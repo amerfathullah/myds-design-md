@@ -1,21 +1,38 @@
-import { ClassNameValue, extendTailwindMerge } from "tailwind-merge";
+import { type ClassNameValue, extendTailwindMerge } from "tailwind-merge";
 
+// The MYDS theme in @govtechmy/myds-style, so tailwind-merge can tell its
+// utilities apart: `text-body-sm` is a size and `text-txt-danger` a colour
 const twMergeConfig = extendTailwindMerge({
   extend: {
-    classGroups: {
-      "font-size": [
-        "text-heading-xl",
-        "text-heading-lg",
-        "text-heading-md",
-        "text-heading-sm",
-        "text-heading-xs",
-        "text-heading-2xs",
-        "text-body-xl",
-        "text-body-lg",
-        "text-body-md",
-        "text-body-sm",
-        "text-body-xs",
+    theme: {
+      text: [
+        "heading-xl",
+        "heading-lg",
+        "heading-md",
+        "heading-sm",
+        "heading-xs",
+        "heading-2xs",
+        "body-xl",
+        "body-lg",
+        "body-md",
+        "body-sm",
+        "body-xs",
       ],
+      font: ["body", "heading", "mono"],
+      shadow: ["button", "card", "context-menu"],
+      animate: [
+        "expire",
+        "slide-up",
+        "slide-down",
+        "accordion-slide-down",
+        "accordion-slide-up",
+        "collapsible-slide-down",
+        "collapsible-slide-up",
+        "shimmer",
+      ],
+    },
+    classGroups: {
+      "transform-origin": [{ origin: ["tooltip-origin"] }],
     },
   },
 });

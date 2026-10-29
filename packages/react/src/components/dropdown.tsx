@@ -101,7 +101,7 @@ DropdownContent.displayName = "DropdownContent";
 
 const dropdown_item_cva = cva(
   [
-    "rounded-xs relative flex cursor-default select-none items-center gap-2 px-2.5 py-1.5 outline-none transition-colors [&>svg]:size-4 [&>svg]:shrink-0",
+    "rounded-xs relative flex cursor-default select-none items-center gap-2 px-2.5 py-1.5 outline-hidden transition-colors [&>svg]:size-4 [&>svg]:shrink-0",
     "text-sm font-medium cursor-pointer",
     "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40",
   ],

@@ -1110,7 +1110,7 @@ components:
 >
 > The text of this file is © 2026 Amer Fathullah Nuaim Zakaria, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The licence covers the writing only, not MYDS's values, the quotes from its design guideline, or the national marks.
 
-This file describes MYDS **as built**: the Tailwind preset in `packages/style` (`@govtechmy/myds-style`) and the React library in `packages/react` (`@govtechmy/myds-react`). The design guideline in `apps/docs/content/docs/design` is used where code says nothing. Where the two disagree, this file prints what the code renders and lists the guideline's value under [Known Gaps](#known-gaps). Terms such as _semantic token_, _off-label pairing_, _page frame_, _variant_ and _state_ are defined in [`CONTEXT.md`](CONTEXT.md).
+This file describes MYDS **as built**: the Tailwind 4 preset in `packages/style` (`@govtechmy/myds-style`, imported with `@import "@govtechmy/myds-style"` after `@import "tailwindcss"`) and the React library in `packages/react` (`@govtechmy/myds-react`). The design guideline in `apps/docs/content/docs/design` is used where code says nothing. Where the two disagree, this file prints what the code renders and lists the guideline's value under [Known Gaps](#known-gaps). Terms such as _semantic token_, _off-label pairing_, _page frame_, _variant_ and _state_ are defined in [`CONTEXT.md`](CONTEXT.md).
 
 ## Overview
 
@@ -1133,17 +1133,17 @@ The canvas is white and the text near-black. There is one primary colour, blue, 
 
 The front matter records the **light theme**. `colors:` holds two layers. The primitive colours are literal hex values (`primary-600: "#2563EB"`). The semantic tokens alias a primitive under their verbatim MYDS names (`bg-primary-600: "{colors.primary-600}"`), exactly as `light.css` maps them. A token with alpha can't be an alias, so those are 8-digit hex literals: `bg-white-disabled` is `gray-100` @ 40%, `#F4F4F566`. `white-disabled` is the preset's white @ 40%, which disabled fill buttons use for their label.
 
-There is no `primary` key. The Tailwind `primary` family has no `DEFAULT`, so `bg-primary` doesn't exist and inventing it would document a class nobody can write.
+There is no `primary` key. The preset's `primary` family has only numbered steps, so `bg-primary` doesn't exist and inventing it would document a class nobody can write.
 
 The design guideline's colour pages are images only, so every value here comes from `packages/style/styles/theme/{color,light,dark}.css`. Usage notes come from how the components actually use each token.
 
 ### Theming
 
-- **Theme switching is only a variable swap.** Semantic tokens are CSS variables defined on `:root` (`light.css`) and redefined under `.dark` (`dark.css`). No component uses a `dark:` variant and the preset sets no `darkMode`. Anything styled with a semantic token re-themes; anything styled with a primitive stays the same colour in both themes.
-- **Class rule: `<utility>-<token>`.** The preset exposes each semantic token as a Tailwind colour, so the token name follows the utility: `bg-bg-white`, `text-txt-black-900`, `border-otl-gray-200`, `ring-fr-primary`. The doubled prefix is correct.
+- **Theme switching is only a variable swap.** Semantic tokens are CSS variables defined on `:root` (`light.css`) and redefined under `.dark` (`dark.css`). No component uses a `dark:` variant and the preset leaves Tailwind's `dark` variant as it is. Anything styled with a semantic token re-themes; anything styled with a primitive stays the same colour in both themes.
+- **Class rule: `<utility>-<token>`.** The preset exposes each semantic token as a Tailwind colour (the theme variable `--color-bg-white` makes `bg-bg-white`), so the token name follows the utility: `bg-bg-white`, `text-txt-black-900`, `border-otl-gray-200`, `ring-fr-primary`. The doubled prefix is correct.
 - **Any utility takes any token.** The prefix names the token's intended _visual role_: `bg` for surfaces, `txt` for glyphs and icons, `otl` for lines, edges and rings, `fr` for focus. The library sometimes pairs a token with an unexpected utility. Most of these are on-role, because the pixel really is that role: `bg-otl-divider` on a 1px divider, `stroke-txt-primary` on an icon, `ring-otl-primary-200` on a ring. A few are off-label pairings, which are documented as built but not recommended: the toast progress bar uses `bg-txt-{status}`, the toast border is `border-bg-washed-active`, the toggle track is `bg-otl-gray-200`, the breadcrumb separator is `text-bg-black-400`, and a disabled radio hint is `text-otl-gray-300`.
 - **Inversion rule.** In the dark theme, `bg-{family}-N` maps to primitive step 1000−N (50 ↔ 950). Step 500 is the pivot and is **theme-invariant**: `bg-{black,primary,danger,success,warning}-500` resolve to the same colour in both themes.
-- `theme.colors` is replaced, not extended, so Tailwind's default palette (`blue-500`, `red-600`, …) is unavailable. Only the MYDS primitives and semantic tokens exist, plus `current`, `inherit` and `transparent`.
+- The preset clears Tailwind's colours (`--color-*: initial`) before adding its own, so Tailwind's default palette (`blue-500`, `red-600`, …) is unavailable. Only the MYDS primitives and semantic tokens exist, plus `current`, `inherit` and `transparent`.
 
 ### Primitives
 
@@ -1301,8 +1301,8 @@ The dark theme redefines every semantic token. This table is generated from `lig
 
 ## Typography
 
-- **Families.** `font-body` is Inter and `font-heading` is Poppins, each followed by Tailwind's sans stack. `font-mono` (Roboto Mono) is declared but never loaded. Both Inter (variable 100–900) and Poppins (400, 500, 600) load from Google Fonts in `input.tailwind.css`, but the base styles apply neither: an app adds `font-body` to its root and `font-heading` to its headings. The guideline says Poppins is for page headers and section titles, and Inter for everything else.
-- **Scale.** `typography:` copies the preset's `fontSize` block exactly: six heading sizes and five body sizes, each a font size and line height, under the same names as the classes (`{typography.body-sm}` is `text-body-sm`). The bare `text` class (the preset's `DEFAULT`) equals `body-sm`, 14/20. The tokens carry no family or weight: MYDS sets those with separate classes.
+- **Families.** `font-body` is Inter and `font-heading` is Poppins, each followed by Tailwind 3's sans stack (`ui-sans-serif, system-ui, sans-serif` and the emoji fonts), which the preset keeps. `font-mono` (Roboto Mono) is declared but never loaded. Both Inter (variable 100–900) and Poppins (400, 500, 600) load from Google Fonts in the precompiled `full.css` (`input.tailwind.css`); the Tailwind import doesn't load them. The base styles apply neither: an app adds `font-body` to its root and `font-heading` to its headings. The guideline says Poppins is for page headers and section titles, and Inter for everything else.
+- **Scale.** `typography:` copies the preset's `--text-*` theme variables exactly: six heading sizes and five body sizes, each a font size and line height, under the same names as the classes (`{typography.body-sm}` is `text-body-sm`). The bare `text` class (a utility the preset defines) equals `body-sm`, 14/20. The tokens carry no family or weight: MYDS sets those with separate classes.
 - **Which size where.** `heading-md` (36/44) is `<h1>`, `heading-sm` is `<h2>`, `heading-xs` is `<h3>` and `heading-2xs` is `<h4>`. `heading-xl` and `heading-lg` are display sizes. No component uses a `heading-*` size. Components use `body-sm` for small controls, `body-md` for medium and `body-lg` for large, and `body-lg` also sets the dialog title.
 - **Weights.** Regular 400, Medium 500 and Semibold 600 (`font-normal`, `font-medium`, `font-semibold`). Controls, tags, breadcrumbs and menu items are Medium; titles are Semibold. Component entries carry the weight as a `fontWeight` number next to `typography`.
 - **Off-scale sizes in the library.** Some components use Tailwind's default sizes instead of the body scale. Where the rendered size and line height match a MYDS token, the entry references it (`text-sm` = `body-sm`, `text-base` = `body-md`). Otherwise the entry carries a literal `"size/line-height"` value and the component's prose flags it: `text-xs` 12/16, `text-lg` 18/28, `text-4xl` 36/40, and a few `leading-*` overrides. New UI uses the MYDS scale.
@@ -1335,7 +1335,7 @@ For long-form reading, the guideline sets article text at 640px wide and images 
 
 ### Spacing
 
-`spacing:` uses Tailwind's step names, so `{spacing.4.5}` is the `4.5` in `px-4.5`. The scale is Tailwind's 4px scale; MYDS's only additions are `4.5` (18px, the mobile gutter) and `10.5` (42px, the alert-dialog icon). `2.5` (10px) is Tailwind's own step.
+`spacing:` uses Tailwind's step names, so `{spacing.4.5}` is the `4.5` in `px-4.5`. The scale is Tailwind's 4px scale. Tailwind multiplies the 4px by the step number, so the two steps MYDS needs beyond the common ones, `4.5` (18px, the mobile gutter) and `10.5` (42px, the alert-dialog icon), need no token.
 
 The guideline's ten steps (4, 8, 12, 16, 20, 24, 32, 40, 48 and 64px) are the layout rhythm. It uses 8px between buttons in a group and between a field and its label, 24px between sub-sections and cards, and 32px between main sections. The half steps (2, 6, 10, 14 and 18px) are for component internals such as button and tag padding.
 
@@ -1361,7 +1361,7 @@ MYDS is mostly flat. Depth comes from borders (`otl-gray-200`) and recessed `bg-
 | Context menu | `shadow-context-menu` | `0px 2px 6px 0px rgba(0,0,0,0.05), 0px 12px 50px 0px rgba(0,0,0,0.10)` | Dropdown, select content, tooltip, popover, sheet, Navbar dropdown and mobile menu, search results, SkipLink when focused   |
 
 - The shadows are pure black at a fixed alpha and **don't change in the dark theme**.
-- The preset **replaces** Tailwind's shadow scale, so `shadow-sm`, `shadow`, `shadow-lg` and `shadow-none` generate nothing. The dialog asks for `shadow-lg` and so renders with no shadow.
+- The preset **replaces** Tailwind's shadow scale, so `shadow-sm`, `shadow` and `shadow-lg` generate nothing. `shadow-none` is Tailwind's and removes a shadow. The dialog asks for `shadow-lg` and so renders with no shadow.
 - Overlays behind modal surfaces are `gray-700` @ 60% (`#3F3F4699`): the dialog overlay and the Navbar's mobile-menu overlay.
 
 ## Shapes
@@ -1384,7 +1384,7 @@ MYDS is mostly flat. Depth comes from borders (`otl-gray-200`) and recessed `bg-
 
 Motion in MYDS is short and functional: the guideline says it should guide, not distract, and that every motion needs a purpose.
 
-- **Durations.** The preset adds `duration-200`, `duration-400` and `duration-600`, which the guideline calls short, medium and long. Tailwind's own durations still exist, and components also use `duration-300`, `duration-500` and `duration-1000`.
+- **Durations.** `duration-200`, `duration-400` and `duration-600` are what the guideline calls short, medium and long. Tailwind takes any number of milliseconds, and components also use `duration-300`, `duration-500` and `duration-1000`.
 - **Easing.** The preset defines no easings. Components use Tailwind's `ease-out` and `ease-in-out`.
 - **Named animations**, which you reuse rather than write your own:
 
@@ -1396,7 +1396,7 @@ Motion in MYDS is short and functional: the guideline says it should guide, not 
   | `animate-shimmer`                         | background-position 0% → 200%                    | 1200ms linear, infinite (Skeleton)                                      |
   | `animate-expire`                          | width 100% → 0%                                  | 5s linear (toast progress bar; the toast sets the real duration inline) |
 
-- **Enter and exit.** The `tailwindcss-animate` plugin supplies `animate-in`/`animate-out`, `fade-in-0`/`fade-out-0`, `zoom-in-95`/`zoom-out-95` and `slide-in-from-*`. Dropdown, select content, popover and dialog open and close with fade + zoom-95 + an 8px slide from the trigger side. Sheet slides from its edge. Tooltip fades in over 200ms.
+- **Enter and exit.** `tw-animate-css`, which the preset imports, supplies `animate-in`/`animate-out`, `fade-in-0`/`fade-out-0`, `zoom-in-95`/`zoom-out-95` and `slide-in-from-*`. Dropdown, select content, popover and dialog open and close with fade + zoom-95 + an 8px slide from the trigger side. Sheet slides from its edge. Tooltip fades in over 200ms.
 - **Press.** Buttons move down by half a pixel while pressed (`active:translate-y-[0.5px]`).
 - **Reduced motion.** Under `prefers-reduced-motion`, Skeleton and the Masthead panel stop animating (`motion-reduce:animate-none`), and Navbar's menu links and dropdown chevron drop their transitions (`motion-reduce:transition-none`). Every other animation still runs.
 - The base styles set `scroll-behavior: smooth` with `scroll-padding-top: 65px`, which clears the sticky Navbar.
@@ -1415,7 +1415,7 @@ Front-matter keys follow the code: `<component>-<variant>` in the library's own 
 Rules that hold across every component:
 
 - **No `backgroundColor` means no fill.** The element inherits the surface behind it (ghost buttons, links, tab triggers, select ghost).
-- **Focus** is a 3px ring in `fr-primary` (`focus:ring focus:ring-fr-primary`) on every focusable control, danger variants included. Inputs, textareas, date and time fields and search bars also switch their border to `otl-primary-300`. Only an invalid date or time field uses `fr-danger`. Focus has no entries of its own.
+- **Focus** is a 3px ring in `fr-primary` (`focus:ring-3 focus:ring-fr-primary`) on every focusable control, danger variants included. Inputs, textareas, date and time fields and search bars also switch their border to `otl-primary-300`. Only an invalid date or time field uses `fr-danger`. Focus has no entries of its own.
 - **Press** moves a button down half a pixel.
 - **Disabled** controls use `cursor-not-allowed`. Checkbox and radio also fade to 30% opacity.
 - **Borders** are 1px (`borderColor`). Where a border is a primitive at an alpha, the entry has an 8-digit hex literal and the prose names the source.
@@ -1507,7 +1507,7 @@ These frame the page; their responsive behaviour is under [Layout → Page frame
 - Don't borrow a token from another role for its colour, such as `bg-txt-*` to fill a surface.
 - Don't style new UI with primitives or inline hex.
 - Don't use Tailwind's default text sizes (`text-xs`, `text-sm`, `text-lg`, …) in place of the body and heading scale.
-- Don't use `shadow-sm`, `shadow`, `shadow-lg` or `shadow-none`: the preset doesn't generate them. Use `shadow-button`, `shadow-card` or `shadow-context-menu`, or no class for no shadow.
+- Don't use `shadow-sm`, `shadow` or `shadow-lg`: the preset doesn't generate them. Use `shadow-button`, `shadow-card` or `shadow-context-menu`, or no class for no shadow.
 - Don't use weights above Semibold 600.
 - Don't use status colours decoratively.
 
@@ -1552,7 +1552,7 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 
 ### Layout
 
-- **Gap:** the preset defines no breakpoints or container. Its `screens` and `container` blocks (mobile 354, tablet 768, desktop 1280, with "bp\_" variants 390, 816 and 1328) are commented out, so Tailwind's defaults apply.
+- **Gap:** the preset defines no breakpoints or container, so Tailwind's defaults apply. The Tailwind 3 preset carried them commented out: mobile 354, tablet 768 and desktop 1280, with "bp\_" variants 390, 816 and 1328.
 - **Divergence:** the Footer switches to 4 columns at tablet (`md:grid-cols-4`); the guideline's tablet grid has 8.
 - **Divergence:** the Navbar collapses to its mobile menu below `xl` (1280); the guideline's desktop tier starts at 1024.
 

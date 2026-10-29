@@ -25,7 +25,7 @@ const AccordionItem = React.forwardRef<
   <AccordionBase.Item
     className={clx(
       "border-otl-gray-200 bg-bg-white group mt-px overflow-hidden border-b first:mt-0",
-      "focus:ring-fr-primary outline-none focus-within:relative focus-within:z-10 focus-within:shadow-lg",
+      "focus:ring-fr-primary outline-hidden focus-within:relative focus-within:z-10 focus-within:shadow-lg",
       className,
     )}
     {...props}
@@ -44,7 +44,7 @@ const AccordionTrigger = React.forwardRef<
     <AccordionBase.Trigger
       className={clx(
         "text-txt-black-700 font-body bg-bg-white hover:text-txt-black-900 data-[state=open]:text-txt-black-900 group flex flex-1 cursor-pointer items-center justify-between py-4 text-base font-medium leading-none hover:underline",
-        "outline-none focus-visible:underline",
+        "outline-hidden focus-visible:underline",
         "data-[disabled]:text-txt-black-disabled data-[disabled]:cursor-not-allowed data-[disabled]:hover:no-underline",
         className,
       )}

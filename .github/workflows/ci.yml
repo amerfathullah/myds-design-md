@@ -6,6 +6,8 @@ on:
       - "**"
     paths:
       - "packages/react/**"
+      - "packages/style/**"
+      - "DESIGN.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -43,3 +45,12 @@ jobs:
 
       - name: Type-check @govtechmy/myds-react against React 18 and 19 types
         run: pnpm --filter @govtechmy/myds-react check-types
+
+      - name: Test @govtechmy/myds-react
+        run: pnpm --filter @govtechmy/myds-react test
+
+      - name: Install Chromium for the @govtechmy/myds-style token-parity check
+        run: pnpm --filter @govtechmy/myds-style exec playwright install --with-deps --only-shell chromium
+
+      - name: Test @govtechmy/myds-style
+        run: pnpm --filter @govtechmy/myds-style test

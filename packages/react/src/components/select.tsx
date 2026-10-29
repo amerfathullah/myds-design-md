@@ -229,8 +229,8 @@ SelectCounter.displayName = "SelectCounter";
 
 const select_trigger_cva = cva(
   [
-    "group inline-flex select-none items-center gap-1.5 outline-none rounded-md w-fit text-txt-black-900",
-    "focus:ring focus:ring-fr-primary",
+    "group inline-flex select-none items-center gap-1.5 outline-hidden rounded-md w-fit text-txt-black-900",
+    "focus:ring-3 focus:ring-fr-primary",
     "disabled:bg-bg-white-disabled disabled:text-txt-black-disabled disabled:border-transparent disabled:cursor-not-allowed",
   ],
   {
@@ -387,7 +387,7 @@ SelectGroupTitle.displayName = SelectPrimitive.Label.displayName;
 
 const select_item_cva = cva(
   [
-    "flex items-center w-full cursor-default select-none py-1.5 gap-2 font-medium outline-none text-txt-black-700 rounded-xs",
+    "flex items-center w-full cursor-default select-none py-1.5 gap-2 font-medium outline-hidden text-txt-black-700 rounded-xs",
     "data-[highlighted]:bg-bg-washed",
   ],
   {

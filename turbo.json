@@ -20,6 +20,10 @@
     "lint": {
       "persistent": false,
       "cache": false
+    },
+    "test": {
+      "cache": false,
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
     }
   }
 }

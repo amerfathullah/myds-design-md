@@ -1,12 +1,12 @@
-@import "@govtechmy/myds-style/color.css";
-@import "@govtechmy/myds-style/light.css";
-@import "@govtechmy/myds-style/dark.css";
-
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap");
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@import "@govtechmy/myds-style";
+
+@source "../stories";
+@source "../react";
+@source "../../../packages/react/src";
+@source not "../../../packages/react/src/**/*.test.ts";
 
 @layer base {
   html {
@@ -22,7 +22,7 @@
   }
 
   :focus:not(:focus-visible) {
-    @apply outline-none;
+    @apply outline-hidden;
   }
 }
 

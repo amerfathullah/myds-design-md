@@ -149,13 +149,13 @@ const pin_cva = cva(["bg-bg-white"], {
       pin_direction: ["left"],
       pin_last: true,
       className:
-        "before:right-0 before:border-none before:outline-none before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_3px_0_8px_-8px]",
+        "before:right-0 before:border-none before:outline-hidden before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_3px_0_8px_-8px]",
     },
     {
       pin_direction: ["right"],
       pin_last: true,
       className:
-        "before:left-0 before:border-none before:outline-none before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_-3px_0_8px_-8px]",
+        "before:left-0 before:border-none before:outline-hidden before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_-3px_0_8px_-8px]",
     },
   ],
 });
@@ -541,7 +541,7 @@ const RadioColumn = <TData extends Record<string, any>>() => {
       <div
         className={clx(
           "shadow-button hover:border-otl-gray-300 border-otl-gray-200 flex aspect-square size-4 items-center justify-center rounded-full border",
-          "focus-within:ring-fr-primary focus-within:ring-4 focus-within:ring-opacity-40 focus:outline-none",
+          "focus-within:ring-fr-primary focus-within:ring-4 focus-within:ring-opacity-40 focus:outline-hidden",
           "has-[:checked]:bg-primary-600 has-[:disabled]:has-[:checked]::bg-primary-600 has-[:checked]:border-none has-[:disabled]:opacity-30",
         )}
       >

@@ -10,7 +10,7 @@ import { ComponentProps, forwardRef, ForwardRefExoticComponent } from "react";
 
 const checkbox_cva = cva(
   [
-    "outline-none flex items-center justify-center",
+    "outline-hidden flex items-center justify-center",
     "border border-otl-gray-200 hover:border-otl-gray-300 shadow-button bg-bg-white",
     "data-[state=checked]:bg-primary-600 data-[state=checked]:border-none data-[state=checked]:hover:border-primary-700 data-[state=checked]:hover:bg-primary-700",
     "data-[state=indeterminate]:bg-primary-600 data-[state=indeterminate]:border-none data-[state=indeterminate]:hover:border-primary-700 data-[state=indeterminate]:hover:bg-primary-700",

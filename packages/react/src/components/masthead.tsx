@@ -53,7 +53,7 @@ const Masthead: FunctionComponent<ComponentProps<"div">> = ({
         data-nosnippet
         {...props}
       >
-        <div className="mx-auto grid w-full max-w-screen-xl outline-none transition-[grid-template-rows] duration-500 print:hidden">
+        <div className="mx-auto grid w-full max-w-screen-xl outline-hidden transition-[grid-template-rows] duration-500 print:hidden">
           {children}
         </div>
       </div>
@@ -69,7 +69,7 @@ const MastheadHeader: FunctionComponent<ComponentProps<"div">> = ({
 }) => {
   return (
     <div
-      className="px-4.5 flex items-center gap-2 overflow-x-hidden py-2 outline-none sm:py-1 md:px-6"
+      className="px-4.5 flex items-center gap-2 overflow-x-hidden py-2 outline-hidden sm:py-1 md:px-6"
       {...props}
     >
       <MalaysiaFlagIcon className="inline-block aspect-auto w-fit shrink-0" />
@@ -110,7 +110,7 @@ const MastheadTrigger: FunctionComponent<ComponentProps<"button">> = ({
 
   return (
     <CollapsibleTrigger
-      className="text-txt-primary focus:ring-fr-primary bg-otl-gray-200 group flex items-center gap-0.5 rounded-md p-1 px-1 focus:outline-none focus:ring focus:ring-inset sm:bg-transparent sm:pl-1.5 xl:rounded-sm"
+      className="text-txt-primary focus:ring-fr-primary bg-otl-gray-200 group flex items-center gap-0.5 rounded-md p-1 px-1 focus:outline-hidden focus:ring-3 focus:ring-inset sm:bg-transparent sm:pl-1.5 xl:rounded-sm"
       aria-label="Toggle masthead"
       tabIndex={0}
       onClick={handleToggle}

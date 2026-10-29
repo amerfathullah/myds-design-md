@@ -70,7 +70,7 @@ interface ToastRootProps
 }
 
 const toast_cva = cva([
-  "group pointer-events-auto relative bg-bg-dialog-active z-[99] p-3 flex w-full items-start gap-2 outline-none",
+  "group pointer-events-auto relative bg-bg-dialog-active z-[99] p-3 flex w-full items-start gap-2 outline-hidden",
   "overflow-hidden rounded-md border shadow-card border-bg-washed-active transition-all data-[swipe=cancel]:translate-x-0 ",
   "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",
   "data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out",
@@ -129,7 +129,7 @@ ToastRoot.displayName = ToastPrimitives.Root.displayName;
 
 const toast_close_cva = cva([
   "text-txt-black-500 hover:text-txt-black-700 absolute right-1 top-1 rounded-md p-1",
-  "focus:outline-none",
+  "focus:outline-hidden",
 ]);
 const ToastClose = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Close>,

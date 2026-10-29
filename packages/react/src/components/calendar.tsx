@@ -117,18 +117,18 @@ const Calendar: FC<CalendarProps> = ({
         selected: clx(
           "selected",
           props.mode === "single"
-            ? "*:bg-primary-600 *:text-white *:hover:bg-primary-600 *:hover:text-white *:focus:bg-primary-600 *:focus:text-white"
+            ? "*:bg-primary-600 *:text-white hover:*:bg-primary-600 hover:*:text-white focus:*:bg-primary-600 focus:*:text-white"
             : "",
         ),
         today: "today",
         outside: "text-txt-black-900 opacity-50",
         disabled: "",
         range_start:
-          "rounded-l-md bg-bg-primary-100 *:bg-primary-600 *:text-white *:hover:bg-primary-600 *:hover:text-white *:focus:bg-primary-600 *:focus:text-white",
+          "rounded-l-md bg-bg-primary-100 *:bg-primary-600 *:text-white hover:*:bg-primary-600 hover:*:text-white focus:*:bg-primary-600 focus:*:text-white",
         range_middle:
-          "in-range bg-bg-primary-100 *:hover:bg-bg-primary-200 *:focus:bg-bg-primary-200",
+          "in-range bg-bg-primary-100 hover:*:bg-bg-primary-200 focus:*:bg-bg-primary-200",
         range_end:
-          "rounded-r-md bg-bg-primary-100 *:bg-primary-600 *:text-white *:hover:bg-primary-600 *:hover:text-white *:focus:bg-primary-600 *:focus:text-white",
+          "rounded-r-md bg-bg-primary-100 *:bg-primary-600 *:text-white hover:*:bg-primary-600 hover:*:text-white focus:*:bg-primary-600 focus:*:text-white",
         hidden: "invisible",
         ...classNames,
       }}
@@ -146,7 +146,7 @@ const Calendar: FC<CalendarProps> = ({
               className={clx(
                 "px-1.5 py-1 text-base font-semibold",
                 view === monthOrYear
-                  ? "text-txt-primary bg-bg-primary-50 ring-fr-primary focus:ring"
+                  ? "text-txt-primary bg-bg-primary-50 ring-fr-primary focus:ring-3"
                   : "border-none",
               )}
               onClick={() =>

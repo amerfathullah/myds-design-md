@@ -81,7 +81,7 @@ TabsList.displayName = TabsPrimitive.List.displayName;
 
 const tabs_trigger_cva = cva(
   [
-    "relative flex gap-1 items-center text-txt-black-500 hover:text-txt-black-900 data-[state=active]:text-txt-black-900 outline-none border border-transparent",
+    "relative flex gap-1 items-center text-txt-black-500 hover:text-txt-black-900 data-[state=active]:text-txt-black-900 outline-hidden border border-transparent",
     "focus:ring-2 focus:ring-fr-primary space",
   ],
   {
@@ -94,7 +94,7 @@ const tabs_trigger_cva = cva(
           "data-[state=active]:bg-bg-dialog-active rounded-md transition-[border] data-[state=active]:border-otl-gray-200",
           // "before:h-auto before:w-[1px] before:content-[''] before:absolute before:-left-1 before:bg-otl-gray-300 before:first-of-type:hidden",
         ],
-        line: "rounded-md before:h-0.5 before:content-[''] before:absolute before:-bottom-2.5 before:left-0 before:right-0 before:data-[state=active]:bg-primary-600 before:transition-all before:duration-200",
+        line: "rounded-md before:h-0.5 before:content-[''] before:absolute before:-bottom-2.5 before:left-0 before:right-0 data-[state=active]:before:bg-primary-600 before:transition-all before:duration-200",
       },
       size: {
         small: "text-body-sm py-1.5 px-2.5",

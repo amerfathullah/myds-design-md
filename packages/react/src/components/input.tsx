@@ -32,9 +32,9 @@ interface InputProps
 
 const input_cva = cva(
   [
-    "bg-bg-white border border-transparent outline-none box-border rounded-md",
+    "bg-bg-white border border-transparent outline-hidden box-border rounded-md",
     "placeholder:text-txt-black-500 text-txt-black-700 transition-colors w-full",
-    "focus:ring focus:ring-fr-primary focus:border-otl-primary-300",
+    "focus:ring-3 focus:ring-fr-primary focus:border-otl-primary-300",
     "disabled:bg-bg-washed disabled:cursor-not-allowed disabled:text-txt-black-disabled",
     "data-[has-prepend=true]:rounded-l-none data-[has-append=true]:rounded-r-none",
     "data-[has-left-icon=true]:pl-10 data-[has-right-icon=true]:pr-10",
@@ -75,7 +75,7 @@ const Input: ForwardRefExoticComponent<InputProps> = forwardRef(
     return (
       <div
         className={clx(
-          "border-otl-gray-200 relative rounded-md border outline-none",
+          "border-otl-gray-200 relative rounded-md border outline-hidden",
           className,
         )}
       >
@@ -108,7 +108,7 @@ Input.displayName = "Input";
 const input_addon_cva = cva(
   [
     "flex items-center",
-    "border border-transparent outline-none box-border ",
+    "border border-transparent outline-hidden box-border ",
     "[&:not(:last-child)]:border-r-otl-gray-200 [&:not(:first-child)]:border-l-otl-gray-200",
   ],
   {

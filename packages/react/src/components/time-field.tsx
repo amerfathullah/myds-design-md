@@ -4,8 +4,8 @@ import { cva, VariantProps } from "class-variance-authority";
 
 const timefield_container_cva = cva(
   [
-    "flex items-center gap-2 border rounded-md text-txt-black-900 shadow-button focus:outline-none font-body font-normal",
-    "focus-within:border-otl-primary-300 focus-within:ring focus-within:ring-fr-primary",
+    "flex items-center gap-2 border rounded-md text-txt-black-900 shadow-button focus:outline-hidden font-body font-normal",
+    "focus-within:border-otl-primary-300 focus-within:ring-3 focus-within:ring-fr-primary",
   ],
   {
     variants: {
@@ -19,7 +19,7 @@ const timefield_container_cva = cva(
         false: "bg-bg-white",
       },
       invalid: {
-        true: "border-otl-danger-300 ring-fr-danger ring",
+        true: "border-otl-danger-300 ring-fr-danger ring-3",
         false: "border-otl-gray-200",
       },
     },
@@ -31,10 +31,12 @@ const timefield_container_cva = cva(
 );
 
 const timefield_cva = cva([
-  "bg-transparent focus:outline-none",
+  "bg-transparent focus:outline-hidden",
   "disabled:bg-bg-washed disabled:text-txt-black-500 disabled:cursor-not-allowed",
   "[&::-webkit-calendar-picker-indicator]:hidden",
   "[&::-webkit-datetime-edit]:max-w-fit",
+  // Tailwind 4's preflight removes this padding, which sets the field's height
+  "[&::-webkit-datetime-edit-fields-wrapper]:py-px",
   "[&::-webkit-datetime-edit-text]:mx-[2px]",
   "[&::-webkit-datetime-edit-hour-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-hour-field:focus]:text-txt-white",
   "[&::-webkit-datetime-edit-minute-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-minute-field:focus]:text-txt-white",

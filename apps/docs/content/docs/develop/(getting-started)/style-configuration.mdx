@@ -71,23 +71,21 @@ If you do use TailwindCSS, MYDS provides the option for developers to leverage o
 
 ### Installation
 
-Before we start, make sure you have installed Tailwind CSS in your project. Refer to the [official documentation](https://tailwindcss.com/docs/installation/using-vite) for more information.
+Before we start, make sure you have installed Tailwind CSS 4 in your project. Refer to the [official documentation](https://tailwindcss.com/docs/installation/using-vite) for more information.
 
 ### Preset Configuration
 
-Once TailwindCSS is installed, you can import the MYDS presets to your own project! Also we need to make sure the TailwindCSS is 'aware' of the components from the library.
+Once TailwindCSS is installed, import the MYDS preset after Tailwind in your stylesheet. Tailwind also needs to scan the components from the library for the classes they use.
 
-```ts title="tailwind.config.ts"
-import { preset } from "@govtechmy/myds-style";
+```css title="src/index.css"
+@import "tailwindcss";
+@import "@govtechmy/myds-style";
 
-export default {
-  content: [
-    "src/**/*.{js,jsx,ts,tsx}", // Your own project source files
-    "node_modules/@govtechmy/myds-react/dist/**/*.{js,jsx,ts,tsx}",
-  ],
-  presets: [preset],
-};
+/* Path from this stylesheet to your node_modules */
+@source "../node_modules/@govtechmy/myds-react/dist";
 ```
+
+The import turns every MYDS token into a Tailwind theme variable and includes the colors and both themes, so classes such as `bg-bg-white` and `text-txt-black-900` work straight away. Tailwind's default color palette (`blue-500`, `red-600`, …) isn't available.
 
 ### Color Token
 
@@ -97,4 +95,4 @@ MYDS has 2 types of color token that developers need to be aware of, which are:
 
 - **Theme token** - The value of the theme token changes based on the theme applied.
 
-To learn the entire list of primitive & theme tokens available, read the [full configuration](https://github.com/govtechmy/myds/blob/main/packages/style/tailwind.config.js)
+To learn the entire list of primitive & theme tokens available, read the [full configuration](https://github.com/amerfathullah/myds-design-md/blob/main/packages/style/styles/index.css)

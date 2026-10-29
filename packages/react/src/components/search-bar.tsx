@@ -49,7 +49,7 @@ const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
 const search_bar_input_container_cva = cva(
   [
     "flex items-center bg-bg-white border border-otl-gray-200 shadow-button",
-    "has-[input:focus]:ring has-[input:focus]:ring-otl-primary-200 has-[input:focus]:border-otl-primary-300",
+    "has-[input:focus]:ring-3 has-[input:focus]:ring-otl-primary-200 has-[input:focus]:border-otl-primary-300",
   ],
   {
     variants: {
@@ -87,7 +87,7 @@ export const SearchBarInput: FunctionComponent<
     <Command.Input
       ref={ref}
       className={clx(
-        "text-txt-black-900 placeholder:text-txt-black-500 flex-1 bg-transparent focus:outline-none",
+        "text-txt-black-900 placeholder:text-txt-black-500 flex-1 bg-transparent focus:outline-hidden",
         className,
       )}
       asChild
@@ -110,7 +110,7 @@ export const SearchBarSearchButton: FunctionComponent<ButtonProps> = ({
     return (
       <Button
         className={clx(
-          "border-primary-600 from-primary-400 to-primary-600 rounded-full border bg-gradient-to-b p-1",
+          "border-primary-600 from-primary-400 to-primary-600 rounded-full border bg-linear-to-b/srgb p-1",
           className,
         )}
         {...props}

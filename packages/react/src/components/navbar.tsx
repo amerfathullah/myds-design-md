@@ -211,7 +211,7 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
             <ul
               className={clx(
                 "absolute max-h-[80dvh] w-[var(--radix-popper-anchor-width)] overflow-y-auto p-3",
-                "border-otl-gray-200 rounded-md rounded-t-none border border-t-0 outline-none",
+                "border-otl-gray-200 rounded-md rounded-t-none border border-t-0 outline-hidden",
                 "bg-bg-dialog text-txt-black-900 shadow-context-menu",
                 "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2",
                 "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2",

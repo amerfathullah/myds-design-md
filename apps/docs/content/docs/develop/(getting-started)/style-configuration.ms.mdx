@@ -72,23 +72,21 @@ Jika anda menggunakan TailwindCSS, MYDS menyediakan pilihan untuk pembangun mema
 
 ### Pemasangan
 
-Sebelum kita mula, pastikan anda telah memasang pakej TailwindCSS dalam projek anda. Rujuk [dokumentasi rasmi](https://tailwindcss.com/docs/installation/using-vite) untuk maklumat lanjut.
+Sebelum kita mula, pastikan anda telah memasang pakej TailwindCSS 4 dalam projek anda. Rujuk [dokumentasi rasmi](https://tailwindcss.com/docs/installation/using-vite) untuk maklumat lanjut.
 
 ### Konfigurasi Preset
 
-Setelah TailwindCSS dipasang, anda boleh mengimport preset MYDS ke dalam projek anda sendiri! Kita juga perlu memastikan TailwindCSS 'sedar' tentang pustaka komponen dari MYDS.
+Setelah TailwindCSS dipasang, import preset MYDS selepas Tailwind dalam stylesheet anda. Tailwind juga perlu mengimbas pustaka komponen MYDS untuk kelas yang digunakannya.
 
-```ts title="tailwind.config.ts"
-import { preset } from "@govtechmy/myds-style";
+```css title="src/index.css"
+@import "tailwindcss";
+@import "@govtechmy/myds-style";
 
-export default {
-  content: [
-    "src/**/*.{js,jsx,ts,tsx}", // Fail sumber projek anda sendiri
-    "node_modules/@govtechmy/myds-react/dist/**/*.{js,jsx,ts,tsx}",
-  ],
-  presets: [preset],
-};
+/* Laluan dari stylesheet ini ke node_modules anda */
+@source "../node_modules/@govtechmy/myds-react/dist";
 ```
+
+Import ini menjadikan setiap token MYDS pemboleh ubah tema Tailwind dan turut memuatkan warna serta kedua-dua tema, jadi kelas seperti `bg-bg-white` dan `text-txt-black-900` boleh terus digunakan. Palet warna lalai Tailwind (`blue-500`, `red-600`, …) tidak tersedia.
 
 ### Token Warna
 
@@ -98,4 +96,4 @@ MYDS mempunyai 2 jenis token warna yang perlu diketahui oleh pembangun, iaitu:
 
 - **Token tema** - Nilai token tema berubah berdasarkan tema yang digunakan.
 
-Untuk mempelajari senarai penuh token primitif & tema yang tersedia, baca [konfigurasi penuh](https://github.com/govtechmy/myds/blob/main/packages/style/tailwind.config.js)
+Untuk mempelajari senarai penuh token primitif & tema yang tersedia, baca [konfigurasi penuh](https://github.com/amerfathullah/myds-design-md/blob/main/packages/style/styles/index.css)

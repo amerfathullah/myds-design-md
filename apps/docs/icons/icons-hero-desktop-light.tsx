@@ -1,4 +1,4 @@
-import { clx } from "@govtechmy/myds-react/utils";
+import { clx } from "@amerfathullah/myds-react/utils";
 
 export default function IconsHeroDesktopLight({
   className,

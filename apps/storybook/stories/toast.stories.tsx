@@ -1,9 +1,9 @@
 import { fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
-import { AutoToast } from "@govtechmy/myds-react/toast";
-import { useToast } from "@govtechmy/myds-react/hooks";
-import { Button } from "@govtechmy/myds-react/button";
+import { AutoToast } from "@amerfathullah/myds-react/toast";
+import { useToast } from "@amerfathullah/myds-react/hooks";
+import { Button } from "@amerfathullah/myds-react/button";
 import React from "react";
 
 const DemoToast = (props: any) => {
@@ -80,7 +80,7 @@ const DemoToast = (props: any) => {
 /**
  * ### Overview
  *
- * This file contains the implementation of a Toast component using `@govtechmy/myds-react/toast`.
+ * This file contains the implementation of a Toast component using `@amerfathullah/myds-react/toast`.
  * The `DemoToast` component demonstrates various toast notifications such as message, info, success, warning, and error.
  *
  * > Toast enak dimakan pagi,
@@ -91,7 +91,7 @@ const DemoToast = (props: any) => {
  *
  * ### Usage
  * ```tsx
- * import { AutoToast, ToastRoot, ToastIcon, ToastProgress, ToastProvider, ToastViewport, ToastTitle, ToastDescription } from "@govtechmy/myds-react/toast";
+ * import { AutoToast, ToastRoot, ToastIcon, ToastProgress, ToastProvider, ToastViewport, ToastTitle, ToastDescription } from "@amerfathullah/myds-react/toast";
  *
  * <button
  *  onClick={() => {
@@ -141,7 +141,7 @@ const DemoToast = (props: any) => {
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/Toast",
+  title: "@amerfathullah/myds-react/Toast",
   component: DemoToast,
   tags: ["autodocs"],
   parameters: {

@@ -34,23 +34,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build @govtechmy/myds-react
-        run: pnpm build --filter=@govtechmy/myds-react
+      - name: Build @amerfathullah/myds-react
+        run: pnpm build --filter=@amerfathullah/myds-react
 
-      - name: Lint @govtechmy/myds-react
-        run: pnpm --filter @govtechmy/myds-react lint
+      - name: Lint @amerfathullah/myds-react
+        run: pnpm --filter @amerfathullah/myds-react lint
 
-      - name: Check @govtechmy/myds-react exports
-        run: pnpm --filter @govtechmy/myds-react check-exports
+      - name: Check @amerfathullah/myds-react exports
+        run: pnpm --filter @amerfathullah/myds-react check-exports
 
-      - name: Type-check @govtechmy/myds-react against React 18 and 19 types
-        run: pnpm --filter @govtechmy/myds-react check-types
+      - name: Type-check @amerfathullah/myds-react against React 18 and 19 types
+        run: pnpm --filter @amerfathullah/myds-react check-types
 
-      - name: Test @govtechmy/myds-react
-        run: pnpm --filter @govtechmy/myds-react test
+      - name: Test @amerfathullah/myds-react
+        run: pnpm --filter @amerfathullah/myds-react test
 
-      - name: Install Chromium for the @govtechmy/myds-style token-parity check
-        run: pnpm --filter @govtechmy/myds-style exec playwright install --with-deps --only-shell chromium
+      - name: Install Chromium for the @amerfathullah/myds-style token-parity check
+        run: pnpm --filter @amerfathullah/myds-style exec playwright install --with-deps --only-shell chromium
 
-      - name: Test @govtechmy/myds-style
-        run: pnpm --filter @govtechmy/myds-style test
+      - name: Test @amerfathullah/myds-style
+        run: pnpm --filter @amerfathullah/myds-style test

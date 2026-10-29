@@ -1,7 +1,7 @@
 import { fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
-import { TextArea } from "@govtechmy/myds-react/textarea";
+import { TextArea } from "@amerfathullah/myds-react/textarea";
 
 /**
  * ### Overview
@@ -16,13 +16,13 @@ import { TextArea } from "@govtechmy/myds-react/textarea";
  *
  * ### Usage
  * ```tsx
- * import TextArea from "@govtechmy/myds-react/text-area";
+ * import TextArea from "@amerfathullah/myds-react/text-area";
  *
  * <TextArea />
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/TextArea",
+  title: "@amerfathullah/myds-react/TextArea",
   component: TextArea,
   tags: ["autodocs"],
   parameters: {

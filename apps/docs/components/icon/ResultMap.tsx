@@ -1,8 +1,8 @@
 "use client";
-import { Button } from "@govtechmy/myds-react/button";
+import { Button } from "@amerfathullah/myds-react/button";
 import { IconData } from "./IconDataList";
 import { FunctionComponent, useContext, useRef, useState } from "react";
-import { CopyIcon } from "@govtechmy/myds-react/icon";
+import { CopyIcon } from "@amerfathullah/myds-react/icon";
 import { SearchContext } from "./SearchProvider";
 import { useParams } from "next/navigation";
 import { getRosetta } from "@/locales/_server";

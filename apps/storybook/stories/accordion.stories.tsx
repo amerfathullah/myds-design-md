@@ -5,7 +5,7 @@ import {
   AccordionContent,
   Accordion,
   AccordionItem,
-} from "@govtechmy/myds-react/accordion";
+} from "@amerfathullah/myds-react/accordion";
 import React from "react";
 
 /**
@@ -22,7 +22,7 @@ import React from "react";
  *   AccordionContent,
  *   Accordion,
  *   AccordionItem,
- * } from "@govtechmy/myds-react/accordion";
+ * } from "@amerfathullah/myds-react/accordion";
  *
  * const AccordionDemo = () => (
  *   <Accordion type="single" defaultValue="item-1" collapsible>
@@ -51,7 +51,7 @@ import React from "react";
  */
 
 const meta = {
-  title: "@govtechmy/myds-react/Accordion",
+  title: "@amerfathullah/myds-react/Accordion",
   component: Accordion,
   tags: ["autodocs"],
   parameters: {

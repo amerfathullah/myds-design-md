@@ -1,6 +1,15 @@
 {
-  "name": "@govtechmy/myds-style",
+  "name": "@amerfathullah/myds-style",
   "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amerfathullah/myds-design-md.git",
+    "directory": "packages/style"
+  },
+  "homepage": "https://github.com/amerfathullah/myds-design-md/tree/main/packages/style#readme",
+  "bugs": {
+    "url": "https://github.com/amerfathullah/myds-design-md/issues"
+  },
   "scripts": {
     "dev": "tailwindcss -i ./styles/input.tailwind.css -o ./styles/output.tailwind.css --watch",
     "build": "tailwindcss -i ./styles/input.tailwind.css -o ./dist/index.css --minify",

@@ -5,11 +5,11 @@ import {
   Pagination,
   PaginationNext,
   PaginationPrevious,
-} from "@govtechmy/myds-react/pagination";
+} from "@amerfathullah/myds-react/pagination";
 import React from "react";
 
-import { GovtOfficeIcon } from "@govtechmy/myds-react/icon";
-import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
+import { GovtOfficeIcon } from "@amerfathullah/myds-react/icon";
+import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
 import ArrowBack from "../react/arrow-back";
 
 /**
@@ -23,7 +23,7 @@ import ArrowBack from "../react/arrow-back";
  *
  * ### Usage
  * ```ts
- * import Pagination from "@govtechmy/myds-react/pagination";
+ * import Pagination from "@amerfathullah/myds-react/pagination";
  *
  * <Pagination
  *    page={1}
@@ -35,7 +35,7 @@ import ArrowBack from "../react/arrow-back";
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/Pagination",
+  title: "@amerfathullah/myds-react/Pagination",
   component: AutoPagination,
   parameters: {
     layout: "centered",
@@ -237,7 +237,7 @@ export const CustomizedButtonAndLabel: Story = createStory({
 /**
  *
  * ```ts
- * import Pagination from "@govtechmy/myds-react/pagination";
+ * import Pagination from "@amerfathullah/myds-react/pagination";
  *
  * const urlParams = new URLSearchParams(document.location.search);
  *

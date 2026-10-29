@@ -5,7 +5,7 @@ description: Advanced configuration for stylesheet & TailwindCSS
 
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import { InfoIcon } from "@govtechmy/myds-react/icon";
+import { InfoIcon } from "@amerfathullah/myds-react/icon";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 
 MYDS stylesheet is composed of various components to cater to a wide range of use cases.
@@ -37,7 +37,7 @@ MYDS supports 2 typefaces: `Poppins` & `Inter`. We recommend you to import via a
 We define each color in the MYDS Design Language as a CSS variable, which later becomes the building block to build themes!
 
 ```css
-@import "@govtechmy/myds-style/color.css";
+@import "@amerfathullah/myds-style/color.css";
 ```
 
 ### Theme
@@ -47,10 +47,10 @@ So, you can omit importing the unwanted theme from your project!
 
 ```css
 /* Import Light theme */
-@import "@govtechmy/myds-style/light.css";
+@import "@amerfathullah/myds-style/light.css";
 
 /* Import Dark theme */
-@import "@govtechmy/myds-style/dark.css";
+@import "@amerfathullah/myds-style/dark.css";
 ```
 
 <Callout
@@ -79,10 +79,10 @@ Once TailwindCSS is installed, import the MYDS preset after Tailwind in your sty
 
 ```css title="src/index.css"
 @import "tailwindcss";
-@import "@govtechmy/myds-style";
+@import "@amerfathullah/myds-style";
 
 /* Path from this stylesheet to your node_modules */
-@source "../node_modules/@govtechmy/myds-react/dist";
+@source "../node_modules/@amerfathullah/myds-react/dist";
 ```
 
 The import turns every MYDS token into a Tailwind theme variable and includes the colors and both themes, so classes such as `bg-bg-white` and `text-txt-black-900` work straight away. Tailwind's default color palette (`blue-500`, `red-600`, …) isn't available.

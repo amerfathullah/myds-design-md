@@ -1,6 +1,6 @@
 import "@/app/global.css";
 import { RootProvider } from "fumadocs-ui/provider/next";
-import { clx } from "@govtechmy/myds-react/utils";
+import { clx } from "@amerfathullah/myds-react/utils";
 import Masthead from "@/components/Masthead";
 
 import type { Metadata } from "next";

@@ -1,7 +1,7 @@
 import { fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
-import { Tag } from "@govtechmy/myds-react/tag";
+import { Tag } from "@amerfathullah/myds-react/tag";
 
 /**
  * ### Overview
@@ -14,7 +14,7 @@ import { Tag } from "@govtechmy/myds-react/tag";
  *
  * ### Usage
  * ```ts
- * import Tag from "@govtechmy/myds-react/tag";
+ * import Tag from "@amerfathullah/myds-react/tag";
  *
  * <Tag size="medium" dot={true}>Gray</Tag>
  * <Tag size="medium" mode="default" dot={true}>Gray</Tag>
@@ -23,7 +23,7 @@ import { Tag } from "@govtechmy/myds-react/tag";
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/Tag",
+  title: "@amerfathullah/myds-react/Tag",
   component: Tag,
   parameters: {
     layout: "centered",

@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@govtechmy/myds-react/button";
+import { Button } from "@amerfathullah/myds-react/button";
 import {
   PhoneIcon,
   EmailIcon,
@@ -8,7 +8,7 @@ import {
   PinIcon,
   TwitterXIcon,
   TiktokIcon,
-} from "@govtechmy/myds-react/icon";
+} from "@amerfathullah/myds-react/icon";
 
 export default function ContactUsTemplate() {
   return (

@@ -1,6 +1,6 @@
 import type { Meta } from "@storybook/react-vite";
 import { createRender } from "../utils";
-import { InputOTP, InputOTPSlot } from "@govtechmy/myds-react/input-otp";
+import { InputOTP, InputOTPSlot } from "@amerfathullah/myds-react/input-otp";
 
 /**
  * ### Overview
@@ -16,7 +16,7 @@ import { InputOTP, InputOTPSlot } from "@govtechmy/myds-react/input-otp";
  *
  * ### Usage
  * ```tsx
- * import { InputOTP, InputOTPSlot } from "@govtechmy/myds-react/input-otp";
+ * import { InputOTP, InputOTPSlot } from "@amerfathullah/myds-react/input-otp";
  *
  * <InputOTP maxLength={4}>
  *   <InputOTPSlot index={0} />
@@ -27,7 +27,7 @@ import { InputOTP, InputOTPSlot } from "@govtechmy/myds-react/input-otp";
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/InputOTP",
+  title: "@amerfathullah/myds-react/InputOTP",
   component: InputOTP,
   tags: ["autodocs"],
   parameters: {

@@ -1,7 +1,7 @@
 import { fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
-import { Pill } from "@govtechmy/myds-react/pill";
+import { Pill } from "@amerfathullah/myds-react/pill";
 
 /**
  * ### Overview
@@ -9,13 +9,13 @@ import { Pill } from "@govtechmy/myds-react/pill";
  *
  * ### Usage
  * ```tsx
- * import Pill from "@govtechmy/myds-react/pill";
+ * import Pill from "@amerfathullah/myds-react/pill";
  *
  * <Pill size="large" disabled={false} onDismiss={() => {}}/>
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/Pill",
+  title: "@amerfathullah/myds-react/Pill",
   component: Pill,
   tags: ["autodocs"],
   parameters: {

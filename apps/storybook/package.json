@@ -9,8 +9,8 @@
     "test-storybook": "test-storybook"
   },
   "dependencies": {
-    "@govtechmy/myds-react": "workspace:*",
-    "@govtechmy/myds-style": "workspace:*",
+    "@amerfathullah/myds-react": "workspace:*",
+    "@amerfathullah/myds-style": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.2",
     "tailwindcss": "^4.3.3",

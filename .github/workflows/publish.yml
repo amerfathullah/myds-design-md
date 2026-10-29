@@ -1,17 +1,19 @@
 name: "publish"
 
-on:
-  workflow_dispatch:
+# The Changesets flow for @amerfathullah/myds-react and @amerfathullah/myds-style.
+# A push to main opens or updates the "Version Packages" PR while changesets
+# are pending, and publishes both packages to npm once that PR merges.
+# A manual run is a dry run on any branch: it versions, builds and packs both
+# packages as a release would, without publishing or pushing anything.
 
+on:
   push:
     branches:
-      - "release/**"
-    paths:
-      - "packages/react/**"
+      - main
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   publish:
@@ -19,6 +21,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write # npm provenance
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,17 +34,33 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 26
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build @govtechmy/myds-react
-        run: pnpm build --filter=@govtechmy/myds-react
+      - name: Dry run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          pnpm version-packages
+          pnpm build:packages
+          pnpm changeset pack --out-dir "$RUNNER_TEMP/packed"
+          pnpm exec attw "$RUNNER_TEMP"/packed/packages/amerfathullah-myds-react-*.tgz --profile node16
 
-      - name: Create PR to Publish stable package
-        id: changeset
+      # The Changesets action publishes when no changesets are pending
+      - name: Check for the npm token
+        if: github.event_name == 'push'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$(find .changeset -name '*.md' ! -name README.md)" ] && [ -z "$NPM_TOKEN" ]; then
+            echo "::error::Add an NPM_TOKEN repository secret: an npm token that can publish @amerfathullah/myds-react and @amerfathullah/myds-style."
+            exit 1
+          fi
+
+      - name: Open the version PR or publish
+        if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
           publish: pnpm release
@@ -49,3 +68,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PNPM_CONFIG_PROVENANCE: true

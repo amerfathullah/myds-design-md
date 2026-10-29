@@ -196,15 +196,15 @@ importers:
 
   apps/docs:
     dependencies:
+      '@amerfathullah/myds-react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@amerfathullah/myds-style':
+        specifier: workspace:*
+        version: link:../../packages/style
       '@aws-sdk/client-ses':
         specifier: ^3.1158.0
         version: 3.1158.0
-      '@govtechmy/myds-react':
-        specifier: workspace:*
-        version: link:../../packages/react
-      '@govtechmy/myds-style':
-        specifier: workspace:*
-        version: link:../../packages/style
       '@hookform/resolvers':
         specifier: ^6.0.2
         version: 6.0.2(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(ajv@8.18.0)(joi@17.13.3)(react-hook-form@7.91.0(@types/react@19.3.0)(react@19.3.1))(zod@4.6.7)
@@ -269,10 +269,10 @@ importers:
 
   apps/standard:
     dependencies:
-      '@govtechmy/myds-react':
+      '@amerfathullah/myds-react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@govtechmy/myds-style':
+      '@amerfathullah/myds-style':
         specifier: workspace:*
         version: link:../../packages/style
       fumadocs-core:
@@ -330,10 +330,10 @@ importers:
 
   apps/storybook:
     dependencies:
-      '@govtechmy/myds-react':
+      '@amerfathullah/myds-react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@govtechmy/myds-style':
+      '@amerfathullah/myds-style':
         specifier: workspace:*
         version: link:../../packages/style
       '@tailwindcss/vite':

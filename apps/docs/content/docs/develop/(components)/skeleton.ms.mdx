@@ -6,7 +6,7 @@ description: Pemegang tempat semasa pemuatan yang mengikut bentuk kandungan yang
 import { Quicklinks } from "@/components/quicklinks";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
@@ -23,7 +23,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
   <Tab value="Kod">
 
 ```tsx
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <div className="flex w-72 items-center gap-3">
   <Skeleton shape="circle" className="size-10 shrink-0" />
@@ -47,7 +47,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
 ## Penggunaan
 
 ```ts copy title="Import"
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 ```
 
 ```tsx copy title="Anatomi"
@@ -80,7 +80,7 @@ Gunakan prop `shape` untuk memadankan kandungan yang sedang dimuatkan. Tetapkan 
   <Tab value="Kod">
 
 ```tsx
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <Skeleton className="w-32" />
 <Skeleton shape="circle" className="size-10" />
@@ -107,7 +107,7 @@ Tiada pembantu berbilang baris. Petakan (`map`) `Skeleton` untuk melukis seberap
   <Tab value="Kod">
 
 ```tsx
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <div className="flex flex-col gap-2">
   {["w-full", "w-full", "w-1/2"].map((width, index) => (
@@ -124,7 +124,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
 Setiap `Skeleton` dipaparkan dengan `aria-hidden="true"`, jadi pembaca skrin melangkauinya. Memaklumkan bahawa kandungan sedang dimuatkan ialah tanggungjawab anda: tetapkan `aria-busy="true"` pada kawasan yang sedang dimuatkan dan letakkan teks "Memuatkan…" yang tersembunyi secara visual di dalamnya. Buang kedua-duanya apabila kandungan tiba.
 
 ```tsx copy title="Kawasan pemuatan"
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <section aria-busy={isLoading}>
   {isLoading ? (

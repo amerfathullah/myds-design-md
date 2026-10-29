@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1158.0",
-    "@govtechmy/myds-react": "workspace:*",
-    "@govtechmy/myds-style": "workspace:*",
+    "@amerfathullah/myds-react": "workspace:*",
+    "@amerfathullah/myds-style": "workspace:*",
     "@hookform/resolvers": "^6.0.2",
     "fumadocs-core": "16.17.8",
     "fumadocs-mdx": "15.4.10",

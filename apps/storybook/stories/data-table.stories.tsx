@@ -1,9 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
-import { Cell, ColumnDef, DataTable } from "@govtechmy/myds-react/data-table";
+import {
+  Cell,
+  ColumnDef,
+  DataTable,
+} from "@amerfathullah/myds-react/data-table";
 import type { TypeWithDeepControls } from "storybook-addon-deep-controls";
-import { Button } from "@govtechmy/myds-react/button";
-import { Tag } from "@govtechmy/myds-react/tag";
+import { Button } from "@amerfathullah/myds-react/button";
+import { Tag } from "@amerfathullah/myds-react/tag";
 
 type EmployeeProps = {
   id: number;
@@ -31,7 +35,7 @@ type EmployeeProps = {
  *
  * ### Usage
  * ```tsx
- * import Table from "@govtechmy/myds-react/table";
+ * import Table from "@amerfathullah/myds-react/table";
  *
  * <DataTable
  * columns={[
@@ -110,7 +114,7 @@ type EmployeeProps = {
  */
 
 const meta: Meta<typeof DataTable> = {
-  title: "@govtechmy/myds-react/DataTable",
+  title: "@amerfathullah/myds-react/DataTable",
   component: DataTable,
   tags: ["autodocs"],
   parameters: {

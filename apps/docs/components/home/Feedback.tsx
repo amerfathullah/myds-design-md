@@ -1,6 +1,6 @@
 "use client";
 import { Paragraph } from "@/components/Paragraph";
-import { clx } from "@govtechmy/myds-react/utils";
+import { clx } from "@amerfathullah/myds-react/utils";
 import Section from "../section";
 import { useContext } from "react";
 import { RosettaContext } from "@/locales/_client";

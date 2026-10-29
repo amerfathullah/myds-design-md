@@ -8,9 +8,9 @@ import {
   CookieBannerPreferences,
   CookieBannerTitle,
   CookieBannerPreferencesTrigger,
-} from "@govtechmy/myds-react/cookie-banner";
-import { Button } from "@govtechmy/myds-react/button";
-import { Checkbox } from "@govtechmy/myds-react/checkbox";
+} from "@amerfathullah/myds-react/cookie-banner";
+import { Button } from "@amerfathullah/myds-react/button";
+import { Checkbox } from "@amerfathullah/myds-react/checkbox";
 
 const CookiesBannerPreview = () => {
   const [open, setOpen] = useState(false);

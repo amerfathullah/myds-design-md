@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
-import { TimeField } from "@govtechmy/myds-react/time-field";
+import { TimeField } from "@amerfathullah/myds-react/time-field";
 
 /**
  * ### Overview
@@ -13,8 +13,8 @@ import { TimeField } from "@govtechmy/myds-react/time-field";
  *
  * ### Usage
  * ```tsx
- * import { TimeField } from "@govtechmy/myds-react/time-field";
- * import { Label } from "@govtechmy/myds-react/label";
+ * import { TimeField } from "@amerfathullah/myds-react/time-field";
+ * import { Label } from "@amerfathullah/myds-react/label";
  *
  * const [time, setTime] = useState("16:30");
  *
@@ -23,7 +23,7 @@ import { TimeField } from "@govtechmy/myds-react/time-field";
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/TimeField",
+  title: "@amerfathullah/myds-react/TimeField",
   component: TimeField,
   tags: ["autodocs"],
   parameters: {

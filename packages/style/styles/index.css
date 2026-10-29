@@ -2,7 +2,7 @@
  * MYDS for Tailwind 4. Import it once, after Tailwind:
  *
  *   @import "tailwindcss";
- *   @import "@govtechmy/myds-style";
+ *   @import "@amerfathullah/myds-style";
  *
  * Every MYDS token becomes a Tailwind theme variable, so the utilities keep
  * their names: `<utility>-<token>`, e.g. `bg-bg-white` or `text-txt-black-900`.

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createRender, createStory } from "../utils";
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 /**
  * ### Overview
@@ -10,7 +10,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
  *
  * ### Usage
  * ```tsx
- * import { Skeleton } from "@govtechmy/myds-react/skeleton";
+ * import { Skeleton } from "@amerfathullah/myds-react/skeleton";
  *
  * <Skeleton />
  * <Skeleton shape="circle" className="size-10" />
@@ -18,7 +18,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/Skeleton",
+  title: "@amerfathullah/myds-react/Skeleton",
   component: Skeleton,
   tags: ["autodocs"],
   parameters: {

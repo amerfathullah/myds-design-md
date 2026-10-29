@@ -9,7 +9,7 @@ Each HTML/CSS component is a second implementation of the same design, kept in s
 Teams not on React are already served by two things that can't drift this way:
 
 - **DESIGN.md** describes MYDS as built, token by token and component by component, for any stack or for an AI agent building in one.
-- **The Tailwind preset** (`@govtechmy/myds-style`) works with plain HTML, so utility classes resolve to the real tokens.
+- **The Tailwind preset** (`@amerfathullah/myds-style`) works with plain HTML, so utility classes resolve to the real tokens.
 
 See [ADR-0003](../docs/adr/0003-one-implementation-react-on-the-preset.md).
 

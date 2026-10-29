@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Button } from "@govtechmy/myds-react/button";
+import { Button } from "@amerfathullah/myds-react/button";
 import {
   Dialog,
   DialogClose,
@@ -15,7 +15,7 @@ import {
   DialogBodyProps,
   DialogFooterProps,
   DialogHeaderProps,
-} from "@govtechmy/myds-react/dialog";
+} from "@amerfathullah/myds-react/dialog";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
 
@@ -25,7 +25,7 @@ import { createStory } from "../utils";
  *
  * ### Usage
  * ```tsx
- * import { Button } from "@govtechmy/myds-react/button";
+ * import { Button } from "@amerfathullah/myds-react/button";
  * import {
  *   Dialog,
  *   DialogContent,
@@ -33,7 +33,7 @@ import { createStory } from "../utils";
  *   DialogHeader,
  *   DialogTitle,
  *   DialogTrigger,
- * } from "@govtechmy/myds-react/dialog";
+ * } from "@amerfathullah/myds-react/dialog";
  *
  *    <Dialog>
  *       <DialogTrigger>
@@ -79,7 +79,7 @@ import { createStory } from "../utils";
  */
 // @ts-expect-error
 const meta: Meta = {
-  title: "@govtechmy/myds-react/Dialog",
+  title: "@amerfathullah/myds-react/Dialog",
   component: Dialog,
   render: ({ dismissible, border, align, border_header }) => {
     return (

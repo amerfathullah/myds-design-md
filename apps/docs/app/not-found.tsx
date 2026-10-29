@@ -4,7 +4,7 @@ import { getMYDSConfig, i18nUI } from "@/app/[lang]/layout.config";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import Masthead from "@/components/Masthead";
-import { ArrowBackIcon } from "@govtechmy/myds-react/icon";
+import { ArrowBackIcon } from "@amerfathullah/myds-react/icon";
 import { getRosetta } from "@/locales/_server";
 
 /**

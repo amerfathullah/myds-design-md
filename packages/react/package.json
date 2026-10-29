@@ -232,14 +232,15 @@
   },
   "devDependencies": {
     "@myds/eslint-config": "workspace:*",
-    "@swc/core": "^1.10.1",
-    "@types/node": "^22.7.5",
+    "@swc/core": "^1.16.20",
+    "@types/node": "^26.6.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.8",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "react-dom": "^18",
-    "tsup": "^8.3.5"
+    "tsup": "^9.0.0"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.1",

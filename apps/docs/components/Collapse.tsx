@@ -63,6 +63,7 @@ export default function Collapse({
     <div
       ref={containerRef}
       className="transform-gpu overflow-hidden transition-all ease-in-out motion-reduce:transition-none"
+      // eslint-disable-next-line react-hooks/refs -- only the first render's value is meant to be read here
       style={initialOpen.current || horizontal ? undefined : { height: 0 }}
     >
       <div

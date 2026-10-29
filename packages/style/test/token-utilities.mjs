@@ -51,7 +51,7 @@ export function tokenUtilities() {
 
   // Utilities the prose of DESIGN.md documents
   const prose = [
-    // Colors: primitives at an opacity, as the tags and overlays use them,
+    // Colours: primitives at an opacity, as the tags and overlays use them,
     // and classes that DESIGN.md says the preset doesn't generate
     ...["bg-gray-700/60", "bg-black", "bg-bg-black-600", "bg-bg-black-950"].map(
       (utility) => ({ utility, props: ["backgroundColor"] }),

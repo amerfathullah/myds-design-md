@@ -34,10 +34,12 @@ The MYDS preset is now native to Tailwind 4: a CSS import in place of the Tailwi
 4. **Class names.** No MYDS class changes. Some Tailwind core utilities changed in Tailwind 4, so check classes in your own markup:
    - `outline-none` is now `outline-hidden`.
    - A bare `ring` is 1px; write `ring-3` for the old 3px.
-   - Stacked variants apply left to right, so `*:hover:x` becomes `hover:*:x` and `before:data-[state=open]:x` becomes `data-[state=open]:before:x`.
+   - Stacked Tailwind variants (`hover:`, `before:`, `*:` …) apply left to right, so `*:hover:x` becomes `hover:*:x` and `before:data-[state=open]:x` becomes `data-[state=open]:before:x`.
    - `bg-gradient-to-*` now interpolates in oklab; use `bg-linear-to-*/srgb` to keep the same colours.
    - Gradient stops now begin with the gradient's position, so an arbitrary `bg-[conic-gradient(var(--tw-gradient-stops))]` renders nothing; use `bg-conic/srgb`.
-   - Tailwind 4's base styles also remove the browser's 1px padding from table cells and from inside native date and time inputs.
+   - Tailwind 4's preflight also removes the browser's 1px padding from table cells and from inside native date and time inputs.
+   - `hover:` styles now apply only on devices that can hover, so a tap on a touch screen no longer leaves them on.
+   - Tailwind 4's default `font-sans` stack starts with `-apple-system` instead of `ui-sans-serif, system-ui`. `font-body` and `font-heading` keep Tailwind 3's stack after Inter and Poppins, so put `font-body` on your page's root, as before, rather than relying on the default font.
    - `blur-sm` is now `blur-xs`, and a bare `blur` is now `blur-sm`.
    - Don't apply Tailwind's renames to `rounded-*` or `shadow-*` classes. MYDS defines both scales itself, and their names and values haven't changed: `rounded-sm` is still 6px, and only `shadow-button`, `shadow-card` and `shadow-context-menu` exist.
 

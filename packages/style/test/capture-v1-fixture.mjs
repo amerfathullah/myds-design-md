@@ -8,7 +8,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import { tokenUtilities } from "./design-tokens.mjs";
+import { tokenUtilities } from "./token-utilities.mjs";
 import { measure } from "./measure.mjs";
 
 const prefix = path.resolve(process.argv[2] ?? "");

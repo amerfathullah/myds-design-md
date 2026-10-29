@@ -5,7 +5,7 @@ import { test } from "node:test";
 import tailwindcss from "@tailwindcss/postcss";
 import postcss from "postcss";
 
-import { tokenUtilities } from "./design-tokens.mjs";
+import { tokenUtilities } from "./token-utilities.mjs";
 import { measure } from "./measure.mjs";
 
 const packageDir = new URL("..", import.meta.url).pathname;
@@ -28,7 +28,7 @@ async function compile(classes) {
 }
 
 // Colours are compared premultiplied, so 8-bit rounding at low alpha doesn't count
-function sameValue(prop, expected, actual) {
+function sameValue(expected, actual) {
   const rgba = /^rgba\((\d+), (\d+), (\d+), (\d+)\)$/;
   const [e, a] = [rgba.exec(expected), rgba.exec(actual)];
   if (!e || !a) return expected === actual;
@@ -59,7 +59,7 @@ test("every token utility DESIGN.md documents resolves as it did in v1, in both 
     for (const theme of ["light", "dark"]) {
       for (const [prop, expected] of Object.entries(v1[utility][theme])) {
         const actual = measured[utility][theme][prop];
-        if (!sameValue(prop, expected, actual)) {
+        if (!sameValue(expected, actual)) {
           differences.push(
             `${utility} (${theme}) ${prop}: v1 ${expected}, now ${actual}`,
           );

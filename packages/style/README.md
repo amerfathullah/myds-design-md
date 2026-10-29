@@ -47,7 +47,7 @@ For a Fumadocs site, add the MYDS colours for Fumadocs after its theme, and keep
 
 ### Without Tailwind
 
-`full.css` is precompiled: Tailwind's base styles, the fonts, MYDS and every class `@govtechmy/myds-react` uses.
+`full.css` is precompiled: Tailwind's preflight, the fonts, MYDS and every class `@govtechmy/myds-react` uses.
 
 ```css
 /* In your CSS entry point */

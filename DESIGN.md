@@ -1133,7 +1133,7 @@ The canvas is white and the text near-black. There is one primary colour, blue, 
 
 The front matter records the **light theme**. `colors:` holds two layers. The primitive colours are literal hex values (`primary-600: "#2563EB"`). The semantic tokens alias a primitive under their verbatim MYDS names (`bg-primary-600: "{colors.primary-600}"`), exactly as `light.css` maps them. A token with alpha can't be an alias, so those are 8-digit hex literals: `bg-white-disabled` is `gray-100` @ 40%, `#F4F4F566`. `white-disabled` is the preset's white @ 40%, which disabled fill buttons use for their label.
 
-There is no `primary` key. The Tailwind `primary` family has no `DEFAULT`, so `bg-primary` doesn't exist and inventing it would document a class nobody can write.
+There is no `primary` key. The preset's `primary` family has only numbered steps, so `bg-primary` doesn't exist and inventing it would document a class nobody can write.
 
 The design guideline's colour pages are images only, so every value here comes from `packages/style/styles/theme/{color,light,dark}.css`. Usage notes come from how the components actually use each token.
 
@@ -1415,7 +1415,7 @@ Front-matter keys follow the code: `<component>-<variant>` in the library's own 
 Rules that hold across every component:
 
 - **No `backgroundColor` means no fill.** The element inherits the surface behind it (ghost buttons, links, tab triggers, select ghost).
-- **Focus** is a 3px ring in `fr-primary` (`focus:ring focus:ring-fr-primary`) on every focusable control, danger variants included. Inputs, textareas, date and time fields and search bars also switch their border to `otl-primary-300`. Only an invalid date or time field uses `fr-danger`. Focus has no entries of its own.
+- **Focus** is a 3px ring in `fr-primary` (`focus:ring-3 focus:ring-fr-primary`) on every focusable control, danger variants included. Inputs, textareas, date and time fields and search bars also switch their border to `otl-primary-300`. Only an invalid date or time field uses `fr-danger`. Focus has no entries of its own.
 - **Press** moves a button down half a pixel.
 - **Disabled** controls use `cursor-not-allowed`. Checkbox and radio also fade to 30% opacity.
 - **Borders** are 1px (`borderColor`). Where a border is a primitive at an alpha, the entry has an 8-digit hex literal and the prose names the source.

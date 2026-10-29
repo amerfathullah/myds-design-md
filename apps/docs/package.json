@@ -7,8 +7,8 @@
     "dev": "next dev",
     "start": "next start --port 4000",
     "postinstall": "fumadocs-mdx",
-    "lint": "next lint",
-    "lint-staged": "next lint --fix"
+    "lint": "eslint app components lib",
+    "lint-staged": "eslint --fix app components lib"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.857.0",
@@ -30,13 +30,14 @@
   },
   "devDependencies": {
     "@types/mdx": "^2.0.13",
-    "@types/node": "22.5.4",
+    "@types/node": "^26.6.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
-    "eslint-config-next": "15.2.3",
+    "eslint": "^10.13.0",
+    "eslint-config-next": "16.4.3",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.10",
-    "typescript": "^5.5.4"
+    "typescript": "~6.0.3"
   }
 }

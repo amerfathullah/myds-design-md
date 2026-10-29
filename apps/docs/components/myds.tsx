@@ -184,7 +184,7 @@ export const DismissibleCalloutExample: FunctionComponent<
   );
 };
 
-interface PreviewToggleProps extends ComponentProps<typeof Toggle> {}
+type PreviewToggleProps = ComponentProps<typeof Toggle>;
 
 export const ControlledToggle: FunctionComponent<PreviewToggleProps> = (
   props,
@@ -691,7 +691,7 @@ export const DataTableRadio = {
   rowId: "id",
 };
 
-interface PreviewSummaryList extends ComponentProps<typeof SummaryList> {}
+type PreviewSummaryList = ComponentProps<typeof SummaryList>;
 
 export const PreviewSummaryList: FunctionComponent<PreviewSummaryList> = () => {
   return (

@@ -1,4 +1,12 @@
 const { resolve } = require("node:path");
+const js = require("@eslint/js");
+const tsPlugin = require("@typescript-eslint/eslint-plugin");
+const tsParser = require("@typescript-eslint/parser");
+const prettier = require("eslint-config-prettier");
+const turbo = require("eslint-config-turbo/flat").default;
+const jsxA11y = require("eslint-plugin-jsx-a11y");
+const onlyWarn = require("eslint-plugin-only-warn");
+const globals = require("globals");
 
 const project = resolve(process.cwd(), "tsconfig.json");
 
@@ -8,47 +16,47 @@ const project = resolve(process.cwd(), "tsconfig.json");
  * that utilize React.
  */
 
-/** @type {import("eslint").Linter.Config} */
-module.exports = {
-  extends: [
-    "eslint:recommended",
-    "prettier",
-    "turbo",
-    "plugin:jsx-a11y/recommended",
-    "plugin:@typescript-eslint/recommended",
-  ],
-  plugins: ["only-warn", "jsx-a11y", "@typescript-eslint"],
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
-    project,
-    ecmaVersion: "latest",
-    sourceType: "module",
+/** @type {import("eslint").Linter.Config[]} */
+module.exports = [
+  {
+    ignores: [
+      // Ignore dotfiles
+      "**/.*.js",
+      "**/node_modules/",
+      "**/dist/",
+    ],
   },
-  globals: {
-    React: true,
-    JSX: true,
-  },
-  env: {
-    browser: true,
-  },
-  settings: {
-    "import/resolver": {
-      typescript: {
+  // Force ESLint to detect .tsx files
+  { files: ["**/*.js?(x)", "**/*.ts?(x)"] },
+  js.configs.recommended,
+  prettier,
+  ...turbo,
+  jsxA11y.flatConfigs.recommended,
+  ...tsPlugin.configs["flat/recommended"],
+  {
+    plugins: { "only-warn": onlyWarn },
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
         project,
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+      globals: {
+        ...globals.browser,
+        React: true,
+        JSX: true,
       },
     },
+    settings: {
+      "import/resolver": {
+        typescript: {
+          project,
+        },
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
   },
-  ignorePatterns: [
-    // Ignore dotfiles
-    ".*.js",
-    "node_modules/",
-    "dist/",
-  ],
-  overrides: [
-    // Force ESLint to detect .tsx files
-    { files: ["*.js?(x)", "*.ts?(x)"] },
-  ],
-  rules: {
-    "@typescript-eslint/no-explicit-any": "off",
-  },
-};
+];

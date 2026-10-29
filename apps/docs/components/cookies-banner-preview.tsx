@@ -23,6 +23,7 @@ const CookiesBannerPreview = () => {
   // Reset preferences back to default when dialog closes
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- new in eslint-plugin-react-hooks 7; fixing it means restructuring the reset logic
       setPreferences({
         necessary: true,
         analytics: true,

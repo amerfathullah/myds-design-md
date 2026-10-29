@@ -2,3 +2,6 @@ packages:
   - "apps/*"
   - "packages/*"
   - "turbo/*"
+allowBuilds:
+  "@swc/core": true
+  esbuild: true

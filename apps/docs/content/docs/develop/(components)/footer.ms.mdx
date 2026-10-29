@@ -349,7 +349,6 @@ Bekas `div` yang digunakan untuk mengandungi maklumat seperti maklumat jabatan d
 ### SiteLinkGroup
 Bekas (container) yang menyusun koleksi `SiteLink` ke dalam kumpulan bertajuk. Setiap kumpulan ialah landmark `nav`. `groupTitle` berjenis string menamakannya, jadi berikan tajuk yang berbeza kepada setiap kumpulan. Jika anda menghantar elemen anda sendiri sebagai `groupTitle`, seperti tajuk (heading), namakan navigasi itu sendiri dengan `aria-labelledby` atau `aria-label`.
 
-
 <Tabs items={["Pratonton", "Kod"]}>
 <Tab value="Pratonton">
   <div className="max-w-[50%] mx-auto bg-bg-gray-50">
@@ -438,7 +437,7 @@ import { SiteLinkGroup, SiteLink } from "@govtechmy/myds-react/footer";
       type: "string",
     },
     groupTitle: {
-      description: "Tajuk untuk perkumpulan ini. String dipaparkan sebagai teks dan menamakan navigasi kumpulan. Elemen dipaparkan seperti yang diberi, dan anda menamakan navigasi dengan aria-labelledby atau aria-label.",
+      description: "Tajuk untuk perkumpulan ini. String dipaparkan sebagai teks dan menamakan navigasi kumpulan, kecuali jika anda menghantar aria-label. Elemen dipaparkan seperti yang diberi, dan anda menamakan navigasi dengan aria-labelledby atau aria-label.",
       type: "ReactNode",
     },
     linkCount: {

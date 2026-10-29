@@ -105,7 +105,9 @@ const SiteLinkGroup: ForwardRefExoticComponent<SiteLinkGroupProps> = forwardRef(
       });
     return (
       <nav
-        aria-labelledby={hasTextTitle ? titleId : undefined}
+        aria-labelledby={
+          hasTextTitle && !props["aria-label"] ? titleId : undefined
+        }
         className={clx(
           "flex flex-col gap-2",
           "max-lg:col-span-full md:gap-3",

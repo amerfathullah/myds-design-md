@@ -1,4 +1,4 @@
-# @govtechmy/myds-style
+# @amerfathullah/myds-style
 
 ## 1.0.0
 

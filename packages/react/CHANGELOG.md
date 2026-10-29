@@ -1,4 +1,4 @@
-# @govtechmy/myds-react
+# @amerfathullah/myds-react
 
 ## 1.0.2
 

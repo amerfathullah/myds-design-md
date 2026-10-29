@@ -1112,7 +1112,7 @@ components:
 
 This file describes MYDS **as built**: the Tailwind 4 preset in `packages/style` (`@amerfathullah/myds-style`, imported with `@import "@amerfathullah/myds-style"` after `@import "tailwindcss"`) and the React library in `packages/react` (`@amerfathullah/myds-react`). The design guideline in `apps/docs/content/docs/design` is used where code says nothing. Where the two disagree, this file prints what the code renders and lists the guideline's value under [Known Gaps](#known-gaps). Terms such as _semantic token_, _off-label pairing_, _page frame_, _variant_ and _state_ are defined in [`CONTEXT.md`](CONTEXT.md).
 
-Install both with `npm install @amerfathullah/myds-react @amerfathullah/myds-style`. From 2.0.0 they continue `@govtechmy/myds-*` 1.x under these names.
+Install both with `npm install @amerfathullah/myds-react @amerfathullah/myds-style`, or only `@amerfathullah/myds-style` without React. From 2.0.0 they continue `@govtechmy/myds-*` 1.x under these names.
 
 ## Overview
 

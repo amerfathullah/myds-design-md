@@ -9,7 +9,7 @@ Components are now styled for Tailwind 4 and need the Tailwind 4 `@amerfathullah
 
 ### Migrating from 1.x
 
-1. **Switch to the new package names.** 2.0.0 continues `@govtechmy/myds-*` 1.x as `@amerfathullah/myds-*`. Uninstall the `@govtechmy/myds-*` packages and install their `@amerfathullah/myds-*` successors, then replace `@govtechmy/myds-` with `@amerfathullah/myds-` in every import, CSS `@import` and `@source` path:
+1. Switch to the new package names. 2.0.0 continues `@govtechmy/myds-*` 1.x as `@amerfathullah/myds-*`. Swap each `@govtechmy/myds-*` dependency for its `@amerfathullah/myds-*` successor, then replace `@govtechmy/myds-` with `@amerfathullah/myds-` in every import, CSS `@import` and `@source` path. If you use both packages:
 
    ```sh
    npm install @amerfathullah/myds-react @amerfathullah/myds-style

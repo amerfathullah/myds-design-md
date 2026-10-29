@@ -19,7 +19,7 @@ import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InfoIcon } from "@govtechmy/myds-react/icon";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
   </Tab>
@@ -138,7 +138,7 @@ export default () => <DataTable />;
 - `data` accepts array of objects, where each object represents a row in the table.
 - `columns` accepts array of `ColumnDef`, where each object represents a column in the table.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3 overflow-auto">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -252,7 +252,7 @@ You can expand the size of the cells in a column by setting the `expandable` pro
 
 To demonstrate this, we have set the `expandable` property to `true` for the `Name` and `Position` columns. You can click on the expand icon to view the full content of the cell.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -353,7 +353,7 @@ You can add a tooltip to the column headers by setting the `tooltip` property in
 
 To demonstrate this, we have set the `tooltip` property to `Age` and `Position` column. Hover over the column header to view the tooltip.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -454,7 +454,7 @@ You can sort the data in the table by setting the `sortable` property to `true` 
 
 To demonstrate this, we have set the `sortable` property to the `Position` column. Click the sort icon to toggle the sorts available.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -553,7 +553,7 @@ To demonstrate this, we have set the `sortable` property to the `Position` colum
 
 You can enable `loading` prop to trigger skeleton loading state for the table.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable loading data={DataTableData} columns={DataTableColumns} />
@@ -653,7 +653,7 @@ You can enable `loading` prop to trigger skeleton loading state for the table.
 
 Passing an empty array to the `data` prop will render an empty state for the table.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={[]} columns={DataTableColumns} />
@@ -725,7 +725,7 @@ Enable selection mode by passing a `selection` prop to the `DataTable` component
 - `onSelectionChange`: A callback function that is triggered when the selection changes.
 - `rowId`: The unique identifier for each row in the table.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
       <div className="w-full">
@@ -935,7 +935,7 @@ You can group columns together by setting the `columns` property to an array of 
 
 Here is an example of a table with grouped columns:
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableGroupedColumns} />
@@ -1048,7 +1048,7 @@ By default, the header of the table is sticky, but it never materialised as the 
 
 To demonstrate the sticky header, lets set a fixed height for the table. Simply pass the `className` prop to the `DataTable` component with a `max-h-[300px]` class.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable className="max-h-[300px]" data={DataTableData} columns={DataTableGroupedColumns} />
@@ -1165,7 +1165,7 @@ To demonstrate the sticky header, lets set a fixed height for the table. Simply 
 3. `nest`: An object prop that contains the following properties:
    - `id_by`: The key that matches the nested array object in the `data` property.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable className="max-h-[300px]" 
@@ -1357,7 +1357,7 @@ You can pin columns to the left or right of the table by setting the `pin` prope
 - `left`: An array of column IDs to pin to the left.
 - `right`: An array of column IDs to pin to the right.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} pin={{ left: ["name"], right: ["action"]}} />
@@ -1457,7 +1457,7 @@ You can pin columns to the left or right of the table by setting the `pin` prope
 
 You can add footer per column by setting the `footer` in **ColumnDef** object of the column definition. Here is an example of a table with footer:
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableFooterColumns} />

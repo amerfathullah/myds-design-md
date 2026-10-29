@@ -1,29 +1,29 @@
-import { DocsLayout } from "fumadocs-ui/layout";
-import type { ReactNode } from "react";
+import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { getMYDSConfig } from "@/app/[lang]/layout.config";
 import { source } from "@/app/[lang]/source";
-import { RootToggle } from "fumadocs-ui/components/layout/root-toggle";
+import { SidebarTabsDropdown } from "fumadocs-ui/components/sidebar/tabs/dropdown";
 
-export default function Layout({
+export default async function Layout({
   children,
-  params: { lang },
-}: {
-  children: ReactNode;
-  params: { lang: "en" | "ms" };
-}) {
+  params,
+}: LayoutProps<"/[lang]/docs">) {
+  const { lang } = (await params) as { lang: "en" | "ms" };
   const { config, menu } = getMYDSConfig(lang);
   return (
     <DocsLayout
+      tabs={false}
       sidebar={{
         banner: (
-          <RootToggle
+          <SidebarTabsDropdown
             className="border-otl-gray-200 shadow-button hover:bg-bg-washed mx-0.5 rounded-md border transition"
             options={menu}
           />
         ),
       }}
-      tree={source.pageTree[lang]}
+      tree={source.getPageTree(lang)}
       {...config}
+      // The dropdown lists the same links, which Fumadocs 16 would repeat in the sidebar
+      links={[]}
     >
       {children}
     </DocsLayout>

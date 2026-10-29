@@ -9,7 +9,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { ArrowBackIcon, ArrowForwardIcon } from "@govtechmy/myds-react/icon";
 import { Input, InputIcon, InputAddon } from "@/components/myds";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <Input placeholder="Enter your name" />
   </Tab>
@@ -46,7 +46,7 @@ import { Input } from "@govtechmy/myds-react/input";
 
 Use the `size` prop to change the size of the input. The default size is `small`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose block space-y-1">
   
     <Input size="small" placeholder="Small" />
@@ -67,7 +67,7 @@ Use the `size` prop to change the size of the input. The default size is `small`
 
 Disable the input by setting the `disabled` prop to true.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <Input disabled placeholder="Disabled" />
   </Tab>
@@ -85,7 +85,7 @@ To use the input in an uncontrolled state, set the `defaultValue` prop to the in
 
 To use the input in the controlled state, utilize the `value` and `onChange` prop to handle the state programmatically.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose block space-y-2">
     <Input defaultValue="Uncontrolled" />
     <Input value="Controlled" />
@@ -103,7 +103,7 @@ To use the input in the controlled state, utilize the `value` and `onChange` pro
 
 You can add an icon to the input field by using the `InputIcon` component. The icon can be positioned on the `left` or `right` side of the input field. Both left and right icons can be used together.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex flex-col justify-center gap-2">
     <Input placeholder="Input + Left Icon">
       <InputIcon position="left">
@@ -160,7 +160,7 @@ You can add an icon to the input field by using the `InputIcon` component. The i
 
 You can add an addon to the input field by using the `InputAddon` component. The addon can be appended or prepended to the input field. This is useful for attaching **submit buttons**, **currency symbols** or any other control to the input field.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex flex-col gap-2">
     <Input
       placeholder="Type something here"

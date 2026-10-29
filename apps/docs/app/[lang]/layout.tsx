@@ -1,21 +1,18 @@
 import "@/app/global.css";
-import { RootProvider } from "fumadocs-ui/provider";
-import { I18nProvider as FumaI18n } from "fumadocs-ui/i18n";
+import { RootProvider } from "fumadocs-ui/provider/next";
 import { RosettaProvider } from "@/locales/_client";
 import en from "@/locales/en";
 import ms from "@/locales/ms";
 import { getRosetta } from "@/locales/_server";
 import type { Metadata } from "next";
 import { AutoToast } from "@/components/myds";
-
-interface MetadataProps {
-  params: { lang: "en" | "ms" };
-}
+import { i18nUI } from "@/app/[lang]/layout.config";
 
 export async function generateMetadata({
-  params: { lang },
-}: MetadataProps): Promise<Metadata> {
-  const { t } = getRosetta(lang as "en" | "ms");
+  params,
+}: LayoutProps<"/[lang]">): Promise<Metadata> {
+  const { lang } = (await params) as { lang: "en" | "ms" };
+  const { t } = getRosetta(lang);
 
   return {
     title: t("metadata.title"),
@@ -40,58 +37,15 @@ export async function generateMetadata({
 export default async function RootLayout({
   params,
   children,
-}: {
-  params: { lang: string };
-  children: React.ReactNode;
-}) {
+}: LayoutProps<"/[lang]">) {
+  const { lang } = (await params) as { lang: "en" | "ms" };
+
   return (
-    <>
-      <FumaI18n
-        locale={params.lang}
-        locales={[
-          {
-            name: "English",
-            locale: "en",
-          },
-          {
-            name: "Bahasa Melayu",
-            locale: "ms",
-          },
-        ]}
-        translations={
-          {
-            en: {
-              search: "Search",
-              searchNoResult: "No results found",
-              toc: "On this page",
-              tocNoHeadings: "No Headings",
-              lastUpdate: "Last updated on",
-              chooseLanguage: "Choose a language",
-              nextPage: "Next",
-              previousPage: "Previous",
-              chooseTheme: "Theme",
-              editOnGithub: "Edit on GitHub",
-            },
-            ms: {
-              search: "Cari",
-              searchNoResult: "Tiada hasil ditemui",
-              toc: "Di halaman ini",
-              tocNoHeadings: "Tiada Tajuk",
-              lastUpdate: "Dikemaskini pada",
-              chooseLanguage: "Pilih bahasa",
-              nextPage: "Seterusnya",
-              previousPage: "Sebelumnya",
-              chooseTheme: "Tema",
-              editOnGithub: "Edit di GitHub",
-            },
-          }[params.lang]
-        }
-      >
-        <RosettaProvider locales={{ en, ms }}>
-          <AutoToast />
-          <RootProvider>{children}</RootProvider>
-        </RosettaProvider>
-      </FumaI18n>
-    </>
+    <RootProvider i18n={i18nUI.provider(lang)}>
+      <RosettaProvider locales={{ en, ms }}>
+        <AutoToast />
+        {children}
+      </RosettaProvider>
+    </RootProvider>
   );
 }

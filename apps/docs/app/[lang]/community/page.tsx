@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { getRosetta } from "@/locales/_server";
 import CommunityAnnounceBar from "@/components/community/community-announce-bar";
 import CommunityHero from "@/components/community/community-hero";
@@ -11,12 +11,11 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTit
 
 export default function CommunityPage({
   params,
-}: {
-  params: { lang: "en" | "ms" };
-}) {
+}: PageProps<"/[lang]/community">) {
   const [showModal, setShowModal] = useState(false);
 
-  const { t } = getRosetta(params.lang);
+  const { lang } = use(params) as { lang: "en" | "ms" };
+  const { t } = getRosetta(lang);
 
   return (
     <>

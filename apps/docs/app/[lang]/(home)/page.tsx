@@ -7,12 +7,9 @@ import Timeline from "@/components/home/Timeline";
 import { links } from "@/lib/constant";
 import { getRosetta } from "@/locales/_server";
 
-export default async function HomePage({
-  params,
-}: {
-  params: { lang: "en" | "ms" };
-}) {
-  const { t } = getRosetta(params.lang);
+export default async function HomePage({ params }: PageProps<"/[lang]">) {
+  const { lang } = (await params) as { lang: "en" | "ms" };
+  const { t } = getRosetta(lang);
   const previewItems = [
     {
       tagKey: "Home.previewContent.items.1.tag",
@@ -47,7 +44,7 @@ export default async function HomePage({
     <>
       <main className="xl:border-otl-divider divide-otl-divider flex min-h-screen flex-col divide-y">
         <Hero />
-        <About lang={params.lang} />
+        <About lang={lang} />
         {previewItems.map((item, i) => (
           <PreviewContent
             key={i}

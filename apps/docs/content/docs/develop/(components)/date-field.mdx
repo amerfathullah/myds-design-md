@@ -10,7 +10,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export const NOW = new Date().toISOString().split("T")[0];
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <div className="flex flex-col gap-2">
       <Label htmlFor="date-field" size="small">Date of birth</Label>
@@ -56,7 +56,7 @@ export default () => (
 
 Use the `size` prop to change the checkbox size!
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3">
       <div className="flex flex-col gap-2">
@@ -91,7 +91,7 @@ To use the date field in the uncontrolled state, set the `defaultValue` prop to 
 
 To use the date field in the controlled state, set the `value` prop to the current value of the date field and provide an `onValueChange` event listener to handle the change.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
       <div className="flex flex-col gap-2">
@@ -122,7 +122,7 @@ To use the date field in the controlled state, set the `value` prop to the curre
 
 Date field can be disabled by setting the `disabled` prop to `true`. When disabled, the date field will not be interactive.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
@@ -143,7 +143,7 @@ Date field can be disabled by setting the `disabled` prop to `true`. When disabl
 
 Invalid state is triggered when a date field fails validation. To indicate an invalid date field, set the `invalid` prop to `true`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">

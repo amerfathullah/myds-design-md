@@ -18,7 +18,7 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <AlertDialog variant="success">
       <AlertDialogTrigger>
@@ -107,7 +107,7 @@ export default () => (
 
 Gunakan prop `variant` untuk menetapkan tema dialog amaran. Variasi lalai adalah `default`. Variasi yang tersedia adalah `info`, `success`, `warning`, dan `danger`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
     <Tab value="Pratonton">
         <div className="not-prose flex justify-center items-center gap-3">
             <AlertDialog variant="default">
@@ -309,7 +309,7 @@ Gunakan prop `variant` untuk menetapkan tema dialog amaran. Variasi lalai adalah
 
 Gunakan `AlertDialogTrigger` untuk membungkus elemen pencetus yang membuka dialog. Contoh di bawah menunjukkan tiga (3) butang yang membuka dialog amaran yang sama.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center gap-3">
       <AlertDialog variant="success">
@@ -375,7 +375,7 @@ Untuk menggunakan dialog amaran dalam keadaan tidak terkawal, tetapkan prop `def
 
 Untuk menggunakan dialog amaran dalam keadaan terkawal, gunakan prop `open` dan `onOpenChange` untuk mengendalikan keadaan secara programatik.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -473,7 +473,7 @@ Untuk menghalang pengguna daripada menutup dialog, tetapkan prop `dismissible` k
 
 Anda boleh melampirkan fungsi panggilan balik kepada prop `onDismiss` untuk mengendalikan acara tutup.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose space-y-2 flex flex-col items-center">
       <DismissibleAlertDialog />
@@ -517,7 +517,7 @@ Anda boleh melampirkan fungsi panggilan balik kepada prop `onDismiss` untuk meng
 
 Anda boleh menetapkan `align` kepada `DialogAction` untuk menjajarkan anak-anak kepada `start`, `end`, atau `full` lebar dialog. Secara lalai, penjajaran ditetapkan kepada `end`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -657,7 +657,7 @@ Anda boleh menetapkan `align` kepada `DialogAction` untuk menjajarkan anak-anak 
 
 Anda boleh menambah tindakan khas kepada dialog dengan menggunakan prop `action` pada `DialogAction`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
     <AlertDialog variant="danger">

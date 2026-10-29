@@ -32,7 +32,7 @@ import {
   SiteLinkGroupComponent,
 } from "@/components/myds";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview" className="not-prose"> 
+<Tabs items={["Preview", "Code"]} className="not-prose"> 
   <Tab value="Preview">
     <div className="overflow-scroll px-2 h-[250px]">
       <div >
@@ -221,7 +221,7 @@ export default () => (
 
 `FooterSection` is a grid-based layout container that organizes and partition footer content and provides the responsive behavior.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
   <Footer>
     <FooterSection className="text-txt-black-500 md:max-lg:gap-4.5 mx-auto flex w-full max-w-[1280px] flex-col justify-between border-none text-sm max-md:gap-4 lg:flex-row lg:gap-6">
@@ -263,7 +263,7 @@ export default () => (
 
 An `aside` HTML component designed to contain brand information, contact details, and social media links in the footer.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="max-w-[50%] mx-auto bg-bg-gray-50">
       <SiteInfoComponent />
@@ -348,7 +348,7 @@ An `aside` HTML component designed to contain brand information, contact details
 
 ### SiteLinkGroup
 A container that structures a collection of links (`SiteLink`) into a titled group with responsive column layout.
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
 <Tab value="Preview">
   <div className="max-w-[50%] mx-auto bg-bg-gray-50">
     <SiteLinkGroupComponent />

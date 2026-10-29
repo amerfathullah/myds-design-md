@@ -8,12 +8,11 @@ import { SearchProvider } from "@/components/icon/SearchProvider";
 import { getRosetta } from "@/locales/_server";
 import ResultMap from "@/components/icon/ResultMap";
 
-export default function IconHomepage({
+export default async function IconHomepage({
   params,
-}: {
-  params: { lang: "en" | "ms" };
-}) {
-  const { t } = getRosetta(params.lang);
+}: PageProps<"/[lang]/icon">) {
+  const { lang } = (await params) as { lang: "en" | "ms" };
+  const { t } = getRosetta(lang);
   return (
     <SearchProvider>
       <div className="container">

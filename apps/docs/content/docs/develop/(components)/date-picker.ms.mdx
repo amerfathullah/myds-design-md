@@ -10,7 +10,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export const NOW = new Date();
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <DatePicker />
   </Tab>
@@ -46,7 +46,7 @@ export default () => <DatePicker />;
 
 Gunakan prop `size` untuk menukar saiz pemilih tarikh!
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center gap-3">
       <DatePicker size="small" />
@@ -69,7 +69,7 @@ Untuk menggunakan pemilih tarikh dalam keadaan tidak terkawal, tetapkan prop `de
 
 Untuk menggunakan pemilih tarikh dalam keadaan terkawal, tetapkan prop `value` kepada nilai semasa pemilih tarikh dan sediakan pendengar acara `onValueChange` untuk mengendalikan perubahan.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -100,7 +100,7 @@ Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Tarikh
 
 Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh menghantar `Matcher | Matcher[]` yang mentakrifkan peraturan untuk melumpuhkan tarikh.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose space-y-2">
       <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh m
 
 Anda boleh menetapkan tahun maksimum dan minimum untuk pemilih tarikh dengan menghantar prop `minYear` dan `maxYear`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <DatePicker defaultValue={NOW} maxYear={2030} minYear={2020} />
@@ -199,7 +199,7 @@ Anda boleh menetapkan tahun maksimum dan minimum untuk pemilih tarikh dengan men
 
 Anda boleh menetapkan susunan pengisihan tahun dalam dropdown tahun dengan menghantar prop `yearOrder`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -227,7 +227,7 @@ Komponen ini menyokong dwibahasa, anda boleh menghantar prop `locale` untuk mene
 
 Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetapkan `ms`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <div>

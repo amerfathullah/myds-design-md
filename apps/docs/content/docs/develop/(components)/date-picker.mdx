@@ -10,7 +10,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export const NOW = new Date();
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <DatePicker />
   </Tab>
@@ -46,7 +46,7 @@ export default () => <DatePicker />;
 
 Use the `size` prop to change the date picker size!
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3">
       <DatePicker size="small" />
@@ -69,7 +69,7 @@ To use the date picker in the uncontrolled state, set the `defaultValue` prop to
 
 To use the date picker in the controlled state, set the `value` prop to the current value of the date picker and provide an `onValueChange` event listener to handle the change.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -100,7 +100,7 @@ There are many ways to interact with DatePicker `disabled` state. Date picker ca
 
 For a finer control on which dates to disable, you can pass a `Matcher | Matcher[]` that defines the rules for disabling dates.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose space-y-2">
       <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ For a finer control on which dates to disable, you can pass a `Matcher | Matcher
 
 You can set the maximum and minimum year for the date picker by passing the `minYear` and `maxYear` props.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <DatePicker defaultValue={NOW} maxYear={2030} minYear={2020} />
@@ -199,7 +199,7 @@ You can set the maximum and minimum year for the date picker by passing the `min
 
 You can set the sorting order of the years in the year dropdown by passing the `yearOrder` prop.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -227,7 +227,7 @@ To support common locales, you can pass the `locale` prop to the date picker.
 
 Default value is English `en`. To switch to Bahasa Melayu, pass `ms`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <div>

@@ -1,7 +1,8 @@
 import { FunctionComponent } from "react";
 import { Link, Button, ButtonIcon } from "@/components/myds";
-import { getMYDSConfig } from "@/app/[lang]/layout.config";
-import { HomeLayout } from "fumadocs-ui/home-layout";
+import { getMYDSConfig, i18nUI } from "@/app/[lang]/layout.config";
+import { HomeLayout } from "fumadocs-ui/layouts/home";
+import { RootProvider } from "fumadocs-ui/provider/next";
 import Masthead from "@/components/Masthead";
 import { ArrowBackIcon } from "@govtechmy/myds-react/icon";
 import { getRosetta } from "@/locales/_server";
@@ -27,7 +28,7 @@ const NotFound: FunctionComponent = () => {
   const { config } = getMYDSConfig("ms");
 
   return (
-    <>
+    <RootProvider i18n={i18nUI.provider("ms")}>
       <Masthead lang={"ms"} />
       <HomeLayout {...config}>
         <main className="flex min-h-[90vh] flex-grow flex-col items-center justify-center gap-6">
@@ -50,7 +51,7 @@ const NotFound: FunctionComponent = () => {
           </Button>
         </main>
       </HomeLayout>
-    </>
+    </RootProvider>
   );
 };
 

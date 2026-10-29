@@ -20,7 +20,7 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <Dialog>
       <DialogTrigger>
@@ -121,7 +121,7 @@ export default () => (
 
 Use the `DialogTrigger` to wrap the trigger element that opens the dialog. The example below shows three different (3) buttons opening the same dialog.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3">
       <Dialog>
@@ -196,7 +196,7 @@ To use the dialog in an uncontrolled state, set the `defaultOpen` prop to the in
 
 To use the dialog in the controlled state, utilize the `open` and `onOpenChange` prop to handle the state programmatically.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -310,7 +310,7 @@ To prevent users from dismissing the dialog, set the `dismissible` prop to `fals
 
 You can attach a callback function to the `onDismiss` prop to handle the dismiss event.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose space-y-2 flex flex-col items-center">
       <DismissibleDialog />
@@ -354,7 +354,7 @@ You can attach a callback function to the `onDismiss` prop to handle the dismiss
 
 Border can be added to the `DialogHeader` and `DialogFooter` by setting the `border` prop to `true`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
      <Dialog>
@@ -414,7 +414,7 @@ Border can be added to the `DialogHeader` and `DialogFooter` by setting the `bor
 
 You can set `align` to `DialogFooter` to align the children to the `start`, `end`, or `full` width of the dialog. By default, the alignment is set to `end`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -573,7 +573,7 @@ You can set `align` to `DialogFooter` to align the children to the `start`, `end
 
 You can add special actions to the dialog by utilising the `action` prop on the `DialogFooter`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
     <Dialog>

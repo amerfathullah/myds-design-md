@@ -1,15 +1,12 @@
-import type { ReactNode } from "react";
-import { HomeLayout } from "fumadocs-ui/home-layout";
+import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { getMYDSConfig } from "@/app/[lang]/layout.config";
 import Masthead from "@/components/Masthead";
 
-export default function Layout({
+export default async function Layout({
   children,
-  params: { lang },
-}: {
-  children: ReactNode;
-  params: { lang: "en" | "ms" };
-}): React.ReactElement {
+  params,
+}: LayoutProps<"/[lang]">): Promise<React.ReactElement> {
+  const { lang } = (await params) as { lang: "en" | "ms" };
   const { config } = getMYDSConfig(lang);
 
   return (

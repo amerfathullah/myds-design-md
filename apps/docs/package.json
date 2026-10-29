@@ -11,33 +11,30 @@
     "lint-staged": "eslint --fix app components lib"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.857.0",
+    "@aws-sdk/client-ses": "^3.1158.0",
     "@govtechmy/myds-react": "workspace:*",
     "@govtechmy/myds-style": "workspace:*",
-    "@hookform/resolvers": "^5.2.0",
-    "fumadocs-core": "14.2.1",
-    "fumadocs-mdx": "11.1.1",
-    "fumadocs-ui": "13.4.10",
-    "next": "^14.2.35",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-hook-form": "^7.61.1",
+    "@hookform/resolvers": "^6.0.2",
+    "fumadocs-core": "16.17.8",
+    "fumadocs-mdx": "15.4.10",
+    "fumadocs-ui": "16.17.8",
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-hook-form": "^7.91.0",
     "rosetta": "^1.1.0",
-    "zod": "^4.0.10"
-  },
-  "optionalDependencies": {
-    "fumadocs-docgen": "^1.3.7"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/mdx": "^2.0.13",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/mdx": "^2.0.14",
     "@types/node": "^26.6.5",
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.20",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "eslint": "^10.13.0",
     "eslint-config-next": "16.4.3",
-    "postcss": "^8.4.45",
-    "tailwindcss": "^3.4.10",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3"
   }
 }

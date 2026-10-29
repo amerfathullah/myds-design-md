@@ -9,7 +9,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InputOTP, InputOTPSlot } from "@/components/myds";
 import { InputOTPControlledExample } from "./input-otp.client";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <InputOTP maxLength={4}>
       <InputOTPSlot index={0} />
@@ -63,7 +63,7 @@ import { InputOTP, InputOTPSlot } from "@govtechmy/myds-react/input-otp";
 
 Set the `invalid` prop to true to mark the input as invalid.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <InputOTP maxLength={4} invalid>
       <InputOTPSlot index={0} />
@@ -91,7 +91,7 @@ Set the `invalid` prop to true to mark the input as invalid.
 
 Disable the input by setting the `disabled` prop to true.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <InputOTP maxLength={4} disabled defaultValue="AB12">
       <InputOTPSlot index={0} />
@@ -119,7 +119,7 @@ Disable the input by setting the `disabled` prop to true.
 
 The input can be controlled by setting the `value` and `onChange` props. In the example below, we control `InputOTP` with a state and convert the values to uppercase on change.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <InputOTPControlledExample />
   </Tab>
@@ -150,7 +150,7 @@ The input can be controlled by setting the `value` and `onChange` props. In the 
 
 Pass a regex to the `pattern` prop to only accept values of a certain pattern. For example, we can use a regex to only accept numbers:
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <InputOTP maxLength={4} pattern="^[0-9]{0,4}$">
       <InputOTPSlot index={0} />

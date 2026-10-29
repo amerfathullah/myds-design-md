@@ -17,7 +17,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export const DEFAULT_DATERANGE = { from: YESTERDAY, to: TOMORROW };
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <DateRangePicker />
   </Tab>
@@ -53,7 +53,7 @@ export default () => <DateRangePicker />;
 
 Gunakan prop `size` untuk menukar saiz pemilih julat tarikh!
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center gap-3">
       <DateRangePicker size="small" />
@@ -76,7 +76,7 @@ Untuk menggunakan pemilih julat tarikh dalam keadaan tidak terkawal, tetapkan pr
 
 Untuk menggunakan pemilih julat tarikh dalam keadaan terkawal, tetapkan prop `value` kepada nilai semasa pemilih julat tarikh dan sediakan pendengar acara `onValueChange` untuk mengendalikan perubahan.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -107,7 +107,7 @@ Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Julat 
 
 Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh menghantar `Matcher | Matcher[]` yang mentakrifkan peraturan untuk melumpuhkan tarikh.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose space-y-2">
       <div className="flex items-center gap-3">
@@ -189,7 +189,7 @@ Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh m
 
 Anda boleh menetapkan tahun maksimum dan minimum untuk pemilih julat tarikh dengan menghantar prop `minYear` dan `maxYear`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <DateRangePicker
@@ -217,7 +217,7 @@ Anda boleh menetapkan tahun maksimum dan minimum untuk pemilih julat tarikh deng
 
 Anda boleh menetapkan susunan pengisihan tahun dalam dropdown tahun dengan menghantar prop `yearOrder`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -245,7 +245,7 @@ Komponen ini menyokong dwibahasa, anda boleh menghantar prop `locale` untuk mene
 
 Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetapkan `ms`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
       <div>

@@ -20,7 +20,7 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <Dialog>
       <DialogTrigger>
@@ -111,7 +111,7 @@ export default () => (
 
 Gunakan `DialogTrigger` untuk membungkus elemen pencetus yang membuka dialog. Contoh di bawah menunjukkan tiga butang yang berbeza membuka dialog yang sama.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center gap-3">
       <Dialog>
@@ -186,7 +186,7 @@ Untuk menggunakan dialog dalam keadaan tidak terkawal, tetapkan prop `defaultOpe
 
 Untuk menggunakan dialog dalam keadaan terkawal, gunakan prop `open` dan `onOpenChange` untuk mengendalikan keadaan secara programatik.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -300,7 +300,7 @@ Untuk menghalang pengguna daripada menutup dialog, tetapkan prop `dismissible` k
 
 Anda boleh melampirkan fungsi panggilan balik kepada prop `onDismiss` untuk mengendalikan acara penutupan.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose space-y-2 flex flex-col items-center">
       <DismissibleDialog />
@@ -344,7 +344,7 @@ Anda boleh melampirkan fungsi panggilan balik kepada prop `onDismiss` untuk meng
 
 Sempadan boleh ditambah pada `DialogHeader` dan `DialogFooter` dengan menetapkan prop `border` kepada `true`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
      <Dialog>
@@ -404,7 +404,7 @@ Sempadan boleh ditambah pada `DialogHeader` dan `DialogFooter` dengan menetapkan
 
 Anda boleh menetapkan `align` pada `DialogFooter` untuk menjajarkan anak kepada `start`, `end`, atau `full` lebar dialog. Secara lalai, penjajaran ditetapkan kepada `end`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -563,7 +563,7 @@ Anda boleh menetapkan `align` pada `DialogFooter` untuk menjajarkan anak kepada 
 
 Anda boleh menambah tindakan khas pada dialog dengan menggunakan prop `action` pada `DialogFooter`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
     <Dialog>

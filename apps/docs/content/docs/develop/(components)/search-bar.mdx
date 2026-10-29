@@ -37,7 +37,7 @@ import {
   UserIcon,
 } from "@govtechmy/myds-react/icon";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose h-[420px]">
     <SearchBarControlledStateExample />
   </Tab>
@@ -180,7 +180,7 @@ export default () => (
 
 Use the `size` prop to change the search bar's size.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Small">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex flex-col gap-4">
     <SearchBar size="small">
       <SearchBarInputContainer>
@@ -239,7 +239,7 @@ Use the `size` prop to change the search bar's size.
 
 You can use `SearchBarClearButton` to show a clear button.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
     <SearchBarClearButtonExample />
   </Tab>
@@ -278,7 +278,7 @@ You can use `SearchBarClearButton` to show a clear button.
 
 Show a hint with `SearchBarHint`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
 <Tab value="Preview" className="not-prose">
   <SearchBar size="large">
     <SearchBarInputContainer>
@@ -317,7 +317,7 @@ Show a hint with `SearchBarHint`.
 
 You can show search results or suggestions with the `SearchBarResults`, `SearchBarResultsList` and `SearchBarResultsItem` components.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose h-[340px]">
     <SearchBarResultsExample />
   </Tab>
@@ -368,7 +368,7 @@ You can show search results or suggestions with the `SearchBarResults`, `SearchB
 
 You can also group results with the `SearchBarResultsGroup` component:
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
 <Tab value="Preview" className="not-prose h-[420px]">
   <SearchBarGroupedResultsExample />
 </Tab>
@@ -439,7 +439,7 @@ The search bar must be controlled with props:
 
 In the example below, we also keep track of whether the search bar is focused or not with a `hasFocus` state. This lets us open or close `SearchBarResults` based on the input's value and focus state.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose h-[420px]">
     <SearchBarControlledStateExample />
   </Tab>

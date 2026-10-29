@@ -5,7 +5,7 @@ import {
   DocsBody,
   DocsDescription,
   DocsTitle,
-} from "fumadocs-ui/page";
+} from "fumadocs-ui/layouts/docs/page";
 import { notFound } from "next/navigation";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { Heading } from "fumadocs-ui/components/heading";
@@ -14,12 +14,11 @@ import { darkify } from "@/lib/constant";
 import { getRosetta } from "@/locales/_server";
 import { ImgHTMLAttributes } from "react";
 
-interface PageParams {
-  params: { slug?: string[]; lang: string };
-}
-
-export default async function Page({ params }: PageParams) {
-  const page = source.getPage(params.slug, params.lang);
+export default async function Page({
+  params,
+}: PageProps<"/[lang]/docs/[[...slug]]">) {
+  const { slug, lang } = await params;
+  const page = source.getPage(slug, lang);
   if (!page) notFound();
 
   const MDX = page.data.body;
@@ -103,9 +102,12 @@ export async function generateStaticParams() {
   return source.generateParams();
 }
 
-export function generateMetadata({ params }: PageParams) {
-  const { t } = getRosetta(params.lang as "en" | "ms");
-  const page = source.getPage(params.slug, params.lang);
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/docs/[[...slug]]">) {
+  const { slug, lang } = await params;
+  const { t } = getRosetta(lang as "en" | "ms");
+  const page = source.getPage(slug, lang);
   if (!page) notFound();
 
   return {

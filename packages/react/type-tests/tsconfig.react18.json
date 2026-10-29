@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.react19.json",
+  "compilerOptions": {
+    "paths": {
+      "react": ["../node_modules/@types/react-18/index.d.ts"],
+      "react/*": ["../node_modules/@types/react-18/*.d.ts"]
+    }
+  }
+}

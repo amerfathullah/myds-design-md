@@ -74,6 +74,8 @@ const Calendar: FC<CalendarProps> = ({
 
   return (
     <DayPicker
+      // DayPicker gets no `locale` (it would move the week start), so it would set lang="en-US"
+      lang={locale?.code}
       showOutsideDays={showOutsideDays}
       month={month}
       onMonthChange={setMonth}
@@ -107,6 +109,8 @@ const Calendar: FC<CalendarProps> = ({
         day_button: clx(
           buttonVariants({ variant: "default-ghost" }),
           "aspect-square h-full w-full font-normal justify-center disabled:bg-transparent",
+          // A focused day that is disabled gets aria-disabled, not disabled, so it keeps focus
+          "aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-txt-black-disabled",
           "[.selected:not(.in-range)_&]:bg-primary-600 [.selected:not(.in-range)_&]:text-white",
           "[.today:not(.selected)_&]:text-txt-primary [.today:selected)_&]:text-white",
         ),

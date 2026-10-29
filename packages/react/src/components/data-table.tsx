@@ -1,19 +1,28 @@
 import {
-  type Table as TTable,
+  type CellContext,
   type Column,
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getSortedRowModel,
-  getFacetedUniqueValues,
-  RowData,
-  RowSelectionState,
+  type ColumnDef as TanStackColumnDef,
+  type ExpandedState,
+  type ReactTable,
+  type Row,
+  type RowData,
+  type RowSelectionState,
+  columnOrderingFeature,
+  columnPinningFeature,
+  columnSizingFeature,
+  columnVisibilityFeature,
   createColumnHelper,
-  Row,
-  CellContext,
-  ExpandedState,
-  getExpandedRowModel,
+  createExpandedRowModel,
+  createSortedRowModel,
+  flexRender,
+  metaHelper,
+  rowExpandingFeature,
+  rowPaginationFeature,
+  rowSelectionFeature,
+  rowSortingFeature,
+  sortFns,
+  tableFeatures,
+  useTable,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -51,21 +60,46 @@ import {
 import { Checkbox } from "./checkbox";
 import { cva } from "class-variance-authority";
 /**
- * Way to define the ColumnMeta type in @tanstack/react-table
- * @see https://tanstack.com/table/v8/docs/api/core/column-def#meta
+ * The `meta` of a DataTable column definition
+ * @see https://tanstack.com/table/latest/docs/guide/table-and-column-meta
  */
-declare module "@tanstack/react-table" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    className?: {
-      header?: string;
-      cell?: string;
-    };
-    sortable?: boolean;
-    expandable?: boolean;
-    tooltip?: ReactNode;
-  }
+interface DataTableColumnMeta {
+  className?: {
+    header?: string;
+    cell?: string;
+  };
+  sortable?: boolean;
+  expandable?: boolean;
+  tooltip?: ReactNode;
 }
+
+/**
+ * The TanStack Table features DataTable registers. Only their APIs exist on the
+ * table, column, row and cell objects that column definitions receive.
+ * Pagination is registered for `table.getRowCount()` alone: without a paginated
+ * row model, no rows are sliced.
+ */
+const dataTableFeatures = tableFeatures({
+  columnVisibilityFeature,
+  columnOrderingFeature,
+  columnPinningFeature,
+  columnSizingFeature,
+  rowExpandingFeature,
+  rowPaginationFeature,
+  rowSelectionFeature,
+  rowSortingFeature,
+  expandedRowModel: createExpandedRowModel(),
+  sortedRowModel: createSortedRowModel(),
+  sortFns,
+  columnMeta: metaHelper<DataTableColumnMeta>(),
+});
+type DataTableFeatures = typeof dataTableFeatures;
+
+type ColumnDef<TData extends RowData, TValue = unknown> = TanStackColumnDef<
+  DataTableFeatures,
+  TData,
+  TValue
+>;
 
 interface DataTableProps<TData extends Record<string, any>> {
   className?: string;
@@ -76,8 +110,12 @@ interface DataTableProps<TData extends Record<string, any>> {
     id_by: keyof TData;
     mode: "checkbox" | "radio";
     onSelectionChange?: (value: string[]) => void;
-    enableRowSelection?: boolean | ((row: Row<TData>) => boolean);
-    enableSubRowSelection?: boolean | ((row: Row<TData>) => boolean);
+    enableRowSelection?:
+      | boolean
+      | ((row: Row<DataTableFeatures, TData>) => boolean);
+    enableSubRowSelection?:
+      | boolean
+      | ((row: Row<DataTableFeatures, TData>) => boolean);
   };
   pin?: {
     left?: string[];
@@ -136,15 +174,19 @@ const cell_cva = cva([
   "data-[expanded=false]:truncate data-[expanded=false]:max-w-[230px]",
 ]);
 
-interface DataTableContextProps<TData extends Record<string, any>> {
-  table: TTable<TData> | null;
+interface DataTableContextProps {
+  /**
+   * The rendering components don't depend on the row type, and TanStack's
+   * table type is invariant in it, so the context holds the table untyped.
+   */
+  table: ReactTable<DataTableFeatures, any> | null;
   expandableColumns: Record<string, any>;
   toggleColumnWidth: (columnId: string) => void;
-  loading?: DataTableProps<TData>["loading"];
-  emptyState?: DataTableProps<TData>["emptyState"];
+  loading?: DataTableProps<any>["loading"];
+  emptyState?: DataTableProps<any>["emptyState"];
 }
 
-const DataTableContext = createContext<DataTableContextProps<any>>({
+const DataTableContext = createContext<DataTableContextProps>({
   table: null,
   expandableColumns: {},
   toggleColumnWidth: () => {},
@@ -184,42 +226,45 @@ const DataTableProvider = <TData extends Record<string, any>>({
     }
   }, [columns, selection?.mode]);
 
-  const table = useReactTable<TData>({
+  const table = useTable<DataTableFeatures, TData>({
+    features: dataTableFeatures,
     data,
     columns: _columns,
     state: {
       expanded: expandedSelection,
       rowSelection: rowSelection,
       columnPinning: {
-        left: pin?.left,
-        right: pin?.right,
+        start: pin?.left ?? [],
+        end: pin?.right ?? [],
       },
     },
     enableRowSelection: selection?.enableRowSelection,
     enableSubRowSelection: selection?.enableSubRowSelection,
     enableMultiRowSelection: selection?.mode === "checkbox",
+    enableRowRangeSelection: false,
     getRowId: selection?.id_by
       ? (row) => row[selection.id_by] as string
       : undefined,
     getSubRows: nest ? (row) => row[nest.id_by] : undefined,
     onExpandedChange: setExpandedSelection,
     onRowSelectionChange: setRowSelection,
-    getExpandedRowModel: getExpandedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     debugTable: false,
     debugHeaders: false,
   });
 
   useEffect(() => {
     if (!selection) return;
-    selection?.onSelectionChange?.(Object.keys(table.getState().rowSelection));
-  }, [table.getState().rowSelection]);
+    selection?.onSelectionChange?.(Object.keys(rowSelection));
+  }, [rowSelection]);
 
   return (
     <DataTableContext.Provider
-      value={{ table, expandableColumns, toggleColumnWidth, ...props }}
+      value={{
+        table: table as ReactTable<DataTableFeatures, any>,
+        expandableColumns,
+        toggleColumnWidth,
+        ...props,
+      }}
     >
       <Table
         className={className}
@@ -253,11 +298,11 @@ const DataTableHeader: FunctionComponent = () => {
                   key={header.id}
                   colSpan={header.colSpan}
                   data-expanded={expandableColumns[header.id]}
-                  data-pinned={header.column.getIsPinned()}
+                  data-pinned={getPinnedSide(header.column)}
                   className={clx(
                     th_cva({ expandable, sortable }),
                     pin_cva({
-                      pin_direction: header.column.getIsPinned(),
+                      pin_direction: getPinnedSide(header.column),
                       pin_last: header.column.getIsLastColumn(
                         header.column.getIsPinned(),
                       ),
@@ -358,11 +403,11 @@ const DataTableBody: FunctionComponent = () => {
                     id={cell.id}
                     key={cell.id}
                     data-expanded={expandableColumns[cell.column.id]}
-                    data-pinned={cell.column.getIsPinned()}
+                    data-pinned={getPinnedSide(cell.column)}
                     className={clx(
                       cell_cva(),
                       pin_cva({
-                        pin_direction: cell.column.getIsPinned(),
+                        pin_direction: getPinnedSide(cell.column),
                         pin_last: cell.column.getIsLastColumn(
                           cell.column.getIsPinned(),
                         ),
@@ -413,11 +458,11 @@ const DataTableFooter: FunctionComponent = () => {
               key={header.id}
               colSpan={header.colSpan}
               data-expanded={expandableColumns[header.column.id]}
-              data-pinned={header.column.getIsPinned()}
+              data-pinned={getPinnedSide(header.column)}
               className={clx(
                 cell_cva(),
                 pin_cva({
-                  pin_direction: header.column.getIsPinned(),
+                  pin_direction: getPinnedSide(header.column),
                   pin_last: header.column.getIsLastColumn(
                     header.column.getIsPinned(),
                   ),
@@ -441,11 +486,10 @@ const DataTableFooter: FunctionComponent = () => {
 };
 
 const CheckboxColumn = <TData extends Record<string, any>>() => {
-  const columnHelper = createColumnHelper<TData>();
+  const columnHelper = createColumnHelper<DataTableFeatures, TData>();
   return columnHelper.display({
     id: "_checkbox",
     size: 46,
-    enableResizing: true,
     header: ({ table }) => (
       <Checkbox
         key="checkbox-all"
@@ -471,11 +515,10 @@ const CheckboxColumn = <TData extends Record<string, any>>() => {
 };
 
 const RadioColumn = <TData extends Record<string, any>>() => {
-  const columnHelper = createColumnHelper<TData>();
+  const columnHelper = createColumnHelper<DataTableFeatures, TData>();
   return columnHelper.display({
     id: "_radio",
     size: 46,
-    enableResizing: false,
     header: ({ table }) => (
       <div className="flex items-center gap-1">
         <Button
@@ -516,7 +559,7 @@ const RadioColumn = <TData extends Record<string, any>>() => {
 };
 
 const ExpandCell = <TData extends Record<string, any>>(
-  { row, getValue }: CellContext<TData, unknown>,
+  { row, getValue }: CellContext<DataTableFeatures, TData, unknown>,
   cell?: ReactNode,
 ) => {
   const useDefault = !cell || JSON.stringify(cell) === JSON.stringify({});
@@ -546,13 +589,26 @@ const ExpandCell = <TData extends Record<string, any>>(
   );
 };
 
+/**
+ * The side a column is pinned to. DataTable's `pin.left` columns are TanStack's
+ * `start` region and `pin.right` columns its `end` region.
+ */
+const getPinnedSide = <TData extends Record<string, any>>(
+  column: Column<DataTableFeatures, TData>,
+): "left" | "right" | false => {
+  const position = column.getIsPinned();
+  if (position === "start") return "left";
+  if (position === "end") return "right";
+  return false;
+};
+
 const getCommonPinningStyles = <TData extends Record<string, any>>(
-  column: Column<TData>,
+  column: Column<DataTableFeatures, TData>,
 ): CSSProperties => {
   const isPinned = column.getIsPinned();
   return {
-    left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
-    right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
+    left: isPinned === "start" ? `${column.getStart("start")}px` : undefined,
+    right: isPinned === "end" ? `${column.getAfter("end")}px` : undefined,
     width: isPinned ? column.getSize() : undefined,
   };
 };
@@ -585,4 +641,4 @@ const DataTable = <TData extends Record<string, any>>(
 };
 DataTable.displayName = "DataTable";
 
-export { DataTable, Cell, type ColumnDef };
+export { DataTable, Cell, type ColumnDef, type DataTableFeatures };

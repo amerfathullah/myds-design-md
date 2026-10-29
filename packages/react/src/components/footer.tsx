@@ -5,7 +5,6 @@ import {
   forwardRef,
   ForwardRefExoticComponent,
   isValidElement,
-  ReactElement,
   ReactNode,
 } from "react";
 import { clx } from "../utils";
@@ -89,9 +88,9 @@ const SiteLinkGroup: ForwardRefExoticComponent<SiteLinkGroupProps> = forwardRef(
     const processedChildren = Children.toArray(children)
       .slice(0, linkCount)
       .map((child, index) => {
-        if (!isValidElement(child)) return child;
+        if (!isValidElement<{ className?: string }>(child)) return child;
 
-        return cloneElement(child as ReactElement<any>, {
+        return cloneElement(child, {
           className: clx(
             "line-clamp-1 lg:col-span-full text-txt-black-700",
             child.props.className,

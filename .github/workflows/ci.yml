@@ -34,3 +34,12 @@ jobs:
 
       - name: Build @govtechmy/myds-react
         run: pnpm build --filter=@govtechmy/myds-react
+
+      - name: Lint @govtechmy/myds-react
+        run: pnpm --filter @govtechmy/myds-react lint
+
+      - name: Check @govtechmy/myds-react exports
+        run: pnpm --filter @govtechmy/myds-react check-exports
+
+      - name: Type-check @govtechmy/myds-react against React 18 and 19 types
+        run: pnpm --filter @govtechmy/myds-react check-types

@@ -9,6 +9,7 @@ module.exports = [
       "node_modules/",
       ".next/",
       "coverage/",
+      "type-tests/",
       "tsup.config.ts",
       "eslint.config.js",
     ],

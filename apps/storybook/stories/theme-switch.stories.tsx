@@ -41,6 +41,15 @@ const meta = {
         "Array of theme objects containing theme name and associated icon.",
       control: "object",
     },
+    selectLabel: {
+      table: {
+        type: { summary: "string" },
+        defaultValue: { summary: '"Theme"' },
+      },
+      description:
+        'Accessible name of the select trigger, when `as="select"`. Screen readers announce it; it is not shown.',
+      control: "text",
+    },
   },
 } satisfies Meta<typeof ThemeSwitch>;
 

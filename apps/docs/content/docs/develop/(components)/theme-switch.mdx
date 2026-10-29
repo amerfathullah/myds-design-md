@@ -95,6 +95,8 @@ import { ThemeSwitch } from "@govtechmy/myds-react/theme-switch";
 
 You can also use `ThemeSwitch` as a select dropdown, allowing users to choose from a list of themes.
 
+Screen readers announce the select as "Theme", followed by the current theme. Set `selectLabel` to name it in your site's language, for example `selectLabel="Tema"`.
+
 <Tabs items={["Preview", "Code"]}>
 <Tab value="Preview">
   <div className="flex justify-center">
@@ -255,6 +257,12 @@ import { ThemeSwitch } from "@govtechmy/myds-react/theme-switch";
           </code>
         </pre>
       ),
+    },
+    selectLabel: {
+      description:
+        'Accessible name of the select, when `as="select"`. Screen readers announce it; it is not shown.',
+      type: "string",
+      default: "Theme",
     },
   }}
 />

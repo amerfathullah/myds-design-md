@@ -9,7 +9,7 @@ import { clx } from "../utils";
 
 const skeleton_cva = cva(
   [
-    "animate-shimmer direction-reverse from-bg-black-100 via-bg-black-300 to-bg-black-100 bg-gradient-to-r bg-[length:200%_50%]",
+    "animate-shimmer direction-reverse from-bg-black-100 via-bg-black-300 to-bg-black-100 bg-linear-to-r/srgb bg-[length:200%_50%]",
     "motion-reduce:animate-none motion-reduce:bg-none motion-reduce:bg-bg-black-100",
   ],
   {

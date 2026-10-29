@@ -1,12 +1,13 @@
-@import "./theme/color.css";
-@import "./theme/light.css";
-@import "./theme/dark.css";
-
+/* The precompiled full.css: Tailwind, MYDS and every class @govtechmy/myds-react uses */
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap");
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@import "./index.css";
+
+@source "../../react/src";
+@source not "../../react/src/**/*.test.ts";
+/* The whole type scale, which full.css has always shipped */
+@source inline("text-{heading-{xl,lg,md,sm,xs,2xs},body-{xl,lg,md,sm,xs}}");
 
 @layer base {
   html {
@@ -22,7 +23,7 @@
   }
 
   :focus:not(:focus-visible) {
-    @apply outline-none;
+    @apply outline-hidden;
   }
 }
 

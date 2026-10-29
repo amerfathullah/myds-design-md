@@ -37,7 +37,7 @@ type CookieBannerProps = ComponentProps<typeof Dialog> & {
 
 const cookie_content_cva = cva([
   "bg-bg-white p-4.5 shadow-card border-otl-gray-200 fixed bottom-0 right-0 z-30 max-w-[500px]",
-  "space-y-1 rounded-lg border transition-all outline-none",
+  "space-y-1 rounded-lg border transition-all outline-hidden",
   "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-full data-[state=open]:fade-in data-[state=open]:duration-400",
   "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-full data-[state=closed]:fade-out data-[state=closed]:duration-200",
   "sm:mb-4 sm:mr-4 sm:p-6",
@@ -62,7 +62,7 @@ const CookieBanner: FunctionComponent<CookieBannerProps> = ({
             onInteractOutside={resetPreferences}
             {...props}
           >
-            <DialogClose className="ring-fr-primary absolute right-0 top-0 mr-4 mt-4 rounded-md p-1.5 outline-none transition-all focus:ring">
+            <DialogClose className="ring-fr-primary absolute right-0 top-0 mr-4 mt-4 rounded-md p-1.5 outline-hidden transition-all focus:ring-3">
               <CrossIcon className="size-4 shrink-0" />
             </DialogClose>
             {children}

@@ -37,7 +37,7 @@ We look forward to see what you may bring to MYDS.
 
 ### 1. Tailwind Intellisense Workaround
 
-MYDS incorporates a unified tailwind config file, as the base config for multiple apps/packages. If you are using Tailwind Intellisense extension on VSCode, you may lose the extension's ability to auto-suggest and CSS preview if you work within `packages/**`. This is because the extension requires `tailwind.config` to be available in the local package workspace, which is not defined in individual packages.
+MYDS has no Tailwind config file: Tailwind 4 reads the theme from a stylesheet that imports `@govtechmy/myds-style`. The Tailwind Intellisense extension on VSCode looks for that stylesheet in the folder you work in, so inside `packages/**` it finds none and stops suggesting classes and previewing CSS.
 
 To solve this, add the following in your VSCode **Workspace settings** (_Not your User settings_):
 
@@ -46,11 +46,12 @@ To solve this, add the following in your VSCode **Workspace settings** (_Not you
 {
   "tailwindCSS.experimental.configFile": {
     "apps/docs/app/global.css": "apps/docs/**",
-    "packages/tailwindcss/tailwind.config.ts": "packages/**"
+    "apps/standard/app/global.css": "apps/standard/**",
+    "apps/storybook/.storybook/global.css": ["apps/storybook/**", "packages/**"]
   }
 }
 ```
 
-This will override Intellisense's auto-config-locator to point to the defined config files and together with its glob scope.
+This will override Intellisense's auto-config-locator to point to the defined stylesheets and together with their glob scopes.
 
 Made with ❤️ by GNU, Kementerian Digital

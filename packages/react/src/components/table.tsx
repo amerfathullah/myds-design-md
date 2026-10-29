@@ -49,7 +49,7 @@ const TableRow: ForwardRefExoticComponent<ComponentProps<"tr">> = forwardRef(
       ref={ref}
       className={clx(
         "*:border-otl-gray-200 *:border-b",
-        "[&_th]:first:border-t-2 [&_th]:last:border-b-2 [&_th]:only:border-t-0",
+        "first:[&_th]:border-t-2 last:[&_th]:border-b-2 only:[&_th]:border-t-0",
         className,
       )}
       {...props}

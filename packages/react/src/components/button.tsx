@@ -24,9 +24,9 @@ import { Slot } from "@radix-ui/react-slot";
 const button_cva = cva(
   [
     "group flex select-none items-center gap-1.5 rounded-md w-fit",
-    "font-body font-medium outline-none transition disabled:cursor-not-allowed",
+    "font-body font-medium outline-hidden transition disabled:cursor-not-allowed",
     "text-center active:translate-y-[0.5px]",
-    "focus:ring focus:ring-fr-primary",
+    "focus:ring-3 focus:ring-fr-primary",
   ],
   {
     variants: {

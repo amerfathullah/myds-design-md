@@ -51,7 +51,7 @@ const slot_cva = cva(
   {
     variants: {
       active: {
-        true: "z-10 border-otl-primary-300 ring ring-otl-primary-200 group-has-[input[aria-invalid=true]]:ring-otl-danger-200",
+        true: "z-10 border-otl-primary-300 ring-3 ring-otl-primary-200 group-has-[input[aria-invalid=true]]:ring-otl-danger-200",
         false: "",
       },
     },

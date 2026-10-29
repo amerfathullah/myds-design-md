@@ -8,7 +8,7 @@ import { Pill, PillWithTrailingXButton } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center gap-1">
     <Pill>New</Pill>
     <Pill>Trending</Pill>
@@ -48,7 +48,7 @@ export default () => <Pill>Trending</Pill>;
 
 Gunakan prop `size` untuk menukar saiz pil.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center items-end gap-1">
       <Pill size="small">small</Pill>
       <Pill size="medium">medium</Pill>
@@ -70,7 +70,7 @@ Gunakan prop `size` untuk menukar saiz pil.
 
 Hantarkan fungsi panggil balik ke prop `onDismiss` untuk menunjukkan butang "x" di belakang.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center items-end gap-1">
       <PillWithTrailingXButton>Dengan butang "x" mengekori</PillWithTrailingXButton>
   </Tab>
@@ -88,7 +88,7 @@ Hantarkan fungsi panggil balik ke prop `onDismiss` untuk menunjukkan butang "x" 
 
 Pil boleh dinyahaktifkan dengan menetapkan prop `disabled` kepada `true`. Apabila dinyahaktifkan, pil tidak akan interaktif. Jika prop `onDismiss` ditetapkan, butang "x" akan disembunyikan.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center items-end gap-1">
       <PillWithTrailingXButton>Enabled</PillWithTrailingXButton>
       <PillWithTrailingXButton disabled>Disabled</PillWithTrailingXButton>

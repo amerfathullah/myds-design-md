@@ -11,7 +11,7 @@ import { Link } from "@/components/myds";
 import NextLink from "next/link";
 import { InfoIcon } from "@govtechmy/myds-react/icon";
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Preview">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="justify-center relative not-prose">
       <Link href="/" primary underline="always">
@@ -63,7 +63,7 @@ export default () => (
 Sekiranya anda perlu menggunakan komponen `Link` daripada pakej yang lain, anda boleh
 menggunakan prop `asChild` seperti berikut (Next.js sebagai contoh):
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Preview">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <Link asChild>
       <NextLink href="#using-aschild-for-custom-links">
@@ -101,7 +101,7 @@ export const Link = (props) => (
 
 Prop ini menetapkan sama ada pautan dibuka dalam tab baharu dengan menggunakan `target="_blank"`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Preview">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <Link href="https://digital.gov.my" newTab>Ministry of Digital</Link>
   </Tab>
@@ -129,7 +129,7 @@ Prop ini menetapkan sama ada pautan dibuka dalam tab baharu dengan menggunakan `
 
 Prop ini digunakan untuk menetapkan warna teks pautan.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Preview">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="space-y-2">
       <div className="flex justify-center items-center gap-2">
@@ -153,7 +153,7 @@ Prop ini digunakan untuk menetapkan warna teks pautan.
 
 Prop ini digunakan untuk menetapkan waktu pautan digaris bawah.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Preview">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="space-y-2">
       <div className="flex justify-center items-center h-fit gap-2 not-prose">

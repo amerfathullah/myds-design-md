@@ -9,7 +9,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { ArrowBackIcon, ArrowForwardIcon } from "@govtechmy/myds-react/icon";
 import { Input, InputIcon, InputAddon } from "@/components/myds";
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <Input placeholder="Masukkan nama anda" />
   </Tab>
@@ -46,7 +46,7 @@ import { Input } from "@govtechmy/myds-react/input";
 
 Gunakan prop `size` untuk menukar saiz input. Saiz lalai adalah `small`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose block space-y-1">
   
     <Input size="small" placeholder="Kecil" />
@@ -67,7 +67,7 @@ Gunakan prop `size` untuk menukar saiz input. Saiz lalai adalah `small`.
 
 Nonaktifkan input dengan menetapkan prop `disabled` kepada true.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <Input disabled placeholder="Dinonaktifkan" />
   </Tab>
@@ -85,7 +85,7 @@ Untuk menggunakan input dalam keadaan tidak terkawal, tetapkan prop `defaultValu
 
 Untuk menggunakan input dalam keadaan terkawal, gunakan prop `value` dan `onChange` untuk mengendalikan keadaan secara programatik.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose block space-y-2">
     <Input defaultValue="Tidak Terkawal" />
     <Input value="Terkawal" />
@@ -103,7 +103,7 @@ Untuk menggunakan input dalam keadaan terkawal, gunakan prop `value` dan `onChan
 
 Anda boleh menambah ikon pada medan input dengan menggunakan komponen `InputIcon`. Ikon boleh diletakkan di sebelah `kiri` atau `kanan` medan input. Kedua-dua ikon kiri dan kanan boleh digunakan bersama.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex flex-col justify-center gap-2">
     <Input placeholder="Input + Ikon Kiri">
       <InputIcon position="left">
@@ -160,7 +160,7 @@ Anda boleh menambah ikon pada medan input dengan menggunakan komponen `InputIcon
 
 Anda boleh menambah tambahan pada medan input dengan menggunakan komponen `InputAddon`. Tambahan boleh ditambah atau disisipkan pada medan input. Ini berguna untuk melampirkan **butang hantar**, **simbol mata wang** atau sebarang kawalan lain pada medan input.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex flex-col gap-2">
     <Input
       placeholder="Taip sesuatu di sini"

@@ -20,7 +20,7 @@ import Preview from "@/components/preview";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
     <div className="flex flex-col gap-10">
       <AutoPagination
@@ -115,7 +115,7 @@ Use the `type` props to change the type of the `AutoPagination` component. Examp
 2. **simple**: Suitable for simpler navigation where users primarily move forward or backward.
 3. **full**: Similar to the `simple` type, this type displays the current page and total pages on the left and navigation buttons on far right.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
     <div className="flex flex-col gap-10">
       <AutoPagination
@@ -180,7 +180,7 @@ Use the `type` props to change the type of the `AutoPagination` component. Examp
 
 Opting into using `AutoPagination` or manual assembly of pagination subcomponents necessitates into the usage of props such as `page`, `limit` and `count`. The functionality and look of the pagination components will be influenced by them.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
     <div className="flex flex-col gap-10 justify-center items-center">
       <p className="text-md font-bold">AutoPagination</p>

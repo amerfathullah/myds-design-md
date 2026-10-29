@@ -8,7 +8,7 @@ import { Checkbox, Label } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <Checkbox defaultChecked />
   </Tab>
@@ -44,7 +44,7 @@ export default () => <Checkbox />;
 
 Use the `size` prop to change the checkbox size!
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3">
       <Checkbox defaultChecked size="small" />
@@ -67,7 +67,7 @@ The `checked` prop allows you to control the state of the checkbox. If you don't
 
 To manage the state of controlled checkboxes, you need to provide the `checked` prop and handle via `onCheckedChange` event listener.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center">
       <Label className="flex items-center gap-2">
@@ -102,7 +102,7 @@ To manage the state of controlled checkboxes, you need to provide the `checked` 
 
 Checkbox can be disabled by setting the `disabled` prop to `true`. When disabled, the checkbox will not be interactive.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <Label className="flex items-center gap-2">
@@ -125,7 +125,7 @@ Checkbox can be disabled by setting the `disabled` prop to `true`. When disabled
 
 Indeterminate state is used when a checkbox is part of a group of checkboxes and some of the checkboxes are checked while others are not. It is commonly used in a parent checkbox to indicate that some of its children checkboxes are checked.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <Label className="flex items-center gap-2">

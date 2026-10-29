@@ -16,7 +16,7 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
   <Callout>
       <CalloutTitle>Title</CalloutTitle>
@@ -83,7 +83,7 @@ export default () => (
 
 Use the `variant` prop to change the callout style!
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
   <div className="space-y-2 not-prose">
   <Callout>
@@ -182,7 +182,7 @@ Use the `variant` prop to change the callout style!
 A basic callout consisting of **title** and **action** will be displayed an **inline** manner,
 while callouts with all three elements (**title**, **content** & **action**) will be displayed in a **stacked** manner.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
   <div className="space-y-2 not-prose">
   <Callout>
@@ -235,7 +235,7 @@ To capture the dismiss event, you may use the `onDismiss` prop.
 
 To dismiss the callout via event listener, simply wrap the target element with `CalloutClose`. `CalloutClose` will also trigger the onDismiss event, if defined.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose space-y-2">
       <DismissibleCalloutExample

@@ -11,7 +11,7 @@ import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Toggle, ToggleThumb, label } from "@/components/myds";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview" className="not-prose">
+<Tabs items={["Preview", "Code"]} className="not-prose">
   <Tab value="Preview">
       <div className="min-w-[360px] space-y-3">
         <div className="flex justify-between items-center">
@@ -98,7 +98,7 @@ export default () => (
 
 Gunakan prop `size` untuk menukar saiz label!
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
   <div className="flex items-center">
     <Label size="small" className="items-center flex justify-between w-full">
@@ -175,7 +175,7 @@ import { Toggle, ToggleThumb } from "@govtechmy/myds-react/toggle";
 
 Gunakan prop `asChild` untuk memaparkan label menggunakan komponen `Slot`!
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <Label asChild>
        <span>Label Dihasilkan Secara Tersuai</span>

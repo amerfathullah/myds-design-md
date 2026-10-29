@@ -17,7 +17,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export const DEFAULT_DATERANGE = { from: YESTERDAY, to: TOMORROW };
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <DateRangePicker />
   </Tab>
@@ -53,7 +53,7 @@ export default () => <DateRangePicker />;
 
 Use the `size` prop to change the date range picker size!
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3">
       <DateRangePicker size="small" />
@@ -76,7 +76,7 @@ To use the daterange picker in the uncontrolled state, set the `defaultValue` pr
 
 To use the daterange picker in the controlled state, set the `value` prop to the current value of the daterange picker and provide an `onValueChange` event listener to handle the change.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -107,7 +107,7 @@ There are many ways to interact with DateRangePicker `disabled` state. Daterange
 
 For a finer control on which dates to disable, you can pass a `Matcher | Matcher[]` that defines the rules for disabling dates.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose space-y-2">
       <div className="flex items-center gap-3">
@@ -189,7 +189,7 @@ For a finer control on which dates to disable, you can pass a `Matcher | Matcher
 
 You can set the maximum and minimum year for the daterange picker by passing the `minYear` and `maxYear` props.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <DateRangePicker
@@ -217,7 +217,7 @@ You can set the maximum and minimum year for the daterange picker by passing the
 
 You can set the sorting order of the years in the year dropdown by passing the `yearOrder` prop.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -245,7 +245,7 @@ To support different locales, you can pass the `locale` prop to the daterange pi
 
 Default value is `en`. To switch to Bahasa Melayu, pass `ms`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <div>

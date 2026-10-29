@@ -1,8 +1,10 @@
 import { links } from "@/lib/constant";
-import { type HomeLayoutProps } from "fumadocs-ui/home-layout";
-import { LinkItemType } from "fumadocs-ui/layout";
+import type {
+  BaseLayoutProps,
+  LayoutTab,
+  MainItemType,
+} from "fumadocs-ui/layouts/shared";
 import Image from "next/image";
-import { HTMLAttributes, ReactNode } from "react";
 
 /**
  * Shared layout configurations
@@ -12,25 +14,13 @@ import { HTMLAttributes, ReactNode } from "react";
  * Docs Layout: app/docs/layout.tsx
  */
 
-/**
- * Taken from fumadocs-ui/components/layout/root-toggle.tsx
- * Redirect URL of the folder, usually the index page
- */
-interface Option {
-  url: string;
-  icon?: ReactNode;
-  title: ReactNode;
-  description: ReactNode;
-  props?: HTMLAttributes<HTMLElement>;
-}
-
 type DocsConfig = {
-  config: HomeLayoutProps;
-  menu: Array<Option>;
+  config: BaseLayoutProps;
+  menu: Array<LayoutTab>;
 };
 
 export const getDocsConfig = (): DocsConfig => {
-  const menu: Array<LinkItemType & Option> = [
+  const menu: Array<MainItemType & LayoutTab> = [
     {
       title: "Prinsip Rekabentuk",
       text: "Prinsip Rekabentuk",

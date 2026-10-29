@@ -95,7 +95,7 @@ export const items = {
   ],
 };
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
     <div className="w-full">
       <Accordion type="single" defaultValue="item-1">
@@ -187,7 +187,7 @@ Use the `type` prop to change how the content should be displayed!
 
 - `multiple`: allow multiple contents to be shown at the same time.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
     <Accordion type="multiple" defaultValue={["item-1"]}>
       {items.default}
@@ -235,7 +235,7 @@ Use the `type` prop to change how the content should be displayed!
 
 Use the `collapsible` prop to determine whether all the accordion is collapsible! By default, it is set to `true`. Please note this only works when `type="single"`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
 
 <Accordion type="single" defaultValue="item-1" collapsible={false}>
@@ -283,7 +283,7 @@ The `disabled` prop exists in both `Accordion` and `AccordionItem` components.
 
 Setting `disabled` to `true` in `Accordion` will disable all the `AccordionItem` components, while in `AccordionItem` will disable the respective `AccordionItem`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
     <Accordion type="single" defaultValue="item-1">
       {items.disabled}

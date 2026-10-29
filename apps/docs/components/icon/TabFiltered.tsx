@@ -26,7 +26,7 @@ const TabFiltered: FunctionComponent = () => {
       <TabsList
         width="full"
         className={clx(
-          "no-scrollbar flex-grow items-center justify-center overflow-x-scroll scroll-smooth text-nowrap max-md:justify-start",
+          "no-scrollbar flex-grow items-center overflow-x-scroll scroll-smooth text-nowrap md:justify-center",
         )}
       >
         <TabsTrigger value="all">{t("tabfilter.all")}</TabsTrigger>

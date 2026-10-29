@@ -1,26 +1,9 @@
-import { createPreset } from "fumadocs-ui/tailwind-plugin";
-import { Config } from "tailwindcss";
-import { preset, preset_fumadocs } from "@govtechmy/myds-style";
+import { preset } from "@govtechmy/myds-style";
 
-const config: Config = {
-  content: [
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./templates/**/*.{ts,tsx}",
-    "./content/**/*.{md,mdx}",
-    "./mdx-components.{ts,tsx}",
-    "./node_modules/fumadocs-ui/dist/**/*.js",
-    // This is a workaround; In final build, @govtechmy/myds-style output full css for users to import
-    // Issue: Styles are not being applied if below line is not added
-    "../../packages/react/src/**/*.{ts,tsx}",
-  ],
-  presets: [
-    createPreset({
-      preset: preset_fumadocs,
-      // layoutWidth: "1318px",
-    }),
-    preset,
-  ],
+// Loaded from app/global.css with `@config`. Tailwind 4 reads it through its
+// legacy JS config support until @govtechmy/myds-style ships a CSS preset.
+const config = {
+  presets: [preset],
   theme: {
     extend: {
       colors: {

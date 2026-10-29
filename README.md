@@ -45,7 +45,7 @@ To solve this, add the following in your VSCode **Workspace settings** (_Not you
 // .vscode/settings.json
 {
   "tailwindCSS.experimental.configFile": {
-    "apps/docs/tailwind.config.ts": "apps/docs/**",
+    "apps/docs/app/global.css": "apps/docs/**",
     "packages/tailwindcss/tailwind.config.ts": "packages/**"
   }
 }

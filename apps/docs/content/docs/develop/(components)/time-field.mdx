@@ -16,7 +16,7 @@ import { TimeField } from "@govtechmy/myds-react/time-field";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <div className="flex flex-col gap-2">
       <Label htmlFor="time-field" size="small">Appointment time</Label>
@@ -71,7 +71,7 @@ The time field shows a 12-hour clock (with AM/PM) or a 24-hour clock depending o
 
 Use the `size` prop to change the time field size.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3">
       <div className="flex flex-col gap-2">
@@ -106,7 +106,7 @@ To use the time field in the uncontrolled state, set the `defaultValue` prop to 
 
 To use the time field in the controlled state, set the `value` prop and update it from an `onChange` event listener.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
@@ -141,7 +141,7 @@ To use the time field in the controlled state, set the `value` prop and update i
 
 Browsers treat `step` as a validation rule. Not all of them stop the user typing another minute (such as `16:07`); the input is then marked `:invalid` and fails form validation. Check the value on submit, or use [time slots](#time-slots) when only fixed times are allowed.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
@@ -162,7 +162,7 @@ Browsers treat `step` as a validation rule. Not all of them stop the user typing
 
 A time field can be disabled by setting the `disabled` prop to `true`. When disabled, the time field is not interactive.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
@@ -183,7 +183,7 @@ A time field can be disabled by setting the `disabled` prop to `true`. When disa
 
 To mark a time field that failed validation, set the `invalid` prop to `true`. It also sets `aria-invalid` on the input.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
@@ -206,7 +206,7 @@ When the person books from fixed availability, such as counter appointments ever
 
 Use the 24-hour `HH:mm` time as each option's `value`, and write the label the way your service does, such as `4:00 PM`. Leave out the times that are already taken.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">

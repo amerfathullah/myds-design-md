@@ -18,7 +18,7 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <AlertDialog variant="success">
       <AlertDialogTrigger>
@@ -107,7 +107,7 @@ export default () => (
 
 Use the `variant` prop to set the theme of the alert dialog. The default variant is `default`. The available variants are `info`, `success`, `warning`, and `danger`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center items-center gap-3">
       <AlertDialog variant="default">
@@ -308,7 +308,7 @@ Use the `variant` prop to set the theme of the alert dialog. The default variant
 
 Use the `AlertDialogTrigger` to wrap the trigger element that opens the dialog. The example below shows three different (3) buttons opening the same alert dialog.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col items-center gap-3">
       <AlertDialog variant="success">
@@ -374,7 +374,7 @@ To use the alert dialog in an uncontrolled state, set the `defaultOpen` prop to 
 
 To use the alert dialog in the controlled state, utilize the `open` and `onOpenChange` prop to handle the state programmatically.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
         <div>
@@ -472,7 +472,7 @@ To prevent users from dismissing the dialog, set the `dismissible` prop to `fals
 
 You can attach a callback function to the `onDismiss` prop to handle the dismiss event.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose space-y-2 flex flex-col items-center">
       <DismissibleAlertDialog />
@@ -516,7 +516,7 @@ You can attach a callback function to the `onDismiss` prop to handle the dismiss
 
 You can set `align` to `DialogAction` to align the children to the `start`, `end`, or `full` width of the dialog. By default, the alignment is set to `end`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <div>
@@ -656,7 +656,7 @@ You can set `align` to `DialogAction` to align the children to the `start`, `end
 
 You can add special actions to the dialog by utilising the `action` prop on the `DialogAction`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
     <AlertDialog variant="danger">

@@ -1,6 +1,7 @@
 import { Tag } from "@/components/Tag";
 import { links } from "@/lib/constant";
 import { getRosetta } from "@/locales/_server";
+import { i18n } from "@/i18n";
 import {
   ComponentIcon,
   DocumentIcon,
@@ -10,10 +11,13 @@ import {
   SettingIcon,
   UserGroupIcon,
 } from "@govtechmy/myds-react/icon";
-import { type HomeLayoutProps } from "fumadocs-ui/home-layout";
-import { LinkItemType } from "fumadocs-ui/layout";
+import type {
+  BaseLayoutProps,
+  LayoutTab,
+  MainItemType,
+} from "fumadocs-ui/layouts/shared";
+import { defineI18nUI } from "fumadocs-ui/i18n";
 import Image from "next/image";
-import { HTMLAttributes, ReactNode } from "react";
 
 /**
  * Shared layout configurations
@@ -24,26 +28,48 @@ import { HTMLAttributes, ReactNode } from "react";
  */
 
 /**
- * Taken from fumadocs-ui/components/layout/root-toggle.tsx
- * Redirect URL of the folder, usually the index page
+ * Fumadocs UI strings for each locale
  */
-interface Option {
-  url: string;
-  icon?: ReactNode;
-  title: ReactNode;
-  description: ReactNode;
-  props?: HTMLAttributes<HTMLElement>;
-}
+export const i18nUI = defineI18nUI(i18n, {
+  en: {
+    displayName: "English",
+    "Search(search trigger)": "Search",
+    "Search(search dialog)": "Search",
+    "No results found(search dialog)": "No results found",
+    "On this page(table of contents)": "On this page",
+    "No Headings(table of contents)": "No Headings",
+    "Last updated on(page footer)": "Last updated on",
+    "Choose a language(language switcher)": "Choose a language",
+    "Next Page(pagination)": "Next",
+    "Previous Page(pagination)": "Previous",
+    "Toggle Theme(theme switcher)(aria-label)": "Theme",
+    "Edit on GitHub(edit page)": "Edit on GitHub",
+  },
+  ms: {
+    displayName: "Bahasa Melayu",
+    "Search(search trigger)": "Cari",
+    "Search(search dialog)": "Cari",
+    "No results found(search dialog)": "Tiada hasil ditemui",
+    "On this page(table of contents)": "Di halaman ini",
+    "No Headings(table of contents)": "Tiada Tajuk",
+    "Last updated on(page footer)": "Dikemaskini pada",
+    "Choose a language(language switcher)": "Pilih bahasa",
+    "Next Page(pagination)": "Seterusnya",
+    "Previous Page(pagination)": "Sebelumnya",
+    "Toggle Theme(theme switcher)(aria-label)": "Tema",
+    "Edit on GitHub(edit page)": "Edit di GitHub",
+  },
+});
 
 export type MYDSConfig = {
-  config: HomeLayoutProps;
-  menu: Array<Option>;
+  config: BaseLayoutProps;
+  menu: Array<LayoutTab>;
 };
 
 export const getMYDSConfig = (lang: "en" | "ms"): MYDSConfig => {
   const { t } = getRosetta(lang);
 
-  const menu: Array<LinkItemType & Option> = [
+  const menu: Array<MainItemType & LayoutTab> = [
     {
       title: t("menu.design"),
       text: t("menu.design"),
@@ -104,7 +130,6 @@ export const getMYDSConfig = (lang: "en" | "ms"): MYDSConfig => {
 
   return {
     config: {
-      i18n: true,
       nav: {
         title: (
           <div className="flex items-center gap-3">

@@ -5,17 +5,14 @@ import {
   DocsBody,
   DocsDescription,
   DocsTitle,
-} from "fumadocs-ui/page";
+} from "fumadocs-ui/layouts/docs/page";
 import { notFound } from "next/navigation";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { Heading } from "fumadocs-ui/components/heading";
 
-interface PageParams {
-  params: { slug?: string[]; lang: string };
-}
-
-export default async function Page({ params }: PageParams) {
-  const page = source.getPage(params.slug);
+export default async function Page({ params }: PageProps<"/docs/[[...slug]]">) {
+  const { slug } = await params;
+  const page = source.getPage(slug);
   if (!page) notFound();
 
   const MDX = page.data.body;
@@ -59,8 +56,11 @@ export async function generateStaticParams() {
   return source.generateParams();
 }
 
-export function generateMetadata({ params }: PageParams) {
-  const page = source.getPage(params.slug);
+export async function generateMetadata({
+  params,
+}: PageProps<"/docs/[[...slug]]">) {
+  const { slug } = await params;
+  const page = source.getPage(slug);
   if (!page) notFound();
 
   return {

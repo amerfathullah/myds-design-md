@@ -19,7 +19,7 @@ import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InfoIcon } from "@govtechmy/myds-react/icon";
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
   </Tab>
@@ -138,7 +138,7 @@ Komponen `DataTable` terutamanya ditakrifkan oleh 2 prop penting: `data` dan `co
 - `data` menerima array objek, di mana setiap objek mewakili baris dalam jadual.
 - `columns` menerima array `ColumnDef`, di mana setiap objek mewakili lajur dalam jadual.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center gap-3 overflow-auto">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -252,7 +252,7 @@ Anda boleh mengembangkan saiz sel dalam lajur dengan menetapkan sifat `expandabl
 
 Untuk menunjukkan ini, kami telah menetapkan sifat `expandable` kepada `true` untuk lajur `Nama` dan `Jawatan`. Anda boleh mengklik ikon pengembangan untuk melihat kandungan penuh sel.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -353,7 +353,7 @@ Anda boleh menambah tooltip pada tajuk lajur dengan menetapkan sifat `tooltip` d
 
 Untuk menunjukkan ini, kami telah menetapkan sifat `tooltip` kepada lajur `Umur` dan `Jawatan`. Arahkan kursor ke tajuk lajur untuk melihat tooltip.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -454,7 +454,7 @@ Anda boleh mengisih data dalam jadual dengan menetapkan sifat `sortable` kepada 
 
 Untuk menunjukkan ini, kami telah menetapkan sifat `sortable` kepada lajur `Jawatan`. Klik ikon pengisihan untuk menukar pengisihan yang tersedia.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} />
@@ -553,7 +553,7 @@ Untuk menunjukkan ini, kami telah menetapkan sifat `sortable` kepada lajur `Jawa
 
 Anda boleh mengaktifkan prop `loading` untuk mencetuskan keadaan pemuatan rangka untuk jadual.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable loading data={DataTableData} columns={DataTableColumns} />
@@ -653,7 +653,7 @@ Anda boleh mengaktifkan prop `loading` untuk mencetuskan keadaan pemuatan rangka
 
 Menghantar array kosong kepada prop `data` akan memaparkan keadaan kosong untuk jadual.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={[]} columns={DataTableColumns} />
@@ -725,7 +725,7 @@ Aktifkan mod pemilihan dengan menghantar prop `selection` kepada komponen `DataT
 - `onSelectionChange`: Fungsi panggilan balik yang dicetuskan apabila pemilihan berubah.
 - `rowId`: Pengenal unik untuk setiap baris dalam jadual.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
       <div className="w-full">
@@ -935,7 +935,7 @@ Anda boleh mengumpulkan lajur bersama dengan menetapkan sifat `columns` kepada a
 
 Berikut adalah contoh jadual dengan lajur berkumpulan:
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableGroupedColumns} />
@@ -1048,7 +1048,7 @@ Secara lalai, tajuk jadual adalah melekat, tetapi ia tidak pernah terwujud keran
 
 Untuk menunjukkan tajuk melekat, mari tetapkan ketinggian tetap untuk jadual. Hanya hantar prop `className` kepada komponen `DataTable` dengan kelas `max-h-[300px]`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable className="max-h-[300px]" data={DataTableData} columns={DataTableGroupedColumns} />
@@ -1165,7 +1165,7 @@ Untuk menunjukkan tajuk melekat, mari tetapkan ketinggian tetap untuk jadual. Ha
 3. `nest`: Prop objek yang mengandungi sifat berikut:
    - `id_by`: Kunci yang sepadan dengan objek array bersarang dalam sifat `data`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable className="max-h-[300px]" 
@@ -1357,7 +1357,7 @@ Anda boleh menyangkut lajur ke kiri atau kanan jadual dengan menetapkan sifat `p
 - `left`: Array ID lajur untuk disangkut ke kiri.
 - `right`: Array ID lajur untuk disangkut ke kanan.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableColumns} pin={{ left: ["name"], right: ["action"]}} />
@@ -1457,7 +1457,7 @@ Anda boleh menyangkut lajur ke kiri atau kanan jadual dengan menetapkan sifat `p
 
 Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **ColumnDef** definisi lajur. Berikut adalah contoh jadual dengan kaki:
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
     <DataTable data={DataTableData} columns={DataTableFooterColumns} />

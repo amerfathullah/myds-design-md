@@ -10,7 +10,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export const NOW = new Date().toISOString().split("T")[0];
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <div className="flex flex-col gap-2">
       <Label htmlFor="date-field" size="small">Tarikh lahir</Label>
@@ -56,7 +56,7 @@ export default () => (
 
 Gunakan prop `size` untuk menukar saiz medan tarikh!
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center gap-3">
       <div className="flex flex-col gap-2">
@@ -91,7 +91,7 @@ Untuk menggunakan medan tarikh dalam keadaan tidak terkawal, tetapkan prop `defa
 
 Untuk menggunakan medan tarikh dalam keadaan terkawal, tetapkan prop `value` kepada nilai semasa medan tarikh dan sediakan pendengar acara `onValueChange` untuk mengendalikan perubahan.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
       <div className="flex flex-col gap-2">
@@ -122,7 +122,7 @@ Untuk menggunakan medan tarikh dalam keadaan terkawal, tetapkan prop `value` kep
 
 Medan tarikh boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, medan tarikh tidak akan interaktif.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
@@ -143,7 +143,7 @@ Medan tarikh boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. 
 
 Keadaan tidak sah dicetuskan apabila medan tarikh gagal pengesahan. Untuk menunjukkan medan tarikh tidak sah, tetapkan prop `invalid` kepada `true`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">

@@ -11,7 +11,7 @@ import { Link } from "@/components/myds";
 import NextLink from "next/link";
 import { InfoIcon } from "@govtechmy/myds-react/icon";
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="justify-center relative not-prose">
       <Link href="/" primary underline="always">
@@ -64,7 +64,7 @@ export default () => (
 If you need to use the `Link` component provided by a different package, you can use the
 `asChild` prop and wrap the component. Here's an example using Next.js:
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <Link asChild>
       <NextLink href="#using-aschild-for-custom-links">
@@ -102,7 +102,7 @@ export const Link = (props) => (
 
 Opens the link in a new tab by setting `target="_blank"`.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <Link href="https://digital.gov.my" newTab>Ministry of Digital</Link>
   </Tab>
@@ -130,7 +130,7 @@ Opens the link in a new tab by setting `target="_blank"`.
 
 Used to toggle the link text colour.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="space-y-2">
       <div className="flex justify-center items-center gap-2">
@@ -154,7 +154,7 @@ Used to toggle the link text colour.
 
 Controls when the link should have an underline.
 
-<Tabs items={["Preview", "Code"]} defaultValue="Preview">
+<Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="space-y-2">
       <div className="flex justify-center items-center h-fit gap-2 not-prose">

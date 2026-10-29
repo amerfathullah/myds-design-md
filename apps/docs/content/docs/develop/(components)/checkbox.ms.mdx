@@ -8,7 +8,7 @@ import { Checkbox, Label } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <Checkbox defaultChecked />
   </Tab>
@@ -44,7 +44,7 @@ export default () => <Checkbox />;
 
 Gunakan prop `size` untuk menukar saiz kotak semak!
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center gap-3">
       <Checkbox defaultChecked size="small" />
@@ -67,7 +67,7 @@ Prop `checked` membolehkan anda mengawal keadaan kotak semak. Jika anda tidak me
 
 Untuk menguruskan keadaan kotak semak terkawal, anda perlu menyediakan prop `checked` dan mengendalikannya melalui pendengar acara `onCheckedChange`.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col items-center">
       <Label className="flex items-center gap-2">
@@ -102,7 +102,7 @@ Untuk menguruskan keadaan kotak semak terkawal, anda perlu menyediakan prop `che
 
 Kotak semak boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, kotak semak tidak akan interaktif.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <Label className="flex items-center gap-2">
@@ -125,7 +125,7 @@ Kotak semak boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. A
 
 Keadaan tidak menentu digunakan apabila kotak semak adalah sebahagian daripada kumpulan kotak semak dan beberapa kotak semak dipilih manakala yang lain tidak. Ia biasanya digunakan dalam kotak semak induk untuk menunjukkan bahawa beberapa kotak semak anaknya dipilih.
 
-<Tabs items={["Pratonton", "Kod"]} defaultValue="Pratonton">
+<Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <Label className="flex items-center gap-2">

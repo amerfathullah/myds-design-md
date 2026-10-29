@@ -19,7 +19,7 @@
     "incremental": true,
     "paths": {
       "@/*": ["./*"],
-      // @govtechmy/myds-react's declarations would otherwise pick up the React 18
+      // @amerfathullah/myds-react's declarations would otherwise pick up the React 18
       // types from that package's devDependencies.
       "react": ["./node_modules/@types/react"],
       "react/*": ["./node_modules/@types/react/*"]

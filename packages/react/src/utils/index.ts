@@ -1,6 +1,6 @@
 import { type ClassNameValue, extendTailwindMerge } from "tailwind-merge";
 
-// The MYDS theme in @govtechmy/myds-style, so tailwind-merge can tell its
+// The MYDS theme in @amerfathullah/myds-style, so tailwind-merge can tell its
 // utilities apart: `text-body-sm` is a size and `text-txt-danger` a colour
 const twMergeConfig = extendTailwindMerge({
   extend: {

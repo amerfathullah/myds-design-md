@@ -6,39 +6,39 @@ import React, {
   FunctionComponent,
   forwardRef,
 } from "react";
-import { Button } from "@govtechmy/myds-react/button";
-export * from "@govtechmy/myds-react/toggle";
-export * from "@govtechmy/myds-react/button";
-export * from "@govtechmy/myds-react/link";
-export * from "@govtechmy/myds-react/skiplink";
-export * from "@govtechmy/myds-react/accordion";
-export * from "@govtechmy/myds-react/alert-dialog";
-export * from "@govtechmy/myds-react/announce-bar";
-export * from "@govtechmy/myds-react/toast";
-export * from "@govtechmy/myds-react/callout";
-export * from "@govtechmy/myds-react/breadcrumb";
-export * from "@govtechmy/myds-react/checkbox";
-export * from "@govtechmy/myds-react/label";
-export * from "@govtechmy/myds-react/date-field";
-export * from "@govtechmy/myds-react/date-picker";
-export * from "@govtechmy/myds-react/daterange-picker";
-export * from "@govtechmy/myds-react/dialog";
-export * from "@govtechmy/myds-react/dropdown";
-export * from "@govtechmy/myds-react/pill";
-export * from "@govtechmy/myds-react/select";
-export * from "@govtechmy/myds-react/input";
-export * from "@govtechmy/myds-react/table";
-export * from "@govtechmy/myds-react/data-table";
-export * from "@govtechmy/myds-react/search-bar";
-export * from "@govtechmy/myds-react/masthead";
-export * from "@govtechmy/myds-react/navbar";
-export * from "@govtechmy/myds-react/radio";
-export * from "@govtechmy/myds-react/input-otp";
-export * from "@govtechmy/myds-react/tabs";
-export * from "@govtechmy/myds-react/navbar";
-export * from "@govtechmy/myds-react/summary-list";
-export * from "@govtechmy/myds-react/theme-switch";
-export { ThemeProvider } from "@govtechmy/myds-react/hooks";
+import { Button } from "@amerfathullah/myds-react/button";
+export * from "@amerfathullah/myds-react/toggle";
+export * from "@amerfathullah/myds-react/button";
+export * from "@amerfathullah/myds-react/link";
+export * from "@amerfathullah/myds-react/skiplink";
+export * from "@amerfathullah/myds-react/accordion";
+export * from "@amerfathullah/myds-react/alert-dialog";
+export * from "@amerfathullah/myds-react/announce-bar";
+export * from "@amerfathullah/myds-react/toast";
+export * from "@amerfathullah/myds-react/callout";
+export * from "@amerfathullah/myds-react/breadcrumb";
+export * from "@amerfathullah/myds-react/checkbox";
+export * from "@amerfathullah/myds-react/label";
+export * from "@amerfathullah/myds-react/date-field";
+export * from "@amerfathullah/myds-react/date-picker";
+export * from "@amerfathullah/myds-react/daterange-picker";
+export * from "@amerfathullah/myds-react/dialog";
+export * from "@amerfathullah/myds-react/dropdown";
+export * from "@amerfathullah/myds-react/pill";
+export * from "@amerfathullah/myds-react/select";
+export * from "@amerfathullah/myds-react/input";
+export * from "@amerfathullah/myds-react/table";
+export * from "@amerfathullah/myds-react/data-table";
+export * from "@amerfathullah/myds-react/search-bar";
+export * from "@amerfathullah/myds-react/masthead";
+export * from "@amerfathullah/myds-react/navbar";
+export * from "@amerfathullah/myds-react/radio";
+export * from "@amerfathullah/myds-react/input-otp";
+export * from "@amerfathullah/myds-react/tabs";
+export * from "@amerfathullah/myds-react/navbar";
+export * from "@amerfathullah/myds-react/summary-list";
+export * from "@amerfathullah/myds-react/theme-switch";
+export { ThemeProvider } from "@amerfathullah/myds-react/hooks";
 
 import {
   Callout,
@@ -46,11 +46,11 @@ import {
   CalloutContent,
   CalloutAction,
   CalloutClose,
-} from "@govtechmy/myds-react/callout";
-import { useToast, usePagination } from "@govtechmy/myds-react/hooks";
-import { DatePicker } from "@govtechmy/myds-react/date-picker";
-import { DateRangePicker } from "@govtechmy/myds-react/daterange-picker";
-import { Pill } from "@govtechmy/myds-react/pill";
+} from "@amerfathullah/myds-react/callout";
+import { useToast, usePagination } from "@amerfathullah/myds-react/hooks";
+import { DatePicker } from "@amerfathullah/myds-react/date-picker";
+import { DateRangePicker } from "@amerfathullah/myds-react/daterange-picker";
+import { Pill } from "@amerfathullah/myds-react/pill";
 import {
   Dialog,
   DialogBody,
@@ -61,7 +61,7 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@govtechmy/myds-react/dialog";
+} from "@amerfathullah/myds-react/dialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -70,24 +70,24 @@ import {
   AlertDialogTrigger,
   AlertDialogAction,
   AlertDialogClose,
-} from "@govtechmy/myds-react/alert-dialog";
+} from "@amerfathullah/myds-react/alert-dialog";
 import {
   Select,
   SelectValue,
   SelectTrigger,
   SelectContent,
   SelectItem,
-} from "@govtechmy/myds-react/select";
-import { Tag } from "@govtechmy/myds-react/tag";
-import { Cell, ColumnDef } from "@govtechmy/myds-react/data-table";
-import { Toggle, ToggleThumb } from "@govtechmy/myds-react/toggle";
+} from "@amerfathullah/myds-react/select";
+import { Tag } from "@amerfathullah/myds-react/tag";
+import { Cell, ColumnDef } from "@amerfathullah/myds-react/data-table";
+import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 import {
   FacebookIcon,
   InstagramIcon,
   TwitterXIcon,
   YoutubeIcon,
   SwapIcon,
-} from "@govtechmy/myds-react/icon";
+} from "@amerfathullah/myds-react/icon";
 import {
   SummaryList,
   SummaryListAction,
@@ -96,7 +96,7 @@ import {
   SummaryListHeader,
   SummaryListRow,
   SummaryListTerm,
-} from "@govtechmy/myds-react/summary-list";
+} from "@amerfathullah/myds-react/summary-list";
 
 import {
   Pagination,
@@ -106,7 +106,7 @@ import {
   PaginationNext,
   PaginationNumber,
   PaginationPrevious,
-} from "@govtechmy/myds-react/pagination";
+} from "@amerfathullah/myds-react/pagination";
 import {
   Footer,
   FooterLogo,
@@ -114,8 +114,8 @@ import {
   SiteInfo,
   SiteLink,
   SiteLinkGroup,
-} from "@govtechmy/myds-react/footer";
-import { Link } from "@govtechmy/myds-react/link";
+} from "@amerfathullah/myds-react/footer";
+import { Link } from "@amerfathullah/myds-react/link";
 
 interface PreviewButtonProps extends ComponentProps<typeof Button> {
   pantun: string;
@@ -780,7 +780,7 @@ export const PreviewSummaryListAction: FunctionComponent<
 import {
   AutoPagination,
   AutoPaginationProps,
-} from "@govtechmy/myds-react/pagination";
+} from "@amerfathullah/myds-react/pagination";
 import Image from "next/image";
 
 export const SimplePagination = forwardRef<HTMLElement, AutoPaginationProps>(

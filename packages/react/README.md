@@ -1,25 +1,27 @@
 # myds-react
 
+> This package continues `@govtechmy/myds-*` 1.x under a new name, from version 2.0.0. To switch, follow the migration guide in the [2.0.0 changelog](https://github.com/amerfathullah/myds-design-md/blob/main/packages/react/CHANGELOG.md).
+
 ![myds-hero-img](https://d2391uizq0pg2.cloudfront.net/design/myds-hero-img.png)
 
 > The Malaysian Government Design System (MYDS) is an open-source design system to build products for the Malaysian government. It contains the design guideline and the component library for creating consistent and accessible digital services.
 
 ## Getting started
 
-To install `@govtechmy/myds-react` in your project, run the installation command for the package manager of your choice:
+To install `@amerfathullah/myds-react` in your project, run the installation command for the package manager of your choice:
 
 ```bash
 # npm
-npm i @govtechmy/myds-react
+npm i @amerfathullah/myds-react
 
 # yarn
-yarn add @govtechmy/myds-react
+yarn add @amerfathullah/myds-react
 
 # pnpm
-pnpm add @govtechmy/myds-react
+pnpm add @amerfathullah/myds-react
 ```
 
-This package requires [@govtechmy/myds-style](#) to provide styling. For more info on how to configure the styling, we recommend to check out the docs provided below:
+This package requires [@amerfathullah/myds-style](#) to provide styling. For more info on how to configure the styling, we recommend to check out the docs provided below:
 
 - [Style Configuration](https://design.digital.gov.my/en/docs/develop/install#b-import-via-css)
 
@@ -30,7 +32,7 @@ The package provides components and icons to support MYDS implementation for you
 To use a component, you can import directly from the package:
 
 ```tsx
-import { Button } from "@govtechmy/myds-react/button";
+import { Button } from "@amerfathullah/myds-react/button";
 
 <Button variant="primary-fill" size="small">
   Jana Pantun

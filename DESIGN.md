@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: MYDS
-description: An unofficial description of the Malaysian Government Design System as built in `@govtechmy/myds-react` and `@govtechmy/myds-style`, for official Malaysian government services only. A calm, institutional, accessibility-first utility for government digital services. A white canvas and near-black text, one blue primary kept for action and selection, Poppins headings over an Inter body, status colours kept for status, and a light and a dark theme driven by semantic tokens. Every page sits in a fixed frame of SkipLink, Masthead (Malaysia flag), Navbar and Footer, on a 12-8-4 grid.
+description: An unofficial description of the Malaysian Government Design System as built in `@amerfathullah/myds-react` and `@amerfathullah/myds-style`, for official Malaysian government services only. A calm, institutional, accessibility-first utility for government digital services. A white canvas and near-black text, one blue primary kept for action and selection, Poppins headings over an Inter body, status colours kept for status, and a light and a dark theme driven by semantic tokens. Every page sits in a fixed frame of SkipLink, Masthead (Malaysia flag), Navbar and Footer, on a 12-8-4 grid.
 
 colors:
   white: "#FFFFFF"
@@ -1110,7 +1110,9 @@ components:
 >
 > The text of this file is © 2026 Amer Fathullah Nuaim Zakaria, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The licence covers the writing only, not MYDS's values, the quotes from its design guideline, or the national marks.
 
-This file describes MYDS **as built**: the Tailwind 4 preset in `packages/style` (`@govtechmy/myds-style`, imported with `@import "@govtechmy/myds-style"` after `@import "tailwindcss"`) and the React library in `packages/react` (`@govtechmy/myds-react`). The design guideline in `apps/docs/content/docs/design` is used where code says nothing. Where the two disagree, this file prints what the code renders and lists the guideline's value under [Known Gaps](#known-gaps). Terms such as _semantic token_, _off-label pairing_, _page frame_, _variant_ and _state_ are defined in [`CONTEXT.md`](CONTEXT.md).
+This file describes MYDS **as built**: the Tailwind 4 preset in `packages/style` (`@amerfathullah/myds-style`, imported with `@import "@amerfathullah/myds-style"` after `@import "tailwindcss"`) and the React library in `packages/react` (`@amerfathullah/myds-react`). The design guideline in `apps/docs/content/docs/design` is used where code says nothing. Where the two disagree, this file prints what the code renders and lists the guideline's value under [Known Gaps](#known-gaps). Terms such as _semantic token_, _off-label pairing_, _page frame_, _variant_ and _state_ are defined in [`CONTEXT.md`](CONTEXT.md).
+
+Install both with `npm install @amerfathullah/myds-react @amerfathullah/myds-style`, or only `@amerfathullah/myds-style` without React. From 2.0.0 they continue `@govtechmy/myds-*` 1.x under these names.
 
 ## Overview
 
@@ -1403,7 +1405,7 @@ Motion in MYDS is short and functional: the guideline says it should guide, not 
 
 ## Iconography
 
-- **Source.** Import `<Name>Icon` components from `@govtechmy/myds-react/icon` (220 icons). The Masthead's `MalaysiaFlagIcon` is internal to the Masthead.
+- **Source.** Import `<Name>Icon` components from `@amerfathullah/myds-react/icon` (220 icons). The Masthead's `MalaysiaFlagIcon` is internal to the Masthead.
 - **Drawing.** Icons are drawn on a 20×20 viewBox with a `currentColor` stroke, so you colour an icon with a `txt-*` token. An icon is a glyph, so a text token is on-role. The stroke is 1.5px (`stroke-[1.5px]` on button, dropdown, dialog and tab icons); checkbox ticks are 1.5px small and 2px at medium and large.
 - **Size comes from the host component.** Button icons are 16px (small) and 20px (medium and large). Tab icons are 16/20, input icons 18/20/24, date- and time-field icons 16/18/20, and select icons 16/20/20. The spinner is 16/20/24, callout and toast icons are 20px, and the alert-dialog icon is 42px.
 - **Sets.** The outline set has a few filled counterparts (`-fill`, and `document-filled`). There are also social (Facebook, Instagram, X, TikTok, YouTube, LinkedIn, Telegram, WhatsApp, GitHub), file-type (`*-media`: PDF, Word, Excel, PowerPoint) and 60 `legacy-*` agency marks, `legacy-jata-negara` among them.
@@ -1488,7 +1490,7 @@ These frame the page; their responsive behaviour is under [Layout → Page frame
 
 ### Do
 
-- Use the `@govtechmy/myds-react` component before hand-building one.
+- Use the `@amerfathullah/myds-react` component before hand-building one.
 - Build new UI with semantic tokens. The colour guideline says primitives "do not have a corresponding dark mode variant".
 - Choose a token by what the pixel _is_, whatever the utility: a surface takes `bg`, a glyph or icon takes `txt`, a line, edge or ring takes `otl`, and focus takes `fr`.
 - Use the `text-body-*` and `text-heading-*` classes in new UI.

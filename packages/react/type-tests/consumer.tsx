@@ -9,19 +9,19 @@ import {
   DataTable,
   type ColumnDef,
   type DataTableFeatures,
-} from "@govtechmy/myds-react/data-table";
-import { DatePicker } from "@govtechmy/myds-react/date-picker";
+} from "@amerfathullah/myds-react/data-table";
+import { DatePicker } from "@amerfathullah/myds-react/date-picker";
 import {
   DateRangePicker,
   type DateRange,
-} from "@govtechmy/myds-react/daterange-picker";
+} from "@amerfathullah/myds-react/daterange-picker";
 import {
   Footer,
   FooterSection,
   SiteInfo,
   SiteLink,
   SiteLinkGroup,
-} from "@govtechmy/myds-react/footer";
+} from "@amerfathullah/myds-react/footer";
 import {
   createColumnHelper,
   type CellContext,

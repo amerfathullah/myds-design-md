@@ -12,45 +12,36 @@ Documentation for For FE Templates A ( React + Vite + MYDS )
 9. Remove filler inside App.tsx, write only then save ` <div>test</div>`
 10. npm run dev
 11. remove Readme.md infos.
-12. Open tailwind docs for 3.4 https://v3.tailwindcss.com/docs/guides/vite
-13. Run `npm install -D tailwindcss@3 postcss autoprefixer`
-14. Run `npx tailwindcss init -p`
-15. Copy this code and replace the code inside tailwind.config.js
+12. Open the Tailwind docs for Vite https://tailwindcss.com/docs/installation/using-vite
+13. Run `npm install tailwindcss @tailwindcss/vite`
+14. Add the Tailwind plugin to vite.config.ts
 
 ```
-import { preset } from "@govtechmy/myds-style";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
-export default {
-  content: [
-    "src/**/*.{js,jsx,ts,tsx}", // Your own project source files
-    "node_modules/@govtechmy/myds-react/dist/**/*.{js,jsx,ts,tsx}",
-  ],
-  presets: [preset],
-};
-
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+});
 ```
 
-16. Add this code into index.css
+15. Run
+```
+npm install @amerfathullah/myds-react @amerfathullah/myds-style
+```
+16. Add this code into index.css. MYDS doesn't load fonts, so load Inter and Poppins yourself, for example from Google Fonts.
+```
+@import "tailwindcss";
+@import "@amerfathullah/myds-style";
 
+@source "../node_modules/@amerfathullah/myds-react/dist";
 ```
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-17. Run
-```
-npm i @govtechmy/myds-react @govtechmy/myds-style
-```
-18. Copy this code into index.css above tailwind imports - base,component,utils
-```
-@import "@govtechmy/myds-style/full.css";
-```
-19. Run 
+17. Run 
 ```
 npm run dev
 ```
-20.  Edit 
+18.  Edit 
 ```
 <div>test</div>
 ```
@@ -59,4 +50,4 @@ npm run dev
  <div className='bg-bg-warning-50'>test</div>
  ```
  
-21. Restart tailwind intelisense
+19. Restart tailwind intelisense

@@ -32,7 +32,7 @@ a) Toggle Language now
 b) Since using React Router, change children to <Outlet>
 
 ```
-import { Button } from "@govtechmy/myds-react/button";
+import { Button } from "@amerfathullah/myds-react/button";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import FooterMyds from "./FooterMyds";
@@ -197,8 +197,8 @@ b) you can now remove the test button to use this dropdown as the main language 
 ```
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
-import { SearchIcon, GlobeIcon } from "@govtechmy/myds-react/icon";
+import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
+import { SearchIcon, GlobeIcon } from "@amerfathullah/myds-react/icon";
 import {
   Navbar,
   NavbarLogo,
@@ -206,15 +206,15 @@ import {
   NavbarMenuItem,
   NavbarMenuDropdown,
   NavbarAction,
-} from "@govtechmy/myds-react/navbar";
+} from "@amerfathullah/myds-react/navbar";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@govtechmy/myds-react/select";
-import { ThemeSwitch } from "@govtechmy/myds-react/theme-switch";
+} from "@amerfathullah/myds-react/select";
+import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 import i18n from "../../i18n";
 
 export default function NavbarMyds() {

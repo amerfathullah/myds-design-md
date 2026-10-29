@@ -1,6 +1,6 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Toggle, ToggleThumb } from "@govtechmy/myds-react/toggle";
+import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 import { createRender, createStory } from "../utils";
 
 /**
@@ -12,7 +12,7 @@ import { createRender, createStory } from "../utils";
  * ### Usage
  *
  * ```tsx
- * import { Toggle, ToggleThumb } from "@govtechmy/myds-react/toggle"
+ * import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle"
  *
  * function MyComponent() {
  *   const [isChecked, setIsChecked] = React.useState(false);
@@ -26,7 +26,7 @@ import { createRender, createStory } from "../utils";
  */
 
 const meta: Meta<typeof Toggle> = {
-  title: "@govtechmy/myds-react/Toggle",
+  title: "@amerfathullah/myds-react/Toggle",
   component: Toggle,
   parameters: {
     layout: "centered",

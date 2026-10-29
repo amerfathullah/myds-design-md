@@ -1,7 +1,7 @@
 "use client";
 
 import type { MYDSConfig } from "@/app/[lang]/layout.config";
-import { Tabs, TabsList, TabsTrigger } from "@govtechmy/myds-react/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@amerfathullah/myds-react/tabs";
 import { usePathname, useRouter } from "next/navigation";
 import { FunctionComponent } from "react";
 

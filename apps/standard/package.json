@@ -9,8 +9,8 @@
     "lint": "eslint app components lib"
   },
   "dependencies": {
-    "@govtechmy/myds-react": "workspace:*",
-    "@govtechmy/myds-style": "workspace:*",
+    "@amerfathullah/myds-react": "workspace:*",
+    "@amerfathullah/myds-style": "workspace:*",
     "fumadocs-core": "16.17.8",
     "fumadocs-mdx": "15.4.10",
     "fumadocs-ui": "16.17.8",

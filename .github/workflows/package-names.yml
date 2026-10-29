@@ -1,0 +1,29 @@
+name: "package names"
+
+# MYDS publishes as @amerfathullah/myds-react and @amerfathullah/myds-style
+# (ADR-0005). The former @govtechmy/myds-* names stay only in history: the
+# CHANGELOGs, the ADRs, the templates until they move to 2.x (#50) and the
+# script that captures the 1.0.0 fixture from npm.
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for the former @govtechmy package names
+        run: |
+          if git grep -nE '@govtechmy/myds-(react|style)' -- . \
+            ':(exclude,glob)**/CHANGELOG.md' \
+            ':(exclude)docs/adr' \
+            ':(exclude,glob)template/fe-template-*/**' \
+            ':(exclude)packages/style/test/capture-v1-fixture.mjs'; then
+            echo "::error::Use @amerfathullah/myds-react and @amerfathullah/myds-style (ADR-0005)."
+            exit 1
+          fi

@@ -93,7 +93,7 @@ export default i18n;
 4. Edit app.tsx
 
 ```
-import { Button } from "@govtechmy/myds-react/button";
+import { Button } from "@amerfathullah/myds-react/button";
 import i18n from "./i18n";
 import { useTranslation } from "react-i18next";
 

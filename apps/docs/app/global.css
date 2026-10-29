@@ -1,11 +1,11 @@
 @import "tailwindcss";
-@import "@govtechmy/myds-style";
+@import "@amerfathullah/myds-style";
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
-@import "@govtechmy/myds-style/fumadocs.css";
+@import "@amerfathullah/myds-style/fumadocs.css";
 
-/* Classes used inside @govtechmy/myds-react components */
-@source "../node_modules/@govtechmy/myds-react/dist/**/*.{js,mjs}";
+/* Classes used inside @amerfathullah/myds-react components */
+@source "../node_modules/@amerfathullah/myds-react/dist/**/*.{js,mjs}";
 
 @theme inline {
   --color-txt-accent: rgb(var(--txt-accent));

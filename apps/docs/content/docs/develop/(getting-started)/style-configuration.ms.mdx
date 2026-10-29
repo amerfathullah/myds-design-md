@@ -5,7 +5,7 @@ description: Konfigurasi lanjutan untuk stylesheet & TailwindCSS
 
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import { InfoIcon } from "@govtechmy/myds-react/icon";
+import { InfoIcon } from "@amerfathullah/myds-react/icon";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 
 Stylesheet MYDS terdiri daripada pelbagai komponen untuk memenuhi pelbagai kegunaan.
@@ -37,7 +37,7 @@ MYDS menyokong 2 jenis fon: `Poppins` & `Inter`. Kami mengesyorkan anda untuk me
 Kami mentakrifkan setiap warna dalam Bahasa Reka Bentuk MYDS sebagai pembolehubah CSS, yang kemudiannya menjadi blok binaan untuk membina tema!
 
 ```css
-@import "@govtechmy/myds-style/color.css";
+@import "@amerfathullah/myds-style/color.css";
 ```
 
 ### Tema
@@ -47,10 +47,10 @@ Oleh itu, anda boleh mengabaikan import tema yang tidak diingini dari projek and
 
 ```css
 /* Import tema terang */
-@import "@govtechmy/myds-style/light.css";
+@import "@amerfathullah/myds-style/light.css";
 
 /* Import tema gelap */
-@import "@govtechmy/myds-style/dark.css";
+@import "@amerfathullah/myds-style/dark.css";
 ```
 
 <Callout
@@ -80,10 +80,10 @@ Setelah TailwindCSS dipasang, import preset MYDS selepas Tailwind dalam styleshe
 
 ```css title="src/index.css"
 @import "tailwindcss";
-@import "@govtechmy/myds-style";
+@import "@amerfathullah/myds-style";
 
 /* Laluan dari stylesheet ini ke node_modules anda */
-@source "../node_modules/@govtechmy/myds-react/dist";
+@source "../node_modules/@amerfathullah/myds-react/dist";
 ```
 
 Import ini menjadikan setiap token MYDS pemboleh ubah tema Tailwind dan turut memuatkan warna serta kedua-dua tema, jadi kelas seperti `bg-bg-white` dan `text-txt-black-900` boleh terus digunakan. Palet warna lalai Tailwind (`blue-500`, `red-600`, …) tidak tersedia.

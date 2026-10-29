@@ -1,4 +1,4 @@
-name: "@myds/react beta release"
+name: "beta release"
 
 # TODO: Workflow requires more thought on:
 # 1. Ideal way to handle prereleases (beta)
@@ -9,11 +9,13 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  ci:
+  beta:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # npm provenance
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,14 +34,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build @govtechmy/myds-react
-        run: pnpm build --filter=@govtechmy/myds-react
+      - name: Check for the npm token
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::error::Add an NPM_TOKEN repository secret: an npm token that can publish @amerfathullah/myds-react and @amerfathullah/myds-style."
+            exit 1
+          fi
 
       - name: Enter prerelease mode if not already
         run: pnpm changeset pre enter beta || true
 
       - name: Create beta version
-        run: pnpm changeset version --pre beta
+        run: pnpm version-packages
 
       - name: Commit and push changes
         run: |
@@ -49,10 +57,14 @@ jobs:
           git commit -m "ci: version beta packages"
           git push
 
-      - name: Publish beta package
+      # In prerelease mode, `changeset publish` publishes under the beta tag
+      - name: Build and publish the beta packages
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish --tag beta --access public --filter=@govtechmy/myds-react
+          PNPM_CONFIG_PROVENANCE: true
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+          pnpm release
 
       - name: Push tags
         run: |

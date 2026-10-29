@@ -37,7 +37,7 @@ We look forward to see what you may bring to MYDS.
 
 ### 1. Tailwind Intellisense Workaround
 
-MYDS has no Tailwind config file: Tailwind 4 reads the theme from a stylesheet that imports `@govtechmy/myds-style`. The Tailwind Intellisense extension on VSCode looks for that stylesheet in the folder you work in, so inside `packages/**` it finds none and stops suggesting classes and previewing CSS.
+MYDS has no Tailwind config file: Tailwind 4 reads the theme from a stylesheet that imports `@amerfathullah/myds-style`. The Tailwind Intellisense extension on VSCode looks for that stylesheet in the folder you work in, so inside `packages/**` it finds none and stops suggesting classes and previewing CSS.
 
 To solve this, add the following in your VSCode **Workspace settings** (_Not your User settings_):
 

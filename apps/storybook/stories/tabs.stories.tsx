@@ -8,14 +8,14 @@ import {
   TabsIcon,
   TabsList,
   TabsTrigger,
-} from "@govtechmy/myds-react/tabs";
+} from "@amerfathullah/myds-react/tabs";
 import ArrowBack from "../react/arrow-back";
 import ArrowForward from "../react/arrow-forward";
 
 /**
  * ### Overview
  *
- * This file contains the Storybook stories for the `Tabs` component from the `@govtechmy/myds-react/tabs` library.
+ * This file contains the Storybook stories for the `Tabs` component from the `@amerfathullah/myds-react/tabs` library.
  * The `Tabs` component is used to create a tabbed interface, allowing users to switch between different views or content sections.
  *
  * ### Pantun
@@ -27,7 +27,7 @@ import ArrowForward from "../react/arrow-forward";
  *
  * ### Usage
  * ```tsx
- * import Tabs from "@govtechmy/myds-react/tabs";
+ * import Tabs from "@amerfathullah/myds-react/tabs";
  *
  * <Tabs
  *  defaultValue="1"
@@ -81,7 +81,7 @@ import ArrowForward from "../react/arrow-forward";
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/Tabs",
+  title: "@amerfathullah/myds-react/Tabs",
   component: Tabs,
   tags: ["autodocs"],
   parameters: {

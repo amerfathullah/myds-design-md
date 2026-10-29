@@ -3,7 +3,7 @@ import {
   AnnounceBar,
   AnnounceBarTag,
   AnnounceBarDescription,
-} from "@govtechmy/myds-react/announce-bar";
+} from "@amerfathullah/myds-react/announce-bar";
 
 export default function CommunityAnnounceBar({
   infoTitle,

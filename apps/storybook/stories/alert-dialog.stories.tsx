@@ -6,9 +6,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   AlertDialogClose,
-} from "@govtechmy/myds-react/alert-dialog";
-import { Button } from "@govtechmy/myds-react/button";
-import { DialogBody } from "@govtechmy/myds-react/dialog";
+} from "@amerfathullah/myds-react/alert-dialog";
+import { Button } from "@amerfathullah/myds-react/button";
+import { DialogBody } from "@amerfathullah/myds-react/dialog";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
 import { createStory } from "../utils";
@@ -19,7 +19,7 @@ import { createStory } from "../utils";
  *
  * ### Usage
  * ```tsx
- * import { AlertDialog, AlertDialogTrigger } from "@govtechmy/myds-react/alert-dialog";
+ * import { AlertDialog, AlertDialogTrigger } from "@amerfathullah/myds-react/alert-dialog";
  *
  *  <AlertDialog variant={variant}>
  *       <AlertDialogTrigger>
@@ -57,7 +57,7 @@ import { createStory } from "../utils";
  */
 // @ts-expect-error
 const meta: Meta = {
-  title: "@govtechmy/myds-react/AlertDialog",
+  title: "@amerfathullah/myds-react/AlertDialog",
   component: AlertDialog,
   render: ({ dismissible, align, variant }) => {
     return (

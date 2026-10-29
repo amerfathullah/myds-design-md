@@ -4,10 +4,10 @@
  * Fumadocs, so MYDS's colour reset doesn't remove Fumadocs' own colours:
  *
  *   @import "tailwindcss";
- *   @import "@govtechmy/myds-style";
+ *   @import "@amerfathullah/myds-style";
  *   @import "fumadocs-ui/css/neutral.css";
  *   @import "fumadocs-ui/css/preset.css";
- *   @import "@govtechmy/myds-style/fumadocs.css";
+ *   @import "@amerfathullah/myds-style/fumadocs.css";
  *
  * Each colour reads the MYDS primitive in color.css that its comment names.
  */

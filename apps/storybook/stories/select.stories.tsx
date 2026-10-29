@@ -11,11 +11,11 @@ import {
   SelectValue,
   SelectGroupTitle,
   SelectFooter,
-} from "@govtechmy/myds-react/select";
-import { Input, InputIcon } from "@govtechmy/myds-react/input";
+} from "@amerfathullah/myds-react/select";
+import { Input, InputIcon } from "@amerfathullah/myds-react/input";
 import { SearchIcon } from "../../../packages/react/src/icons/search";
-import { Button } from "@govtechmy/myds-react/button";
-import { Pill } from "@govtechmy/myds-react/pill";
+import { Button } from "@amerfathullah/myds-react/button";
+import { Pill } from "@amerfathullah/myds-react/pill";
 
 const CONTENT = (
   <SelectGroup>
@@ -49,7 +49,7 @@ const CONTENT = (
  *
  * ### Usage
  * ```tsx
- * import Select from "@govtechmy/myds-react/select";
+ * import Select from "@amerfathullah/myds-react/select";
  *
  * <Select
  *  size="small"
@@ -105,7 +105,7 @@ const CONTENT = (
  * ```
  */
 const meta = {
-  title: "@govtechmy/myds-react/Select",
+  title: "@amerfathullah/myds-react/Select",
   component: Select,
   tags: ["autodocs"],
   parameters: {

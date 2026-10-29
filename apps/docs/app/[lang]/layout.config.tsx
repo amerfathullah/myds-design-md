@@ -10,7 +10,7 @@ import {
   InfoIcon,
   SettingIcon,
   UserGroupIcon,
-} from "@govtechmy/myds-react/icon";
+} from "@amerfathullah/myds-react/icon";
 import type {
   BaseLayoutProps,
   LayoutTab,

@@ -5,25 +5,25 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@govtechmy/myds-react/accordion";
-import { Button } from "@govtechmy/myds-react/button";
-import { Footer } from "@govtechmy/myds-react/footer";
-import { Link } from "@govtechmy/myds-react/link";
-import { Navbar } from "@govtechmy/myds-react/navbar";
+} from "@amerfathullah/myds-react/accordion";
+import { Button } from "@amerfathullah/myds-react/button";
+import { Footer } from "@amerfathullah/myds-react/footer";
+import { Link } from "@amerfathullah/myds-react/link";
+import { Navbar } from "@amerfathullah/myds-react/navbar";
 import {
   SearchBar,
   SearchBarInput,
   SearchBarInputContainer,
   SearchBarResults,
   SearchBarResultsList,
-} from "@govtechmy/myds-react/search-bar";
+} from "@amerfathullah/myds-react/search-bar";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@govtechmy/myds-react/select";
+} from "@amerfathullah/myds-react/select";
 
 /**
  * SPLaSK tagging is done by passing raw `splwpk-*` attributes to MYDS components. Each story

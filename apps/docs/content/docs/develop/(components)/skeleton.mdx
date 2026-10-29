@@ -6,7 +6,7 @@ description: A loading placeholder in the shape of the content it stands in for.
 import { Quicklinks } from "@/components/quicklinks";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
@@ -23,7 +23,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
   <Tab value="Code">
 
 ```tsx
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <div className="flex w-72 items-center gap-3">
   <Skeleton shape="circle" className="size-10 shrink-0" />
@@ -47,7 +47,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
 ## Usage
 
 ```ts copy title="Import"
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 ```
 
 ```tsx copy title="Anatomy"
@@ -80,7 +80,7 @@ Use the `shape` prop to match the content being loaded. Set the size with `class
   <Tab value="Code">
 
 ```tsx
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <Skeleton className="w-32" />
 <Skeleton shape="circle" className="size-10" />
@@ -107,7 +107,7 @@ There is no multi-line helper. Map over `Skeleton` to draw as many lines as you 
   <Tab value="Code">
 
 ```tsx
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <div className="flex flex-col gap-2">
   {["w-full", "w-full", "w-1/2"].map((width, index) => (
@@ -124,7 +124,7 @@ import { Skeleton } from "@govtechmy/myds-react/skeleton";
 Every `Skeleton` renders `aria-hidden="true"`, so screen readers skip it. Telling people that content is loading is up to you: set `aria-busy="true"` on the region that is loading and put visually hidden "Loading…" text inside it. Remove both when the content arrives.
 
 ```tsx copy title="Loading region"
-import { Skeleton } from "@govtechmy/myds-react/skeleton";
+import { Skeleton } from "@amerfathullah/myds-react/skeleton";
 
 <section aria-busy={isLoading}>
   {isLoading ? (

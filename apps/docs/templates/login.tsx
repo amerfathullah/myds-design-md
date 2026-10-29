@@ -1,22 +1,22 @@
 "use client";
-import { Button } from "@govtechmy/myds-react/button";
-import { Input } from "@govtechmy/myds-react/input";
+import { Button } from "@amerfathullah/myds-react/button";
+import { Input } from "@amerfathullah/myds-react/input";
 import {
   GlobeIcon,
   GoogleIcon,
   JataNegaraIcon,
-} from "@govtechmy/myds-react/icon";
-import { Navbar, NavbarLogo } from "@govtechmy/myds-react/navbar";
+} from "@amerfathullah/myds-react/icon";
+import { Navbar, NavbarLogo } from "@amerfathullah/myds-react/navbar";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@govtechmy/myds-react/select";
-import { ThemeSwitch } from "@govtechmy/myds-react/theme-switch";
-import { Link } from "@govtechmy/myds-react/link";
-import { clx } from "@govtechmy/myds-react/utils";
+} from "@amerfathullah/myds-react/select";
+import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
+import { Link } from "@amerfathullah/myds-react/link";
+import { clx } from "@amerfathullah/myds-react/utils";
 
 export default function LoginTemplate({className}:{className?:string}) {
   return (

@@ -16,10 +16,18 @@ import {
   type DateRange,
 } from "@govtechmy/myds-react/daterange-picker";
 import {
+  Footer,
+  FooterSection,
+  SiteInfo,
+  SiteLink,
+  SiteLinkGroup,
+} from "@govtechmy/myds-react/footer";
+import {
   createColumnHelper,
   type CellContext,
   type Row,
 } from "@tanstack/react-table";
+import { useRef } from "react";
 
 type Employee = {
   id: string;
@@ -121,5 +129,27 @@ export const Dates = () => {
         toLabel="Hingga"
       />
     </>
+  );
+};
+
+// SiteInfo renders a div and SiteLinkGroup a nav, which takes its own name.
+export const SiteFooter = () => {
+  const info = useRef<HTMLDivElement>(null);
+  const group = useRef<HTMLElement>(null);
+  return (
+    <Footer>
+      <FooterSection>
+        <SiteInfo ref={info}>Kementerian Digital</SiteInfo>
+        <SiteLinkGroup ref={group} groupTitle="Services" linkCount={4}>
+          <SiteLink href="#">Link</SiteLink>
+        </SiteLinkGroup>
+        <SiteLinkGroup
+          groupTitle={<h2 id="help-title">Help</h2>}
+          aria-labelledby="help-title"
+        >
+          <SiteLink href="#">Link</SiteLink>
+        </SiteLinkGroup>
+      </FooterSection>
+    </Footer>
   );
 };

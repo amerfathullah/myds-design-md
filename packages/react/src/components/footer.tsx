@@ -6,6 +6,7 @@ import {
   ForwardRefExoticComponent,
   isValidElement,
   ReactNode,
+  useId,
 } from "react";
 import { clx } from "../utils";
 import { Slot } from "@radix-ui/react-slot";
@@ -50,11 +51,11 @@ const Footer: ForwardRefExoticComponent<FooterProps> = forwardRef(
   },
 );
 
-interface SiteInfoProps extends ComponentProps<"aside"> {}
+interface SiteInfoProps extends ComponentProps<"div"> {}
 const SiteInfo: ForwardRefExoticComponent<SiteInfoProps> = forwardRef(
   ({ children, className, ...props }, ref) => {
     return (
-      <aside
+      <div
         className={clx(
           "flex flex-col max-lg:col-span-full lg:col-start-1 lg:col-end-4",
           "max-lg:gap-4",
@@ -65,25 +66,29 @@ const SiteInfo: ForwardRefExoticComponent<SiteInfoProps> = forwardRef(
         ref={ref}
       >
         {children}
-      </aside>
+      </div>
     );
   },
 );
 
-interface SiteLinkGroupProps extends ComponentProps<"div"> {
+interface SiteLinkGroupProps extends ComponentProps<"nav"> {
   groupTitle: ReactNode;
   linkCount?: number;
 }
 const SiteLinkGroup: ForwardRefExoticComponent<SiteLinkGroupProps> = forwardRef(
   ({ children, className, groupTitle, linkCount = 8, ...props }, ref) => {
-    const titleElement =
-      typeof groupTitle === "string" ? (
-        <h6 className="text-txt-black-900 line-clamp-1 font-semibold">
-          {groupTitle}
-        </h6>
-      ) : (
-        groupTitle
-      );
+    const titleId = useId();
+    const hasTextTitle = typeof groupTitle === "string";
+    const titleElement = hasTextTitle ? (
+      <div
+        id={titleId}
+        className="text-txt-black-900 line-clamp-1 font-semibold"
+      >
+        {groupTitle}
+      </div>
+    ) : (
+      groupTitle
+    );
 
     const processedChildren = Children.toArray(children)
       .slice(0, linkCount)
@@ -99,7 +104,10 @@ const SiteLinkGroup: ForwardRefExoticComponent<SiteLinkGroupProps> = forwardRef(
         });
       });
     return (
-      <div
+      <nav
+        aria-labelledby={
+          hasTextTitle && !props["aria-label"] ? titleId : undefined
+        }
         className={clx(
           "flex flex-col gap-2",
           "max-lg:col-span-full md:gap-3",
@@ -110,18 +118,15 @@ const SiteLinkGroup: ForwardRefExoticComponent<SiteLinkGroupProps> = forwardRef(
         ref={ref}
       >
         {titleElement}
-        <nav
+        <div
           className={clx(
             "gap-x-4.5 grid grid-cols-2 md:grid-cols-4 md:gap-x-6 lg:grid-cols-2",
             "max-md:gap-y-2 md:max-lg:gap-y-3 lg:gap-y-2",
-            className,
           )}
-          ref={ref}
-          {...props}
         >
           {processedChildren}
-        </nav>
-      </div>
+        </div>
+      </nav>
     );
   },
 );

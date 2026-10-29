@@ -132,7 +132,7 @@ import {
       <SiteLink href="#">Link 3</SiteLink>
       <SiteLink href="#">Link 4</SiteLink>
     </SiteLinkGroup>
-    <SiteLinkGroup groupTitle="Super super long long long long long title">
+    <SiteLinkGroup groupTitle="Services">
       <SiteLink href="#">
         Link 1 super super long super super long
       </SiteLink>
@@ -140,7 +140,7 @@ import {
       <SiteLink href="#">Link 3</SiteLink>
       <SiteLink href="#">Link 4</SiteLink>
     </SiteLinkGroup>
-    <SiteLinkGroup groupTitle="Super super long long long long long title">
+    <SiteLinkGroup groupTitle="Resources">
       <SiteLink href="#">
         Link 1 super super long super super long
       </SiteLink>
@@ -148,7 +148,7 @@ import {
       <SiteLink href="#">Link 3</SiteLink>
       <SiteLink href="#">Link 4</SiteLink>
     </SiteLinkGroup>
-    <SiteLinkGroup groupTitle="Super super long long long long long title">
+    <SiteLinkGroup groupTitle="About us">
       <SiteLink href="#">
         Link 1 super super long super super long
       </SiteLink>
@@ -261,7 +261,7 @@ export default () => (
 
 ### SiteInfo
 
-An `aside` HTML component designed to contain brand information, contact details, and social media links in the footer.
+A `div` that holds brand information, contact details, and social media links in the footer.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
@@ -347,7 +347,8 @@ An `aside` HTML component designed to contain brand information, contact details
 </Tabs>
 
 ### SiteLinkGroup
-A container that structures a collection of links (`SiteLink`) into a titled group with responsive column layout.
+A container that structures a collection of links (`SiteLink`) into a titled group with responsive column layout. Each group is a `nav` landmark. A string `groupTitle` names it, so give each group a distinct title. If you pass your own element as `groupTitle`, such as a heading, name the navigation yourself with `aria-labelledby` or `aria-label`.
+
 <Tabs items={["Preview", "Code"]}>
 <Tab value="Preview">
   <div className="max-w-[50%] mx-auto bg-bg-gray-50">
@@ -436,7 +437,7 @@ import { SiteLinkGroup, SiteLink } from "@govtechmy/myds-react/footer";
       type: "string",
     },
     groupTitle: {
-      description: "Title element for the grouping",
+      description: "Title of the grouping. A string renders as text and names the group's navigation, unless you pass aria-label. An element renders as given, and you name the navigation with aria-labelledby or aria-label.",
       type: "ReactNode",
     },
     linkCount: {

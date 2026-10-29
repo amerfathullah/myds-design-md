@@ -7,12 +7,14 @@ import {
   type Row,
   type RowData,
   type RowSelectionState,
+  columnFacetingFeature,
   columnOrderingFeature,
   columnPinningFeature,
   columnSizingFeature,
   columnVisibilityFeature,
   createColumnHelper,
   createExpandedRowModel,
+  createFacetedUniqueValues,
   createSortedRowModel,
   flexRender,
   metaHelper,
@@ -76,19 +78,24 @@ interface DataTableColumnMeta {
 /**
  * The TanStack Table features DataTable registers. Only their APIs exist on the
  * table, column, row and cell objects that column definitions receive.
- * Pagination is registered for `table.getRowCount()` alone: without a paginated
- * row model, no rows are sliced.
+ * - Visibility orders `row.getVisibleCells()` by pinned region, and ordering
+ *   provides `column.getIsLastColumn()` for the pinned-edge shadow.
+ * - Pagination and faceting keep `table.getRowCount()` and
+ *   `column.getFacetedUniqueValues()`: without a paginated row model, no rows
+ *   are sliced.
  */
 const dataTableFeatures = tableFeatures({
   columnVisibilityFeature,
   columnOrderingFeature,
   columnPinningFeature,
   columnSizingFeature,
+  columnFacetingFeature,
   rowExpandingFeature,
   rowPaginationFeature,
   rowSelectionFeature,
   rowSortingFeature,
   expandedRowModel: createExpandedRowModel(),
+  facetedUniqueValues: createFacetedUniqueValues(),
   sortedRowModel: createSortedRowModel(),
   sortFns,
   columnMeta: metaHelper<DataTableColumnMeta>(),
@@ -111,11 +118,9 @@ interface DataTableProps<TData extends Record<string, any>> {
     mode: "checkbox" | "radio";
     onSelectionChange?: (value: string[]) => void;
     enableRowSelection?:
-      | boolean
-      | ((row: Row<DataTableFeatures, TData>) => boolean);
+      boolean | ((row: Row<DataTableFeatures, TData>) => boolean);
     enableSubRowSelection?:
-      | boolean
-      | ((row: Row<DataTableFeatures, TData>) => boolean);
+      boolean | ((row: Row<DataTableFeatures, TData>) => boolean);
   };
   pin?: {
     left?: string[];

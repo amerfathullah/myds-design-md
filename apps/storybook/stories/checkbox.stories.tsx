@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Checkbox } from "@govtechmy/myds-react/checkbox";
 import { createStory } from "../utils";
 import { Label } from "@govtechmy/myds-react/label";

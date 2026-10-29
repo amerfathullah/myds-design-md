@@ -5,3 +5,7 @@ packages:
 allowBuilds:
   "@swc/core": true
   esbuild: true
+  # Jest 30 dependencies. Their scripts only build or fetch a native binary
+  # when the prebuilt optional dependency is missing, so they aren't needed.
+  "@parcel/watcher": false
+  unrs-resolver: false

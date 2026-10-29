@@ -1,4 +1,4 @@
-import type { Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react-vite";
 import { createRender } from "../utils";
 import { InputOTP, InputOTPSlot } from "@govtechmy/myds-react/input-otp";
 

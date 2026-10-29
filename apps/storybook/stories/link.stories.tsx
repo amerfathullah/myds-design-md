@@ -1,6 +1,6 @@
 import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
 import { Link } from "@govtechmy/myds-react/link";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import ArrowBack from "../react/arrow-back";
 import { createStory } from "../utils";
 
@@ -101,9 +101,11 @@ export const ButtonAsLink: Story = {
   },
   parameters: {
     backgrounds: {
-      default: "light",
-      values: [{ name: "dark", value: "#18181B" }],
+      options: { dark: { name: "dark", value: "#18181B" } },
     },
+  },
+  globals: {
+    backgrounds: { value: "light" },
   },
   render: (args) => (
     <Button asChild>
@@ -122,9 +124,11 @@ export const Backlink: Story = {
   },
   parameters: {
     backgrounds: {
-      default: "light",
-      values: [{ name: "dark", value: "#18181B" }],
+      options: { dark: { name: "dark", value: "#18181B" } },
     },
+  },
+  globals: {
+    backgrounds: { value: "light" },
   },
   render: (args) => (
     <Button asChild variant="unset">
@@ -156,9 +160,11 @@ export const NavbarLink: Story = {
   },
   parameters: {
     backgrounds: {
-      default: "light",
-      values: [{ name: "dark", value: "#18181B" }],
+      options: { dark: { name: "dark", value: "#18181B" } },
     },
+  },
+  globals: {
+    backgrounds: { value: "light" },
   },
   render: (args) => (
     <Button asChild variant="default-ghost">

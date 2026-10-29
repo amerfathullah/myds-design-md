@@ -11,25 +11,19 @@ export default {
 };
 
 export const Mobile = {
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
 export const Tablet = {
-  parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };
 
 export const Desktop = {
-  parameters: {
-    viewport: {
-      defaultViewport: "desktop",
-    },
+  globals: {
+    viewport: { value: "desktop" },
   },
 };

@@ -979,19 +979,19 @@ export const FooterComponent = () => {
           <SiteLink href="#">Link 3</SiteLink>
           <SiteLink href="#">Link 4</SiteLink>
         </SiteLinkGroup>
-        <SiteLinkGroup groupTitle="Super super long long long long long title">
+        <SiteLinkGroup groupTitle="Services">
           <SiteLink href="#">Link 1 super super long super super long</SiteLink>
           <SiteLink href="#">Link 2</SiteLink>
           <SiteLink href="#">Link 3</SiteLink>
           <SiteLink href="#">Link 4</SiteLink>
         </SiteLinkGroup>
-        <SiteLinkGroup groupTitle="Super super long long long long long title">
+        <SiteLinkGroup groupTitle="Resources">
           <SiteLink href="#">Link 1 super super long super super long</SiteLink>
           <SiteLink href="#">Link 2</SiteLink>
           <SiteLink href="#">Link 3</SiteLink>
           <SiteLink href="#">Link 4</SiteLink>
         </SiteLinkGroup>
-        <SiteLinkGroup groupTitle="Super super long long long long long title">
+        <SiteLinkGroup groupTitle="About us">
           <SiteLink href="#">Link 1 super super long super super long</SiteLink>
           <SiteLink href="#">Link 2</SiteLink>
           <SiteLink href="#">Link 3</SiteLink>

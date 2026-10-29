@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import {
   Footer,
   SiteInfo,
@@ -155,7 +156,7 @@ export const Default: Story = {
             <SiteLink href="#">Link 3</SiteLink>
             <SiteLink href="#">Link 4</SiteLink>
           </SiteLinkGroup>
-          <SiteLinkGroup groupTitle="Super super long long long long long title">
+          <SiteLinkGroup groupTitle="Services">
             <SiteLink href="#">
               Link 1 super super long super super long
             </SiteLink>
@@ -163,7 +164,7 @@ export const Default: Story = {
             <SiteLink href="#">Link 3</SiteLink>
             <SiteLink href="#">Link 4</SiteLink>
           </SiteLinkGroup>
-          <SiteLinkGroup groupTitle="Super super long long long long long title">
+          <SiteLinkGroup groupTitle="Resources">
             <SiteLink href="#">
               Link 1 super super long super super long
             </SiteLink>
@@ -171,7 +172,7 @@ export const Default: Story = {
             <SiteLink href="#">Link 3</SiteLink>
             <SiteLink href="#">Link 4</SiteLink>
           </SiteLinkGroup>
-          <SiteLinkGroup groupTitle="Super super long long long long long title">
+          <SiteLinkGroup groupTitle="About us">
             <SiteLink href="#">
               Link 1 super super long super super long
             </SiteLink>
@@ -198,6 +199,20 @@ export const Default: Story = {
         </FooterSection>
       </Footer>
     );
+  },
+  play: async ({ canvasElement }) => {
+    const footer = within(within(canvasElement).getByRole("contentinfo"));
+
+    await expect(footer.queryAllByRole("complementary")).toHaveLength(0);
+    await expect(footer.queryAllByRole("heading")).toHaveLength(0);
+    for (const name of [
+      "Super super long long long long long title",
+      "Services",
+      "Resources",
+      "About us",
+    ]) {
+      await expect(footer.getByRole("navigation", { name })).toBeVisible();
+    }
   },
 };
 
@@ -301,7 +316,7 @@ export const CustomDark: Story = {
             <SiteLink href="#">Link 3</SiteLink>
             <SiteLink href="#">Link 4</SiteLink>
           </SiteLinkGroup>
-          <SiteLinkGroup groupTitle="Super super long long long long long title">
+          <SiteLinkGroup groupTitle="Services">
             <SiteLink href="#">
               Link 1 super super long super super long
             </SiteLink>
@@ -309,7 +324,7 @@ export const CustomDark: Story = {
             <SiteLink href="#">Link 3</SiteLink>
             <SiteLink href="#">Link 4</SiteLink>
           </SiteLinkGroup>
-          <SiteLinkGroup groupTitle="Super super long long long long long title">
+          <SiteLinkGroup groupTitle="Resources">
             <SiteLink href="#">
               Link 1 super super long super super long
             </SiteLink>
@@ -317,7 +332,7 @@ export const CustomDark: Story = {
             <SiteLink href="#">Link 3</SiteLink>
             <SiteLink href="#">Link 4</SiteLink>
           </SiteLinkGroup>
-          <SiteLinkGroup groupTitle="Super super long long long long long title">
+          <SiteLinkGroup groupTitle="About us">
             <SiteLink href="#">
               Link 1 super super long super super long
             </SiteLink>

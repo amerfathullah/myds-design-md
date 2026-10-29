@@ -6,16 +6,19 @@ import { DateField } from "@govtechmy/myds-react/date-field";
  * ### Overview
  * The Date Field component allows users to input a date in a structured format
  * using separate fields for day, month, and year.
+ * Name it with a `Label` (`htmlFor`) and pass the matching `id`.
  *
  * _Based on [HTML's date input](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date)_
  *
  * ### Usage
  * ```tsx
- * import DateField from "@govtechmy/myds-react/date-field";
+ * import { DateField } from "@govtechmy/myds-react/date-field";
+ * import { Label } from "@govtechmy/myds-react/label";
  *
- * const [date, setDate] = useState("1957-08-31")
+ * const [date, setDate] = useState("1957-08-31");
  *
- * <DateField value={date} onChange={setDate} />
+ * <Label htmlFor="date-of-birth">Date of birth</Label>
+ * <DateField id="date-of-birth" value={date} onChange={(e) => setDate(e.target.value)} />
  * ```
  */
 const meta = {
@@ -28,6 +31,8 @@ const meta = {
   args: {
     size: "medium",
     invalid: false,
+    // Stories render the field alone, so name it here; in an app, pair it with a `Label` instead.
+    "aria-label": "Date of birth",
   },
   argTypes: {
     size: {

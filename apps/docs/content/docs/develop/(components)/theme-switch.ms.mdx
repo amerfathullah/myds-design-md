@@ -95,6 +95,8 @@ import { ThemeSwitch } from "@govtechmy/myds-react/theme-switch";
 
 Anda juga boleh menggunakan `ThemeSwitch` sebagai menu pilihan dropdown, membolehkan pengguna memilih dari senarai tema.
 
+Pembaca skrin menyebut menu pilihan ini sebagai "Theme", diikuti tema semasa. Tetapkan `selectLabel` untuk menamakannya dalam bahasa laman anda, contohnya `selectLabel="Tema"`.
+
 <Tabs items={["Pratonton", "Kod"]}>
 <Tab value="Pratonton">
   <div className="flex justify-center">
@@ -255,6 +257,12 @@ import { ThemeSwitch } from "@govtechmy/myds-react/theme-switch";
           </code>
         </pre>
       ),
+    },
+    selectLabel: {
+      description:
+        'Nama boleh capai menu pilihan, apabila `as="select"`. Pembaca skrin menyebutnya; ia tidak dipaparkan.',
+      type: "string",
+      default: "Theme",
     },
   }}
 />

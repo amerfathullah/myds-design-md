@@ -12,45 +12,48 @@
 /* Classes used inside @govtechmy/myds-react components */
 @source "../node_modules/@govtechmy/myds-react/dist/**/*.{js,mjs}";
 
-/* MYDS colours for Fumadocs, formerly `preset_fumadocs` from @govtechmy/myds-style */
+/*
+ * MYDS colours for Fumadocs, formerly `preset_fumadocs` from @govtechmy/myds-style,
+ * read from the primitives in color.css
+ */
 @theme {
-  --color-fd-background: hsl(0 0% 100%); /* white */
-  --color-fd-foreground: hsl(240 10% 4%); /* gray-950 */
-  --color-fd-muted: hsl(0 0% 98%); /* gray-50 */
-  --color-fd-muted-foreground: hsl(240 4% 46%); /* gray-500 */
-  --color-fd-popover: hsl(0 0% 100%); /* white */
-  --color-fd-popover-foreground: hsl(240 4% 46%); /* gray-500 */
-  --color-fd-card: hsl(0 0% 100%); /* white */
-  --color-fd-card-foreground: hsl(240 5% 26%); /* gray-700 */
-  --color-fd-border: hsl(240 6% 90%); /* gray-200 */
-  --color-fd-primary: hsl(221 83% 53%); /* primary-600 */
-  --color-fd-primary-foreground: hsl(214 100% 97%); /* primary-50 */
-  --color-fd-secondary: hsl(0 0% 100%); /* white */
-  --color-fd-secondary-foreground: hsl(240 5% 26%); /* gray-700 */
-  --color-fd-accent: hsl(0 0% 98%); /* gray-50 */
-  --color-fd-accent-foreground: hsl(240 10% 4%); /* gray-950 */
-  --color-fd-ring: hsl(221 100% 79%); /* primary-300 */
+  --color-fd-background: rgb(var(--_white));
+  --color-fd-foreground: rgb(var(--_gray-950));
+  --color-fd-muted: rgb(var(--_gray-50));
+  --color-fd-muted-foreground: rgb(var(--_gray-500));
+  --color-fd-popover: rgb(var(--_white));
+  --color-fd-popover-foreground: rgb(var(--_gray-500));
+  --color-fd-card: rgb(var(--_white));
+  --color-fd-card-foreground: rgb(var(--_gray-700));
+  --color-fd-border: rgb(var(--_gray-200));
+  --color-fd-primary: rgb(var(--_primary-600));
+  --color-fd-primary-foreground: rgb(var(--_primary-50));
+  --color-fd-secondary: rgb(var(--_white));
+  --color-fd-secondary-foreground: rgb(var(--_gray-700));
+  --color-fd-accent: rgb(var(--_gray-50));
+  --color-fd-accent-foreground: rgb(var(--_gray-950));
+  --color-fd-ring: rgb(var(--_primary-300));
 }
 
 /* `#nd-sidebar` overrides the dark sidebar colours of the neutral theme */
 .dark,
 .dark #nd-sidebar {
-  --color-fd-background: hsl(240 6% 10%); /* gray-900 */
-  --color-fd-foreground: hsl(0 0% 100%); /* white */
-  --color-fd-muted: hsl(240 4% 16%); /* gray-800 */
-  --color-fd-muted-foreground: hsl(240 4% 46%); /* gray-500 */
-  --color-fd-popover: hsl(240 6% 10%); /* gray-900 */
-  --color-fd-popover-foreground: hsl(240 4% 46%); /* gray-500 */
-  --color-fd-card: hsl(240 6% 10%); /* gray-900 */
-  --color-fd-card-foreground: hsl(240 5% 84%); /* gray-300 */
-  --color-fd-border: hsl(240 4% 16%); /* gray-800 */
-  --color-fd-primary: hsl(221 100% 69%); /* primary-400 */
-  --color-fd-primary-foreground: hsl(240 6% 90%);
-  --color-fd-secondary: hsl(240 6% 10%); /* gray-900 */
-  --color-fd-secondary-foreground: hsl(240 5% 84%); /* gray-300 */
-  --color-fd-accent: hsl(240 6% 12%); /* gray-850 */
-  --color-fd-accent-foreground: hsl(0 0% 100%); /* white */
-  --color-fd-ring: hsl(224 76% 48%); /* primary-700 */
+  --color-fd-background: rgb(var(--_gray-900));
+  --color-fd-foreground: rgb(var(--_white));
+  --color-fd-muted: rgb(var(--_gray-800));
+  --color-fd-muted-foreground: rgb(var(--_gray-500));
+  --color-fd-popover: rgb(var(--_gray-900));
+  --color-fd-popover-foreground: rgb(var(--_gray-500));
+  --color-fd-card: rgb(var(--_gray-900));
+  --color-fd-card-foreground: rgb(var(--_gray-300));
+  --color-fd-border: rgb(var(--_gray-800));
+  --color-fd-primary: rgb(var(--_primary-400));
+  --color-fd-primary-foreground: rgb(var(--_gray-200));
+  --color-fd-secondary: rgb(var(--_gray-900));
+  --color-fd-secondary-foreground: rgb(var(--_gray-300));
+  --color-fd-accent: rgb(var(--_gray-850));
+  --color-fd-accent-foreground: rgb(var(--_white));
+  --color-fd-ring: rgb(var(--_primary-700));
 }
 
 :root {
@@ -88,7 +91,7 @@
   display: none;
 }
 
-/* If data-theme="dark", show dark image and hide light image */
+/* In the dark theme, hide the light image */
 .dark .img-light {
   display: none;
 }
@@ -97,7 +100,7 @@
 @layer base {
   input::placeholder,
   textarea::placeholder {
-    color: var(--color-gray-400);
+    color: rgb(var(--_gray-400));
   }
 
   button:not(:disabled),

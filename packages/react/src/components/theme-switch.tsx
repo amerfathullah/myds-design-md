@@ -27,7 +27,7 @@ interface ThemeSwitch {
   as?: "toggle" | "select";
   themes?: Array<Theme>;
   onChange?: (value: string) => void;
-  /** Accessible name of the select trigger; announced, not shown. */
+  /** Accessible name of the select trigger when `as="select"`; announced, not shown. */
   selectLabel?: string;
 }
 

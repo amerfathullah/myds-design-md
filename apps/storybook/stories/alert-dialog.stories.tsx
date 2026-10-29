@@ -9,7 +9,7 @@ import {
 } from "@govtechmy/myds-react/alert-dialog";
 import { Button } from "@govtechmy/myds-react/button";
 import { DialogBody } from "@govtechmy/myds-react/dialog";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
 import { createStory } from "../utils";
 

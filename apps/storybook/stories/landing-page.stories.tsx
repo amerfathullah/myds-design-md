@@ -1,4 +1,4 @@
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 import LandingPage from "./components/landingPage";
 
 export default {
@@ -12,25 +12,19 @@ export default {
 };
 
 export const Mobile = {
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
+  globals: {
+    viewport: { value: "mobile1" },
   },
 };
 
 export const Tablet = {
-  parameters: {
-    viewport: {
-      defaultViewport: "tablet",
-    },
+  globals: {
+    viewport: { value: "tablet" },
   },
 };
 
 export const Desktop = {
-  parameters: {
-    viewport: {
-      defaultViewport: "desktop",
-    },
+  globals: {
+    viewport: { value: "desktop" },
   },
 };

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
 import { Cell, ColumnDef, DataTable } from "@govtechmy/myds-react/data-table";
 import type { TypeWithDeepControls } from "storybook-addon-deep-controls";

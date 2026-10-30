@@ -34,7 +34,9 @@ const datefield_cva = cva([
   "bg-transparent focus:outline-hidden",
   "disabled:bg-bg-washed disabled:text-txt-black-500 disabled:cursor-not-allowed",
   "[&::-webkit-calendar-picker-indicator]:hidden",
-  "[&::-webkit-datetime-edit]:max-w-fit",
+  // Chromium sizes the edit to an estimate that leaves out the separators'
+  // margins and cuts off what doesn't fit, so let it grow to its content
+  "[&::-webkit-datetime-edit]:max-w-fit [&::-webkit-datetime-edit]:min-w-max",
   // Tailwind 4's preflight removes this padding, which sets the field's height
   "[&::-webkit-datetime-edit-fields-wrapper]:py-px",
   "[&::-webkit-datetime-edit-text]:mx-[2px]",

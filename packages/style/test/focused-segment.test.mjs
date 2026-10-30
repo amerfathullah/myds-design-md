@@ -3,51 +3,16 @@
 // its `::-webkit-datetime-edit-*-field` pseudo-element and never matches
 // `:focus` there, so the components match the focused one with `:focus-within`.
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
-import { chromium } from "playwright";
+import { compileComponents, cvaClasses } from "./components.mjs";
+import { dateTimeParts, launchInUSEnglish } from "./datetime-input.mjs";
 
-import { compile } from "./compile.mjs";
-
-const components = new URL("../../react/src/components/", import.meta.url);
-
-// The classes a component's `cva` call gives its <input>
-function inputClasses(file, cvaName) {
-  const source = fs.readFileSync(new URL(file, components), "utf8");
-  const list = source.split(`const ${cvaName} = cva([`)[1]?.split("]);")[0];
-  assert.ok(list, `${file} has no ${cvaName}`);
-  return [...list.matchAll(/"([^"]*)"/g)]
-    .map(([, classes]) => classes)
-    .join(" ");
-}
-
-// Each segment's colours, in order. The segments sit in the input's
-// user-agent shadow root, which only the DevTools protocol reaches.
+// Each segment's colours, in order
 async function segments(cdp, id) {
-  const { root } = await cdp.send("DOM.getDocument", {
-    depth: -1,
-    pierce: true,
-  });
-  const attribute = (node, name) => {
-    const attributes = node.attributes ?? [];
-    const i = attributes.indexOf(name);
-    return i % 2 === 0 ? attributes[i + 1] : undefined;
-  };
-  const found = [];
-  const walk = (node, inInput) => {
-    inInput ||= attribute(node, "id") === id;
-    const segment = attribute(node, "pseudo")?.match(
-      /^-webkit-datetime-edit-(\w+)-field$/,
-    );
-    if (inInput && segment) found.push({ name: segment[1], node });
-    for (const child of [...(node.children ?? []), ...(node.shadowRoots ?? [])])
-      walk(child, inInput);
-  };
-  walk(root, false);
-
+  const { segments } = await dateTimeParts(cdp, id);
   return Promise.all(
-    found.map(async ({ name, node }) => {
+    segments.map(async ({ name, node }) => {
       const { computedStyle } = await cdp.send("CSS.getComputedStyleForNode", {
         nodeId: node.nodeId,
       });
@@ -93,22 +58,15 @@ const fields = [
 ];
 
 test("only the focused DateField or TimeField segment is filled, in both themes", async () => {
-  // Scan the components, as the full stylesheet scans the React sources
-  const files = new Set(fields.map(({ file }) => file));
-  const css = await compile(
-    [...files]
-      .map((file) => `@source "${new URL(file, components).pathname}";`)
-      .join("\n"),
-  );
-  const browser = await chromium.launch();
+  const css = await compileComponents(fields.map(({ file }) => file));
+  const browser = await launchInUSEnglish();
   try {
-    // en-US, so the segments come month first and the time has AM/PM
     const page = await browser.newPage({ locale: "en-US" });
     await page.setContent(
       `<!doctype html><html><head><style>${css}</style></head><body>${fields
         .map(
           ({ id, file, cva, attributes }) =>
-            `<input id="${id}" ${attributes} class="${inputClasses(file, cva)}">`,
+            `<input id="${id}" ${attributes} class="${cvaClasses(file, cva)}">`,
         )
         .join("")}</body></html>`,
     );

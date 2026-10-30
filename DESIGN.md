@@ -1561,11 +1561,6 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 
 ### Colour
 
-- **Expected lint warnings.** `npx @google/design.md lint DESIGN.md` reports zero errors. It warns on:
-  - orphaned tokens, because the front matter records every exposed token, not only those components use;
-  - `missing-primary`, because MYDS has no `primary` key (see Colors);
-  - unknown sub-tokens `borderColor` and `fontWeight`, which the spec doesn't define but MYDS needs;
-  - seven contrast pairs. Four are disabled states (`button-{primary,danger}-fill-disabled`, `button-danger-{outline,ghost}-disabled`): the linter ignores alpha, and WCAG exempts disabled controls. One is `masthead-trigger`, `txt-primary` on `otl-gray-200` at 4.07:1: that fill shows only below `sm:`, where the trigger is just its chevron, and an icon needs 3:1. The other two are real wherever they render: the focused date-field and time-field segments put `txt-white` on `primary-500` at 4.15:1. Chromium and Firefox don't render that pair (see Known Gaps → Components).
 - **Gap:** the colour guideline is published as images only, so it can't be compared with the code value by value. All colour here comes from code.
 - **Gap:** the design guideline advertises a Theme Customizer for adjusting colours to an agency's branding. It is not built.
 - **Defect:** `otl-warning-300` resolves to `danger-300` (light) and `danger-700` (dark), while `otl-warning-200` uses the warning scale. It is reproduced as built.
@@ -1646,3 +1641,24 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 - **Defect:** more components hard-code English accessible names, so a Malay-language service announces them in English. Rename these with `aria-label`: the Navbar menu toggle ("Open navigation menu" / "Close navigation menu"), the Masthead trigger ("Toggle masthead", which replaces its visible label as its name), and the Breadcrumb ("breadcrumb") and Pagination ("pagination") landmarks. These can't be renamed without replacing the control: the Navbar's `<nav>` ("Main", Radix's default; `NavbarMenu` forwards no props to it), Pagination's previous, next and page buttons ("previous page", "next page", "page 3"; with `asChild`, `PaginationPrevious` and `PaginationNext` carry no name, so name your own element), the Dialog close button ("Close"; pass `hideClose` and render your own `DialogClose`), Pill's remove button ("close button"), the date pickers' previous and next buttons ("Go to the Previous Month" / "Go to the Next Month" in the day view, "Go to the Previous Year" / "Go to the Next Year" in the month view) and their day buttons and weekday headings, which react-day-picker names in English (e.g. "Friday, October 30th, 2026") whatever `locale` is, the table tooltip trigger ("Tooltip"), and DataTable's selection controls ("checkbox", "radio", and "selection-column" on their header) and nested-row toggle ("expand row"). `PaginationEllipsis`'s "More pages" sits inside `aria-hidden`, so it is never announced.
 - **Defect:** Link, Breadcrumb links, Footer links, Navbar menu items, the Navbar dropdown trigger and the table tooltip trigger have no `fr-*` focus ring; they fall back to the browser's default `:focus-visible` outline. The Toast close button (`focus:outline-hidden`) and the Accordion trigger (`outline-hidden`) remove that outline without adding a ring, so the Toast close button shows no focus indicator at all and the Accordion trigger only its focus underline. The ring is written directly in 15 of the 42 component files (Accordion's sets only a colour, on the non-focusable item); Pagination, the date pickers and other composites get it from Button.
 - **Defect:** DataTable's sort and widen buttons are `invisible` until their header is hovered or the column is sorted or widened, and `hidden` below `lg:`. Keyboard users can't reach an unsorted column's sort button, nobody can sort or widen below 1024px, and each button holds only an icon, with no accessible name. To make sorting reachable, leave `sortable` off and put your own labelled button in the column's `header`.
+
+## Linting
+
+`npx @google/design.md@0.4.0 lint DESIGN.md` reports zero errors. It warns on:
+
+- orphaned tokens, because the front matter records every token the preset exposes, not only those its component entries name;
+- `missing-primary`, because MYDS has no `primary` key (see Colors);
+- the unknown sub-tokens `borderColor` and `fontWeight`, which the DESIGN.md format doesn't define but MYDS needs;
+- the contrast pairs below, which fall short of the 4.5:1 that WCAG AA asks of text. The ratios are the linter's: it drops alpha rather than compositing it, so a pair with an alpha colour renders lower still. WCAG exempts disabled controls.
+
+| Component                        | Pair                                         | Ratio  | Why it's expected                                                                                 |
+| -------------------------------- | -------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `button-primary-fill-disabled`   | `white-disabled` on `bg-primary-disabled`    | 1.47:1 | Disabled                                                                                          |
+| `button-danger-fill-disabled`    | `white-disabled` on `bg-danger-disabled`     | 1.45:1 | Disabled                                                                                          |
+| `button-danger-outline-disabled` | `txt-danger-disabled` on `bg-white-disabled` | 4.39:1 | Disabled                                                                                          |
+| `button-danger-ghost-disabled`   | `txt-danger-disabled` on `bg-white-disabled` | 4.39:1 | Disabled                                                                                          |
+| `masthead-trigger`               | `txt-primary` on `otl-gray-200`              | 4.07:1 | The fill shows only below `sm:`, where the trigger is just its chevron, and an icon needs 3:1     |
+| `date-field-segment-active`      | `txt-white` on `primary-500`                 | 4.15:1 | Fails wherever it renders, but Chromium and Firefox don't render it (see Known Gaps → Components) |
+| `time-field-segment-active`      | `txt-white` on `primary-500`                 | 4.15:1 | As `date-field-segment-active`                                                                    |
+
+Versions before 0.2.0 fail on this file: they stop at the numeric `fontWeight` values and reject 8-digit hex colours.

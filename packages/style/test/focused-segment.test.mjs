@@ -6,30 +6,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
-import tailwindcss from "@tailwindcss/postcss";
 import { chromium } from "playwright";
-import postcss from "postcss";
 
-const packageDir = new URL("..", import.meta.url).pathname;
-const { exports } = JSON.parse(
-  fs.readFileSync(new URL("../package.json", import.meta.url)),
-);
+import { compile } from "./compile.mjs";
+
 const components = new URL("../../react/src/components/", import.meta.url);
-
-// A consumer's Tailwind 4 stylesheet that scans the two components
-async function compile() {
-  const css = `@import "tailwindcss" source(none);
-@import "./${exports["."].style.replace(/^\.\//, "")}";
-@source "../react/src/components/date-field.tsx";
-@source "../react/src/components/time-field.tsx";`;
-  const result = await postcss([tailwindcss({ base: packageDir })]).process(
-    css,
-    {
-      from: `${packageDir}consumer.css`,
-    },
-  );
-  return result.css;
-}
 
 // The classes a component's `cva` call gives its <input>
 function inputClasses(file, cvaName) {
@@ -90,26 +71,35 @@ const fill = {
 const fields = [
   {
     id: "date",
-    classes: inputClasses("date-field.tsx", "datefield_cva"),
+    file: "date-field.tsx",
+    cva: "datefield_cva",
     attributes: 'type="date" value="2026-09-26"',
     segments: ["month", "day", "year"],
   },
   {
     id: "time",
-    classes: inputClasses("time-field.tsx", "timefield_cva"),
+    file: "time-field.tsx",
+    cva: "timefield_cva",
     attributes: 'type="time" value="09:30" step="60"',
     segments: ["hour", "minute", "ampm"],
   },
   {
     id: "time-seconds",
-    classes: inputClasses("time-field.tsx", "timefield_cva"),
+    file: "time-field.tsx",
+    cva: "timefield_cva",
     attributes: 'type="time" value="09:30:15" step="1"',
     segments: ["hour", "minute", "second", "ampm"],
   },
 ];
 
 test("only the focused DateField or TimeField segment is filled, in both themes", async () => {
-  const css = await compile();
+  // Scan the components, as the full stylesheet scans the React sources
+  const files = new Set(fields.map(({ file }) => file));
+  const css = await compile(
+    [...files]
+      .map((file) => `@source "${new URL(file, components).pathname}";`)
+      .join("\n"),
+  );
   const browser = await chromium.launch();
   try {
     // en-US, so the segments come month first and the time has AM/PM
@@ -117,8 +107,8 @@ test("only the focused DateField or TimeField segment is filled, in both themes"
     await page.setContent(
       `<!doctype html><html><head><style>${css}</style></head><body>${fields
         .map(
-          ({ id, classes, attributes }) =>
-            `<input id="${id}" ${attributes} class="${classes}">`,
+          ({ id, file, cva, attributes }) =>
+            `<input id="${id}" ${attributes} class="${inputClasses(file, cva)}">`,
         )
         .join("")}</body></html>`,
     );

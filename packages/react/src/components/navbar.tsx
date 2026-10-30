@@ -31,7 +31,7 @@ import { cva } from "class-variance-authority";
 import { RemoveScroll } from "react-remove-scroll";
 import { Root, Slot } from "@radix-ui/react-slot";
 
-interface NavbarProps extends ComponentProps<"header"> {}
+type NavbarProps = ComponentProps<"header">;
 
 interface NavbarContextProps {
   id: string;

@@ -160,7 +160,7 @@ const DialogHeader: ForwardRefExoticComponent<DialogHeaderProps> = forwardRef(
 );
 /*========================================================================================================================*/
 
-interface DialogContentProps extends ComponentProps<"div"> {}
+type DialogContentProps = ComponentProps<"div">;
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef(
   ({ className, ...props }, ref) => {
@@ -239,8 +239,7 @@ const DialogFooter: ForwardRefExoticComponent<DialogFooterProps> = forwardRef(
 
 /*========================================================================================================================*/
 
-interface DialogTitleProps
-  extends ComponentProps<typeof DialogPrimitive.Title> {}
+type DialogTitleProps = ComponentProps<typeof DialogPrimitive.Title>;
 
 const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef(
   ({ className, ...props }, ref) => (
@@ -256,8 +255,9 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef(
 );
 
 /*========================================================================================================================*/
-interface DialogDescriptionProps
-  extends ComponentProps<typeof DialogPrimitive.Description> {}
+type DialogDescriptionProps = ComponentProps<
+  typeof DialogPrimitive.Description
+>;
 
 const DialogDescription: ForwardRefExoticComponent<DialogDescriptionProps> =
   forwardRef(({ className, ...props }, ref) => (

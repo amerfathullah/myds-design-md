@@ -77,9 +77,9 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
       if (value === undefined || value === null) return;
 
       if (isMultiple(props)) {
-        let temp = [];
-        if (!_value.includes(value)) temp = [..._value, value];
-        else temp = (_value as string[]).filter((v) => v !== value);
+        const temp = !_value.includes(value)
+          ? [..._value, value]
+          : (_value as string[]).filter((v) => v !== value);
 
         _setValue(temp);
         props.onValueChange?.(temp);
@@ -207,7 +207,7 @@ const select_counter_cva = cva(
   },
 );
 
-interface SelectCounterProps extends React.ComponentProps<"span"> {}
+type SelectCounterProps = React.ComponentProps<"span">;
 
 const SelectCounter: React.ForwardRefExoticComponent<SelectCounterProps> =
   React.forwardRef(({ children, className, ...props }, ref) => {

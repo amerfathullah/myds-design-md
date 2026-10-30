@@ -5,12 +5,12 @@ import {
   MastheadTitle,
   MastheadTrigger,
   MastheadSection,
-} from "@govtechmy/myds-react/masthead";
+} from "@amerfathullah/myds-react/masthead";
 import {
   PutrajayaIcon,
   Lock2Icon,
   LockFillIcon,
-} from "@govtechmy/myds-react/icon";
+} from "@amerfathullah/myds-react/icon";
 
 export default function MastheadMyds() {
   return (

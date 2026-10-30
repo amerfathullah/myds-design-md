@@ -5,14 +5,14 @@ import {
   SiteLinkGroup,
   SiteLink,
   FooterLogo,
-} from "@govtechmy/myds-react/footer";
+} from "@amerfathullah/myds-react/footer";
 import {
   FacebookIcon,
   TwitterXIcon,
   InstagramIcon,
   YoutubeIcon,
-} from "@govtechmy/myds-react/icon";
-import { Link } from "@govtechmy/myds-react/link";
+} from "@amerfathullah/myds-react/icon";
+import { Link } from "@amerfathullah/myds-react/link";
 
 export default function FooterMyds() {
   return (
@@ -93,19 +93,19 @@ export default function FooterMyds() {
           <SiteLink href="#">Link 3</SiteLink>
           <SiteLink href="#">Link 4</SiteLink>
         </SiteLinkGroup>
-        <SiteLinkGroup groupTitle="Super super long long long long long title">
+        <SiteLinkGroup groupTitle="Services">
           <SiteLink href="#">Link 1 super super long super super long</SiteLink>
           <SiteLink href="#">Link 2</SiteLink>
           <SiteLink href="#">Link 3</SiteLink>
           <SiteLink href="#">Link 4</SiteLink>
         </SiteLinkGroup>
-        <SiteLinkGroup groupTitle="Super super long long long long long title">
+        <SiteLinkGroup groupTitle="Resources">
           <SiteLink href="#">Link 1 super super long super super long</SiteLink>
           <SiteLink href="#">Link 2</SiteLink>
           <SiteLink href="#">Link 3</SiteLink>
           <SiteLink href="#">Link 4</SiteLink>
         </SiteLinkGroup>
-        <SiteLinkGroup groupTitle="Super super long long long long long title">
+        <SiteLinkGroup groupTitle="About us">
           <SiteLink href="#">Link 1 super super long super super long</SiteLink>
           <SiteLink href="#">Link 2</SiteLink>
           <SiteLink href="#">Link 3</SiteLink>

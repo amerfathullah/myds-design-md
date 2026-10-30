@@ -4,17 +4,19 @@ Documentation for For FE Templates B ( React + Vite + MYDS + Layout + i18n)
 Part 1 : Layout Prep
 
 1. Use the Documentation for For FE Templates ( React + Vite + MYDS)
-2. Create component file in src
-3. Create layout file in component file
+2. Create components file in src
+3. Create layout file in components file
 4. create Layout.tsx in layout file
 5. Create MastheadMyds.tsx in layout file
-6. Paste in masthead the code from https://myds.vercel.app/en/docs/develop/masthead
+6. Paste in masthead the code from [fe-template-b/src/components/layout/MastheadMyds.tsx](fe-template-b/src/components/layout/MastheadMyds.tsx)
 7. Create NavbarMyds.tsx in layout file
 8. Paste in navbar the code from
-   https://myds.vercel.app/en/docs/develop/navbar
+   [fe-template-b/src/components/layout/NavbarMyds.tsx](fe-template-b/src/components/layout/NavbarMyds.tsx)
 9. Create FooterMyds.tsx in layout file
 10. Paste in footer the code from
-    https://myds.vercel.app/en/docs/develop/footer
+    [fe-template-b/src/components/layout/FooterMyds.tsx](fe-template-b/src/components/layout/FooterMyds.tsx)
+
+    These are the Masthead, Navbar and Footer examples from the MYDS docs, importing `@amerfathullah/myds-react`. The examples on https://myds.vercel.app import the old `@govtechmy/myds-react` 1.x, so don't copy from there.
 11. Prepare the Layout like below example by importing the MastheadMyds.tsx, NavbarMyds.tsx, FooterMyds.tsx
 
 Ex:
@@ -195,7 +197,16 @@ export default i18n;
 6. Wrap the app with suspense in case of load in main.tsx
 
 ```
-<Suspense fallback={<div>Loading...</div>}>
-   <App />
-</Suspense>
+import { StrictMode, Suspense } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.tsx";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <Suspense fallback={<div>Loading...</div>}>
+      <App />
+    </Suspense>
+  </StrictMode>
+);
 ```

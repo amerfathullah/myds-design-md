@@ -6,29 +6,24 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@govtechmy/myds-react": "^1.0.0",
-    "@govtechmy/myds-style": "^1.0.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "@amerfathullah/myds-react": "^2.0.0",
+    "@amerfathullah/myds-style": "^2.0.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.33.0",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.0",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.33.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "globals": "^16.3.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.90.0",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.5"
   }
 }

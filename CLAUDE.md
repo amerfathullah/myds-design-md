@@ -142,7 +142,7 @@ Overall average: **60-90% token reduction** on common development operations.
 
 ### Issue tracker
 
-Issues are tracked in GitHub Issues for `amerfathullah/myds` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+Issues are tracked in GitHub Issues for `amerfathullah/myds-design-md` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

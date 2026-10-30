@@ -38,10 +38,10 @@ const timefield_cva = cva([
   // Tailwind 4's preflight removes this padding, which sets the field's height
   "[&::-webkit-datetime-edit-fields-wrapper]:py-px",
   "[&::-webkit-datetime-edit-text]:mx-[2px]",
-  "[&::-webkit-datetime-edit-hour-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-hour-field:focus]:text-txt-white",
-  "[&::-webkit-datetime-edit-minute-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-minute-field:focus]:text-txt-white",
-  "[&::-webkit-datetime-edit-second-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-second-field:focus]:text-txt-white",
-  "[&::-webkit-datetime-edit-ampm-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-ampm-field:focus]:text-txt-white",
+  "[&::-webkit-datetime-edit-hour-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-hour-field:focus-within]:text-white",
+  "[&::-webkit-datetime-edit-minute-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-minute-field:focus-within]:text-white",
+  "[&::-webkit-datetime-edit-second-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-second-field:focus-within]:text-white",
+  "[&::-webkit-datetime-edit-ampm-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-ampm-field:focus-within]:text-white",
 ]);
 
 const icon_cva = cva([], {

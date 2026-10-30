@@ -38,9 +38,9 @@ const datefield_cva = cva([
   // Tailwind 4's preflight removes this padding, which sets the field's height
   "[&::-webkit-datetime-edit-fields-wrapper]:py-px",
   "[&::-webkit-datetime-edit-text]:mx-[2px]",
-  "[&::-webkit-datetime-edit-day-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-day-field:focus]:text-txt-white",
-  "[&::-webkit-datetime-edit-month-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-month-field:focus]:text-txt-white ",
-  "[&::-webkit-datetime-edit-year-field:focus]:bg-primary-500 [&::-webkit-datetime-edit-year-field:focus]:text-txt-white",
+  "[&::-webkit-datetime-edit-day-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-day-field:focus-within]:text-white",
+  "[&::-webkit-datetime-edit-month-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-month-field:focus-within]:text-white",
+  "[&::-webkit-datetime-edit-year-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-year-field:focus-within]:text-white",
 ]);
 
 const icon_cva = cva([], {

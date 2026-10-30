@@ -48,7 +48,7 @@ const natural = fields.flatMap(({ values, ...field }) =>
   ),
 );
 
-// The two ways #107 narrows a field: a fixed width, and the `min-width`
+// Two ways an author narrows a field: a fixed width, and the `min-width`
 // workaround DESIGN.md used to suggest, inside a parent too narrow for it.
 // 5.5rem is wider than a TimeField without seconds below large, so it only
 // narrows the others.
@@ -69,10 +69,10 @@ const narrowed = natural.flatMap((field) =>
     })),
 );
 
-// The layout #106 gave the fields, for inputs with the class `before`: an
-// edit that grows or shrinks to its content, and inline segments in a fields
-// wrapper that doesn't clip
-const beforeSegments = [
+// The layout the fields had before their fields wrapper scrolled, for inputs
+// with the class `baseline`: an edit that grows or shrinks to its content, and
+// inline segments in a fields wrapper that doesn't clip
+const baselineSegments = [
   "month",
   "day",
   "year",
@@ -81,12 +81,12 @@ const beforeSegments = [
   "second",
   "ampm",
 ]
-  .map((name) => `.before::-webkit-datetime-edit-${name}-field`)
+  .map((name) => `.baseline::-webkit-datetime-edit-${name}-field`)
   .join(", ");
-const before = `
-.before::-webkit-datetime-edit { display: inline-flex !important; min-width: max-content !important; max-width: fit-content !important; }
-.before::-webkit-datetime-edit-fields-wrapper { overflow: visible !important; }
-${beforeSegments} { display: inline !important; text-box: normal !important; margin-block: 0 !important; }`;
+const baseline = `
+.baseline::-webkit-datetime-edit { display: inline-flex !important; min-width: max-content !important; max-width: fit-content !important; }
+.baseline::-webkit-datetime-edit-fields-wrapper { overflow: visible !important; }
+${baselineSegments} { display: inline !important; text-box: normal !important; margin-block: 0 !important; }`;
 
 // `date-field-segment-active` and `time-field-segment-active`
 const fill = "rgb(37, 99, 235)";
@@ -95,6 +95,9 @@ const left = (quad) => Math.min(quad[0], quad[2], quad[4], quad[6]);
 const right = (quad) => Math.max(quad[0], quad[2], quad[4], quad[6]);
 const top = (quad) => Math.min(quad[1], quad[3], quad[5], quad[7]);
 const bottom = (quad) => Math.max(quad[1], quad[3], quad[5], quad[7]);
+
+const borderBox = async (cdp, { nodeId }) =>
+  (await cdp.send("DOM.getBoxModel", { nodeId })).model.border;
 
 /**
  * A page holding `cases`, each in a parent `parent` px wide or as wide as its
@@ -106,8 +109,20 @@ async function render(browser, css, cases) {
   await page.setContent(
     `<!doctype html><html><head><style>${css}</style></head><body>${cases
       .map(
-        ({ id, file, container, input, size, type, value, step, ...rest }) =>
-          `<div style="width: ${rest.parent ? `${rest.parent}px` : "max-content"}"><div class="${cvaClasses(file, container, { size })}"><input id="${id}" type="${type}" value="${value}"${step ? ` step="${step}"` : ""} style="${rest.style ?? ""}" class="${cvaClasses(file, input)} ${rest.className ?? ""}"></div></div>`,
+        ({
+          id,
+          file,
+          container,
+          input,
+          size,
+          type,
+          value,
+          step,
+          style = "",
+          parent,
+          className = "",
+        }) =>
+          `<div style="width: ${parent ? `${parent}px` : "max-content"}"><div class="${cvaClasses(file, container, { size })}"><input id="${id}" type="${type}" value="${value}"${step ? ` step="${step}"` : ""} style="${style}" class="${cvaClasses(file, input)} ${className}"></div></div>`,
       )
       .join("")}</body></html>`,
   );
@@ -120,19 +135,20 @@ async function render(browser, css, cases) {
 
 /**
  * Focuses the input with `id` and moves focus with ArrowRight from its first
- * segment to its last, then with ArrowLeft back to the first, calling `visit`
- * with each focused segment's index.
+ * segment to its last, then with ArrowLeft back to the first. After each move
+ * it calls `visit` with the focused segment's index and the number of keys
+ * pressed so far.
  */
 async function walkSegments(page, id, count, visit) {
   const order = [...Array(count).keys()];
   order.push(...order.slice(0, -1).reverse());
   await page.focus(`#${id}`);
-  for (const [step, i] of order.entries()) {
-    if (step)
+  for (const [move, i] of order.entries()) {
+    if (move)
       await page.keyboard.press(
-        i > order[step - 1] ? "ArrowRight" : "ArrowLeft",
+        i > order[move - 1] ? "ArrowRight" : "ArrowLeft",
       );
-    await visit(i, step);
+    await visit(i, move);
   }
   await page.evaluate((id) => document.getElementById(id).blur(), id);
 }
@@ -146,34 +162,33 @@ test("a narrowed DateField or TimeField scrolls the focused segment into view in
       (
         await cdp.send("CSS.getComputedStyleForNode", { nodeId })
       ).computedStyle.find(({ name }) => name === "background-color").value;
-    const border = async ({ nodeId }) =>
-      (await cdp.send("DOM.getBoxModel", { nodeId })).model.border;
 
     const hidden = [];
     for (const { id } of narrowed) {
-      const parts = await dateTimeParts(cdp, id);
-      const names = parts.segments.map(({ name }) => name);
+      const atRest = await dateTimeParts(cdp, id);
+      const names = atRest.segments.map(({ name }) => name);
       // The field really is narrowed: at rest, its last segment is hidden
-      const [, restTo] = await visibleSpan(cdp, parts);
+      const [, visibleTo] = await visibleSpan(cdp, atRest);
       assert.ok(
-        right(await border(parts.segments.at(-1).node)) > restTo + 1,
+        right(await borderBox(cdp, atRest.segments.at(-1).node)) >
+          visibleTo + 1,
         `${id} isn't narrower than its text`,
       );
 
-      await walkSegments(page, id, names.length, async (i, step) => {
-        const { segments, ...rest } = await dateTimeParts(cdp, id);
+      await walkSegments(page, id, names.length, async (i, move) => {
+        const focused = await dateTimeParts(cdp, id);
         const filled = [];
-        for (const { name, node } of segments)
+        for (const { name, node } of focused.segments)
           if ((await background(node)) === fill) filled.push(name);
-        assert.deepEqual(filled, [names[i]], `${id}, step ${step}`);
+        assert.deepEqual(filled, [names[i]], `${id}, move ${move}`);
 
         // Chromium scrolls by whole pixels, so the focused segment can still
         // pass an edge by under half a pixel
-        const [from, to] = await visibleSpan(cdp, rest);
-        const quad = await border(segments[i].node);
+        const [from, to] = await visibleSpan(cdp, focused);
+        const quad = await borderBox(cdp, focused.segments[i].node);
         const cut = Math.max(from - left(quad), right(quad) - to);
-        if (cut > 0.5)
-          hidden.push(`${id} ${names[i]} (step ${step}): ${cut.toFixed(2)}px`);
+        if (cut >= 0.5)
+          hidden.push(`${id} ${names[i]} (move ${move}): ${cut.toFixed(2)}px`);
       });
     }
     assert.deepEqual(hidden, []);
@@ -186,37 +201,36 @@ test("a DateField or TimeField at natural width keeps its layout and never scrol
   const css = await compileComponents(fields.map(({ file }) => file));
   const browser = await launchInUSEnglish();
   try {
-    const { page, cdp } = await render(browser, `${css}${before}`, [
+    const { page, cdp } = await render(browser, `${css}${baseline}`, [
       ...natural,
       ...natural.map((field) => ({
         ...field,
-        id: `${field.id}-before`,
-        className: "before",
+        id: `${field.id}-baseline`,
+        className: "baseline",
       })),
     ]);
-    const box = async ({ nodeId }) =>
-      (await cdp.send("DOM.getBoxModel", { nodeId })).model.border;
     // The input's size, and each segment's box from the input's top left
     const layout = async (id) => {
       const { input, segments } = await dateTimeParts(cdp, id);
-      const outer = await box(input);
+      const outer = await borderBox(cdp, input);
       const size = (quad) =>
         `${(right(quad) - left(quad)).toFixed(2)}x${(bottom(quad) - top(quad)).toFixed(2)}`;
-      const parts = [`input ${size(outer)}`];
+      const lines = [`input ${size(outer)}`];
       for (const { name, node } of segments) {
-        const quad = await box(node);
-        parts.push(
+        const quad = await borderBox(cdp, node);
+        lines.push(
           `${name} ${size(quad)} at ${(left(quad) - left(outer)).toFixed(2)},${(top(quad) - top(outer)).toFixed(2)}`,
         );
       }
-      return parts;
+      return lines;
     };
 
     for (const { id } of natural) {
-      const rest = await layout(id);
-      assert.deepEqual(rest, await layout(`${id}-before`), id);
-      await walkSegments(page, id, rest.length - 1, async (i, step) =>
-        assert.deepEqual(await layout(id), rest, `${id}, step ${step}`),
+      const atRest = await layout(id);
+      assert.deepEqual(atRest, await layout(`${id}-baseline`), id);
+      const { segments } = await dateTimeParts(cdp, id);
+      await walkSegments(page, id, segments.length, async (i, move) =>
+        assert.deepEqual(await layout(id), atRest, `${id}, move ${move}`),
       );
     }
   } finally {

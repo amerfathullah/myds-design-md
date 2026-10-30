@@ -12,7 +12,7 @@ import { clx } from "../utils";
 import { Slot } from "@radix-ui/react-slot";
 import { Link } from "./link";
 
-interface FooterSectionProps extends ComponentProps<"div"> {}
+type FooterSectionProps = ComponentProps<"div">;
 const FooterSection: ForwardRefExoticComponent<FooterSectionProps> = forwardRef(
   ({ children, className, ...props }, ref) => {
     return (
@@ -30,7 +30,7 @@ const FooterSection: ForwardRefExoticComponent<FooterSectionProps> = forwardRef(
   },
 );
 
-interface FooterProps extends ComponentProps<"footer"> {}
+type FooterProps = ComponentProps<"footer">;
 const Footer: ForwardRefExoticComponent<FooterProps> = forwardRef(
   ({ children, className, ...props }, ref) => {
     return (
@@ -51,7 +51,7 @@ const Footer: ForwardRefExoticComponent<FooterProps> = forwardRef(
   },
 );
 
-interface SiteInfoProps extends ComponentProps<"div"> {}
+type SiteInfoProps = ComponentProps<"div">;
 const SiteInfo: ForwardRefExoticComponent<SiteInfoProps> = forwardRef(
   ({ children, className, ...props }, ref) => {
     return (

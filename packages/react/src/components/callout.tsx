@@ -141,7 +141,7 @@ const CalloutContent: ForwardRefExoticComponent<ComponentProps<"p">> =
   });
 CalloutContent.displayName = "CalloutContent";
 
-interface CalloutActionProps extends ComponentProps<"div"> {}
+type CalloutActionProps = ComponentProps<"div">;
 
 const CalloutAction: ForwardRefExoticComponent<CalloutActionProps> = forwardRef(
   ({ className, ...props }, ref) => {

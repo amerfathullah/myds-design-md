@@ -41,8 +41,9 @@ const ToastContext = React.createContext<{
 
 /*========================================================================================================================*/
 
-interface ToastViewportProps
-  extends React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport> {}
+type ToastViewportProps = React.ComponentPropsWithoutRef<
+  typeof ToastPrimitives.Viewport
+>;
 
 const toast_viewport_cva = cva([
   "fixed flex max-h-screen w-full overflow-hidden flex-col-reverse gap-1",

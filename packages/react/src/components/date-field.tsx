@@ -35,10 +35,16 @@ const datefield_cva = cva([
   "disabled:bg-bg-washed disabled:text-txt-black-500 disabled:cursor-not-allowed",
   "[&::-webkit-calendar-picker-indicator]:hidden",
   // Chromium sizes the edit to an estimate that leaves out the separators'
-  // margins and cuts off what doesn't fit, so let it grow to its content
-  "[&::-webkit-datetime-edit]:max-w-fit [&::-webkit-datetime-edit]:min-w-max",
+  // margins, so it has no box: the fields wrapper sizes to the segments
+  "[&::-webkit-datetime-edit]:contents",
   // Tailwind 4's preflight removes this padding, which sets the field's height
   "[&::-webkit-datetime-edit-fields-wrapper]:py-px",
+  // Chromium's focus scroll centres a segment wholly outside the area the
+  // wrapper's scroll padding leaves, and leaves a partly hidden one where it
+  // is. Half the width on each side leaves only the centre line, so only a
+  // segment that crosses it stays put, and if it's no wider than half the
+  // field, it already shows in full
+  "[&::-webkit-datetime-edit-fields-wrapper]:overflow-hidden [&::-webkit-datetime-edit-fields-wrapper]:scroll-px-[50%]",
   "[&::-webkit-datetime-edit-text]:mx-[2px]",
   "[&::-webkit-datetime-edit-day-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-day-field:focus-within]:text-white",
   "[&::-webkit-datetime-edit-month-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-month-field:focus-within]:text-white",

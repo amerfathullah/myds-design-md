@@ -3,13 +3,17 @@
 // which leaves out author margins, and the edit's `overflow: hidden` cuts off
 // whatever doesn't fit. Both fields put 2px margins around each separator,
 // which cut the end of TimeField's last segment ("09:30 AM" read "09:30 AN");
-// DateField's estimate had room to spare. So both let the edit grow to its
-// content.
+// DateField's estimate had room to spare. So both give the edit no box, and
+// the fields wrapper inside it sizes to the segments.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compileComponents, cvaClasses } from "./components.mjs";
-import { dateTimeParts, launchInUSEnglish } from "./datetime-input.mjs";
+import {
+  dateTimeParts,
+  launchInUSEnglish,
+  visibleSpan,
+} from "./datetime-input.mjs";
 
 const fields = [
   {
@@ -78,7 +82,7 @@ test("no DateField or TimeField segment is cut off in Chromium", async () => {
 
     const cut = [];
     for (const { id, segments: names } of cases) {
-      const { input, edit, segments } = await dateTimeParts(cdp, id);
+      const { segments, ...parts } = await dateTimeParts(cdp, id);
       // A time ends in AM/PM, so this is the 12-hour layout
       assert.deepEqual(
         segments.map(({ name }) => name),
@@ -86,12 +90,9 @@ test("no DateField or TimeField segment is cut off in Chromium", async () => {
         id,
       );
 
-      // The input cuts off what passes its content box, and the edit, which
-      // has no border, what passes its border box
-      const clipEdge = Math.min(
-        right((await box(input)).content),
-        right((await box(edit)).border),
-      );
+      // The input cuts off what passes its content box, and the edit or the
+      // fields wrapper, which have no border, what passes their border box
+      const [, clipEdge] = await visibleSpan(cdp, parts);
       for (const { name, node } of segments) {
         const overflow = right((await box(node)).content) - clipEdge;
         if (overflow > 0.01)

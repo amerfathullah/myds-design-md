@@ -5,21 +5,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { chromium } from "playwright";
-
-import { compile } from "./compile.mjs";
-import { components, cvaClasses, inputParts } from "./components.mjs";
+import { compileComponents, cvaClasses } from "./components.mjs";
+import { dateTimeParts, launchInUSEnglish } from "./datetime-input.mjs";
 
 // Each segment's colours, in order
 async function segments(cdp, id) {
-  const { parts } = await inputParts(cdp, id);
-  const found = parts.flatMap(({ pseudo, node }) => {
-    const segment = pseudo.match(/^-webkit-datetime-edit-(\w+)-field$/);
-    return segment ? [{ name: segment[1], node }] : [];
-  });
-
+  const { segments } = await dateTimeParts(cdp, id);
   return Promise.all(
-    found.map(async ({ name, node }) => {
+    segments.map(async ({ name, node }) => {
       const { computedStyle } = await cdp.send("CSS.getComputedStyleForNode", {
         nodeId: node.nodeId,
       });
@@ -65,16 +58,9 @@ const fields = [
 ];
 
 test("only the focused DateField or TimeField segment is filled, in both themes", async () => {
-  // Scan the components, as the full stylesheet scans the React sources
-  const files = new Set(fields.map(({ file }) => file));
-  const css = await compile(
-    [...files]
-      .map((file) => `@source "${new URL(file, components).pathname}";`)
-      .join("\n"),
-  );
-  const browser = await chromium.launch();
+  const css = await compileComponents(fields.map(({ file }) => file));
+  const browser = await launchInUSEnglish();
   try {
-    // en-US, so the segments come month first and the time has AM/PM
     const page = await browser.newPage({ locale: "en-US" });
     await page.setContent(
       `<!doctype html><html><head><style>${css}</style></head><body>${fields

@@ -1,15 +1,15 @@
-// Chromium sizes a date or time input's `::-webkit-datetime-edit` to a fixed
-// estimate of its segments' text, which leaves out author margins, and the
-// edit's `overflow: hidden` cuts off whatever doesn't fit. DateField's and
-// TimeField's 2px separator margins cut the end of TimeField's last segment
-// ("09:30 AM" read "09:30 AN"), so both let the edit grow to its content.
+// Chromium overrides the width of a date or time input's
+// `::-webkit-datetime-edit` with an estimate built from its segments' text,
+// which leaves out author margins, and the edit's `overflow: hidden` cuts off
+// whatever doesn't fit. Both fields put 2px margins around each separator,
+// which cut the end of TimeField's last segment ("09:30 AM" read "09:30 AN");
+// DateField's estimate had room to spare. So both let the edit grow to its
+// content.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { chromium } from "playwright";
-
-import { compile } from "./compile.mjs";
-import { components, cvaClasses, inputParts } from "./components.mjs";
+import { compileComponents, cvaClasses } from "./components.mjs";
+import { dateTimeParts, launchInUSEnglish } from "./datetime-input.mjs";
 
 const fields = [
   {
@@ -17,31 +17,37 @@ const fields = [
     container: "timefield_container_cva",
     input: "timefield_cva",
     type: "time",
-    attributes: ["09:30", "12:00", "23:45"].flatMap((value) =>
-      [60, 1].map((step) => `value="${value}" step="${step}"`),
-    ),
+    values: ["09:30", "12:00", "23:45"].flatMap((value) => [
+      { value, step: 60, segments: ["hour", "minute", "ampm"] },
+      { value, step: 1, segments: ["hour", "minute", "second", "ampm"] },
+    ]),
   },
   {
     file: "date-field.tsx",
     container: "datefield_container_cva",
     input: "datefield_cva",
     type: "date",
-    attributes: ['value="2026-09-26"', 'value=""'],
+    values: ["2026-09-26", ""].map((value) => ({
+      value,
+      segments: ["month", "day", "year"],
+    })),
   },
 ];
 
-// Every field at every size, enabled and disabled
-const cases = fields.flatMap((field) =>
+// Every field at every size, which the wrapper sets as the text size the
+// input inherits
+const cases = fields.flatMap(({ values, ...field }) =>
   ["small", "medium", "large"].flatMap((size) =>
-    [false, true].flatMap((disabled) =>
-      field.attributes.map((attributes) => ({
-        ...field,
-        id: `${field.type}-${size}${disabled ? "-disabled" : ""}-${attributes.match(/value="([^"]*)"/)[1] || "empty"}${attributes.match(/step="(\d+)"/)?.[1] === "1" ? "-seconds" : ""}`,
-        size,
-        disabled,
-        attributes,
-      })),
-    ),
+    values.map(({ value, step, segments }) => ({
+      ...field,
+      id: [field.type, size, value || "empty", step && `step-${step}`]
+        .filter(Boolean)
+        .join("-"),
+      size,
+      value,
+      step,
+      segments,
+    })),
   ),
 );
 
@@ -49,27 +55,18 @@ const cases = fields.flatMap((field) =>
 const right = (quad) => Math.max(quad[0], quad[2], quad[4], quad[6]);
 
 test("no DateField or TimeField segment is cut off in Chromium", async () => {
-  // Scan the components, as the full stylesheet scans the React sources
-  const files = new Set(fields.map(({ file }) => file));
-  const css = await compile(
-    [...files]
-      .map((file) => `@source "${new URL(file, components).pathname}";`)
-      .join("\n"),
-  );
-  // Headless Linux Chromium takes the 12/24-hour format from LANG, not from
-  // the page's locale
-  const browser = await chromium.launch({
-    env: { ...process.env, LANG: "en_US.UTF-8" },
-  });
+  const css = await compileComponents(fields.map(({ file }) => file));
+  const browser = await launchInUSEnglish();
   try {
-    // No viewport, so no device-scale-factor emulation, which widens
-    // Chromium's estimate and hides the cut
+    // No viewport, so the page renders at a real scale factor of 1: emulating
+    // a larger `deviceScaleFactor` widens Chromium's estimate and hides some
+    // of the cut
     const page = await browser.newPage({ viewport: null, locale: "en-US" });
     await page.setContent(
       `<!doctype html><html><head><style>${css}</style></head><body>${cases
         .map(
-          ({ id, file, container, input, type, size, disabled, attributes }) =>
-            `<div class="${cvaClasses(file, container, { size, disabled, invalid: false })}"><input id="${id}" type="${type}" ${attributes}${disabled ? " disabled" : ""} class="${cvaClasses(file, input)}"></div>`,
+          ({ id, file, container, input, type, size, value, step }) =>
+            `<div class="${cvaClasses(file, container, { size })}"><input id="${id}" type="${type}" value="${value}"${step ? ` step="${step}"` : ""} class="${cvaClasses(file, input)}"></div>`,
         )
         .join("")}</body></html>`,
     );
@@ -80,29 +77,25 @@ test("no DateField or TimeField segment is cut off in Chromium", async () => {
       (await cdp.send("DOM.getBoxModel", { nodeId })).model;
 
     const cut = [];
-    for (const { id } of cases) {
-      const { input, parts } = await inputParts(cdp, id);
-      const edit = parts.find(
-        ({ pseudo }) => pseudo === "-webkit-datetime-edit",
+    for (const { id, segments: names } of cases) {
+      const { input, edit, segments } = await dateTimeParts(cdp, id);
+      // A time ends in AM/PM, so this is the 12-hour layout
+      assert.deepEqual(
+        segments.map(({ name }) => name),
+        names,
+        id,
       );
-      const segments = parts.flatMap(({ pseudo, node }) => {
-        const segment = pseudo.match(/^-webkit-datetime-edit-(\w+)-field$/);
-        return segment ? [{ name: segment[1], node }] : [];
-      });
-      if (id === "time-small-09:30")
-        assert.ok(
-          segments.some(({ name }) => name === "ampm"),
-          `${id} has no AM/PM segment, so this isn't a 12-hour layout`,
-        );
 
-      // The input clips at its content box, and the edit at its border box
-      const end = Math.min(
+      // The input cuts off what passes its content box, and the edit, which
+      // has no border, what passes its border box
+      const clipEdge = Math.min(
         right((await box(input)).content),
-        right((await box(edit.node)).border),
+        right((await box(edit)).border),
       );
       for (const { name, node } of segments) {
-        const over = right((await box(node)).content) - end;
-        if (over > 0.01) cut.push(`${id} ${name}: ${over.toFixed(2)}px`);
+        const overflow = right((await box(node)).content) - clipEdge;
+        if (overflow > 0.01)
+          cut.push(`${id} ${name}: ${overflow.toFixed(2)}px`);
       }
     }
     assert.deepEqual(cut, []);

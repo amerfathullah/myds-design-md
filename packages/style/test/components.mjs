@@ -1,12 +1,11 @@
-// Reads the React components' classes from their source, and finds the parts
-// of a date or time <input> that Chromium renders, for the Chromium tests.
+// Reads the React components' sources for the Chromium tests: the classes a
+// `cva` call gives, and the stylesheet the preset generates for them.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-export const components = new URL(
-  "../../react/src/components/",
-  import.meta.url,
-);
+import { compile } from "./compile.mjs";
+
+const componentsDir = new URL("../../react/src/components/", import.meta.url);
 
 /**
  * The classes a component's `cva` call gives: its base list, then the classes
@@ -17,7 +16,7 @@ export const components = new URL(
  * @returns {string}
  */
 export function cvaClasses(file, cvaName, variants = {}) {
-  const source = fs.readFileSync(new URL(file, components), "utf8");
+  const source = fs.readFileSync(new URL(file, componentsDir), "utf8");
   const call = source
     .split(`const ${cvaName} = cva(`)[1]
     ?.split(/\]\);|\n\);/)[0];
@@ -47,35 +46,15 @@ export function cvaClasses(file, cvaName, variants = {}) {
 }
 
 /**
- * The <input> with `id`, and the parts in its user-agent shadow root, such as
- * `-webkit-datetime-edit`, by their `pseudo` attribute. Only the DevTools
- * protocol reaches them, and its node ids last until the next call.
- * @param {import("playwright").CDPSession} cdp with `DOM` enabled
- * @param {string} id
+ * The stylesheet a consumer gets for `files`: the components are scanned as
+ * the full stylesheet scans the React sources.
+ * @param {string[]} files component files in `packages/react/src/components`
+ * @returns {Promise<string>}
  */
-export async function inputParts(cdp, id) {
-  const { root } = await cdp.send("DOM.getDocument", {
-    depth: -1,
-    pierce: true,
-  });
-  const attribute = (node, name) => {
-    const attributes = node.attributes ?? [];
-    const i = attributes.indexOf(name);
-    return i % 2 === 0 ? attributes[i + 1] : undefined;
-  };
-  let input;
-  const parts = [];
-  const walk = (node, inInput) => {
-    if (!inInput && attribute(node, "id") === id) {
-      input = node;
-      inInput = true;
-    }
-    const pseudo = attribute(node, "pseudo");
-    if (inInput && pseudo) parts.push({ pseudo, node });
-    for (const child of [...(node.children ?? []), ...(node.shadowRoots ?? [])])
-      walk(child, inInput);
-  };
-  walk(root, false);
-  assert.ok(input, `no #${id}`);
-  return { input, parts };
+export function compileComponents(files) {
+  return compile(
+    [...new Set(files)]
+      .map((file) => `@source "${new URL(file, componentsDir).pathname}";`)
+      .join("\n"),
+  );
 }

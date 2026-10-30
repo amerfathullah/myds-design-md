@@ -19,7 +19,7 @@ One complete mapping of semantic tokens to primitive colours; MYDS ships a light
 _Avoid_: Mode, colour scheme
 
 **Off-label pairing**:
-A semantic token used for a visual role other than the one its prefix names, e.g. a text token (`txt-*`) filling a status dot. The role is what the element is, not the utility: a 1px divider filled with an outline token is still an outline, so it isn't off-label.
+A semantic token used for a visual role other than the one its prefix names, e.g. a text token (`txt-*`) filling a status dot. The role is what the element is, not the utility: a 1px divider filled with an outline token is still an outline, and a border coloured to match its own fill is part of that surface, so neither is off-label.
 _Avoid_: Token misuse, cross-role token
 
 **Foundation**:
@@ -39,6 +39,14 @@ _Avoid_: Design docs, style guide
 **Component library**:
 The React implementation of MYDS components that follows the design guideline.
 _Avoid_: UI kit
+
+**Design description**:
+The as-built account of MYDS's tokens, foundations and components written for agents building UI (`DESIGN.md`). Where the design guideline and the component library disagree, it follows the library.
+_Avoid_: Spec, design doc, design guideline
+
+**Preview page**:
+A single page that renders the design description's tokens and components in one theme; MYDS has one per theme, and each shows only what the design description documents.
+_Avoid_: Demo, showcase, Storybook
 
 **Page-level component**:
 A component that frames a whole page rather than sitting inside content: Masthead, Navbar, Footer, AnnounceBar, SkipLink, CookieBanner.
@@ -87,6 +95,12 @@ _Avoid_: Omission, missing feature
 **Defect**:
 A place where the component library contradicts itself: a style it names but never generates, a stale name, or a token that resolves to the wrong scale.
 _Avoid_: Bug, dead code
+
+### Code vs description
+
+**Drift**:
+A statement in the design description or a preview page that no longer matches the component library as built, e.g. setup steps that predate the Tailwind 4 preset.
+_Avoid_: Divergence (that's guideline vs library), stale docs, out of date
 
 ### Project
 

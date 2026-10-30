@@ -8,7 +8,7 @@
 
 ## Preview
 
-Interactive HTML previews of MYDS design tokens (color ramps, semantic tokens, typography, spacing) and UI components (buttons, badges, form controls, callouts, navigation, tables, dialogs):
+Interactive HTML previews of what [`DESIGN.md`](./DESIGN.md) documents: the design tokens (colour ramps, semantic tokens, typography, spacing, radius and elevation) and UI components (buttons, tags, form controls including the date and time fields, callouts, skeletons, tabs, pagination, accordion, data table, dropdown, dialog, and the page frame from SkipLink to Footer, with a placeholder Masthead):
 
 | Theme    | Link                                                                                  |
 | -------- | ------------------------------------------------------------------------------------- |

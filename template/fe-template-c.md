@@ -4,6 +4,7 @@ Documentation for For FE Templates C ( React + Vite + MYDS + Layout + i18n + rou
 
 1. Run
 ``` npm i react-router ```
+React Router 8 needs Node.js 22.22 or newer.
 2. Create pages file in src
 3. Create About.tsx , Home.tsx and Error.tsx and put them in pages file
 4. Edit About.tsx

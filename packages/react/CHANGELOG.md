@@ -1,5 +1,74 @@
 # @amerfathullah/myds-react
 
+## 2.0.0
+
+### Major Changes
+
+- 382b4a5: `Footer` no longer breaks landmark and heading rules: it nests no complementary landmark, each link group is a navigation landmark named after its title, and a string group title is no longer a heading. The footer looks the same. `SiteInfo` and `SiteLinkGroup` render different elements, and their prop types change with them:
+
+  - `SiteInfo` renders a `<div>` in place of an `<aside>`. Its props are `div` props, so its ref is an `HTMLDivElement`: a `RefObject<HTMLElement>` no longer type-checks. Update CSS or tests that select the `aside`.
+  - `SiteLinkGroup` renders one `<nav>` holding the title and the links, in place of a `<div>` wrapping the title and a `<nav>`. Its props are `nav` props, so its ref is an `HTMLElement`. Props, `className` and `ref` apply to the `<nav>` only; they used to land on both elements, which duplicated an `id` or `aria-label`. `className` no longer reaches the grid that lays out the links.
+  - A string `groupTitle` renders as text (a `<div>`) in place of an `<h6>`, and names the group's `<nav>` through `aria-labelledby`, unless you pass an `aria-label`. Give each group a distinct title, so each navigation landmark has a unique name. To keep a heading, pass your own element as `groupTitle` and name the navigation yourself, e.g. `groupTitle={<h2 id="services-title">Services</h2>}` with `aria-labelledby="services-title"`.
+
+  The docs Footer page (EN/MS) describes the new elements and gives each example link group its own title.
+
+- 56b9af8: Components are now styled for Tailwind 4 and need the Tailwind 4 `@amerfathullah/myds-style` 2.x. The React peer range is unchanged: `^18.0.0 || ^19.0.0`.
+
+  - **Tailwind 4 class names.** Components use `outline-hidden` instead of `outline-none` and `ring-3` instead of a bare `ring`. Stacked Tailwind variants (`hover:*:`, `data-[state=checked]:before:` …) are written in Tailwind 4's left-to-right order: the calendar's range days, table header borders, tab underlines and toggle thumbs. Search bar and skeleton gradients use `bg-linear-to-*/srgb`, and Spinner's ring uses `bg-conic/srgb`: Tailwind 4's gradient stops don't work in a hand-written `conic-gradient()`, so the ring would disappear. DateField and TimeField put back the 1px padding inside the native field that Tailwind 4's preflight removes, so they keep their height. Dialog's open and close animation no longer adds `slide-in-from-left-1/2 slide-in-from-top-[48%]` to its centring translate. They render as they did on Tailwind 3; compiled with Tailwind 3, they wouldn't.
+  - **`clx` uses tailwind-merge 3**, which knows Tailwind 4's class groups. It's configured for the MYDS theme, so a text size and a text colour don't cancel each other (`clx("text-txt-danger", "text-body-sm")` keeps both), and MYDS shadows and named animations now override each other and `shadow-none` / `animate-none`.
+
+  ### Migrating from 1.x
+  1. Switch to the new package names. 2.0.0 continues `@govtechmy/myds-*` 1.x as `@amerfathullah/myds-*`. Swap each `@govtechmy/myds-*` dependency for its `@amerfathullah/myds-*` successor, then replace `@govtechmy/myds-` with `@amerfathullah/myds-` in every import, CSS `@import` and `@source` path. If you use both packages:
+
+     ```sh
+     npm install @amerfathullah/myds-react @amerfathullah/myds-style
+     ```
+
+  2. Move to `@amerfathullah/myds-style` 2.x and Tailwind 4 as described in its changelog.
+  3. Replace the `content` entry for the library with `@source` in your stylesheet, pointing from the stylesheet to the package's `dist`:
+
+     ```css
+     @import "tailwindcss";
+     @import "@amerfathullah/myds-style";
+
+     @source "../node_modules/@amerfathullah/myds-react/dist";
+     ```
+
+  4. If you pass `className` to components, check it for the Tailwind 4 renames listed in the `@amerfathullah/myds-style` changelog (`outline-none`, bare `ring`, stacked Tailwind variants).
+
+- 839fbb4: MYDS is now published as `@amerfathullah/myds-react` and `@amerfathullah/myds-style`, continuing `@govtechmy/myds-*` 1.x under names this repository can publish. The migration guide's first step covers the switch. The docs, standard site and Storybook import the new names, and the docs installation pages install them.
+- f488281: Move to TanStack Table 9 (`@tanstack/react-table` 9.3) and react-day-picker 10, with every other dependency on its latest stable release except `tailwind-merge`, which moves to 3 with the Tailwind 4 preset. React and React DOM 18 and 19 stay supported (`^18.0.0 || ^19.0.0`). `DataTable`, `DatePicker` and `DateRangePicker` keep their props, look and behaviour.
+
+  **`DataTable` column definitions**
+
+  - `ColumnDef` from `@amerfathullah/myds-react/data-table` keeps its name and its `<TData, TValue>` type parameters, so `ColumnDef<Employee>[]` still compiles. It is now TanStack Table 9's `ColumnDef` for the features `DataTable` registers.
+  - Rename `sortingFn` to `sortFn`. TypeScript doesn't flag the old key, and `DataTable` ignores it.
+  - Where you name TanStack types yourself, import them from `@tanstack/react-table` 9 and pass the new `DataTableFeatures` type (exported from `@amerfathullah/myds-react/data-table`) first: `Row<Employee>` becomes `Row<DataTableFeatures, Employee>`, `CellContext<Employee, unknown>` becomes `CellContext<DataTableFeatures, Employee, unknown>`, and `createColumnHelper<Employee>()` becomes `createColumnHelper<DataTableFeatures, Employee>()`. Wrap a column helper's columns in `helper.columns([...])` to pass them to `columns`.
+  - `meta` (`className`, `sortable`, `expandable`, `tooltip`) is typed on `DataTable` columns only: `DataTable` no longer augments TanStack's global `ColumnMeta`.
+  - The `table`, `column`, `row` and `cell` objects that `header`, `cell` and `footer` receive only have the APIs of the features `DataTable` uses: sorting, row selection, expanding, column pinning, sizing, visibility, ordering and faceting, plus `table.getRowCount()`. The column filtering, grouping, row pinning and column resizing APIs are gone: `DataTable` never applied them. Read state with `table.store.state` in place of `table.getState()`.
+  - `column.getIsPinned()` returns `"start"` or `"end"` in place of `"left"` or `"right"`. The `pin={{ left, right }}` prop and the `data-pinned="left" | "right"` attribute don't change.
+  - `table.getIsSomeRowsSelected()` is also `true` when every row is selected. Check `!table.getIsAllRowsSelected()` as well for an indeterminate state.
+
+  **`DatePicker` and `DateRangePicker`**
+
+  No prop changes. `Matcher` (the `disabled` prop) and `DateRange` (re-exported from `@amerfathullah/myds-react/daterange-picker`) are react-day-picker 10's types, with the same shape. `CalendarProps` stays internal: `Calendar` isn't an entry point. The calendar now sets `lang` from `locale` (`en-GB` or `ms`) and labels its navigation "Navigation bar". In the day grid, Shift with the left/right arrows moves by a month and with the up/down arrows by a year. A day that becomes disabled while focused keeps focus and is marked `aria-disabled`, styled like other disabled days.
+
+  **`Select`**
+
+  `SelectItem` renders its text inside Radix's `ItemText`, which Radix Slot 1.5 requires (it throws on the old markup). The item text gains a `<span>` wrapper, each option's `aria-labelledby` now resolves to that text, and typing a letter moves to the matching option.
+
+### Minor Changes
+
+- fca197a: Add `TimeField` (`@amerfathullah/myds-react/time-field`), a native `<input type="time">` that matches `DateField` in every size and state, with a decorative clock icon. `step` (seconds) defaults to `60`, so it shows hours and minutes; 12/24-hour display follows the user's locale. It renders no id of its own: name it with a `Label` (`htmlFor`). `ClockIcon` loses its unused Figma ids. The docs add a TimeField page (EN/MS) with a "Time slots" section showing the `Select` pattern for booking from fixed availability.
+- 3f92068: Add `Skeleton` (`@amerfathullah/myds-react/skeleton`), a loading placeholder with a `shape` of `line` (default), `circle` or `block`. It is always `aria-hidden` and stops shimmering under `prefers-reduced-motion`, showing a flat `bg-black-100` fill. `TableSkeleton` is now a `line` Skeleton: its API and animated look are unchanged, and it gains the `aria-hidden` and reduced-motion behaviour.
+- b34ece5: `ThemeSwitch` with `as="select"` now gives its trigger an accessible name, so screen readers announce "Theme" followed by the current theme instead of an unnamed combobox. Set the new `selectLabel` prop to name it in your site's language, for example `selectLabel="Tema"`. The toggle form is unchanged and still takes its name from the current theme's `label`. The docs (EN/MS) document `selectLabel`.
+
+### Patch Changes
+
+- 2481545: `DateField` no longer renders a hardcoded `id="date-field"`; its calendar icon is now decorative (`aria-hidden`) and no longer adds an English-only "Select date" to the input's accessible name. Name the field with a `Label` (`htmlFor`) and pass the matching `id`. If you targeted `#date-field` (e.g. `<label htmlFor="date-field">`), pass `id="date-field"` explicitly.
+- f488281: `require("@amerfathullah/myds-react/hooks")` resolves again: the `./hooks` export pointed CommonJS at `dist/hooks/index.j` in place of `dist/hooks/index.js`.
+- d9b8018: Rebuild with the upgraded toolchain (TypeScript 6, tsup 9). The published JavaScript and type declarations are regenerated: minified names and the order of statements in the `.d.ts` files change (type-only exports are now emitted as `export type { … }`), with no change to the public API.
+
 ## 1.0.2
 
 ### Patch Changes

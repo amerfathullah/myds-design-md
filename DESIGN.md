@@ -1646,9 +1646,9 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 
 `npx @google/design.md@0.4.0 lint DESIGN.md` reports zero errors. It warns on:
 
-- orphaned tokens, because the front matter records every exposed token, not only those components use;
+- orphaned tokens, because the front matter records every token the preset exposes, not only those its component entries name;
 - `missing-primary`, because MYDS has no `primary` key (see Colors);
-- the unknown sub-tokens `borderColor` and `fontWeight`, which the spec doesn't define but MYDS needs;
+- the unknown sub-tokens `borderColor` and `fontWeight`, which the DESIGN.md format doesn't define but MYDS needs;
 - the contrast pairs below, which fall short of the 4.5:1 that WCAG AA asks of text. The ratios are the linter's: it drops alpha rather than compositing it, so a pair with an alpha colour renders lower still. WCAG exempts disabled controls.
 
 | Component                        | Pair                                         | Ratio  | Why it's expected                                                                                 |

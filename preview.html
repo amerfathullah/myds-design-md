@@ -208,7 +208,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .datefield svg{flex-shrink:0;width:16px;height:16px;color:var(--txt-black-700)}
 .datefield input{padding:0;border:0;background:transparent;outline:none}
 .datefield input::-webkit-calendar-picker-indicator{display:none}
-.datefield input::-webkit-datetime-edit{max-width:fit-content}
+.datefield input::-webkit-datetime-edit{max-width:fit-content;min-width:max-content}
 .datefield input::-webkit-datetime-edit-fields-wrapper{padding:1px 0}
 .datefield input::-webkit-datetime-edit-text{margin:0 2px}
 .datefield input::-webkit-datetime-edit-day-field:focus-within,.datefield input::-webkit-datetime-edit-month-field:focus-within,.datefield input::-webkit-datetime-edit-year-field:focus-within,.datefield input::-webkit-datetime-edit-hour-field:focus-within,.datefield input::-webkit-datetime-edit-minute-field:focus-within,.datefield input::-webkit-datetime-edit-ampm-field:focus-within{background:var(--primary-600);color:var(--white)}
@@ -634,7 +634,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 <div class="field"><label class="label" for="t-focus">Time, focused segment</label><div class="datefield specimen-focus"><svg aria-hidden="true"><use href="#i-clock"/></svg><input type="time" id="t-focus" value="09:30" step="60"></div></div>
 <div class="field"><label class="label" for="t-invalid">Time, invalid</label><div class="datefield invalid"><svg aria-hidden="true"><use href="#i-clock"/></svg><input type="time" id="t-invalid" value="23:45" step="60" aria-invalid="true"></div></div>
 </div>
-<p class="note">The focused-segment samples show <code>date-field-segment-active</code> and <code>time-field-segment-active</code>: primitive <code>primary-600</code> with <code>white</code> text, which Chromium also paints on whichever segment has focus. Firefox shows neither: the samples have no fill, and a focused segment shows the browser's own highlight, as in the library (a Defect). An invalid field shows the <code>otl-danger-300</code> border and <code>fr-danger</code> ring only while unfocused; focus replaces them with <code>otl-primary-300</code> and <code>fr-primary</code>. The default samples pass <code>invalid={false}</code>: without it the border is primitive <code>gray-200</code> in both themes (a Defect). In a 12-hour locale at 1x, Chromium clips the AM/PM segment, as it does in the library (a Defect).</p>
+<p class="note">The focused-segment samples show <code>date-field-segment-active</code> and <code>time-field-segment-active</code>: primitive <code>primary-600</code> with <code>white</code> text, which Chromium also paints on whichever segment has focus. Firefox shows neither: the samples have no fill, and a focused segment shows the browser's own highlight, as in the library (a Defect). An invalid field shows the <code>otl-danger-300</code> border and <code>fr-danger</code> ring only while unfocused; focus replaces them with <code>otl-primary-300</code> and <code>fr-primary</code>. The default samples pass <code>invalid={false}</code>: without it the border is primitive <code>gray-200</code> in both themes (a Defect).</p>
 </div>
 </div>
 </section>

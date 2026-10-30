@@ -3,48 +3,20 @@
 // its `::-webkit-datetime-edit-*-field` pseudo-element and never matches
 // `:focus` there, so the components match the focused one with `:focus-within`.
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
 import { chromium } from "playwright";
 
 import { compile } from "./compile.mjs";
+import { components, cvaClasses, inputParts } from "./components.mjs";
 
-const components = new URL("../../react/src/components/", import.meta.url);
-
-// The classes a component's `cva` call gives its <input>
-function inputClasses(file, cvaName) {
-  const source = fs.readFileSync(new URL(file, components), "utf8");
-  const list = source.split(`const ${cvaName} = cva([`)[1]?.split("]);")[0];
-  assert.ok(list, `${file} has no ${cvaName}`);
-  return [...list.matchAll(/"([^"]*)"/g)]
-    .map(([, classes]) => classes)
-    .join(" ");
-}
-
-// Each segment's colours, in order. The segments sit in the input's
-// user-agent shadow root, which only the DevTools protocol reaches.
+// Each segment's colours, in order
 async function segments(cdp, id) {
-  const { root } = await cdp.send("DOM.getDocument", {
-    depth: -1,
-    pierce: true,
+  const { parts } = await inputParts(cdp, id);
+  const found = parts.flatMap(({ pseudo, node }) => {
+    const segment = pseudo.match(/^-webkit-datetime-edit-(\w+)-field$/);
+    return segment ? [{ name: segment[1], node }] : [];
   });
-  const attribute = (node, name) => {
-    const attributes = node.attributes ?? [];
-    const i = attributes.indexOf(name);
-    return i % 2 === 0 ? attributes[i + 1] : undefined;
-  };
-  const found = [];
-  const walk = (node, inInput) => {
-    inInput ||= attribute(node, "id") === id;
-    const segment = attribute(node, "pseudo")?.match(
-      /^-webkit-datetime-edit-(\w+)-field$/,
-    );
-    if (inInput && segment) found.push({ name: segment[1], node });
-    for (const child of [...(node.children ?? []), ...(node.shadowRoots ?? [])])
-      walk(child, inInput);
-  };
-  walk(root, false);
 
   return Promise.all(
     found.map(async ({ name, node }) => {
@@ -108,7 +80,7 @@ test("only the focused DateField or TimeField segment is filled, in both themes"
       `<!doctype html><html><head><style>${css}</style></head><body>${fields
         .map(
           ({ id, file, cva, attributes }) =>
-            `<input id="${id}" ${attributes} class="${inputClasses(file, cva)}">`,
+            `<input id="${id}" ${attributes} class="${cvaClasses(file, cva)}">`,
         )
         .join("")}</body></html>`,
     );

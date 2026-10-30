@@ -68,10 +68,10 @@ pnpm test                                                # all test suites
 pnpm --filter @amerfathullah/myds-react test             # Vitest unit tests
 pnpm --filter @amerfathullah/myds-react check-types      # type-check against React 18 and 19 types
 pnpm --filter @amerfathullah/myds-react check-exports    # check the package's published exports (run build first)
-pnpm --filter @amerfathullah/myds-style test             # token parity and focused-segment tests, rendered in Chromium, and the DESIGN.md lint check
+pnpm --filter @amerfathullah/myds-style test             # token parity, focused-segment and segment-clip tests, rendered in Chromium, and the DESIGN.md lint check
 ```
 
-The token parity and focused-segment tests render in Chromium through Playwright. If Playwright reports a missing browser, install the one that matches its version: `pnpm --filter @amerfathullah/myds-style exec playwright install chromium`.
+The token parity, focused-segment and segment-clip tests render in Chromium through Playwright. If Playwright reports a missing browser, install the one that matches its version: `pnpm --filter @amerfathullah/myds-style exec playwright install chromium`.
 
 ### Frontend templates
 

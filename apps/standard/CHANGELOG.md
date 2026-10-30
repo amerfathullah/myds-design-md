@@ -1,5 +1,27 @@
 # @govtechmy/myds-standard
 
+## 1.0.3
+
+### Patch Changes
+
+- b6abdbc: upgrade `next` to 14.2.35 for security fixes backported to Next.js 14
+- 56b9af8: Load MYDS through the Tailwind 4 `@amerfathullah/myds-style` import. The docs and standard sites drop `@config`, their `tailwind.config.ts` and their own Fumadocs colour mapping for `@amerfathullah/myds-style/fumadocs.css`, and the placeholder and button-cursor defaults now come from the package's preflight additions. Storybook moves from Tailwind 3 to Tailwind 4 through `@tailwindcss/vite`. The docs' Style Configuration page (EN/MS) shows the Tailwind 4 setup.
+- 839fbb4: MYDS is now published as `@amerfathullah/myds-react` and `@amerfathullah/myds-style`, continuing `@govtechmy/myds-*` 1.x under names this repository can publish. The migration guide's first step covers the switch. The docs, standard site and Storybook import the new names, and the docs installation pages install them.
+- 327d985: Move the docs and standard sites to Next.js 16, React 19, Fumadocs 16 (fumadocs-mdx 15) and Tailwind 4, with every other dependency on its latest stable release. Locale routing runs in `proxy.ts`, route `params` are awaited, search is per locale, and the standard site now lints with ESLint. Each site's `app/global.css` is the Tailwind 4 entry point: it loads the MYDS v1 preset through `@config`, maps the former `preset_fumadocs` colours onto Fumadocs 16's theme variables, and scans `@amerfathullah/myds-react` with `@source`. Google Fonts load from `<link>` tags, since Turbopack drops remote CSS imports. Fumadocs `<Tabs items>` in MDX no longer pass `defaultValue`: Fumadocs 13 ignored it, and Fumadocs 16 would select no tab.
+- Updated dependencies [fca197a]
+- Updated dependencies [3f92068]
+- Updated dependencies [382b4a5]
+- Updated dependencies [b34ece5]
+- Updated dependencies [56b9af8]
+- Updated dependencies [56b9af8]
+- Updated dependencies [839fbb4]
+- Updated dependencies [2481545]
+- Updated dependencies [f488281]
+- Updated dependencies [f488281]
+- Updated dependencies [d9b8018]
+  - @amerfathullah/myds-react@2.0.0
+  - @amerfathullah/myds-style@2.0.0
+
 ## 1.0.2
 
 ### Patch Changes

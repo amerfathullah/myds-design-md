@@ -1,5 +1,27 @@
 # @govtechmy/myds-storybook
 
+## 1.0.3
+
+### Patch Changes
+
+- 450c052: Move the Storybook app to Storybook 10, Vite 8, Jest 30 (through `@storybook/test-runner` 0.26) and React 19, with every other dependency on its latest stable release except Tailwind 3, `autoprefixer` and `postcss`. Essentials, interactions, blocks and `@storybook/test` are now part of Storybook core, with `@storybook/addon-docs` providing autodocs. Stories import from `@storybook/react-vite` and `storybook/test`. Background and viewport choices are story `globals`, which Storybook 9 and later read in place of `parameters.backgrounds.default` and `parameters.viewport.defaultViewport`.
+- bd2d961: The DateField stories name the field with an `aria-label` arg, as the TimeField stories do, so they pass the accessibility check. The usage example on the DateField Storybook docs page pairs the field with a `Label` (`htmlFor` and a matching `id`), imports `DateField` by name and reads the date from the change event.
+- 56b9af8: Load MYDS through the Tailwind 4 `@amerfathullah/myds-style` import. The docs and standard sites drop `@config`, their `tailwind.config.ts` and their own Fumadocs colour mapping for `@amerfathullah/myds-style/fumadocs.css`, and the placeholder and button-cursor defaults now come from the package's preflight additions. Storybook moves from Tailwind 3 to Tailwind 4 through `@tailwindcss/vite`. The docs' Style Configuration page (EN/MS) shows the Tailwind 4 setup.
+- 839fbb4: MYDS is now published as `@amerfathullah/myds-react` and `@amerfathullah/myds-style`, continuing `@govtechmy/myds-*` 1.x under names this repository can publish. The migration guide's first step covers the switch. The docs, standard site and Storybook import the new names, and the docs installation pages install them.
+- Updated dependencies [fca197a]
+- Updated dependencies [3f92068]
+- Updated dependencies [382b4a5]
+- Updated dependencies [b34ece5]
+- Updated dependencies [56b9af8]
+- Updated dependencies [56b9af8]
+- Updated dependencies [839fbb4]
+- Updated dependencies [2481545]
+- Updated dependencies [f488281]
+- Updated dependencies [f488281]
+- Updated dependencies [d9b8018]
+  - @amerfathullah/myds-react@2.0.0
+  - @amerfathullah/myds-style@2.0.0
+
 ## 1.0.2
 
 ### Patch Changes

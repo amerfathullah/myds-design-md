@@ -39,10 +39,11 @@ const timefield_cva = cva([
   "[&::-webkit-datetime-edit]:contents",
   // Tailwind 4's preflight removes this padding, which sets the field's height
   "[&::-webkit-datetime-edit-fields-wrapper]:py-px",
-  // Chromium's focus scroll centres a segment wholly outside the wrapper's
-  // scroll padding, and leaves a partly hidden one. With half the width on
-  // each side, only a segment that crosses the centre line stays put, and if
-  // it's no wider than half the field, it already shows in full
+  // Chromium's focus scroll centres a segment wholly outside the area the
+  // wrapper's scroll padding leaves, and leaves a partly hidden one where it
+  // is. Half the width on each side leaves only the centre line, so only a
+  // segment that crosses it stays put, and if it's no wider than half the
+  // field, it already shows in full
   "[&::-webkit-datetime-edit-fields-wrapper]:overflow-hidden [&::-webkit-datetime-edit-fields-wrapper]:scroll-px-[50%]",
   "[&::-webkit-datetime-edit-text]:mx-[2px]",
   "[&::-webkit-datetime-edit-hour-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-hour-field:focus-within]:text-white",

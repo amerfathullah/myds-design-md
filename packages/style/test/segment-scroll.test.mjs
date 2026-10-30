@@ -102,6 +102,21 @@ const bottom = (quad) => Math.max(quad[1], quad[3], quad[5], quad[7]);
 const borderBox = async (cdp, { nodeId }) =>
   (await cdp.send("DOM.getBoxModel", { nodeId })).model.border;
 
+// The names of the segments with the focused segment's fill
+async function filled(cdp, segments) {
+  const names = [];
+  for (const { name, node } of segments) {
+    const { computedStyle } = await cdp.send("CSS.getComputedStyleForNode", {
+      nodeId: node.nodeId,
+    });
+    const background = computedStyle.find(
+      (property) => property.name === "background-color",
+    ).value;
+    if (background === fill) names.push(name);
+  }
+  return names;
+}
+
 /**
  * A page holding `cases`, each in a parent `parent` px wide or as wide as its
  * content, at a real scale factor of 1, and a DevTools session on it.
@@ -137,20 +152,23 @@ async function render(browser, css, cases) {
 }
 
 /**
- * Focuses the input with `id` and moves focus with ArrowRight from its first
- * segment to its last, then with ArrowLeft back to the first. After each move
- * it calls `visit` with the focused segment's index and the number of keys
- * pressed so far.
+ * Focuses the input with `id` and moves focus with the `next` key from its
+ * first segment to its last, then with the `previous` key back to the first.
+ * After each move it calls `visit` with the focused segment's index and the
+ * number of keys pressed so far.
  */
-async function walkSegments(page, id, count, visit) {
+async function walkSegments(
+  page,
+  id,
+  count,
+  visit,
+  [next, previous] = ["ArrowRight", "ArrowLeft"],
+) {
   const order = [...Array(count).keys()];
   order.push(...order.slice(0, -1).reverse());
   await page.focus(`#${id}`);
   for (const [move, i] of order.entries()) {
-    if (move)
-      await page.keyboard.press(
-        i > order[move - 1] ? "ArrowRight" : "ArrowLeft",
-      );
+    if (move) await page.keyboard.press(i > order[move - 1] ? next : previous);
     await visit(i, move);
   }
   await page.evaluate((id) => document.getElementById(id).blur(), id);
@@ -161,10 +179,6 @@ test("a narrowed DateField or TimeField scrolls the focused segment into view in
   const browser = await launchInUSEnglish();
   try {
     const { page, cdp } = await render(browser, css, narrowed);
-    const background = async ({ nodeId }) =>
-      (
-        await cdp.send("CSS.getComputedStyleForNode", { nodeId })
-      ).computedStyle.find(({ name }) => name === "background-color").value;
 
     const hidden = [];
     for (const { id } of narrowed) {
@@ -180,13 +194,14 @@ test("a narrowed DateField or TimeField scrolls the focused segment into view in
 
       await walkSegments(page, id, names.length, async (i, move) => {
         const focused = await dateTimeParts(cdp, id);
-        const filled = [];
-        for (const { name, node } of focused.segments)
-          if ((await background(node)) === fill) filled.push(name);
-        assert.deepEqual(filled, [names[i]], `${id}, move ${move}`);
+        assert.deepEqual(
+          await filled(cdp, focused.segments),
+          [names[i]],
+          `${id}, move ${move}`,
+        );
 
-        // Chromium scrolls by whole pixels, so the focused segment can still
-        // pass an edge by under half a pixel
+        // Chromium scrolls by whole pixels, so at a whole-pixel width the
+        // focused segment can still pass an edge by under half a pixel
         const [from, to] = await visibleSpan(cdp, focused);
         const quad = await borderBox(cdp, focused.segments[i].node);
         const cut = Math.max(from - left(quad), right(quad) - to);
@@ -235,11 +250,23 @@ for (const locale of ["en_US", "he_IL", "ar_EG"])
       for (const { id } of natural) {
         const atRest = await layout(id);
         assert.deepEqual(atRest, await layout(`${id}-baseline`), id);
-        // Arrow keys move between segments only in a left-to-right locale
-        if (locale !== "en_US") continue;
+        // Arrow keys move between segments only in a left-to-right locale,
+        // and Tab in any
+        const keys = locale === "en_US" ? undefined : ["Tab", "Shift+Tab"];
         const { segments } = await dateTimeParts(cdp, id);
-        await walkSegments(page, id, segments.length, async (i, move) =>
-          assert.deepEqual(await layout(id), atRest, `${id}, move ${move}`),
+        await walkSegments(
+          page,
+          id,
+          segments.length,
+          async (i, move) => {
+            assert.deepEqual(
+              await filled(cdp, (await dateTimeParts(cdp, id)).segments),
+              [segments[i].name],
+              `${id}, move ${move}`,
+            );
+            assert.deepEqual(await layout(id), atRest, `${id}, move ${move}`);
+          },
+          keys,
         );
       }
     } finally {

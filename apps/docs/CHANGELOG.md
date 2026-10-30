@@ -1,5 +1,13 @@
 # @govtechmy/myds-docs
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [e8bc6e6]
+  - @amerfathullah/myds-react@2.0.1
+  - @amerfathullah/myds-style@2.0.1
+
 ## 1.0.3
 
 ### Patch Changes

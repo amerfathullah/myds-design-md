@@ -53,24 +53,35 @@ test("every warning is one the Linting section expects", () => {
   assert.deepEqual(unexpected, []);
 });
 
+// The colour token a component's front-matter entry names for `prop`
+function colourRef(component, prop) {
+  const entry = designMd
+    .split(/^---$/m)[1]
+    .split(new RegExp(`^  "?${component}"?:$`, "m"))[1]
+    ?.split(/^ {0,2}\S/m)[0];
+  return entry?.match(
+    new RegExp(`^ {4}${prop}: "\\{colors\\.([\\w-]+)\\}"$`, "m"),
+  )?.[1];
+}
+
 test("the contrast warnings are the Linting section's table", () => {
-  const hex = (token) =>
-    report.designSystem.symbolTable.get(`colors.${token}`)?.hex ?? token;
   const documented = [
     ...linting.matchAll(
       /^\| `([\w-]+)` +\| `([\w-]+)` on `([\w-]+)` +\| ([\d.]+):1 +\|/gm,
     ),
   ].map(
     ([, component, text, background, ratio]) =>
-      `${component}: ${hex(text)} on ${hex(background)} at ${ratio}:1`,
+      `${component}: ${text} on ${background} at ${ratio}:1`,
   );
   const linted = report.findings
     .filter((f) => f.rule === "contrast-ratio")
     .map((f) => {
-      const [, text, background, ratio] = f.message.match(
-        /textColor \((#\w+)\) on backgroundColor \((#\w+)\) has contrast ratio ([\d.]+):1/,
-      );
-      return `${f.path.replace(/^components\./, "")}: ${text} on ${background} at ${ratio}:1`;
+      const component = f.path.replace(/^components\./, "");
+      const ratio = f.message.match(/contrast ratio ([\d.]+):1/)?.[1];
+      if (!ratio) return `${component}: unrecognised message: ${f.message}`;
+      const text = colourRef(component, "textColor");
+      const background = colourRef(component, "backgroundColor");
+      return `${component}: ${text} on ${background} at ${ratio}:1`;
     });
   assert.deepEqual(linted.sort(), documented.sort());
 });

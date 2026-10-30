@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router";
 import LangWrapper from "./LangWrapper";
 import HomePage from "./pages/Home";
 import AboutPage from "./pages/About";

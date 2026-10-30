@@ -3,7 +3,8 @@ Documentation for For FE Templates C ( React + Vite + MYDS + Layout + i18n + rou
 ===
 
 1. Run
-``` npm i react-router-dom ```
+``` npm i react-router ```
+React Router 8 needs Node.js 22.22 or newer.
 2. Create pages file in src
 3. Create About.tsx , Home.tsx and Error.tsx and put them in pages file
 4. Edit About.tsx
@@ -28,7 +29,7 @@ export default function ErrorPage() {
 7. Refactor Layout.tsx to clear up App.tsx and improve layout.tsx
 a) Toggle Language now 
 	-- check the path and replaces the lang on path
-	-- navigate to new path and re-render using react-router-dom
+	-- navigate to new path and re-render using react-router
 b) Since using React Router, change children to <Outlet>
 
 ```
@@ -38,7 +39,7 @@ import i18n from "../../i18n";
 import FooterMyds from "./FooterMyds";
 import MastheadMyds from "./MastheadMyds";
 import NavbarMyds from "./NavbarMyds";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router";
 
 export default function LayoutMain() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ b) Add Browser Router to wrap the app routes
 c) Add App Routes which is the router.tsx later on.
 ```
 import AppRoutes from "./router";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 
 function App() {
   return (
@@ -109,8 +110,8 @@ h) Error page handling on path `/*` is handled by `LangWrapper.tsx` where it red
 i) Error page itself is in `<Route path="404" element={<ErrorPage />} />`
 
 ```
-import { Routes, Route, Navigate, useParams } from "react-router-dom";
-import Layout from "./component/layout/Layout";
+import { Routes, Route, Navigate, useParams } from "react-router";
+import Layout from "./components/layout/Layout";
 import LangWrapper from "./LangWrapper";
 import HomePage from "./pages/Home";
 import AboutPage from "./pages/About";
@@ -161,7 +162,7 @@ c) Behavior
 -   If `lang` is invalid, it redirects to the language stored in `localStorage` . If local storage lang is not `en` or `ms` it defaults to `/en`.
 -   Keeps the application language in sync with both URL and localStorage.
 ```
-import { Navigate, Outlet, useParams } from "react-router-dom";
+import { Navigate, Outlet, useParams } from "react-router";
 import i18n from "./i18n";
 import { useEffect } from "react";
 
@@ -196,7 +197,7 @@ a) Updated: Sync state when URL param changes
 b) you can now remove the test button to use this dropdown as the main language switcher
 ```
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
 import { SearchIcon, GlobeIcon } from "@amerfathullah/myds-react/icon";
 import {

@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useParams } from "react-router-dom";
+import { Navigate, Outlet, useParams } from "react-router";
 import i18n from "./i18n";
 import { useEffect } from "react";
 

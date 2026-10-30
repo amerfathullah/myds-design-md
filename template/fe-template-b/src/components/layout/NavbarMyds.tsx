@@ -1,5 +1,5 @@
-import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
-import { SearchIcon, GlobeIcon } from "@govtechmy/myds-react/icon";
+import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
+import { SearchIcon, GlobeIcon } from "@amerfathullah/myds-react/icon";
 import {
   Navbar,
   NavbarLogo,
@@ -7,15 +7,15 @@ import {
   NavbarMenuItem,
   NavbarMenuDropdown,
   NavbarAction,
-} from "@govtechmy/myds-react/navbar";
+} from "@amerfathullah/myds-react/navbar";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@govtechmy/myds-react/select";
-import { ThemeSwitch } from "@govtechmy/myds-react/theme-switch";
+} from "@amerfathullah/myds-react/select";
+import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 
 export default function NavbarMyds() {
   return (

@@ -22,13 +22,14 @@ export function launchInUSEnglish() {
 }
 
 /**
- * The <input> with `id`, its `-webkit-datetime-edit`, and its segments in
+ * The <input> with `id`, its `-webkit-datetime-edit` and the
+ * `-webkit-datetime-edit-fields-wrapper` inside it, and its segments in
  * order, as DevTools DOM nodes. They sit in the input's user-agent shadow
  * root, which only the DevTools protocol reaches, and their node ids last
  * until the next call.
  * @param {import("playwright").CDPSession} cdp with `DOM` enabled
  * @param {string} id
- * @returns {Promise<{ input: object, edit: object, segments: { name: string, node: object }[] }>}
+ * @returns {Promise<{ input: object, edit: object, wrapper: object, segments: { name: string, node: object }[] }>}
  */
 export async function dateTimeParts(cdp, id) {
   const { root } = await cdp.send("DOM.getDocument", {
@@ -42,6 +43,7 @@ export async function dateTimeParts(cdp, id) {
   };
   let input;
   let edit;
+  let wrapper;
   const segments = [];
   const walk = (node, inInput) => {
     if (!inInput && attribute(node, "id") === id) {
@@ -50,6 +52,7 @@ export async function dateTimeParts(cdp, id) {
     }
     const pseudo = inInput ? attribute(node, "pseudo") : undefined;
     if (pseudo === "-webkit-datetime-edit") edit = node;
+    if (pseudo === "-webkit-datetime-edit-fields-wrapper") wrapper = node;
     const segment = pseudo?.match(/^-webkit-datetime-edit-(\w+)-field$/);
     if (segment) segments.push({ name: segment[1], node });
     for (const child of [...(node.children ?? []), ...(node.shadowRoots ?? [])])
@@ -58,5 +61,6 @@ export async function dateTimeParts(cdp, id) {
   walk(root, false);
   assert.ok(input, `no #${id}`);
   assert.ok(edit, `#${id} has no -webkit-datetime-edit`);
-  return { input, edit, segments };
+  assert.ok(wrapper, `#${id} has no -webkit-datetime-edit-fields-wrapper`);
+  return { input, edit, wrapper, segments };
 }

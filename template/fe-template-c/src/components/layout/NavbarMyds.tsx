@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
 import { SearchIcon, GlobeIcon } from "@amerfathullah/myds-react/icon";
@@ -24,22 +24,14 @@ export default function NavbarMyds() {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
 
-  const [selectedLang, setSelectedLang] = useState(
-    localStorage.getItem("lang") || "en"
-  );
+  // The URL decides the language; LangWrapper syncs it to localStorage and i18n
+  const selectedLang =
+    lang === "en" || lang === "ms"
+      ? lang
+      : localStorage.getItem("lang") || "en";
   const [isHidden, setIsHidden] = useState(false);
 
-  // Sync state when URL param changes (for manual URL changes or navigation)
-  useEffect(() => {
-    if (lang && (lang === "en" || lang === "ms")) {
-      setSelectedLang(lang);
-      localStorage.setItem("lang", lang);
-      i18n.changeLanguage(lang);
-    }
-  }, [lang]);
-
   const updateLanguage = (newLang: string) => {
-    setSelectedLang(newLang);
     localStorage.setItem("lang", newLang);
     i18n.changeLanguage(newLang);
     const currentPath = window.location.pathname;

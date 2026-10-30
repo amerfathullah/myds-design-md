@@ -16,7 +16,7 @@ Part 1 : Layout Prep
 10. Paste in footer the code from
     [fe-template-b/src/components/layout/FooterMyds.tsx](fe-template-b/src/components/layout/FooterMyds.tsx)
 
-    These are the Masthead, Navbar and Footer examples from the MYDS docs, importing `@amerfathullah/myds-react`. The examples on https://myds.vercel.app import the old `@govtechmy/myds-react` 1.x, so don't copy from there.
+    These are the Masthead, Navbar and Footer examples from the MYDS docs, importing `@amerfathullah/myds-react`. The examples on https://myds.vercel.app are for MYDS 1.x and import the old package name, so don't copy from there.
 11. Prepare the Layout like below example by importing the MastheadMyds.tsx, NavbarMyds.tsx, FooterMyds.tsx
 
 Ex:

@@ -2,30 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
-import tailwindcss from "@tailwindcss/postcss";
-import postcss from "postcss";
-
+import { compile } from "./compile.mjs";
 import { tokenUtilities } from "./token-utilities.mjs";
 import { measure } from "./measure.mjs";
-
-const packageDir = new URL("..", import.meta.url).pathname;
-const { exports } = JSON.parse(
-  fs.readFileSync(new URL("../package.json", import.meta.url)),
-);
-
-// A consumer's Tailwind 4 stylesheet: Tailwind, then the package's main entry
-async function compile(classes) {
-  const css = `@import "tailwindcss" source(none);
-@import "./${exports["."].style.replace(/^\.\//, "")}";
-@source inline("${classes.join(" ")}");`;
-  const result = await postcss([tailwindcss({ base: packageDir })]).process(
-    css,
-    {
-      from: `${packageDir}consumer.css`,
-    },
-  );
-  return result.css;
-}
 
 // Colours are compared premultiplied, so 8-bit rounding at low alpha doesn't count
 function sameValue(expected, actual) {
@@ -45,9 +24,8 @@ test("every token utility DESIGN.md documents resolves as it did in v1, in both 
     fs.readFileSync(new URL("fixtures/v1-tokens.json", import.meta.url)),
   );
   const utilities = tokenUtilities();
-  const css = await compile(
-    utilities.flatMap(({ utility }) => utility.split(" ")),
-  );
+  const classes = utilities.flatMap(({ utility }) => utility.split(" "));
+  const css = await compile(`@source inline("${classes.join(" ")}");`);
   const measured = await measure(css, utilities);
 
   const differences = [];
@@ -78,7 +56,7 @@ test("Tailwind's default palette generates no CSS", async () => {
     "ring-emerald-400",
     "fill-black",
   ];
-  const css = await compile(offPalette);
+  const css = await compile(`@source inline("${offPalette.join(" ")}");`);
   for (const utility of offPalette) {
     assert.ok(!css.includes(`.${utility}`), `${utility} generated CSS`);
   }

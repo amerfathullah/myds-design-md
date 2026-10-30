@@ -5,20 +5,30 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
 /**
- * Chromium in US English, so a date reads month first and a time has AM/PM.
- * Headless Linux Chromium takes both from the process's locale variables, not
- * from a page's `locale`, and `LANGUAGE` and `LC_ALL` outrank `LANG`.
+ * Chromium in `locale`, which sets the order of a date's fields, whether a
+ * time has AM/PM, and the input's direction. Headless Linux Chromium takes it
+ * from the process's locale variables, not from a page's `locale`, and
+ * `LANGUAGE` and `LC_ALL` outrank `LANG`.
+ * @param {string} locale e.g. `he_IL`
  * @returns {Promise<import("playwright").Browser>}
  */
-export function launchInUSEnglish() {
+export function launchInLocale(locale) {
   return chromium.launch({
     env: {
       ...process.env,
-      LANGUAGE: "en_US",
-      LC_ALL: "en_US.UTF-8",
-      LANG: "en_US.UTF-8",
+      LANGUAGE: locale,
+      LC_ALL: `${locale}.UTF-8`,
+      LANG: `${locale}.UTF-8`,
     },
   });
+}
+
+/**
+ * Chromium in US English, so a date reads month first and a time has AM/PM.
+ * @returns {Promise<import("playwright").Browser>}
+ */
+export function launchInUSEnglish() {
+  return launchInLocale("en_US");
 }
 
 /**

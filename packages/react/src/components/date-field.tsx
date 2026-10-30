@@ -39,18 +39,15 @@ const datefield_cva = cva([
   "[&::-webkit-datetime-edit]:contents",
   // Tailwind 4's preflight removes this padding, which sets the field's height
   "[&::-webkit-datetime-edit-fields-wrapper]:py-px",
-  // An input narrower than its text scrolls the wrapper to the focused
-  // segment, its only snap area
-  "[&::-webkit-datetime-edit-fields-wrapper]:overflow-hidden [&::-webkit-datetime-edit-fields-wrapper]:snap-x [&::-webkit-datetime-edit-fields-wrapper]:snap-mandatory",
+  // Chromium's focus scroll centres a segment wholly outside the wrapper's
+  // scroll padding, and leaves a partly hidden one. With half the width on
+  // each side, only a segment that crosses the centre line stays put, and if
+  // it's no wider than half the field, it already shows in full
+  "[&::-webkit-datetime-edit-fields-wrapper]:overflow-hidden [&::-webkit-datetime-edit-fields-wrapper]:scroll-px-[50%]",
   "[&::-webkit-datetime-edit-text]:mx-[2px]",
-  // Only a box can be a snap area. Trimmed to its text, with negative block
-  // margins, an inline-block segment lays out like the inline one it replaces
-  "[&::-webkit-datetime-edit-day-field]:inline-block [&::-webkit-datetime-edit-day-field]:[text-box:trim-both_text] [&::-webkit-datetime-edit-day-field]:-my-[1em]",
-  "[&::-webkit-datetime-edit-month-field]:inline-block [&::-webkit-datetime-edit-month-field]:[text-box:trim-both_text] [&::-webkit-datetime-edit-month-field]:-my-[1em]",
-  "[&::-webkit-datetime-edit-year-field]:inline-block [&::-webkit-datetime-edit-year-field]:[text-box:trim-both_text] [&::-webkit-datetime-edit-year-field]:-my-[1em]",
-  "[&::-webkit-datetime-edit-day-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-day-field:focus-within]:text-white [&::-webkit-datetime-edit-day-field:focus-within]:snap-end",
-  "[&::-webkit-datetime-edit-month-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-month-field:focus-within]:text-white [&::-webkit-datetime-edit-month-field:focus-within]:snap-end",
-  "[&::-webkit-datetime-edit-year-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-year-field:focus-within]:text-white [&::-webkit-datetime-edit-year-field:focus-within]:snap-end",
+  "[&::-webkit-datetime-edit-day-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-day-field:focus-within]:text-white",
+  "[&::-webkit-datetime-edit-month-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-month-field:focus-within]:text-white",
+  "[&::-webkit-datetime-edit-year-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-year-field:focus-within]:text-white",
 ]);
 
 const icon_cva = cva([], {

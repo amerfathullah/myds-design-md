@@ -1,16 +1,18 @@
 // An author can make a DateField's or TimeField's <input> narrower than its
 // text, with a fixed `width` or a `min-width` inside a narrow parent. The
-// segments past the input's edge are then hidden, so moving focus to one must
-// bring it fully into view, fill included. Chromium's focus scroll leaves a
-// partly hidden segment where it is, so the fields wrapper is a scroll-snap
-// container whose only snap area is the focused segment. At natural width
-// nothing may scroll, and the segments lay out as they did before.
+// segments past the input's edge are then hidden, so moving keyboard focus to
+// one must bring it fully into view, fill included. Chromium's focus scroll
+// leaves a partly hidden segment where it is, so the fields wrapper's scroll
+// padding leaves only its centre line, and any segment off it gets centred. At
+// natural width nothing may scroll, and the segments lay out as they did
+// before, in left-to-right and right-to-left locales alike.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compileComponents, cvaClasses } from "./components.mjs";
 import {
   dateTimeParts,
+  launchInLocale,
   launchInUSEnglish,
   visibleSpan,
 } from "./datetime-input.mjs";
@@ -70,8 +72,9 @@ const narrowed = natural.flatMap((field) =>
 );
 
 // The layout the fields had before their fields wrapper scrolled, for inputs
-// with the class `baseline`: an edit that grows or shrinks to its content, and
-// inline segments in a fields wrapper that doesn't clip
+// with the class `baseline`: an edit that grows or shrinks to its content,
+// around a fields wrapper that doesn't clip, holding the segments as inline
+// text
 const baselineSegments = [
   "month",
   "day",
@@ -197,43 +200,49 @@ test("a narrowed DateField or TimeField scrolls the focused segment into view in
   }
 });
 
-test("a DateField or TimeField at natural width keeps its layout and never scrolls in Chromium", async () => {
-  const css = await compileComponents(fields.map(({ file }) => file));
-  const browser = await launchInUSEnglish();
-  try {
-    const { page, cdp } = await render(browser, `${css}${baseline}`, [
-      ...natural,
-      ...natural.map((field) => ({
-        ...field,
-        id: `${field.id}-baseline`,
-        className: "baseline",
-      })),
-    ]);
-    // The input's size, and each segment's box from the input's top left
-    const layout = async (id) => {
-      const { input, segments } = await dateTimeParts(cdp, id);
-      const outer = await borderBox(cdp, input);
-      const size = (quad) =>
-        `${(right(quad) - left(quad)).toFixed(2)}x${(bottom(quad) - top(quad)).toFixed(2)}`;
-      const lines = [`input ${size(outer)}`];
-      for (const { name, node } of segments) {
-        const quad = await borderBox(cdp, node);
-        lines.push(
-          `${name} ${size(quad)} at ${(left(quad) - left(outer)).toFixed(2)},${(top(quad) - top(outer)).toFixed(2)}`,
+// US English, and two right-to-left locales: Hebrew, whose times have no
+// AM/PM, and Arabic, whose AM/PM is right-to-left text. A segment laid out as
+// a box rather than as text would reverse their order in both.
+for (const locale of ["en_US", "he_IL", "ar_EG"])
+  test(`a DateField or TimeField at natural width keeps its layout and never scrolls in Chromium, in ${locale}`, async () => {
+    const css = await compileComponents(fields.map(({ file }) => file));
+    const browser = await launchInLocale(locale);
+    try {
+      const { page, cdp } = await render(browser, `${css}${baseline}`, [
+        ...natural,
+        ...natural.map((field) => ({
+          ...field,
+          id: `${field.id}-baseline`,
+          className: "baseline",
+        })),
+      ]);
+      // The input's size, and each segment's box from the input's top left
+      const layout = async (id) => {
+        const { input, segments } = await dateTimeParts(cdp, id);
+        const outer = await borderBox(cdp, input);
+        const size = (quad) =>
+          `${(right(quad) - left(quad)).toFixed(2)}x${(bottom(quad) - top(quad)).toFixed(2)}`;
+        const lines = [`input ${size(outer)}`];
+        for (const { name, node } of segments) {
+          const quad = await borderBox(cdp, node);
+          lines.push(
+            `${name} ${size(quad)} at ${(left(quad) - left(outer)).toFixed(2)},${(top(quad) - top(outer)).toFixed(2)}`,
+          );
+        }
+        return lines;
+      };
+
+      for (const { id } of natural) {
+        const atRest = await layout(id);
+        assert.deepEqual(atRest, await layout(`${id}-baseline`), id);
+        // Arrow keys move between segments only in a left-to-right locale
+        if (locale !== "en_US") continue;
+        const { segments } = await dateTimeParts(cdp, id);
+        await walkSegments(page, id, segments.length, async (i, move) =>
+          assert.deepEqual(await layout(id), atRest, `${id}, move ${move}`),
         );
       }
-      return lines;
-    };
-
-    for (const { id } of natural) {
-      const atRest = await layout(id);
-      assert.deepEqual(atRest, await layout(`${id}-baseline`), id);
-      const { segments } = await dateTimeParts(cdp, id);
-      await walkSegments(page, id, segments.length, async (i, move) =>
-        assert.deepEqual(await layout(id), atRest, `${id}, move ${move}`),
-      );
+    } finally {
+      await browser.close();
     }
-  } finally {
-    await browser.close();
-  }
-});
+  });

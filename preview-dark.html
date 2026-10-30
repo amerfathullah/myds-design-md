@@ -208,10 +208,11 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .datefield svg{flex-shrink:0;width:16px;height:16px;color:var(--txt-black-700)}
 .datefield input{padding:0;border:0;background:transparent;outline:none}
 .datefield input::-webkit-calendar-picker-indicator{display:none}
-.datefield input::-webkit-datetime-edit{max-width:fit-content;min-width:max-content}
-.datefield input::-webkit-datetime-edit-fields-wrapper{padding:1px 0}
+.datefield input::-webkit-datetime-edit{display:contents}
+.datefield input::-webkit-datetime-edit-fields-wrapper{padding:1px 0;overflow:hidden;scroll-snap-type:x mandatory}
 .datefield input::-webkit-datetime-edit-text{margin:0 2px}
-.datefield input::-webkit-datetime-edit-day-field:focus-within,.datefield input::-webkit-datetime-edit-month-field:focus-within,.datefield input::-webkit-datetime-edit-year-field:focus-within,.datefield input::-webkit-datetime-edit-hour-field:focus-within,.datefield input::-webkit-datetime-edit-minute-field:focus-within,.datefield input::-webkit-datetime-edit-ampm-field:focus-within{background:var(--primary-600);color:var(--white)}
+.datefield input::-webkit-datetime-edit-day-field,.datefield input::-webkit-datetime-edit-month-field,.datefield input::-webkit-datetime-edit-year-field,.datefield input::-webkit-datetime-edit-hour-field,.datefield input::-webkit-datetime-edit-minute-field,.datefield input::-webkit-datetime-edit-ampm-field{display:inline-block;text-box:trim-both text;margin-block:-1em}
+.datefield input::-webkit-datetime-edit-day-field:focus-within,.datefield input::-webkit-datetime-edit-month-field:focus-within,.datefield input::-webkit-datetime-edit-year-field:focus-within,.datefield input::-webkit-datetime-edit-hour-field:focus-within,.datefield input::-webkit-datetime-edit-minute-field:focus-within,.datefield input::-webkit-datetime-edit-ampm-field:focus-within{background:var(--primary-600);color:var(--white);scroll-snap-align:end}
 .datefield.specimen-focus input::-webkit-datetime-edit-day-field,.datefield.specimen-focus input::-webkit-datetime-edit-hour-field{background:var(--primary-600);color:var(--white)}
 .datefield.invalid{border-color:var(--otl-danger-300);box-shadow:0 0 0 3px var(--fr-danger),var(--shadow-button)}
 .datefield:focus-within,.datefield.specimen-focus{border-color:var(--otl-primary-300);box-shadow:0 0 0 3px var(--fr-primary),var(--shadow-button)}

@@ -64,3 +64,40 @@ export async function dateTimeParts(cdp, id) {
   assert.ok(wrapper, `#${id} has no -webkit-datetime-edit-fields-wrapper`);
   return { input, edit, wrapper, segments };
 }
+
+const left = (quad) => Math.min(quad[0], quad[2], quad[4], quad[6]);
+const right = (quad) => Math.max(quad[0], quad[2], quad[4], quad[6]);
+
+/**
+ * Where the input's segments can show, as its left and right edges: the
+ * input's content box, narrowed to the border boxes of the edit and the fields
+ * wrapper wherever they have a box and cut off their overflow.
+ * @param {import("playwright").CDPSession} cdp with `DOM` enabled
+ * @param {{ input: object, edit: object, wrapper: object }} parts from `dateTimeParts()`
+ * @returns {Promise<[number, number]>}
+ */
+export async function visibleSpan(cdp, { input, edit, wrapper }) {
+  const quad = async ({ nodeId }, box) =>
+    (await cdp.send("DOM.getBoxModel", { nodeId })).model[box];
+  const clips = async ({ nodeId }) => {
+    const { object } = await cdp.send("DOM.resolveNode", { nodeId });
+    const { result } = await cdp.send("Runtime.callFunctionOn", {
+      objectId: object.objectId,
+      functionDeclaration: `function () {
+        const { display, overflowX } = getComputedStyle(this);
+        return display !== "contents" && overflowX !== "visible";
+      }`,
+      returnByValue: true,
+    });
+    return result.value;
+  };
+
+  const content = await quad(input, "content");
+  let [from, to] = [left(content), right(content)];
+  for (const node of [edit, wrapper]) {
+    if (!(await clips(node))) continue;
+    const border = await quad(node, "border");
+    [from, to] = [Math.max(from, left(border)), Math.min(to, right(border))];
+  }
+  return [from, to];
+}

@@ -1,6 +1,6 @@
-// What the field-state tests share: the props a consumer passes, the
+// What the state tests share: the props a consumer passes a field, the
 // attributes they give the field's native element, and the computed colours
-// of the tokens the fields' and their labels' looks use
+// and shadow the looks of the fields, their labels and the search bar use
 
 // The props a consumer passes, and the look they give at rest. A disabled
 // field can't take focus, so it keeps that look.
@@ -53,6 +53,9 @@ export function stateAttributes(props) {
   )}`;
 }
 
+// `shadow-button`, which a field or the search bar keeps under its ring
+export const shadowButton = "rgba(0, 0, 0, 0.07) 0px 1px 3px 0px";
+
 // The computed colours of the tokens the looks use, in each theme
 export const colours = {
   light: {
@@ -60,6 +63,8 @@ export const colours = {
     "bg-white": "rgb(255, 255, 255)",
     "bg-washed": "rgb(244, 244, 245)",
     "otl-gray-200": "rgb(228, 228, 231)",
+    "otl-gray-300": "rgb(212, 212, 216)",
+    "otl-primary-200": "rgb(194, 213, 255)",
     "otl-primary-300": "rgb(150, 183, 255)",
     "otl-danger-300": "rgb(252, 165, 165)",
     "fr-primary": "rgba(150, 183, 255, 0.4)",
@@ -72,6 +77,8 @@ export const colours = {
     "bg-white": "rgb(24, 24, 27)",
     "bg-washed": "rgb(29, 29, 33)",
     "otl-gray-200": "rgb(39, 39, 42)",
+    "otl-gray-300": "rgb(63, 63, 70)",
+    "otl-primary-200": "rgb(30, 64, 175)",
     "otl-primary-300": "rgb(29, 78, 216)",
     "otl-danger-300": "rgb(185, 28, 28)",
     "fr-primary": "rgba(29, 78, 216, 0.4)",

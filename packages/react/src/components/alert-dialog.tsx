@@ -47,11 +47,10 @@ const AlertDialogContext = createContext<AlertDialogContextProps>({
 });
 
 interface AlertDialogProps
-  extends ComponentProps<typeof Dialog>,
-    AlertDialogContextProps {}
+  extends ComponentProps<typeof Dialog>, Partial<AlertDialogContextProps> {}
 
 const AlertDialog: FunctionComponent<AlertDialogProps> = ({
-  variant,
+  variant = "default",
   ...props
 }) => {
   return (
@@ -86,7 +85,7 @@ const AlertDialogContent: ForwardRefExoticComponent<
   const map = {
     default: {
       variant: "default",
-      icon: <></>,
+      icon: null,
     },
     success: {
       variant: "success",
@@ -106,12 +105,19 @@ const AlertDialogContent: ForwardRefExoticComponent<
     },
   } as const;
 
+  // JavaScript, or a cast, can pass any value, so whatever isn't one of the
+  // map's own keys, such as `null` or `"toString"`, renders as `default`
+  const known = Object.prototype.hasOwnProperty.call(map, variant);
+  const { variant: iconVariant, icon } = map[known ? variant : "default"];
+
   return (
     <DialogBody ref={ref} {...props}>
       <DialogContent className="py-6">
-        <DialogIcon variant={map[variant].variant} className="mb-4">
-          {map[variant].icon}
-        </DialogIcon>
+        {icon && (
+          <DialogIcon variant={iconVariant} className="mb-4">
+            {icon}
+          </DialogIcon>
+        )}
         <div>{children}</div>
       </DialogContent>
     </DialogBody>

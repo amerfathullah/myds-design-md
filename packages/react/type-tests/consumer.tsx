@@ -5,6 +5,12 @@
  * `Calendar` is not a public entry point, so it is covered through the pickers.
  */
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@amerfathullah/myds-react/alert-dialog";
+import {
   Cell,
   DataTable,
   type ColumnDef,
@@ -183,6 +189,33 @@ export const Labels = ({ locked }: { locked?: boolean }) => (
     <Label disabled data-disabled={false}>
       Name
     </Label>
+  </>
+);
+
+// AlertDialog's `variant` is optional and defaults to `default`. TypeScript
+// still rejects `null` and names it doesn't list.
+const alertBody = (
+  <>
+    <AlertDialogTrigger>
+      <button type="button">Delete</button>
+    </AlertDialogTrigger>
+    <AlertDialogContent>
+      <AlertDialogTitle>Delete the file?</AlertDialogTitle>
+    </AlertDialogContent>
+  </>
+);
+
+export const AlertDialogs = () => (
+  <>
+    <AlertDialog>{alertBody}</AlertDialog>
+    <AlertDialog variant="default">{alertBody}</AlertDialog>
+    <AlertDialog variant="danger" defaultOpen>
+      {alertBody}
+    </AlertDialog>
+    {/* @ts-expect-error `variant` takes no `null` */}
+    <AlertDialog variant={null}>{alertBody}</AlertDialog>
+    {/* @ts-expect-error `variant` is one of the five names */}
+    <AlertDialog variant="bogus">{alertBody}</AlertDialog>
   </>
 );
 

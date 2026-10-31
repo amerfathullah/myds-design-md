@@ -120,20 +120,20 @@ Untuk menggunakan medan tarikh dalam keadaan terkawal, tetapkan prop `value` kep
 
 ### Dilumpuhkan
 
-Medan tarikh boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, medan tarikh tidak akan interaktif.
+Medan tarikh boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, medan tarikh tidak akan interaktif. Tetapkan juga `disabled` pada `Label` supaya label turut malap.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="date-field-disabled" size="small">Tarikh lahir</Label>
+        <Label htmlFor="date-field-disabled" size="small" disabled>Tarikh lahir</Label>
         <DateField id="date-field-disabled" defaultValue={NOW} disabled />
       </div>
     </div>
   </Tab>
   <Tab value="Kod">
     ```tsx
-    <Label htmlFor="date-field-disabled" size="small">Tarikh lahir</Label>
+    <Label htmlFor="date-field-disabled" size="small" disabled>Tarikh lahir</Label>
     <DateField id="date-field-disabled" defaultValue={new Date().toISOString().split("T")[0]} disabled />
     ```
   </Tab>

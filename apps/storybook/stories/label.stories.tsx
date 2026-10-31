@@ -34,27 +34,32 @@ const meta = {
   parameters: {
     layout: "centered",
   },
-  render: ({ size }) => {
+  // Label disables nothing, so `disabled` goes to each Label and its field
+  render: ({ size, disabled }) => {
     return (
       <div className="min-w-[360px] space-y-3">
         <div className="flex justify-between">
-          <Label htmlFor="checkbox" size={size}>
+          <Label htmlFor="checkbox" size={size} disabled={disabled}>
             Auto-delete notifications
           </Label>
-          <Checkbox id="checkbox" size={size}></Checkbox>
+          <Checkbox
+            id="checkbox"
+            size={size}
+            disabled={disabled ?? undefined}
+          ></Checkbox>
         </div>
         <div className="flex justify-between">
-          <Label htmlFor="toggle" size={size}>
+          <Label htmlFor="toggle" size={size} disabled={disabled}>
             Enable 2FA security?
           </Label>
-          <Toggle id="toggle" size={size}>
+          <Toggle id="toggle" size={size} disabled={disabled ?? undefined}>
             <ToggleThumb />
           </Toggle>
         </div>
       </div>
     );
   },
-  args: { onClick: fn() },
+  args: { onClick: fn(), disabled: false },
   argTypes: {
     size: {
       table: {
@@ -66,6 +71,16 @@ const meta = {
       control: "inline-radio",
       options: ["small", "medium", "large"],
     },
+    disabled: {
+      table: {
+        type: {
+          summary: "boolean",
+        },
+      },
+      description:
+        "Whether the label's field is disabled. Sets the label's `data-disabled`, which shows the disabled styling. It doesn't disable the field.",
+      control: "boolean",
+    },
   },
 } satisfies Meta<typeof Label>;
 
@@ -75,19 +90,23 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = createStory({});
 
 export const DefaultDark: Story = createRender(
-  ({ size = "medium" as const }) => (
+  ({ size = "medium" as const, disabled = false }) => (
     <div className="dark min-w-[360px] space-y-3">
       <div className="flex justify-between">
-        <Label htmlFor="checkbox-dark" size={size}>
+        <Label htmlFor="checkbox-dark" size={size} disabled={disabled}>
           Auto-delete notifications
         </Label>
-        <Checkbox id="checkbox-dark" size={size}></Checkbox>
+        <Checkbox
+          id="checkbox-dark"
+          size={size}
+          disabled={disabled ?? undefined}
+        ></Checkbox>
       </div>
       <div className="group flex justify-between">
-        <Label htmlFor="toggle-dark" size={size}>
+        <Label htmlFor="toggle-dark" size={size} disabled={disabled}>
           Enable 2FA security?
         </Label>
-        <Toggle id="toggle-dark" size={size}>
+        <Toggle id="toggle-dark" size={size} disabled={disabled ?? undefined}>
           <ToggleThumb />
         </Toggle>
       </div>
@@ -95,3 +114,10 @@ export const DefaultDark: Story = createRender(
   ),
   "dark",
 );
+
+export const DisabledLight: Story = createStory({ disabled: true });
+
+export const DisabledDark: Story = {
+  ...DefaultDark,
+  args: { disabled: true },
+};

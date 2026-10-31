@@ -9,7 +9,7 @@ import { Quicklinks } from "@/components/quicklinks";
 import Preview from "@/components/preview";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-import { Toggle, ToggleThumb, label } from "@/components/myds";
+import { Input, Toggle, ToggleThumb, label } from "@/components/myds";
 
 <Tabs items={["Preview", "Code"]} className="not-prose">
   <Tab value="Preview">
@@ -169,6 +169,51 @@ import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 </Tabs>
 
 
+### Disabled
+
+Use the `disabled` prop to dim the label of a disabled field. It sets the label's `data-disabled`, which shows the disabled styling, wherever the field sits. Label doesn't disable the field, so pass `disabled` to the field as well.
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview">
+    <div className="not-prose min-w-[360px] space-y-3">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="email-disabled" size="small" disabled>Email address</Label>
+        <Input id="email-disabled" type="email" defaultValue="name@example.com" disabled />
+      </div>
+      <div className="flex justify-between items-center">
+        <Label htmlFor="checkbox-disabled" disabled>Auto-delete notifications</Label>
+        <Checkbox id="checkbox-disabled" disabled />
+      </div>
+    </div>
+  </Tab>
+  <Tab value="Code">
+
+```tsx
+import { Label } from "@amerfathullah/myds-react/label";
+import { Input } from "@amerfathullah/myds-react/input";
+import { Checkbox } from "@amerfathullah/myds-react/checkbox";
+
+/** Disabled **/
+
+<>
+  <div className="flex flex-col gap-2">
+    <Label htmlFor="email-disabled" size="small" disabled>
+      Email address
+    </Label>
+    <Input id="email-disabled" type="email" defaultValue="name@example.com" disabled />
+  </div>
+  <div className="flex items-center justify-between">
+    <Label htmlFor="checkbox-disabled" disabled>
+      Auto-delete notifications
+    </Label>
+    <Checkbox id="checkbox-disabled" disabled />
+  </div>
+</>;
+```
+
+  </Tab>
+</Tabs>
+
 ### Using as Slot
 
 Use the `asChild` prop to render the label using the `Slot` component!
@@ -214,6 +259,12 @@ import { Label } from "@amerfathullah/myds-react/label";
       type: "enum",
       typeDescription: "small | medium | large",
       default: "medium",
+    },
+    disabled: {
+      description:
+        "Disabled state for the label. Sets `data-disabled`, which shows the disabled styling. It doesn't disable the field.",
+      type: "boolean",
+      default: "false",
     },
     className: {
       description:

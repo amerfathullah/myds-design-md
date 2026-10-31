@@ -160,20 +160,20 @@ Browsers treat `step` as a validation rule. Not all of them stop the user typing
 
 ### Disabled
 
-A time field can be disabled by setting the `disabled` prop to `true`. When disabled, the time field is not interactive.
+A time field can be disabled by setting the `disabled` prop to `true`. When disabled, the time field is not interactive. Pass `disabled` to its `Label` as well, so the label dims too.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="time-field-disabled" size="small">Appointment time</Label>
+        <Label htmlFor="time-field-disabled" size="small" disabled>Appointment time</Label>
         <TimeField id="time-field-disabled" defaultValue="16:30" disabled />
       </div>
     </div>
   </Tab>
   <Tab value="Code">
     ```tsx
-    <Label htmlFor="time-field-disabled" size="small">Appointment time</Label>
+    <Label htmlFor="time-field-disabled" size="small" disabled>Appointment time</Label>
     <TimeField id="time-field-disabled" defaultValue="16:30" disabled />
     ```
   </Tab>

@@ -9,7 +9,7 @@ import { Quicklinks } from "@/components/quicklinks";
 import Preview from "@/components/preview";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-import { Toggle, ToggleThumb, label } from "@/components/myds";
+import { Input, Toggle, ToggleThumb, label } from "@/components/myds";
 
 <Tabs items={["Preview", "Code"]} className="not-prose">
   <Tab value="Preview">
@@ -171,6 +171,51 @@ import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 </Tabs>
 
 
+### Dilumpuhkan
+
+Gunakan prop `disabled` untuk memalapkan label bagi medan yang dilumpuhkan. Ia menetapkan `data-disabled` pada label, yang memaparkan gaya dilumpuhkan, di mana-mana sahaja medan itu diletakkan. Label tidak melumpuhkan medan, jadi tetapkan juga `disabled` pada medan.
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview">
+    <div className="not-prose min-w-[360px] space-y-3">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="email-disabled" size="small" disabled>Alamat e-mel</Label>
+        <Input id="email-disabled" type="email" defaultValue="name@example.com" disabled />
+      </div>
+      <div className="flex justify-between items-center">
+        <Label htmlFor="checkbox-disabled" disabled>Padamkan notifikasi secara automatik</Label>
+        <Checkbox id="checkbox-disabled" disabled />
+      </div>
+    </div>
+  </Tab>
+  <Tab value="Code">
+
+```tsx
+import { Label } from "@amerfathullah/myds-react/label";
+import { Input } from "@amerfathullah/myds-react/input";
+import { Checkbox } from "@amerfathullah/myds-react/checkbox";
+
+/** Dilumpuhkan **/
+
+<>
+  <div className="flex flex-col gap-2">
+    <Label htmlFor="email-disabled" size="small" disabled>
+      Alamat e-mel
+    </Label>
+    <Input id="email-disabled" type="email" defaultValue="name@example.com" disabled />
+  </div>
+  <div className="flex items-center justify-between">
+    <Label htmlFor="checkbox-disabled" disabled>
+      Padamkan notifikasi secara automatik
+    </Label>
+    <Checkbox id="checkbox-disabled" disabled />
+  </div>
+</>;
+```
+
+  </Tab>
+</Tabs>
+
 ### Menggunakan sebagai Slot
 
 Gunakan prop `asChild` untuk memaparkan label menggunakan komponen `Slot`!
@@ -215,6 +260,12 @@ import { Label } from "@amerfathullah/myds-react/label";
       type: "enum",
       typeDescription: "small | medium | large",
       default: "medium",
+    },
+    disabled: {
+      description:
+        "Keadaan dilumpuhkan untuk label. Menetapkan `data-disabled`, yang memaparkan gaya dilumpuhkan. Ia tidak melumpuhkan medan.",
+      type: "boolean",
+      default: "false",
     },
     className: {
       description:

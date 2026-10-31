@@ -120,20 +120,20 @@ To use the date field in the controlled state, set the `value` prop to the curre
 
 ### Disabled
 
-Date field can be disabled by setting the `disabled` prop to `true`. When disabled, the date field will not be interactive.
+Date field can be disabled by setting the `disabled` prop to `true`. When disabled, the date field will not be interactive. Pass `disabled` to its `Label` as well, so the label dims too.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="date-field-disabled" size="small">Date of birth</Label>
+        <Label htmlFor="date-field-disabled" size="small" disabled>Date of birth</Label>
         <DateField id="date-field-disabled" defaultValue={NOW} disabled />
       </div>
     </div>
   </Tab>
   <Tab value="Code">
     ```tsx
-    <Label htmlFor="date-field-disabled" size="small">Date of birth</Label>
+    <Label htmlFor="date-field-disabled" size="small" disabled>Date of birth</Label>
     <DateField id="date-field-disabled" defaultValue={new Date().toISOString().split("T")[0]} disabled />
     ```
   </Tab>

@@ -104,8 +104,8 @@ export function tokenUtilities() {
       "animate-caret-blink",
     ].map((utility) => ({ utility, props: animation })),
     { utility: "origin-tooltip-origin", props: ["transformOrigin"] },
-    // Enter and exit animations, as dropdown, select, popover, dialog,
-    // sheet and tooltip combine them
+    // Enter and exit animations, as dropdown, select, popover, dialog and
+    // tooltip combine them
     {
       utility: "animate-in fade-in-0 zoom-in-95 slide-in-from-top-2",
       props: enter,

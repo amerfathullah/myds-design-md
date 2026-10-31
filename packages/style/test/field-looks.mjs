@@ -1,6 +1,6 @@
-// What the field-state tests share: the props a consumer passes, the
+// What the state tests share: the props a consumer passes a field, the
 // attributes they give the field's native element, and the computed colours
-// of the tokens the fields' and their labels' looks use
+// and shadow the looks of the fields, their labels and the search bar use
 
 // The props a consumer passes, and the look they give at rest. A disabled
 // field can't take focus, so it keeps that look.
@@ -52,6 +52,9 @@ export function stateAttributes(props) {
     "aria-invalid",
   )}`;
 }
+
+// `shadow-button`, which a field or the search bar keeps under its ring
+export const shadowButton = "rgba(0, 0, 0, 0.07) 0px 1px 3px 0px";
 
 // The computed colours of the tokens the looks use, in each theme
 export const colours = {

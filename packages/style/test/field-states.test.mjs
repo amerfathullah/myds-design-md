@@ -10,7 +10,12 @@ import { test } from "node:test";
 import { chromium } from "playwright";
 
 import { compileComponents, cvaCall, cvaClasses } from "./components.mjs";
-import { cases, colours, stateAttributes } from "./field-looks.mjs";
+import {
+  cases,
+  colours,
+  shadowButton,
+  stateAttributes,
+} from "./field-looks.mjs";
 
 const fields = [
   {
@@ -36,9 +41,6 @@ const looks = {
   invalid: { border: "otl-danger-300" },
   "invalid, focused": { border: "otl-danger-300", ring: "fr-danger" },
 };
-
-// `shadow-button`, under any ring
-const shadowButton = "rgba(0, 0, 0, 0.07) 0px 1px 3px 0px";
 
 // The markup DateField or TimeField renders for `props`: a wrapper with the
 // classes its cva returns for them, defaults applied, around an <input> that

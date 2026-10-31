@@ -7,10 +7,12 @@ const RootLayout: FunctionComponent<{ children: ReactNode }> = ({
   children,
 }) => {
   return (
+    // next-themes sets the class and `color-scheme` before React hydrates
     <html
       className={clx("font-body light")}
       lang="en"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
       <head>
         {/* Next.js 16 (Turbopack) drops remote `@import url()` from CSS */}

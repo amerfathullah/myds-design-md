@@ -6,6 +6,7 @@ import ms from "@/locales/ms";
 import { getRosetta } from "@/locales/_server";
 import type { Metadata } from "next";
 import { AutoToast } from "@/components/myds";
+import { ThemeBridge } from "@/components/theme-bridge";
 import { i18nUI } from "@/app/[lang]/layout.config";
 
 export async function generateMetadata({
@@ -42,10 +43,13 @@ export default async function RootLayout({
 
   return (
     <RootProvider i18n={i18nUI.provider(lang)}>
-      <RosettaProvider locales={{ en, ms }}>
-        <AutoToast />
-        {children}
-      </RosettaProvider>
+      {/* Every live ThemeSwitch reads and sets the site theme */}
+      <ThemeBridge>
+        <RosettaProvider locales={{ en, ms }}>
+          <AutoToast />
+          {children}
+        </RosettaProvider>
+      </ThemeBridge>
     </RootProvider>
   );
 }

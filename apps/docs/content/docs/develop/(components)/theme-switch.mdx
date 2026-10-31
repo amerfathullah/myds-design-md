@@ -107,7 +107,11 @@ const subscribe = () => () => {};
 export function ThemeBridge({ children }: { children: ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme();
   // next-themes knows the theme only in the browser, so the server HTML shows light
-  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
   const theme = (mounted && resolvedTheme) || "light";
   const value = useMemo(
     () => ({ theme, setTheme, defaultTheme: "light" }),
@@ -300,6 +304,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
 In an app without server rendering, such as Vite, put the script in `index.html`. This is the script for the default options:
 
+{/* prettier-ignore */}
 ```html title="index.html"
 <!doctype html>
 <html lang="en">
@@ -307,7 +312,7 @@ In an app without server rendering, such as Vite, put the script in `index.html`
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
-      (function k(t,e,n){let o=n.indexOf(e)===-1?n.concat([e]):n,i=e;try{let r=window.localStorage.getItem(t);r!==null&&o.indexOf(r)!==-1&&(i=r)}catch(r){}let s=document.documentElement.classList;for(let r=0;r!==o.length;r++)s.remove(o[r]);return s.add(i),i})("theme","light",["light","dark"])
+      (function k(t,e,n){let i=n.indexOf(e)===-1?n.concat([e]):n,o=e;try{let r=window.localStorage.getItem(t);r!==null&&i.indexOf(r)!==-1&&(o=r)}catch(r){}let s=document.documentElement.classList;for(let r=0;r!==i.length;r++)s.remove(i[r]);return s.add(o),o})("theme","light",["light","dark"])
     </script>
   </head>
   <body>

@@ -108,7 +108,11 @@ const subscribe = () => () => {};
 export function ThemeBridge({ children }: { children: ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme();
   // next-themes hanya tahu tema dalam pelayar, jadi HTML pelayan memaparkan tema terang
-  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
   const theme = (mounted && resolvedTheme) || "light";
   const value = useMemo(
     () => ({ theme, setTheme, defaultTheme: "light" }),
@@ -301,6 +305,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
 Dalam aplikasi tanpa pemaparan pelayan, seperti Vite, letakkan skrip dalam `index.html`. Ini skrip untuk tetapan lalai:
 
+{/* prettier-ignore */}
 ```html title="index.html"
 <!doctype html>
 <html lang="ms">
@@ -308,7 +313,7 @@ Dalam aplikasi tanpa pemaparan pelayan, seperti Vite, letakkan skrip dalam `inde
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
-      (function k(t,e,n){let o=n.indexOf(e)===-1?n.concat([e]):n,i=e;try{let r=window.localStorage.getItem(t);r!==null&&o.indexOf(r)!==-1&&(i=r)}catch(r){}let s=document.documentElement.classList;for(let r=0;r!==o.length;r++)s.remove(o[r]);return s.add(i),i})("theme","light",["light","dark"])
+      (function k(t,e,n){let i=n.indexOf(e)===-1?n.concat([e]):n,o=e;try{let r=window.localStorage.getItem(t);r!==null&&i.indexOf(r)!==-1&&(o=r)}catch(r){}let s=document.documentElement.classList;for(let r=0;r!==i.length;r++)s.remove(i[r]);return s.add(o),o})("theme","light",["light","dark"])
     </script>
   </head>
   <body>
@@ -324,9 +329,9 @@ Dalam aplikasi tanpa pemaparan pelayan, seperti Vite, letakkan skrip dalam `inde
   className="bg-bg-warning-50 text-txt-warning border-transparent"
   icon={<InfoIcon className="size-5" />}
 >
-  Skrip yang disalin membawa tetapan ThemeProvider. Jana semula skrip itu
-  setiap kali tetapan itu berubah, atau halaman boleh memaparkan tema yang
-  salah sehingga ThemeProvider dipaparkan.
+  Skrip yang disalin membawa tetapan ThemeProvider. Jana semula skrip itu setiap
+  kali tetapan itu berubah, atau halaman boleh memaparkan tema yang salah
+  sehingga ThemeProvider dipaparkan.
 </Callout>
 
 Untuk menjana semula skrip, jalankan arahan ini dalam aplikasi anda, dengan tetapan yang sama seperti ThemeProvider:

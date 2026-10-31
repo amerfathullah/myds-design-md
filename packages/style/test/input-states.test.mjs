@@ -14,33 +14,12 @@ import { test } from "node:test";
 import { chromium } from "playwright";
 
 import { compileComponents, cvaClasses, jsxClasses } from "./components.mjs";
-import { colours } from "./field-colours.mjs";
+import { cases, colours, stateAttributes } from "./field-looks.mjs";
 
-// The props a consumer passes, and the look they give at rest. A disabled
-// field can't take focus, so it keeps that look.
-const cases = [
-  { name: "invalid omitted", props: {}, look: "valid" },
-  { name: "invalid={null}", props: { invalid: null }, look: "valid" },
-  { name: "invalid={false}", props: { invalid: false }, look: "valid" },
-  { name: "invalid", props: { invalid: true }, look: "invalid" },
-  { name: "aria-invalid", props: { "aria-invalid": true }, look: "invalid" },
-  {
-    name: "invalid aria-invalid={false}",
-    props: { invalid: true, "aria-invalid": false },
-    look: "valid",
-  },
-  { name: "disabled", props: { disabled: true }, look: "valid" },
-  {
-    name: "disabled invalid",
-    props: { disabled: true, invalid: true },
-    look: "invalid",
-  },
-];
-
-// Each look's border and 3px ring on the editable field. `rest` is the
+// Each look's border and 3px ring on the editable field. `resting` is the
 // field's own resting border.
 const looks = {
-  valid: { border: "rest" },
+  valid: { border: "resting" },
   "valid, focused": { border: "otl-primary-300", ring: "fr-primary" },
   invalid: { border: "otl-danger-300" },
   "invalid, focused": { border: "otl-danger-300", ring: "fr-danger" },
@@ -49,23 +28,11 @@ const looks = {
 // The colour an addon's text and an icon inherit, which they never change
 const inherited = "rgb(1, 2, 3)";
 
-// The attributes Input or TextArea gives its field for `props`: `disabled`,
-// and `aria-invalid` from `invalid` unless an `aria-invalid` prop overrides it
-function attributes(props) {
-  const ariaInvalid =
-    "aria-invalid" in props
-      ? props["aria-invalid"]
-      : (props.invalid ?? undefined);
-  return `${props.disabled ? " disabled" : ""}${
-    ariaInvalid == null ? "" : ` aria-invalid="${ariaInvalid}"`
-  }`;
-}
-
 const fields = [
   {
     name: "Input",
     file: "input.tsx",
-    rest: "transparent",
+    resting: "transparent",
     // Plain, and with a prepend and an append InputAddon and a left and a
     // right InputIcon
     shapes: [
@@ -74,10 +41,13 @@ const fields = [
     ],
     // The markup Input renders: its wrapper, a row holding the addons, and a
     // box holding the <input> and its icons
-    render(id, size, { decorated }, props) {
-      const [wrapper, row, box, ...rest] = jsxClasses("input.tsx");
-      assert.ok(wrapper && row && box && !rest.length, "input.tsx's markup");
-      const classes = (cva, variants) => cvaClasses("input.tsx", cva, variants);
+    render({ id, props, decorated }, size) {
+      const [wrapper, row, box, ...others] = jsxClasses(this.file);
+      assert.ok(
+        wrapper && row && box && !others.length,
+        `${this.file}'s markup`,
+      );
+      const classes = (cva, variants) => cvaClasses(this.file, cva, variants);
       const addon = (text) =>
         decorated
           ? `<div class="${classes("input_addon_cva", { size })}">${text}</div>`
@@ -89,17 +59,34 @@ const fields = [
       const data = ["prepend", "append", "left-icon", "right-icon"]
         .map((name) => ` data-has-${name}="${!!decorated}"`)
         .join("");
-      const input = `<input id="${id}" class="${classes("input_cva", { size })}"${data}${attributes(props)}>`;
+      const input = `<input id="${id}" class="${classes("input_cva", { size })}"${data}${stateAttributes(props)}>`;
       return `<div class="${wrapper}"><div class="${row}">${addon("RM")}<div class="${box}">${input}${icon("left")}${icon("right")}</div>${addon("Copy")}</div></div>`;
+    },
+    // What every look keeps around the <input>: the wrapper's `otl-gray-200`
+    // border and no shadow, each addon's divider against the field, and the
+    // addons' and icons' inherited colour
+    around({ decorated }, colour) {
+      const [none, grey] = [colour("transparent"), colour("otl-gray-200")];
+      // Border colours run top, right, bottom, left
+      return {
+        wrapper: { border: grey, shadow: "none" },
+        addons: decorated
+          ? [
+              { border: `${none} ${grey} ${none} ${none}`, colour: inherited },
+              { border: `${none} ${none} ${none} ${grey}`, colour: inherited },
+            ]
+          : [],
+        icons: decorated ? [inherited, inherited] : [],
+      };
     },
   },
   {
     name: "TextArea",
     file: "textarea.tsx",
-    rest: "otl-gray-200",
+    resting: "otl-gray-200",
     shapes: [{ name: "plain" }],
-    render(id, size, _, props) {
-      return `<textarea id="${id}" class="${cvaClasses("textarea.tsx", "text_area_cva", { size })}"${attributes(props)}></textarea>`;
+    render({ id, props }, size) {
+      return `<textarea id="${id}" class="${cvaClasses(this.file, "text_area_cva", { size })}"${stateAttributes(props)}></textarea>`;
     },
   },
 ];
@@ -157,27 +144,13 @@ function readLooks(ids) {
 // The look `name` gives a sample, in `theme`
 function want(field, sample, theme, name) {
   const colour = (token) =>
-    colours[theme][token === "rest" ? field.rest : token];
+    colours[theme][token === "resting" ? field.resting : token];
   const { border, ring } = looks[name];
-  const { disabled } = sample.props;
-  const own = {
+  return {
     border: colour(border),
     shadow: ring ? `${colour(ring)} 0px 0px 0px 3px` : "none",
-    background: colour(disabled ? "bg-washed" : "bg-white"),
-  };
-  if (field.name !== "Input") return own;
-  const [none, grey] = [colour("transparent"), colour("otl-gray-200")];
-  // Border colours run top, right, bottom, left
-  return {
-    ...own,
-    wrapper: { border: grey, shadow: "none" },
-    addons: sample.decorated
-      ? [
-          { border: `${none} ${grey} ${none} ${none}`, colour: inherited },
-          { border: `${none} ${none} ${none} ${grey}`, colour: inherited },
-        ]
-      : [],
-    icons: sample.decorated ? [inherited, inherited] : [],
+    background: colour(sample.props.disabled ? "bg-washed" : "bg-white"),
+    ...field.around?.(sample, colour),
   };
 }
 
@@ -218,9 +191,7 @@ test("each Input and TextArea state has its border and ring, in both themes", as
         .map(
           ({ field, size, samples }) =>
             `<fieldset class="group">${samples
-              .map((sample) =>
-                field.render(sample.id, size, sample, sample.props),
-              )
+              .map((sample) => field.render(sample, size))
               .join("")}</fieldset>`,
         )
         .join("")}</body></html>`,

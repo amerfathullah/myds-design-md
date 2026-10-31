@@ -147,6 +147,7 @@ export const Fields = ({ error }: { error?: string }) => (
     <Input invalid />
     <Input invalid={null} prepend={<InputAddon>RM</InputAddon>} />
     <Input invalid={Boolean(error)} size="medium" />
+    <Input invalid={false} />
     <Input aria-invalid={error ? "true" : undefined} />
     <TextArea />
     <TextArea invalid={false} size="large" />

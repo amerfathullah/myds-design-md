@@ -28,6 +28,8 @@ interface InputProps
   prepend?: ReactNode;
   append?: ReactNode;
   children?: ReactNode;
+  /** Sets the input's `aria-invalid`, which shows the error styling */
+  invalid?: boolean | null;
 }
 
 const input_cva = cva(
@@ -35,6 +37,12 @@ const input_cva = cva(
     "bg-bg-white border border-transparent outline-hidden box-border rounded-md",
     "placeholder:text-txt-black-500 text-txt-black-700 transition-colors w-full",
     "focus:ring-3 focus:ring-fr-primary focus:border-otl-primary-300",
+    // The input's aria-invalid, which the invalid prop sets, picks the error
+    // styling, so it matches what assistive technology announces. Tailwind
+    // writes aria- after focus:, so a focused invalid input keeps its danger
+    // border and rings fr-danger. Only the input turns red, not the wrapper
+    // or the addons, as the guideline keeps fixed text unhighlighted
+    "aria-invalid:border-otl-danger-300 aria-invalid:ring-fr-danger",
     "disabled:bg-bg-washed disabled:cursor-not-allowed disabled:text-txt-black-disabled",
     "data-[has-prepend=true]:rounded-l-none data-[has-append=true]:rounded-r-none",
     "data-[has-left-icon=true]:pl-10 data-[has-right-icon=true]:pr-10",
@@ -54,7 +62,10 @@ const input_cva = cva(
 );
 
 const Input: ForwardRefExoticComponent<InputProps> = forwardRef(
-  ({ className, prepend, append, children, size = "small", ...props }, ref) => {
+  (
+    { className, prepend, append, children, size = "small", invalid, ...props },
+    ref,
+  ) => {
     const has_icon = useMemo(() => {
       if (!children) return { left: false, right: false };
       const _children = Children.toArray(children);
@@ -90,6 +101,7 @@ const Input: ForwardRefExoticComponent<InputProps> = forwardRef(
                 data-has-append={!!append}
                 data-has-left-icon={has_icon.left}
                 data-has-right-icon={has_icon.right}
+                aria-invalid={invalid ?? undefined}
                 {...props}
               />
               {children}

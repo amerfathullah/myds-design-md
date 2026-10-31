@@ -79,9 +79,9 @@ async function mount(element: ReturnType<typeof alertDialog>) {
 
 const dialog = () => document.querySelector('[role="dialog"]');
 
-// The dialog's status icon: every icon in it but the close button's cross
-const statusIcons = (dialog: Element) =>
-  [...dialog.querySelectorAll("svg")].filter(
+// The open dialog's status icon: every icon in it but the close button's cross
+const statusIcons = () =>
+  [...dialog()!.querySelectorAll("svg")].filter(
     (svg) => !svg.querySelector('[id="Icon/cross"]'),
   );
 
@@ -129,7 +129,7 @@ describe("AlertDialog without a `variant`", () => {
     const { open } = await mount(alertDialog());
     await open();
     expect(dialog()?.querySelector("h2")?.textContent).toBe("Delete the file?");
-    expect(statusIcons(dialog()!)).toEqual([]);
+    expect(statusIcons()).toEqual([]);
     expect(dialog()!.querySelectorAll('[id="Icon/cross"]')).toHaveLength(1);
   });
 
@@ -179,7 +179,8 @@ test.each([
   },
 );
 
-// Each status variant's icon, with the classes it had at a387c07
+// Each status variant still leads with its icon, in its colour, 16px above
+// its title and description
 describe.each([
   ["info", "info", "text-txt-primary stroke-txt-primary"],
   ["success", "check-circle", "text-txt-success stroke-txt-success"],
@@ -189,7 +190,7 @@ describe.each([
   test(`leads with the ${icon} icon in its colour`, async () => {
     const { open } = await mount(alertDialog({ variant }));
     await open();
-    const [status, ...others] = statusIcons(dialog()!);
+    const [status, ...others] = statusIcons();
     expect(others).toEqual([]);
     expect(status?.querySelector("g")?.id).toBe(`Icon/${icon}`);
     expect(status?.getAttribute("class")).toBe(

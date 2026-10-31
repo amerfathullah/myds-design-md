@@ -232,7 +232,7 @@ export default function CommunityForm({
           <Input
             id="name"
             {...register("name")}
-            className={errors.name ? "border-danger-600" : ""}
+            invalid={Boolean(errors.name)}
             disabled={isLoading}
           />
           {errors.name && (
@@ -259,7 +259,7 @@ export default function CommunityForm({
                 }
               },
             })}
-            className={errors.email ? "border-danger-600" : ""}
+            invalid={Boolean(errors.email)}
             disabled={isLoading}
           />
           {errors.email && (
@@ -279,7 +279,7 @@ export default function CommunityForm({
           <Input
             id="institute"
             {...register("institute")}
-            className={errors.institute ? "border-danger-600" : ""}
+            invalid={Boolean(errors.institute)}
             disabled={isLoading}
           />
           {errors.institute && (

@@ -10,6 +10,7 @@ import { test } from "node:test";
 import { chromium } from "playwright";
 
 import { compileComponents, cvaCall, cvaClasses } from "./components.mjs";
+import { cases, colours, stateAttributes } from "./field-looks.mjs";
 
 const fields = [
   {
@@ -28,45 +29,6 @@ const fields = [
   },
 ];
 
-// The props a consumer passes, and the look they give at rest. A disabled
-// field can't take focus, so it keeps that look.
-const cases = [
-  { name: "invalid omitted", props: {}, look: "valid" },
-  { name: "invalid={null}", props: { invalid: null }, look: "valid" },
-  { name: "invalid={false}", props: { invalid: false }, look: "valid" },
-  { name: "invalid", props: { invalid: true }, look: "invalid" },
-  { name: "aria-invalid", props: { "aria-invalid": true }, look: "invalid" },
-  {
-    name: "invalid aria-invalid={false}",
-    props: { invalid: true, "aria-invalid": false },
-    look: "valid",
-  },
-  { name: "disabled", props: { disabled: true }, look: "valid" },
-  {
-    name: "disabled invalid",
-    props: { disabled: true, invalid: true },
-    look: "invalid",
-  },
-];
-
-// The tokens the looks use, in each theme
-const colours = {
-  light: {
-    "otl-gray-200": "rgb(228, 228, 231)",
-    "otl-primary-300": "rgb(150, 183, 255)",
-    "otl-danger-300": "rgb(252, 165, 165)",
-    "fr-primary": "rgba(150, 183, 255, 0.4)",
-    "fr-danger": "rgba(252, 165, 165, 0.4)",
-  },
-  dark: {
-    "otl-gray-200": "rgb(39, 39, 42)",
-    "otl-primary-300": "rgb(29, 78, 216)",
-    "otl-danger-300": "rgb(185, 28, 28)",
-    "fr-primary": "rgba(29, 78, 216, 0.4)",
-    "fr-danger": "rgba(185, 28, 28, 0.4)",
-  },
-};
-
 // Each look's border and 3px ring
 const looks = {
   valid: { border: "otl-gray-200" },
@@ -80,16 +42,11 @@ const shadowButton = "rgba(0, 0, 0, 0.07) 0px 1px 3px 0px";
 
 // The markup DateField or TimeField renders for `props`: a wrapper with the
 // classes its cva returns for them, defaults applied, around an <input> that
-// takes `disabled`, and `aria-invalid` from `invalid` unless an
-// `aria-invalid` prop overrides it
+// takes `disabled` and `aria-invalid`
 function render({ file, container, input, attributes }, id, props) {
-  const ariaInvalid =
-    "aria-invalid" in props
-      ? props["aria-invalid"]
-      : (props.invalid ?? undefined);
-  return `<div class="${cvaCall(file, container, props)}"><input id="${id}" ${attributes}${
-    props.disabled ? " disabled" : ""
-  }${ariaInvalid == null ? "" : ` aria-invalid="${ariaInvalid}"`} class="${cvaClasses(file, input)}"></div>`;
+  return `<div class="${cvaCall(file, container, props)}"><input id="${id}" ${attributes}${stateAttributes(
+    props,
+  )} class="${cvaClasses(file, input)}"></div>`;
 }
 
 // Runs in the page: each wrapper's border colour and box shadow at rest, then

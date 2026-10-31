@@ -48,6 +48,7 @@ const meta = {
     prepend: false,
     append: false,
     disabled: false,
+    invalid: false,
   },
   argTypes: {
     children: {
@@ -93,6 +94,16 @@ const meta = {
         },
       },
       description: "insert-description-here",
+      control: "boolean",
+    },
+    invalid: {
+      table: {
+        type: {
+          summary: "boolean",
+        },
+      },
+      description:
+        "Whether the input is invalid. Sets the input's `aria-invalid`, which shows the error styling.",
       control: "boolean",
     },
     prepend: {
@@ -177,6 +188,20 @@ export const AppendInput: Story = createStory({
 export const DefaultDark: Story = createStory(
   {
     placeholder: "Type something here",
+    className: "dark",
+  },
+  "dark",
+);
+
+export const ErrorLight: Story = createStory({
+  placeholder: "Type something here",
+  invalid: true,
+});
+
+export const ErrorDark: Story = createStory(
+  {
+    placeholder: "Type something here",
+    invalid: true,
     className: "dark",
   },
   "dark",

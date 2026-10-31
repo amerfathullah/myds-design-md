@@ -111,6 +111,25 @@ import { TextArea } from "@amerfathullah/myds-react/textarea";
   </Tab>
 </Tabs>
 
+### Tidak Sah
+
+Keadaan tidak sah dicetuskan apabila TextArea gagal pengesahan. Untuk menunjukkan TextArea tidak sah, tetapkan prop `invalid` kepada `true`. Ia juga menetapkan `aria-invalid` pada TextArea.
+
+<Tabs items={["Pratonton", "Kod"]}>
+  <Tab value="Pratonton">
+  <div className="flex justify-center">
+  <TextArea placeholder="The TextArea has failed validation." invalid />
+  </div>
+  </Tab>
+  <Tab value="Kod">
+  ```tsx
+import { TextArea } from "@amerfathullah/myds-react/textarea";
+
+<TextArea placeholder="The TextArea has failed validation." invalid />
+```
+  </Tab>
+</Tabs>
+
 ## Props
 
 ### TextArea
@@ -128,6 +147,12 @@ import { TextArea } from "@amerfathullah/myds-react/textarea";
         "Menjadikan TextArea tidak interaktif dan menunjukkan secara visual bahawa ia dinyahaktifkan.",
       type: "boolean",
       typeDescription: "true | false ",
+      default: "false",
+    },
+    invalid: {
+      description: "Keadaan tidak sah untuk TextArea.",
+      type: "boolean",
+      typeDescription: "true | false",
       default: "false",
     },
     placeholder: {

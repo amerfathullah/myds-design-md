@@ -162,6 +162,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .form-grid .full{grid-column:1/-1}
 .field{display:grid;align-content:start;justify-items:start;gap:8px;min-width:0}
 .label{display:inline-flex;gap:4px;color:var(--txt-black-700);font-size:16px;line-height:24px}
+.label[data-disabled=true]{color:var(--txt-black-disabled);cursor:not-allowed}
 .input{width:100%;border:1px solid var(--otl-gray-200);border-radius:8px}
 .input input{display:block;width:100%;padding:6px 12px;border:1px solid transparent;border-radius:8px;background:var(--bg-white);color:var(--txt-black-700);font-size:14px;line-height:20px;outline:none;transition:color .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease)}
 .input:has(.input-addon){display:flex}
@@ -172,6 +173,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .textarea{display:block;width:100%;min-height:120px;padding:12px;border:1px solid var(--otl-gray-200);border-radius:8px;background:var(--bg-white);color:var(--txt-black-700);font-size:16px;line-height:24px;resize:none;outline:none;transition:color .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease)}
 .input input[aria-invalid=true],.textarea[aria-invalid=true]{border-color:var(--otl-danger-300)}
 .input input[aria-invalid=true]:is(:focus,.specimen-focus),.textarea[aria-invalid=true]:is(:focus,.specimen-focus){box-shadow:0 0 0 3px var(--fr-danger)}
+.input input:disabled,.textarea:disabled{background:var(--bg-washed);color:var(--txt-black-disabled);cursor:not-allowed}
 .select{position:relative;display:inline-flex;align-items:center;width:fit-content;color:var(--txt-black-900)}
 .select select{appearance:none;padding:6px 32px 6px 10px;border:1px solid var(--otl-gray-200);border-radius:8px;background:var(--bg-white);color:var(--txt-black-900);font-size:14px;line-height:20px;box-shadow:var(--shadow-button);outline:none;cursor:pointer}
 .select select:hover{background:var(--bg-white-hover);border-color:var(--otl-gray-300)}
@@ -619,8 +621,10 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 <div class="field"><label class="label" for="f-email-invalid-focus">Email, invalid and focused</label><div class="input"><input class="specimen-focus" id="f-email-invalid-focus" type="email" value="name.example.com" aria-invalid="true"></div></div>
 <div class="field"><label class="label" for="f-notes-invalid">Notes, invalid</label><textarea class="textarea" id="f-notes-invalid" placeholder="Enter a short description…" aria-invalid="true"></textarea></div>
 <div class="field"><label class="label" for="f-notes-invalid-focus">Notes, invalid and focused</label><textarea class="textarea specimen-focus" id="f-notes-invalid-focus" placeholder="Enter a short description…" aria-invalid="true"></textarea></div>
+<div class="field"><label class="label" for="f-email-disabled" data-disabled="true">Email, disabled</label><div class="input"><input id="f-email-disabled" type="email" value="name@example.com" disabled></div></div>
+<div class="field"><label class="label" for="f-notes-disabled" data-disabled="true">Notes, disabled</label><textarea class="textarea" id="f-notes-disabled" disabled>Submitted for review on 26 Sep 2026.</textarea></div>
 </div>
-<p class="note">An invalid field, one whose input or textarea has <code>aria-invalid="true"</code>, has the <code>otl-danger-300</code> border at rest and adds the <code>fr-danger</code> ring only while focused. On Input, only the editable field turns red: the wrapper's border and the addon's divider stay <code>otl-gray-200</code>.</p>
+<p class="note">An invalid field, one whose input or textarea has <code>aria-invalid="true"</code>, has the <code>otl-danger-300</code> border at rest and adds the <code>fr-danger</code> ring only while focused. On Input, only the editable field turns red: the wrapper's border and the addon's divider stay <code>otl-gray-200</code>. A disabled input or textarea has a <code>bg-washed</code> fill and <code>txt-black-disabled</code> text, and its border stays <code>otl-gray-200</code>. A Label given <code>disabled</code>, which sets <code>data-disabled="true"</code>, turns <code>txt-black-disabled</code> with a not-allowed cursor. Label disables nothing, so pass <code>disabled</code> to the field as well.</p>
 </div>
 <div class="card">
 <h3>Checkbox, Radio and Switch</h3>

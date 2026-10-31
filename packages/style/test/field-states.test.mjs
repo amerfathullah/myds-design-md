@@ -91,9 +91,9 @@ test("each DateField and TimeField state has its border and ring, in both themes
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    // Each field and size's samples share a `group`, as DESIGN.md suggests
-    // wrapping fields in `<fieldset className="group">`, so every valid
-    // field sits beside invalid ones in a group
+    // Each field and size's samples share a `group`, as fields do inside a
+    // `<fieldset className="group">`, which dims their Labels when disabled,
+    // so every valid field sits beside invalid ones in a group
     await page.setContent(
       `<!doctype html><html><head><style>${css}</style></head><body>${samples
         .map(

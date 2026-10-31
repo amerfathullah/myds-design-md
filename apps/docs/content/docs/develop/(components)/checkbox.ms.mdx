@@ -100,12 +100,12 @@ Untuk menguruskan keadaan kotak semak terkawal, anda perlu menyediakan prop `che
 
 ### Dilumpuhkan
 
-Kotak semak boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, kotak semak tidak akan interaktif.
+Kotak semak boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, kotak semak tidak akan interaktif. Tetapkan juga `disabled` pada `Label` supaya label turut malap.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
-      <Label className="flex items-center gap-2">
+      <Label className="flex items-center gap-2" disabled>
         <Checkbox defaultChecked disabled />
         <span>Keadaan dilumpuhkan</span>
       </Label>
@@ -113,7 +113,7 @@ Kotak semak boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. A
   </Tab>
   <Tab value="Kod">
     ```tsx
-    <Label>
+    <Label disabled>
       <Checkbox defaultChecked disabled />
       <span>Keadaan dilumpuhkan</span>
     </Label>

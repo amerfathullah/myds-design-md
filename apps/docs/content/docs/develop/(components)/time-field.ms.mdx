@@ -160,20 +160,20 @@ Pelayar menganggap `step` sebagai peraturan pengesahan. Tidak semua pelayar meng
 
 ### Dilumpuhkan
 
-Medan masa boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, medan masa tidak boleh digunakan.
+Medan masa boleh dilumpuhkan dengan menetapkan prop `disabled` kepada `true`. Apabila dilumpuhkan, medan masa tidak boleh digunakan. Tetapkan juga `disabled` pada `Label` supaya label turut malap.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="time-field-disabled" size="small">Masa temu janji</Label>
+        <Label htmlFor="time-field-disabled" size="small" disabled>Masa temu janji</Label>
         <TimeField id="time-field-disabled" defaultValue="16:30" disabled />
       </div>
     </div>
   </Tab>
   <Tab value="Kod">
     ```tsx
-    <Label htmlFor="time-field-disabled" size="small">Masa temu janji</Label>
+    <Label htmlFor="time-field-disabled" size="small" disabled>Masa temu janji</Label>
     <TimeField id="time-field-disabled" defaultValue="16:30" disabled />
     ```
   </Tab>

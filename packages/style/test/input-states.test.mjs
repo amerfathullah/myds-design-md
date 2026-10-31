@@ -184,8 +184,9 @@ test("each Input and TextArea state has its border and ring, in both themes", as
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    // Each group's samples share a `<fieldset class="group">`, as DESIGN.md
-    // suggests wrapping fields, so every valid field sits beside invalid ones
+    // Each group's samples share a `<fieldset class="group">`, which dims
+    // their Labels when disabled, so every valid field sits beside invalid
+    // ones
     await page.setContent(
       `<!doctype html><html><head><style>${css}</style><style>*,::before,::after{transition:none!important}</style></head><body style="color:${inherited}">${groups
         .map(

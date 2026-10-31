@@ -19,14 +19,17 @@ function readCva(file, cvaName) {
   const [variants, defaults = ""] = options.split("defaultVariants");
   const strings = (text) => [...text.matchAll(/"([^"]*)"/g)].map(([, s]) => s);
 
+  // A variant value's classes are a string or an array of strings
   const table = Object.fromEntries(
     [...variants.matchAll(/(\w+): \{([^{}]*)\}/g)].map(([, name, values]) => [
       name,
       Object.fromEntries(
-        [...values.matchAll(/(\w+): "([^"]*)"/g)].map(([, value, classes]) => [
-          value,
-          classes,
-        ]),
+        [...values.matchAll(/(\w+): (?:"([^"]*)"|\[([^\]]*)\])/g)].map(
+          ([, value, classes, list]) => [
+            value,
+            classes ?? strings(list).join(" "),
+          ],
+        ),
       ),
     ]),
   );

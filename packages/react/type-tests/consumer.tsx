@@ -10,6 +10,7 @@ import {
   type ColumnDef,
   type DataTableFeatures,
 } from "@amerfathullah/myds-react/data-table";
+import { DateField } from "@amerfathullah/myds-react/date-field";
 import { DatePicker } from "@amerfathullah/myds-react/date-picker";
 import {
   DateRangePicker,
@@ -22,6 +23,7 @@ import {
   SiteLink,
   SiteLinkGroup,
 } from "@amerfathullah/myds-react/footer";
+import { TimeField } from "@amerfathullah/myds-react/time-field";
 import {
   createColumnHelper,
   type CellContext,
@@ -131,6 +133,17 @@ export const Dates = () => {
     </>
   );
 };
+
+// `invalid` takes a boolean or null, and an `aria-invalid` prop, as a form
+// library passes it, overrides it.
+export const Fields = ({ error }: { error?: string }) => (
+  <>
+    <DateField invalid={null} />
+    <DateField invalid={Boolean(error)} size="medium" />
+    <TimeField aria-invalid={error ? "true" : undefined} step={1} />
+    <TimeField invalid aria-invalid={false} disabled />
+  </>
+);
 
 // SiteInfo renders a div and SiteLinkGroup a nav, which takes its own name.
 export const SiteFooter = () => {

@@ -202,8 +202,9 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .switch:focus{box-shadow:0 0 0 3px var(--fr-primary)}
 
 /* Date field and Time field (small, the default) */
-.datetime-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 16px}
-@media (max-width:800px){.datetime-grid{grid-template-columns:minmax(0,1fr)}}
+.datetime-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px 16px}
+@media (max-width:800px){.datetime-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.datetime-grid{grid-template-columns:minmax(0,1fr)}}
 .datefield{display:flex;align-items:center;gap:8px;width:fit-content;padding:6px 10px;border:1px solid var(--otl-gray-200);border-radius:8px;background:var(--bg-white);color:var(--txt-black-900);box-shadow:var(--shadow-button);font-family:var(--font-body);font-size:14px;line-height:20px;font-weight:400}
 .datefield svg{flex-shrink:0;width:16px;height:16px;color:var(--txt-black-700)}
 .datefield input{padding:0;border:0;background:transparent;outline:none}
@@ -213,8 +214,9 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .datefield input::-webkit-datetime-edit-text{margin:0 2px}
 .datefield input::-webkit-datetime-edit-day-field:focus-within,.datefield input::-webkit-datetime-edit-month-field:focus-within,.datefield input::-webkit-datetime-edit-year-field:focus-within,.datefield input::-webkit-datetime-edit-hour-field:focus-within,.datefield input::-webkit-datetime-edit-minute-field:focus-within,.datefield input::-webkit-datetime-edit-ampm-field:focus-within{background:var(--primary-600);color:var(--white)}
 .datefield.specimen-focus input::-webkit-datetime-edit-day-field,.datefield.specimen-focus input::-webkit-datetime-edit-hour-field{background:var(--primary-600);color:var(--white)}
-.datefield.invalid{border-color:var(--otl-danger-300);box-shadow:0 0 0 3px var(--fr-danger),var(--shadow-button)}
 .datefield:focus-within,.datefield.specimen-focus{border-color:var(--otl-primary-300);box-shadow:0 0 0 3px var(--fr-primary),var(--shadow-button)}
+.datefield:has(input[aria-invalid=true]){border-color:var(--otl-danger-300)}
+.datefield:has(input[aria-invalid=true]):is(:focus-within,.specimen-focus){box-shadow:0 0 0 3px var(--fr-danger),var(--shadow-button)}
 
 /* Callout */
 .callouts{display:grid;gap:12px}
@@ -518,7 +520,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 </div></div>
 <div class="token-group"><h4>Focus ring (fr-*)</h4><div class="token-grid">
 <button class="token" type="button" data-token="fr-primary"><i style="background:var(--fr-primary)"></i><span><b>fr-primary</b><code></code><small>Most focusable controls</small></span></button>
-<button class="token" type="button" data-token="fr-danger"><i style="background:var(--fr-danger)"></i><span><b>fr-danger</b><code></code><small>Invalid date or time field, unfocused</small></span></button>
+<button class="token" type="button" data-token="fr-danger"><i style="background:var(--fr-danger)"></i><span><b>fr-danger</b><code></code><small>Invalid date or time field, focused</small></span></button>
 </div></div>
 </div>
 </section>
@@ -629,12 +631,14 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 <div class="datetime-grid">
 <div class="field"><label class="label" for="d-default">Date</label><div class="datefield"><svg aria-hidden="true"><use href="#i-calendar"/></svg><input type="date" id="d-default" value="2026-09-26"></div></div>
 <div class="field"><label class="label" for="d-focus">Date, focused segment</label><div class="datefield specimen-focus"><svg aria-hidden="true"><use href="#i-calendar"/></svg><input type="date" id="d-focus" value="2026-09-26"></div></div>
-<div class="field"><label class="label" for="d-invalid">Date, invalid</label><div class="datefield invalid"><svg aria-hidden="true"><use href="#i-calendar"/></svg><input type="date" id="d-invalid" value="2025-09-26" aria-invalid="true"></div></div>
+<div class="field"><label class="label" for="d-invalid">Date, invalid</label><div class="datefield"><svg aria-hidden="true"><use href="#i-calendar"/></svg><input type="date" id="d-invalid" value="2025-09-26" aria-invalid="true"></div></div>
+<div class="field"><label class="label" for="d-invalid-focus">Date, invalid and focused</label><div class="datefield specimen-focus"><svg aria-hidden="true"><use href="#i-calendar"/></svg><input type="date" id="d-invalid-focus" value="2025-09-26" aria-invalid="true"></div></div>
 <div class="field"><label class="label" for="t-default">Time</label><div class="datefield"><svg aria-hidden="true"><use href="#i-clock"/></svg><input type="time" id="t-default" value="09:30" step="60"></div></div>
 <div class="field"><label class="label" for="t-focus">Time, focused segment</label><div class="datefield specimen-focus"><svg aria-hidden="true"><use href="#i-clock"/></svg><input type="time" id="t-focus" value="09:30" step="60"></div></div>
-<div class="field"><label class="label" for="t-invalid">Time, invalid</label><div class="datefield invalid"><svg aria-hidden="true"><use href="#i-clock"/></svg><input type="time" id="t-invalid" value="23:45" step="60" aria-invalid="true"></div></div>
+<div class="field"><label class="label" for="t-invalid">Time, invalid</label><div class="datefield"><svg aria-hidden="true"><use href="#i-clock"/></svg><input type="time" id="t-invalid" value="23:45" step="60" aria-invalid="true"></div></div>
+<div class="field"><label class="label" for="t-invalid-focus">Time, invalid and focused</label><div class="datefield specimen-focus"><svg aria-hidden="true"><use href="#i-clock"/></svg><input type="time" id="t-invalid-focus" value="23:45" step="60" aria-invalid="true"></div></div>
 </div>
-<p class="note">The focused-segment samples show <code>date-field-segment-active</code> and <code>time-field-segment-active</code>: primitive <code>primary-600</code> with <code>white</code> text, which Chromium also paints on whichever segment has focus. Firefox shows neither: the samples have no fill, and a focused segment shows the browser's own highlight, as in the library (a Defect). An invalid field shows the <code>otl-danger-300</code> border and <code>fr-danger</code> ring only while unfocused; focus replaces them with <code>otl-primary-300</code> and <code>fr-primary</code>. The default samples pass <code>invalid={false}</code>: without it the border is primitive <code>gray-200</code> in both themes (a Defect).</p>
+<p class="note">The focused samples show <code>date-field-segment-active</code> and <code>time-field-segment-active</code>: primitive <code>primary-600</code> with <code>white</code> text, which Chromium also paints on whichever segment has focus. Firefox shows neither: the samples have no fill, and a focused segment shows the browser's own highlight, as in the library (a Defect). An invalid field, one whose input has <code>aria-invalid="true"</code>, has the <code>otl-danger-300</code> border at rest and adds the <code>fr-danger</code> ring only while focused.</p>
 </div>
 </div>
 </section>

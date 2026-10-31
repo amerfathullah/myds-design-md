@@ -81,8 +81,15 @@ Hook `useTheme` menyediakan cara mudah untuk menguruskan keadaan tema dalam apli
   </Tab>
   <Tab value="Pilih">
     ```tsx title="theme-select.tsx"
-    import { Select } from "@amerfathullah/myds-react/select";
-  
+    import { useTheme } from "@amerfathullah/myds-react/hooks";
+    import {
+      Select,
+      SelectTrigger,
+      SelectValue,
+      SelectContent,
+      SelectItem,
+    } from "@amerfathullah/myds-react/select";
+
     const ThemeSelect = () => {
       const { theme, setTheme } = useTheme();
 
@@ -91,9 +98,14 @@ Hook `useTheme` menyediakan cara mudah untuk menguruskan keadaan tema dalam apli
       };
 
       return (
-        <Select size="small" variant="outline" onValueChange={handleChange}>
-          <SelectTrigger>
-            <SelectValue label="Tema" placeholder="Pilih" />
+        <Select
+          size="small"
+          variant="outline"
+          value={theme}
+          onValueChange={handleChange}
+        >
+          <SelectTrigger aria-label="Tema">
+            <SelectValue label="Tema" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="light">Terang</SelectItem>
@@ -111,17 +123,20 @@ Hook `useTheme` menyediakan cara mudah untuk menguruskan keadaan tema dalam apli
 
 ### Mengisytiharkan ThemeProvider yang Boleh Diakses Secara Global
 
-Untuk menggunakan konteks tema di seluruh aplikasi, balut keseluruhan susun atur dengan `ThemeProvider`. Ini memastikan semua komponen anak boleh mengakses keadaan tema dan fungsi tukar.
+Untuk menggunakan konteks tema di seluruh aplikasi, balut keseluruhan susun atur dengan `ThemeProvider`. Ini memastikan semua komponen anak boleh mengakses keadaan tema dan fungsi tukar. Dalam aplikasi Next.js App Router, `ThemeProvider` dan `useTheme` hanya berfungsi dalam komponen klien, jadi susun atur ini bermula dengan `"use client"`.
 
 ```tsx title="layout.tsx"
+"use client";
+
 import type { ReactNode } from "react";
-import { ThemeToggleCustom, ThemeProvider } from "./ThemeToggleCustom";
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
+import { ThemeToggle } from "./theme-toggle";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <div className="app-container">
-        <ThemeToggleCustom />
+        <ThemeToggle />
         {children}
       </div>
     </ThemeProvider>
@@ -152,13 +167,25 @@ export default function Layout({ children }: { children: ReactNode }) {
 <TypeTable
   type={{
     defaultTheme: {
-      description: "Tema lalai",
+      description:
+        "Tema yang digunakan semasa halaman dimuatkan apabila tiada tema sah yang disimpan.",
       type: "string",
       default: "light",
     },
-    setTheme: {
-      description: "Kaedah untuk menukar tema",
-      type: "(theme: string) => void",
+    storageKey: {
+      description: "Kunci localStorage tempat tema yang dipilih disimpan.",
+      type: "string",
+      default: "theme",
+    },
+    themes: {
+      description:
+        "Nama tema yang dipulihkan semasa halaman dimuatkan. Setiap nama menjadi kelas pada `<html>`, jadi ia mesti satu nama kelas. `defaultTheme` sentiasa disertakan. Nama yang tidak disenaraikan dalam `themes`, sama ada dihantar kepada `setTheme` atau ditawarkan oleh `ThemeSwitch`, masih digunakan apabila dipilih, tetapi tidak dipulihkan semasa halaman dimuatkan dan mencatatkan amaran dalam konsol.",
+      type: "string[]",
+      default: '["light", "dark"]',
+    },
+    children: {
+      description: "Komponen anak yang dibalut oleh penyedia.",
+      type: "ReactNode",
     },
   }}
 />

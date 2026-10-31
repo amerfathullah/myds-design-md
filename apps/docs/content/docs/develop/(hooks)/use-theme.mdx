@@ -81,8 +81,15 @@ The `useTheme` hook provides an easy way to manage theme states within your appl
   </Tab>
   <Tab value="Select">
     ```tsx title="theme-select.tsx"
-    import { Select } from "@amerfathullah/myds-react/select";
-  
+    import { useTheme } from "@amerfathullah/myds-react/hooks";
+    import {
+      Select,
+      SelectTrigger,
+      SelectValue,
+      SelectContent,
+      SelectItem,
+    } from "@amerfathullah/myds-react/select";
+
     const ThemeSelect = () => {
       const { theme, setTheme } = useTheme();
 
@@ -91,9 +98,14 @@ The `useTheme` hook provides an easy way to manage theme states within your appl
       };
 
       return (
-        <Select size="small" variant="outline" onValueChange={handleChange}>
-          <SelectTrigger>
-            <SelectValue label="Theme" placeholder="Select" />
+        <Select
+          size="small"
+          variant="outline"
+          value={theme}
+          onValueChange={handleChange}
+        >
+          <SelectTrigger aria-label="Theme">
+            <SelectValue label="Theme" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="light">Light</SelectItem>
@@ -111,17 +123,20 @@ The `useTheme` hook provides an easy way to manage theme states within your appl
 
 ### Declaring a Globally Accessible ThemeProvider
 
-To apply the theme context across the application, wrap the entire layout with the `ThemeProvider`. This ensures that all child components can access the theme state and toggle functionality.
+To apply the theme context across the application, wrap the entire layout with the `ThemeProvider`. This ensures that all child components can access the theme state and toggle functionality. In a Next.js App Router app, `ThemeProvider` and `useTheme` work only in client components, so the layout starts with `"use client"`.
 
 ```tsx title="layout.tsx"
+"use client";
+
 import type { ReactNode } from "react";
-import { ThemeToggleCustom, ThemeProvider } from "./ThemeToggleCustom";
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
+import { ThemeToggle } from "./theme-toggle";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <div className="app-container">
-        <ThemeToggleCustom />
+        <ThemeToggle />
         {children}
       </div>
     </ThemeProvider>
@@ -152,13 +167,24 @@ export default function Layout({ children }: { children: ReactNode }) {
 <TypeTable
   type={{
     defaultTheme: {
-      description: "Default theme",
+      description: "The theme used on load when nothing valid is saved.",
       type: "string",
       default: "light",
     },
-    setTheme: {
-      description: "Method to switch theme",
-      type: "(theme: string) => void",
+    storageKey: {
+      description: "The localStorage key the chosen theme is saved under.",
+      type: "string",
+      default: "theme",
+    },
+    themes: {
+      description:
+        "The theme names restored on load. Each name becomes a class on `<html>`, so it must be a single class name. `defaultTheme` is always included. A name that `themes` doesn't list, whether passed to `setTheme` or offered by a `ThemeSwitch`, still applies when chosen, but isn't restored on load and logs a warning to the console.",
+      type: "string[]",
+      default: '["light", "dark"]',
+    },
+    children: {
+      description: "The children components wrapped by the provider.",
+      type: "ReactNode",
     },
   }}
 />

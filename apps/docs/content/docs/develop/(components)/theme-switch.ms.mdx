@@ -7,11 +7,10 @@ import { Quicklinks } from "@/components/quicklinks";
 import Preview from "@/components/preview";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-import { ThemeProvider, ThemeSwitch } from "@/components/myds";
+import { ThemeSwitch } from "@/components/myds";
+import { ThemeBridge } from "@/components/theme-bridge";
 import { Callout } from "fumadocs-ui/components/callout";
 import { InfoIcon } from "@amerfathullah/myds-react/icon";
-
-<ThemeProvider>
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
@@ -88,8 +87,39 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
   icon={<InfoIcon className="size-5" />}
 >
   Pastikan aplikasi anda dibalut dengan `ThemeProvider` sebelum menggunakan
-  komponen `ThemeSwitch`.
+  komponen `ThemeSwitch`. Jika aplikasi anda sudah menjalankan next-themes
+  (atau Fumadocs), sebaliknya bekalkan `ThemeContext` dengan tema daripada
+  next-themes, seperti yang dilakukan oleh
+  [`ThemeBridge`](https://github.com/amerfathullah/myds-design-md/blob/main/apps/docs/components/theme-bridge.tsx)
+  laman ini.
 </Callout>
+
+Jambatan ini memerlukan next-themes untuk menyimpan tema sebagai kelas pada `<html>` (`attribute="class"`), seperti yang dilakukan oleh Fumadocs. Berikut ialah versi ringkasnya. Paparkan ia di bawah penyedia next-themes:
+
+```tsx title="components/theme-bridge.tsx"
+"use client";
+
+import { ThemeContext } from "@amerfathullah/myds-react/hooks";
+import { useTheme } from "next-themes";
+import { useMemo, useSyncExternalStore, type ReactNode } from "react";
+
+const subscribe = () => () => {};
+
+export function ThemeBridge({ children }: { children: ReactNode }) {
+  const { resolvedTheme, setTheme } = useTheme();
+  // next-themes hanya tahu tema dalam pelayar, jadi HTML pelayan memaparkan tema terang
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const theme = (mounted && resolvedTheme) || "light";
+  const value = useMemo(
+    () => ({ theme, setTheme, defaultTheme: "light" }),
+    [theme, setTheme],
+  );
+
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
+}
+```
 
 ### Sebagai Pilihan
 
@@ -120,8 +150,13 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 
 Anda juga boleh memperluaskan tema yang tersedia dengan menentukan sifat `themes`! Ini juga membolehkan anda menyesuaikan ikon tema atau mengubah susunan tema.
 
+Hantar nama yang sama kepada `themes` ThemeProvider, supaya tema yang dipilih pengguna dipulihkan semasa halaman dimuatkan. Preset gaya MYDS hanya menggayakan tema terang dan `.dark`. Di bawah ThemeProvider, sebarang nama lain, termasuk `system`, hanyalah kelas pada `<html>` untuk anda gayakan sendiri. Jadi memilih Sistem di situ memaparkan tema terang, melainkan anda menggayakan `.system`. ThemeProvider tidak mempunyai pilihan yang mengikut tetapan OS.
+
+Dalam contoh langsung di bawah, Sistem mengikut tetapan OS anda hanya kerana laman ini membekalkan `ThemeContext` dengan tema daripada next-themes.
+
 <Tabs items={["Pratonton", "Kod"]}>
 <Tab value="Pratonton">
+  <ThemeBridge raw>
   <div className="flex justify-center gap-6 items-center">
   <ThemeSwitch
     as="toggle"
@@ -164,13 +199,14 @@ Anda juga boleh memperluaskan tema yang tersedia dengan menentukan sifat `themes
     ]}
   />
   </div>
+  </ThemeBridge>
 </Tab>
 <Tab value="Kod">
 ```tsx
 import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 
-<ThemeProvider>
+<ThemeProvider themes={["light", "dark", "system"]}>
   <ThemeSwitch
     as="toggle"
     themes={[
@@ -216,6 +252,88 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 
   </Tab>
 </Tabs>
+
+## Elakkan kelipan tema yang salah
+
+ThemeProvider memulihkan tema yang disimpan apabila React memaparkannya buat kali pertama. Pelayar boleh memaparkan halaman sebelum itu, dalam tema terang. Jadi pengguna yang memilih Gelap nampak kelipan tema terang dahulu.
+
+Untuk mengelakkannya, jalankan skrip yang dipulangkan oleh `getThemeScript` dalam `<head>`. Ia meletakkan pada `<html>` tema yang akan dipilih oleh ThemeProvider, sebelum halaman dipaparkan. Hantar kepada `getThemeScript` nilai `storageKey`, `defaultTheme` dan `themes` yang sama seperti ThemeProvider. Contohnya, dengan `<ThemeProvider defaultTheme="dark">`, gunakan `getThemeScript({ defaultTheme: "dark" })`. Skrip ini tidak pernah melontar ralat: jika storan disekat, ia menggunakan `defaultTheme`.
+
+Aplikasi yang membekalkan `ThemeContext` dengan tema daripada next-themes tidak memerlukannya, kerana next-themes menjalankan skripnya sendiri.
+
+### Next.js App Router
+
+Susun atur akar ialah Server Component. Ia boleh mengimport `getThemeScript`, kerana `@amerfathullah/myds-react/utils` tidak mencipta konteks React. Skrip ini menukar kelas pada `<html>` sebelum React menghidrat halaman, jadi tambahkan `suppressHydrationWarning` pada `<html>`.
+
+```tsx title="app/layout.tsx"
+import { getThemeScript } from "@amerfathullah/myds-react/utils";
+import type { ReactNode } from "react";
+import { Providers } from "./providers";
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="ms" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: getThemeScript() }} />
+      </head>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+ThemeProvider mencipta konteks React, jadi paparkan ia daripada fail `"use client"` yang berasingan. Tetapannya mesti sepadan dengan tetapan skrip.
+
+```tsx title="app/providers.tsx"
+"use client";
+
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
+import type { ReactNode } from "react";
+
+export function Providers({ children }: { children: ReactNode }) {
+  return <ThemeProvider>{children}</ThemeProvider>;
+}
+```
+
+### `index.html` biasa
+
+Dalam aplikasi tanpa pemaparan pelayan, seperti Vite, letakkan skrip dalam `index.html`. Ini skrip untuk tetapan lalai:
+
+```html title="index.html"
+<!doctype html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function k(t,e,n){let o=n.indexOf(e)===-1?n.concat([e]):n,i=e;try{let r=window.localStorage.getItem(t);r!==null&&o.indexOf(r)!==-1&&(i=r)}catch(r){}let s=document.documentElement.classList;for(let r=0;r!==o.length;r++)s.remove(o[r]);return s.add(i),i})("theme","light",["light","dark"])
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+<Callout
+  type="warn"
+  title="Penting"
+  className="bg-bg-warning-50 text-txt-warning border-transparent"
+  icon={<InfoIcon className="size-5" />}
+>
+  Skrip yang disalin membawa tetapan ThemeProvider. Jana semula skrip itu
+  setiap kali tetapan itu berubah, atau halaman boleh memaparkan tema yang
+  salah sehingga ThemeProvider dipaparkan.
+</Callout>
+
+Untuk menjana semula skrip, jalankan arahan ini dalam aplikasi anda, dengan tetapan yang sama seperti ThemeProvider:
+
+```sh title="terminal"
+node -e 'console.log(require("@amerfathullah/myds-react/utils").getThemeScript())'
+```
 
 ## Props
 
@@ -272,10 +390,22 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 <TypeTable
   type={{
     defaultTheme: {
-      description: "Tema lalai yang akan digunakan.",
+      description:
+        "Tema yang digunakan semasa halaman dimuatkan apabila tiada tema sah yang disimpan.",
       type: "string",
       typeDescription: "Nama tema",
       default: "light",
+    },
+    storageKey: {
+      description: "Kunci localStorage tempat tema yang dipilih disimpan.",
+      type: "string",
+      default: "theme",
+    },
+    themes: {
+      description:
+        "Nama tema yang dipulihkan semasa halaman dimuatkan. Setiap nama menjadi kelas pada `<html>`, jadi ia mesti satu nama kelas. `defaultTheme` sentiasa disertakan. Nama yang ditawarkan oleh ThemeSwitch tetapi tidak disenaraikan dalam `themes` masih digunakan apabila dipilih, tetapi tidak dipulihkan semasa halaman dimuatkan dan mencatatkan amaran dalam konsol.",
+      type: "string[]",
+      default: '["light", "dark"]',
     },
     children: {
       description: "Komponen anak yang dibalut oleh penyedia.",
@@ -283,5 +413,3 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
     },
   }}
 />
-
-</ThemeProvider>

@@ -24,9 +24,12 @@ const meta = {
     layout: "fullscreen",
   },
   decorators: [
-    (Story: typeof ThemeSwitch) => (
+    // One ThemeProvider per story. A story whose switch offers more than
+    // Light and Dark lists them in `providerThemes`, so the provider
+    // restores each of them and none logs a warning.
+    (Story, { parameters }) => (
       <div className="bg-bg-white flex items-center justify-center py-8">
-        <ThemeProvider>
+        <ThemeProvider themes={parameters.providerThemes}>
           <Story />
         </ThemeProvider>
       </div>
@@ -70,26 +73,32 @@ export const AsSelect: Story = createStory({
   as: "select",
 });
 
+const customThemes = [
+  { label: "Light", value: "light", icon: "🌞" },
+  { label: "Dark", value: "dark", icon: "🌚" },
+  { label: "System", value: "system", icon: "🌐" },
+];
+
+// A custom-themes story passes every value its switch offers to the
+// ThemeProvider's `themes`. `system` is only a class on <html> here: MYDS
+// styles the light theme and `.dark`.
+const createCustomThemesStory = (as: "toggle" | "select") => {
+  const story = createStory({ as, themes: customThemes });
+  return {
+    ...story,
+    parameters: {
+      ...story.parameters,
+      providerThemes: customThemes.map(({ value }) => value),
+    },
+  };
+};
+
 /**
- * CustomThemes - Select story.
+ * CustomThemes - Toggle story.
  */
-export const CustomThemesToggle: Story = createStory({
-  as: "toggle",
-  themes: [
-    { label: "Light", value: "light", icon: "🌞" },
-    { label: "Dark", value: "dark", icon: "🌚" },
-    { label: "System", value: "system", icon: "🌐" },
-  ],
-});
+export const CustomThemesToggle: Story = createCustomThemesStory("toggle");
 
 /**
  * CustomThemes - Select story.
  */
-export const CustomThemesSelect: Story = createStory({
-  as: "select",
-  themes: [
-    { label: "Light", value: "light", icon: "🌞" },
-    { label: "Dark", value: "dark", icon: "🌚" },
-    { label: "System", value: "system", icon: "🌐" },
-  ],
-});
+export const CustomThemesSelect: Story = createCustomThemesStory("select");

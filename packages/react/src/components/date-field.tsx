@@ -4,8 +4,14 @@ import { cva, VariantProps } from "class-variance-authority";
 
 const datefield_container_cva = cva(
   [
-    "flex items-center gap-2 border rounded-md text-txt-black-900 shadow-button focus:outline-hidden font-body font-normal",
+    "flex items-center gap-2 border border-otl-gray-200 rounded-md text-txt-black-900 shadow-button focus:outline-hidden font-body font-normal",
     "focus-within:border-otl-primary-300 focus-within:ring-3 focus-within:ring-fr-primary",
+    // The input's aria-invalid, which the invalid prop sets, picks the error
+    // styling, so it matches what assistive technology announces. has-
+    // outranks focus-within:, so a focused invalid field keeps its danger
+    // border and rings fr-danger. Unlike InputOTP's group-has-, it can't match
+    // a group ancestor the consumer adds
+    "has-[input[aria-invalid=true]]:border-otl-danger-300 has-[input[aria-invalid=true]]:ring-fr-danger",
   ],
   {
     variants: {
@@ -17,10 +23,6 @@ const datefield_container_cva = cva(
       disabled: {
         true: "bg-bg-washed text-txt-black-500 cursor-not-allowed",
         false: "bg-bg-white",
-      },
-      invalid: {
-        true: "border-otl-danger-300 ring-fr-danger ring-3",
-        false: "border-otl-gray-200",
       },
     },
     defaultVariants: {
@@ -70,7 +72,10 @@ const icon_cva = cva([], {
 });
 
 type DateFieldProps = Omit<ComponentProps<"input">, "type" | "size"> &
-  VariantProps<typeof datefield_container_cva>;
+  VariantProps<typeof datefield_container_cva> & {
+    /** Sets the input's `aria-invalid`, which shows the error styling */
+    invalid?: boolean | null;
+  };
 
 const DateField: FunctionComponent<DateFieldProps> = ({
   className,
@@ -84,7 +89,6 @@ const DateField: FunctionComponent<DateFieldProps> = ({
       className={datefield_container_cva({
         size,
         disabled,
-        invalid,
         className,
       })}
     >

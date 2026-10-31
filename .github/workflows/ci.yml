@@ -49,7 +49,7 @@ jobs:
       - name: Test @amerfathullah/myds-react
         run: pnpm --filter @amerfathullah/myds-react test
 
-      - name: Install Chromium for the @amerfathullah/myds-style token-parity, focused-segment, segment-clip and segment-scroll tests
+      - name: Install Chromium for the @amerfathullah/myds-style token-parity, focused-segment, segment-clip, segment-scroll and field-states tests
         run: pnpm --filter @amerfathullah/myds-style exec playwright install --with-deps --only-shell chromium
 
       - name: Test @amerfathullah/myds-style

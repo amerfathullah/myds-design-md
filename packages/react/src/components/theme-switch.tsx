@@ -1,10 +1,4 @@
-import {
-  FunctionComponent,
-  isValidElement,
-  ReactNode,
-  useEffect,
-  useState,
-} from "react";
+import { FunctionComponent, isValidElement, ReactNode } from "react";
 import { MoonIcon, SunIcon } from "../icons";
 import { Button } from "./button";
 import { useTheme } from "../hooks/use-theme";
@@ -41,7 +35,9 @@ const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
   selectLabel = "Theme",
 }) => {
   const { theme, setTheme, defaultTheme } = useTheme();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // The provider's theme in `themes`, worked out on every render, so the
+  // server HTML already shows it
+  const currentIndex = themes.findIndex((t) => t.value === theme);
 
   const getTheme = (value: string) =>
     themes.find((theme) => theme.value === value);
@@ -63,23 +59,15 @@ const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
     if (themes.length <= 1) return;
 
     if (as === "toggle") {
-      const nextIndex = (currentIndex + 1) % themes.length;
-      setCurrentIndex(nextIndex);
-      setTheme(themes[nextIndex]!.value);
-      if (onChange) onChange(themes[nextIndex]!.value);
+      const next = themes[(currentIndex + 1) % themes.length]!.value;
+      setTheme(next);
+      if (onChange) onChange(next);
     } else if (as === "select") {
       if (!value) return;
       setTheme(value);
       if (onChange) onChange(value);
     }
   };
-
-  useEffect(() => {
-    if (as === "toggle") {
-      const index = themes.findIndex((t) => t.value === theme);
-      setCurrentIndex(index);
-    }
-  }, [theme]);
 
   if (as === "toggle")
     return (

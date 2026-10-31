@@ -65,3 +65,5 @@ export const pick = <T = string>(
     return { ...previous, [_key as string]: _value };
   }, {});
 };
+
+export { getThemeScript, type ThemeScriptOptions } from "./theme";

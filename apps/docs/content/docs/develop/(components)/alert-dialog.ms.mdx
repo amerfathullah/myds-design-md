@@ -86,17 +86,13 @@ import {
 export default () => (
   <AlertDialog>
     <AlertDialogTrigger />
-    <AlertDialogBody>
-      <AlertDialogHeader>
-        <AlertDialogTitle />
-      </AlertDialogHeader>
-      <AlertDialogContent>
-        <AlertDialogDescription />
-      </AlertDialogContent>
-      <AlertDialogFooter>
+    <AlertDialogContent>
+      <AlertDialogTitle />
+      <AlertDialogDescription />
+      <AlertDialogAction>
         <AlertDialogClose />
-      </AlertDialogFooter>
-    </AlertDialogBody>
+      </AlertDialogAction>
+    </AlertDialogContent>
   </AlertDialog>
 );
 ```
@@ -105,7 +101,7 @@ export default () => (
 
 ### Variasi
 
-Gunakan prop `variant` untuk menetapkan tema dialog amaran. Variasi lalai adalah `default`. Variasi yang tersedia adalah `info`, `success`, `warning`, dan `danger`.
+Gunakan prop `variant` untuk menetapkan tema dialog amaran. Variasi lalai adalah `default`, jadi `variant` boleh ditinggalkan. Variasi yang tersedia adalah `info`, `success`, `warning`, dan `danger`.
 
 <Tabs items={["Pratonton", "Kod"]}>
     <Tab value="Pratonton">
@@ -709,6 +705,12 @@ Anda boleh menambah tindakan khas kepada dialog dengan menggunakan prop `action`
 
 <TypeTable
   type={{
+    variant: {
+      description: "Variasi dialog amaran",
+      type: "enum",
+      typeDescription: "default | info | success | warning | danger",
+      default: "default",
+    },
     open: {
       description: "Keadaan dialog amaran (terkawal)",
       type: "boolean",

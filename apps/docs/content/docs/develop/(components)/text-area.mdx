@@ -109,6 +109,25 @@ import { TextArea } from "@amerfathullah/myds-react/textarea";
   </Tab>
 </Tabs>
 
+### Invalid
+
+Invalid state is triggered when a text area fails validation. To indicate an invalid text area, set the `invalid` prop to `true`. It also sets `aria-invalid` on the text area.
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview">
+  <div className="flex justify-center">
+  <TextArea placeholder="The TextArea has failed validation." invalid />
+  </div>
+  </Tab>
+  <Tab value="Code">
+  ```tsx
+import { TextArea } from "@amerfathullah/myds-react/textarea";
+
+<TextArea placeholder="The TextArea has failed validation." invalid />
+```
+  </Tab>
+</Tabs>
+
 ## Props
 
 ### TextArea
@@ -126,6 +145,12 @@ import { TextArea } from "@amerfathullah/myds-react/textarea";
         "Makes the TextArea non-interactive and visually indicates it's disabled.",
       type: "boolean",
       typeDescription: "true | false ",
+      default: "false",
+    },
+    invalid: {
+      description: "Invalid state for the TextArea.",
+      type: "boolean",
+      typeDescription: "true | false",
       default: "false",
     },
     placeholder: {

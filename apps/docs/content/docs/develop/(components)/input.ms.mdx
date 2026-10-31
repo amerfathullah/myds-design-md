@@ -82,6 +82,22 @@ Nonaktifkan input dengan menetapkan prop `disabled` kepada true.
   </Tab>
 </Tabs>
 
+### Tidak Sah
+
+Keadaan tidak sah dicetuskan apabila input gagal pengesahan. Untuk menunjukkan input tidak sah, tetapkan prop `invalid` kepada `true`. Ia juga menetapkan `aria-invalid` pada input. Hanya medan yang boleh disunting bertukar merah, bukan tambahannya.
+
+<Tabs items={["Pratonton", "Kod"]}>
+  <Tab value="Pratonton" className="not-prose flex justify-center">
+    <Input invalid placeholder="Tidak Sah" />
+  </Tab>
+  <Tab value="Kod">
+    ```tsx
+    <Input invalid placeholder="Tidak Sah" />
+    ```
+
+  </Tab>
+</Tabs>
+
 ### Keadaan Tidak Terkawal vs Terkawal
 
 Untuk menggunakan input dalam keadaan tidak terkawal, tetapkan prop `defaultValue` kepada keadaan awal input.
@@ -231,6 +247,11 @@ Anda boleh menambah tambahan pada medan input dengan menggunakan komponen `Input
       typeDescription: "(value: string) => void",
     },
     disabled: {
+      type: "boolean",
+      default: "false",
+    },
+    invalid: {
+      description: "Keadaan tidak sah untuk medan input",
       type: "boolean",
       default: "false",
     },

@@ -29,6 +29,9 @@ const meta = {
     layout: "padded",
     componentSubtitle: "Multi-line text input for longer form content",
   },
+  args: {
+    invalid: false,
+  },
   argTypes: {
     size: {
       description: "Controls the size of the textarea",
@@ -45,6 +48,14 @@ const meta = {
     },
     disabled: {
       description: "Whether the textarea is disabled",
+      control: "boolean",
+    },
+    invalid: {
+      description:
+        "Whether the textarea is invalid. Sets the textarea's `aria-invalid`, which shows the error styling",
+      table: {
+        type: { summary: "boolean" },
+      },
       control: "boolean",
     },
   },
@@ -82,6 +93,22 @@ export const DisabledDark: Story = createStory(
     placeholder: "Enter your message here...",
     size: "medium",
     disabled: true,
+    className: "dark",
+  },
+  "dark",
+);
+
+export const ErrorLight: Story = createStory({
+  placeholder: "Enter your message here...",
+  size: "medium",
+  invalid: true,
+});
+
+export const ErrorDark: Story = createStory(
+  {
+    placeholder: "Enter your message here...",
+    size: "medium",
+    invalid: true,
     className: "dark",
   },
   "dark",

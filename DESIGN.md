@@ -393,6 +393,8 @@ components:
   input-disabled:
     backgroundColor: "{colors.bg-washed}"
     textColor: "{colors.txt-black-disabled}"
+  input-invalid:
+    borderColor: "{colors.otl-danger-300}"
   input-placeholder:
     textColor: "{colors.txt-black-500}"
   input-size-small:
@@ -414,6 +416,8 @@ components:
   textarea-disabled:
     backgroundColor: "{colors.bg-washed}"
     textColor: "{colors.txt-black-disabled}"
+  textarea-invalid:
+    borderColor: "{colors.otl-danger-300}"
   textarea-size-small:
     typography: "{typography.body-sm}"
     padding: "{spacing.2.5}"
@@ -1155,7 +1159,7 @@ The canvas is white and the text near-black. There is one primary colour, blue, 
 3. Poppins headings (`font-heading` with `text-heading-*`) over an Inter body (`font-body` with `text-body-*`). Weights stop at Semibold 600; no component uses `font-bold`.
 4. Danger, success and warning convey status only: callouts, tags, validation and toasts.
 5. Light and dark themes come from semantic tokens plus the `.dark` class.
-6. Keyboard focus shows as a visible ring, mostly `fr-primary`. An invalid date or time field keeps its `otl-danger-300` border when focused, and its ring is `fr-danger`.
+6. Keyboard focus shows as a visible ring, mostly `fr-primary`. An invalid input, textarea, date field or time field keeps its `otl-danger-300` border when focused, and its ring is `fr-danger`.
 7. A fixed page frame: SkipLink → Masthead (Malaysia flag) → Navbar (agency logo) … Footer (agency logo).
 8. The 12-8-4 grid: 12 columns on desktop, 8 on tablet, 4 on mobile.
 
@@ -1224,7 +1228,7 @@ Five scales, plus `white` and `black`. `gray` is Tailwind 3's _zinc_ with its ow
 ### Focus ring (`fr-*`)
 
 - `fr-primary` (`primary-300` @ 40%) is the focus ring on most focusable controls, danger variants included. The search bar and the active Input OTP slot use an `otl-primary-200` ring instead, and a table cell a 3px `primary-600` @ 20% outline.
-- `fr-danger` (`danger-300` @ 40%) is used only as the focus ring of an invalid date or time field. At rest, an invalid field shows no ring, only its `otl-danger-300` border.
+- `fr-danger` (`danger-300` @ 40%) is used only as the focus ring of an invalid input, textarea, date field or time field. At rest, an invalid field shows no ring, only its `otl-danger-300` border.
 
 ### Dark theme
 
@@ -1450,7 +1454,7 @@ Front-matter keys follow the code: `<component>-<variant>` in the library's own 
 Rules that hold across every component:
 
 - **No `backgroundColor` means no fill.** The element inherits the surface behind it (ghost buttons, links, tab triggers, select ghost).
-- **Focus** is a 3px ring in `fr-primary` (`focus:ring-3 focus:ring-fr-primary`) on most focusable controls, danger variants included. Radio shows a 4px `fr-primary` ring on keyboard focus only (`focus-visible:ring-4`), the search bar and the active Input OTP slot a 3px `otl-primary-200` ring, tabs a 2px ring, and a table cell a 3px `primary-600` @ 20% outline. Inputs, textareas, valid date and time fields and search bars also switch their border to `otl-primary-300`. An invalid date or time field keeps its `otl-danger-300` border and shows an `fr-danger` ring instead. A few controls show no ring; see Known Gaps. Focus has no entries of its own.
+- **Focus** is a 3px ring in `fr-primary` (`focus:ring-3 focus:ring-fr-primary`) on most focusable controls, danger variants included. Radio shows a 4px `fr-primary` ring on keyboard focus only (`focus-visible:ring-4`), the search bar and the active Input OTP slot a 3px `otl-primary-200` ring, tabs a 2px ring, and a table cell a 3px `primary-600` @ 20% outline. Search bars and valid inputs, textareas, date fields and time fields also switch their border to `otl-primary-300`. An invalid input, textarea, date field or time field keeps its `otl-danger-300` border and shows an `fr-danger` ring instead. A few controls show no ring; see Known Gaps. Focus has no entries of its own.
 - **Press** moves a button down half a pixel.
 - **Disabled** controls use `cursor-not-allowed`. A disabled checkbox fades to 30% opacity. A radio fades only when checked; unchecked, it is `bg-washed` at full opacity.
 - **Borders** are 1px (`borderColor`). Where a border is a primitive at an alpha, the entry has an 8-digit hex literal and the prose names the source. A border that turns transparent is `#00000000`.
@@ -1464,8 +1468,8 @@ Rules that hold across every component:
 
 ### Form inputs
 
-- **Input** (`input-*`), from the guideline's Text Input. Sizes are `body-sm`/`md`/`lg` (default small). The border (`otl-gray-200`) sits on the wrapper, and prepend and append addons join it with `otl-gray-200` dividers. Left and right icons are 18/20/24px. These addons approximate the guideline's number field with a leading dropdown, field with leading uneditable text, and field with a trailing button. It has no invalid state; see Known Gaps.
-- **Textarea** (`TextArea`, `textarea-*`). Minimum heights are 100, 120 and 150px by size (default medium). It has no resize handle and, like Input, no invalid state.
+- **Input** (`input-*`), from the guideline's Text Input. Sizes are `body-sm`/`md`/`lg` (default small). The border (`otl-gray-200`) sits on the wrapper, and prepend and append addons join it with `otl-gray-200` dividers. Left and right icons are 18/20/24px. These addons approximate the guideline's number field with a leading dropdown, field with leading uneditable text, and field with a trailing button. `invalid` sets the input's `aria-invalid`, and the error styling follows `aria-invalid="true"`, so an `aria-invalid` you pass yourself, as form libraries do, overrides `invalid`. An invalid input has an `otl-danger-300` border, which it keeps when focused, and shows a 3px `fr-danger` ring only while focused. Only the editable field turns red, inside the wrapper's `otl-gray-200` border, which stays; addons and icons keep their colours, as the guideline highlights only the field with editable text. So `input-invalid`'s `borderColor` is the editable field's, while `input`'s is the wrapper's.
+- **Textarea** (`TextArea`, `textarea-*`). Minimum heights are 100, 120 and 150px by size (default medium). It has no resize handle. `invalid` works as on Input: it sets the textarea's `aria-invalid`, which the error styling follows, so an `aria-invalid` you pass yourself overrides it. An invalid textarea has an `otl-danger-300` border, which it keeps when focused, and shows a 3px `fr-danger` ring only while focused.
 - **Label** (`label-*`). Sizes `body-sm`/`md`/`lg` (default medium). It dims to `txt-black-disabled` only after a disabled sibling marked `peer`, or inside a disabled ancestor marked `group`. No library field is such a `peer` or `group`, so a Label beside a disabled Input or date field keeps its colour; see Known Gaps.
 - **Date field** (`date-field-*`). Sizes small/medium/large (default small) and `disabled`/`invalid` axes. Its sizes use Tailwind text classes: `text-sm` and `text-base` match `body-sm`/`body-md`, and large is `text-lg` 18/28, **off-scale**. In Chromium, the focused day, month or year segment is primitive `primary-600` with `white` text (`date-field-segment-active`), like the date picker's selected day, so it doesn't re-theme. Firefox shows its own highlight instead; see Known Gaps. An input made narrower than its text hides the segments past its edge. In Chromium, moving keyboard focus to one scrolls it fully into view, but typing that widens the focused segment (an empty AM/PM becoming PM) can leave it cut, so keep the input at least as wide as its text; `style` reaches the `<input>` and `className` the wrapper. `invalid` sets the input's `aria-invalid`, and the error styling follows `aria-invalid="true"`, so an `aria-invalid` you pass yourself, as form libraries do, overrides `invalid`. An invalid field has an `otl-danger-300` border, which it keeps when focused, and shows a 3px `fr-danger` ring only while focused. The calendar icon is decorative (`aria-hidden`). It renders no id or label of its own: name it with a Label (`htmlFor`) and pass the matching `id`.
 - **Time field** (`time-field-*`). A native time input that matches the date field at every size and state, with a decorative clock icon in place of the calendar. `step` is in seconds and defaults to 60, so it shows hours and minutes. 12/24-hour display follows the user's locale and can't be set. In Chromium, the focused hour, minute, second or AM/PM segment takes the same fill (`time-field-segment-active`); Firefox shows its own highlight. Like the date field, it renders no id or label of its own: name it with a Label and the matching `id`. For booking from fixed availability, offer the times as Select options instead.
@@ -1530,7 +1534,7 @@ These frame the page; their responsive behaviour is under [Layout → Page frame
 - Pair every `text-heading-*` with `font-heading`. Use Inter (`font-body`) for body and rich text.
 - Open every page with SkipLink first, outside any `<header>` and never inside a `<nav>`, then the Masthead and the Navbar.
 - Put agency identity only in the Navbar and Footer logo slots.
-- Show keyboard focus with the `fr-primary` ring. The exception is an invalid date or time field, whose focus ring is `fr-danger`.
+- Show keyboard focus with the `fr-primary` ring. The exception is an invalid input, textarea, date field or time field, whose focus ring is `fr-danger`.
 - Use primary for the one primary action on a view.
 - Keep motion simple and functional; every motion needs a purpose.
 
@@ -1552,7 +1556,7 @@ These frame the page; their responsive behaviour is under [Layout → Page frame
 2. Reach for the React component first; hand-style only what the library lacks.
 3. Use `{token.refs}` and semantic token classes, never inline hex.
 4. Check every change in both themes by toggling `.dark` on the root.
-5. Give a state (hover, disabled, checked, invalid) its own styling only where a distinct token exists. Show focus with the `fr-primary` ring, or `fr-danger` on an invalid date or time field.
+5. Give a state (hover, disabled, checked, invalid) its own styling only where a distinct token exists. Show focus with the `fr-primary` ring, or `fr-danger` on an invalid input, textarea, date field or time field.
 6. When unsure about emphasis, step up the type scale before reaching for colour.
 
 ## Known Gaps
@@ -1612,7 +1616,6 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 - **Gap:** these guideline components have no library component: backlink, character count, details (a chevron disclosure, distinct from the accordion), file upload, inset text (including block quote), panel (blue, green, yellow and red), password input, task list, and the WYSIWYG editor. The guideline's text-input types are approximated: number field with a leading dropdown, field with leading text, and field with a trailing button use Input's prepend and append addons. The tags field is Pill.
 - **Gap:** the guideline has no time-input page. The library's TimeField (and the Select time-slot pattern in its docs) has no design reference.
 - **Gap:** the guideline has no skeleton page. The library's Skeleton (`line`, `circle`, `block`) has no design reference.
-- **Gap:** the guideline's text input has an error state, a red border that stays when the field is focused. Input and TextArea have no `invalid` prop and no `aria-invalid` styling; only DateField, TimeField and InputOTP have one.
 - **Divergence:** Radio has small, medium and large sizes; the guideline has Small and Medium.
 - **Divergence:** Switch has small, medium and large sizes; the guideline has Medium and Large.
 - **Divergence:** the guideline calls information callouts non-critical, but every Callout renders `role="alert"`, so screen readers interrupt the user to read even a static one. Props override the role: pass `role="note"`, or `role="status"` for a polite update.

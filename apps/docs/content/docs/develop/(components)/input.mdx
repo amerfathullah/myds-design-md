@@ -82,6 +82,22 @@ Disable the input by setting the `disabled` prop to true.
   </Tab>
 </Tabs>
 
+### Invalid
+
+Invalid state is triggered when an input fails validation. To indicate an invalid input, set the `invalid` prop to `true`. It also sets `aria-invalid` on the input. Only the editable field turns red, not its addons.
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview" className="not-prose flex justify-center">
+    <Input invalid placeholder="Invalid" />
+  </Tab>
+  <Tab value="Code">
+    ```tsx
+    <Input invalid placeholder="Invalid" />
+    ```
+
+  </Tab>
+</Tabs>
+
 ### Uncontrolled vs Controlled State
 
 To use the input in an uncontrolled state, set the `defaultValue` prop to the initial state of the input.
@@ -231,6 +247,11 @@ You can add an addon to the input field by using the `InputAddon` component. The
       typeDescription: "(value: string) => void",
     },
     disabled: {
+      type: "boolean",
+      default: "false",
+    },
+    invalid: {
+      description: "Invalid state for the input field",
       type: "boolean",
       default: "false",
     },

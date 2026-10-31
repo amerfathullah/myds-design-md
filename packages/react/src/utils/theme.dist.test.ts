@@ -5,15 +5,12 @@
 // first, and fails, rather than skips, without it.
 /// <reference types="node" />
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
-import {
-  cases,
-  keysRead,
-  runScript,
-  type ThemeOptions,
-} from "./theme-test-page";
+import type { ThemeScriptOptions } from "./theme";
+import { cases, keysRead, runScript } from "./theme-test-page";
 
 const root = resolve(__dirname, "../..");
 const entry = "@amerfathullah/myds-react/utils";
@@ -23,25 +20,26 @@ const optionSets = [
   ...new Map(cases.map(({ options }) => [JSON.stringify(options), options])),
 ];
 
-// The `import` and `require` forms of a Node program that loads the entry,
-// and prints the file it resolved to and the script for each set of options.
-// Node runs it unable to evaluate strings as code, as under a Content
-// Security Policy without `'unsafe-eval'`.
+// A Node program that loads the entry through the `import` or `require`
+// condition, and prints the file it resolved to and the script for each set
+// of options. Node runs it unable to evaluate strings as code, as under a
+// Content Security Policy without `'unsafe-eval'`.
+const program = (load: string, resolveEntry: string) => `
+  ${load}
+  const sets = JSON.parse(process.env.THEME_OPTIONS);
+  console.log(JSON.stringify({
+    file: ${resolveEntry}("${entry}"),
+    scripts: sets.map((o) => (Object.keys(o).length ? getThemeScript(o) : getThemeScript())),
+  }));`;
 const programs = {
-  import: `
-    import { getThemeScript } from "${entry}";
-    const sets = JSON.parse(process.env.THEME_OPTIONS);
-    console.log(JSON.stringify({
-      file: import.meta.resolve("${entry}"),
-      scripts: sets.map((o) => (Object.keys(o).length ? getThemeScript(o) : getThemeScript())),
-    }));`,
-  require: `
-    const { getThemeScript } = require("${entry}");
-    const sets = JSON.parse(process.env.THEME_OPTIONS);
-    console.log(JSON.stringify({
-      file: require.resolve("${entry}"),
-      scripts: sets.map((o) => (Object.keys(o).length ? getThemeScript(o) : getThemeScript())),
-    }));`,
+  import: program(
+    `import { getThemeScript } from "${entry}";`,
+    "import.meta.resolve",
+  ),
+  require: program(
+    `const { getThemeScript } = require("${entry}");`,
+    "require.resolve",
+  ),
 };
 
 function load(condition: keyof typeof programs) {
@@ -66,7 +64,7 @@ function load(condition: keyof typeof programs) {
     file: string;
     scripts: string[];
   };
-  const scriptFor = (options: ThemeOptions) =>
+  const scriptFor = (options: ThemeScriptOptions) =>
     scripts[
       optionSets.findIndex(([key]) => key === JSON.stringify(options))
     ] as string;
@@ -93,3 +91,35 @@ describe.each([
     expect(writes).toEqual([]);
   });
 });
+
+// The ThemeSwitch develop pages show the script for the default options in a
+// plain index.html, copied by hand. The minifier names its variables
+// differently from build to build, so the copy must behave as the built
+// script does, not match its text.
+describe.each(["theme-switch.mdx", "theme-switch.ms.mdx"])(
+  "the docs' index.html sample in %s",
+  (page) => {
+    const mdx = readFileSync(
+      resolve(root, "../../apps/docs/content/docs/develop/(components)", page),
+      "utf8",
+    );
+    const sample =
+      mdx
+        .split('```html title="index.html"')[1]
+        ?.match(/<script>\s*([^\n]*)\s*<\/script>/)?.[1] ?? "";
+
+    test("is a script", () => {
+      expect(sample).toMatch(/^\(function /);
+    });
+
+    test.each(cases.filter(({ options }) => !Object.keys(options).length))(
+      "$name",
+      (theCase) => {
+        const { classes, reads, writes } = runScript(sample, theCase.page);
+        expect(classes).toEqual(theCase.classes);
+        expect([...new Set(reads)]).toEqual(keysRead(theCase));
+        expect(writes).toEqual([]);
+      },
+    );
+  },
+);

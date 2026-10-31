@@ -3,7 +3,6 @@ import {
   act,
   createElement,
   StrictMode,
-  useContext,
   type ComponentProps,
   type ContextType,
 } from "react";
@@ -12,7 +11,12 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { ThemeSwitch } from "../components/theme-switch";
-import { ThemeContext, ThemeProvider } from "./use-theme";
+import {
+  blockedStorage,
+  fakeStorage as fakeStorageOf,
+  type Blocked,
+} from "../utils/theme-test-page";
+import { ThemeContext, ThemeProvider, useTheme } from "./use-theme";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -22,43 +26,27 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 type ProviderProps = Omit<ComponentProps<typeof ThemeProvider>, "children">;
 type Theme = ContextType<typeof ThemeContext>;
 
-// A localStorage that records what's written to it, or that's blocked, as in
-// a sandboxed iframe: its methods throw, or reading `localStorage` does
-function fakeStorage(
-  saved: Record<string, string> = {},
-  blocked?: "getItem throws" | "localStorage throws",
-) {
-  const items = new Map(Object.entries(saved));
-  const writes: [string, string][] = [];
-  const fail = () => {
-    throw new DOMException("The operation is insecure.", "SecurityError");
-  };
-  const storage = {
-    getItem: (key: string) => {
-      if (blocked) fail();
-      return items.get(key) ?? null;
-    },
-    setItem: (key: string, value: string) => {
-      if (blocked) fail();
-      writes.push([key, value]);
-      items.set(key, value);
-    },
-  };
+// Puts a fake localStorage on the page: one holding `saved`, or one that's
+// blocked, as in a sandboxed iframe
+function fakeStorage(saved?: Record<string, string>, blocked?: Blocked) {
+  const fake = fakeStorageOf(saved, blocked);
   vi.spyOn(window, "localStorage", "get").mockImplementation(() =>
-    blocked === "localStorage throws" ? fail() : (storage as Storage),
+    blocked === "localStorage throws"
+      ? blockedStorage()
+      : (fake.storage as Storage),
   );
-  return { items, writes };
+  return fake;
 }
 
 // `<html>`'s classes, sorted
 const classes = () => [...document.documentElement.classList].sort();
 
-// Mounts a ThemeProvider around a component that records every context value
-// it renders with, and re-renders it with new props
+// Mounts a ThemeProvider around a component that records what `useTheme()`
+// returns on every render, and re-renders it with new props
 async function mount(props: ProviderProps = {}, strict = false) {
   const seen: Theme[] = [];
   const Probe = () => {
-    seen.push(useContext(ThemeContext));
+    seen.push(useTheme());
     return null;
   };
   const root = createRoot(document.createElement("div"));
@@ -153,7 +141,7 @@ describe("ThemeProvider on mount", () => {
     expect(provider.current.theme).toBe("system");
   });
 
-  test.each(["getItem throws", "localStorage throws"] as const)(
+  test.each(["methods throw", "localStorage throws"] as const)(
     "with storage blocked (%s), applies `defaultTheme`, and `setTheme` still changes the class and state",
     async (blocked) => {
       fakeStorage({ theme: "light" }, blocked);
@@ -235,7 +223,7 @@ describe("ThemeProvider's setTheme", () => {
   });
 
   test("keeps its identity, and the context value too, when the parent re-renders with the same theme names", async () => {
-    fakeStorage({}, "getItem throws");
+    fakeStorage({}, "methods throw");
     const provider = await mounted({ themes: ["light", "dark"] });
     const { setTheme } = provider.current;
     await provider.setTheme("dark");

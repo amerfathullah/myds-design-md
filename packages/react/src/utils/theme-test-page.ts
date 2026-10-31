@@ -8,17 +8,15 @@
  */
 import vm from "node:vm";
 
-export interface ThemeOptions {
-  storageKey?: string;
-  defaultTheme?: string;
-  themes?: string[];
-}
+import type { ThemeScriptOptions } from "./theme";
+
+/** Storage blocked, as in a sandboxed iframe: its methods throw, or reading `localStorage` itself does */
+export type Blocked = "methods throw" | "localStorage throws";
 
 export interface Page {
   /** What localStorage holds before load, by key */
   saved?: Record<string, string>;
-  /** Storage blocked, as in a sandboxed iframe: `getItem` and `setItem` throw, or reading `localStorage` itself does */
-  storage?: "getItem throws" | "localStorage throws";
+  storage?: Blocked;
   /** The classes on `<html>` before load */
   classes?: string[];
 }
@@ -28,30 +26,48 @@ export interface Loaded {
   classes: string[];
   /** The keys read from storage */
   reads: string[];
-  /** The keys written to storage */
-  writes: string[];
+  /** What was written to storage, or tried to be, as `[key, value]` */
+  writes: [string, string][];
 }
 
-function fakePage(page: Page) {
-  const classes = new Set(page.classes ?? []);
-  const saved = new Map(Object.entries(page.saved ?? {}));
+/**
+ * A fake localStorage holding `saved`. It records the keys read and every
+ * write tried, and its methods throw when they're blocked.
+ */
+export function fakeStorage(
+  saved: Record<string, string> = {},
+  blocked?: Blocked,
+) {
+  const items = new Map(Object.entries(saved));
   const reads: string[] = [];
-  const writes: string[] = [];
-  const blocked = () => {
-    throw new Error("SecurityError: storage is blocked");
+  const writes: [string, string][] = [];
+  const fail = () => {
+    if (blocked === "methods throw")
+      throw new DOMException("The operation is insecure.", "SecurityError");
   };
   const storage = {
     getItem(key: string) {
       reads.push(key);
-      if (page.storage === "getItem throws") blocked();
-      return saved.get(key) ?? null;
+      fail();
+      return items.get(key) ?? null;
     },
     setItem(key: string, value: string) {
-      writes.push(key);
-      if (page.storage === "getItem throws") blocked();
-      saved.set(key, String(value));
+      writes.push([key, value]);
+      fail();
+      items.set(key, value);
     },
   };
+  return { storage, items, reads, writes };
+}
+
+/** Reading a blocked `localStorage` itself throws */
+export function blockedStorage(): never {
+  throw new DOMException("The operation is insecure.", "SecurityError");
+}
+
+function fakePage(page: Page) {
+  const classes = new Set(page.classes ?? []);
+  const { storage, reads, writes } = fakeStorage(page.saved, page.storage);
   const classList = {
     add: (...tokens: string[]) => tokens.forEach((token) => classes.add(token)),
     remove: (...tokens: string[]) =>
@@ -61,7 +77,7 @@ function fakePage(page: Page) {
   const document = { documentElement: { classList } };
   const localStorage: PropertyDescriptor =
     page.storage === "localStorage throws"
-      ? { get: blocked, configurable: true, enumerable: true }
+      ? { get: blockedStorage, configurable: true, enumerable: true }
       : { value: storage, configurable: true, enumerable: true };
   const window = Object.defineProperties(
     {},
@@ -118,11 +134,11 @@ export const defaults = {
   storageKey: "theme",
   defaultTheme: "light",
   themes: ["light", "dark"],
-} satisfies Required<ThemeOptions>;
+} satisfies Required<ThemeScriptOptions>;
 
 export interface Case {
   name: string;
-  options: ThemeOptions;
+  options: ThemeScriptOptions;
   page: Page;
   /** `<html>`'s classes after load, sorted */
   classes: string[];
@@ -131,12 +147,12 @@ export interface Case {
 const custom = {
   storageKey: "myds-theme",
   themes: ["light", "dark", "system"],
-} satisfies ThemeOptions;
+} satisfies ThemeScriptOptions;
 const brand = {
   storageKey: "brand",
   defaultTheme: "sepia",
   themes: ["sepia", "contrast"],
-} satisfies ThemeOptions;
+} satisfies ThemeScriptOptions;
 
 /** The theme rule's cases: the classes on `<html>` after load, for each set of options and page */
 // prettier-ignore
@@ -149,7 +165,7 @@ export const cases: Case[] = [
   { name: "an empty string saved", options: {}, page: { saved: { theme: "" } }, classes: ["light"] },
   { name: "nothing saved", options: {}, page: {}, classes: ["light"] },
   { name: "a known name saved under another key", options: {}, page: { saved: { "myds-theme": "dark" } }, classes: ["light"] },
-  { name: "getItem throwing", options: {}, page: { saved: { theme: "dark" }, storage: "getItem throws" }, classes: ["light"] },
+  { name: "getItem throwing", options: {}, page: { saved: { theme: "dark" }, storage: "methods throw" }, classes: ["light"] },
   { name: "reading localStorage throwing", options: {}, page: { saved: { theme: "dark" }, storage: "localStorage throws" }, classes: ["light"] },
   { name: "<html> carrying dark, light saved", options: {}, page: { saved: { theme: "light" }, classes: ["dark"] }, classes: ["light"] },
   { name: "<html> carrying light and dark, nothing saved", options: {}, page: { classes: ["light", "dark"] }, classes: ["light"] },
@@ -159,7 +175,7 @@ export const cases: Case[] = [
   { name: "defaultTheme dark, nothing saved", options: { defaultTheme: "dark" }, page: {}, classes: ["dark"] },
   { name: "defaultTheme dark, light saved", options: { defaultTheme: "dark" }, page: { saved: { theme: "light" } }, classes: ["light"] },
   { name: "defaultTheme dark, an unknown name saved", options: { defaultTheme: "dark" }, page: { saved: { theme: "blue" } }, classes: ["dark"] },
-  { name: "defaultTheme dark, getItem throwing", options: { defaultTheme: "dark" }, page: { storage: "getItem throws" }, classes: ["dark"] },
+  { name: "defaultTheme dark, getItem throwing", options: { defaultTheme: "dark" }, page: { storage: "methods throw" }, classes: ["dark"] },
   // `defaultTheme` not in `themes` counts as one of them
   { name: "defaultTheme solarized, nothing saved", options: { defaultTheme: "solarized" }, page: {}, classes: ["solarized"] },
   { name: "defaultTheme solarized, solarized saved", options: { defaultTheme: "solarized" }, page: { saved: { theme: "solarized" } }, classes: ["solarized"] },
@@ -172,7 +188,7 @@ export const cases: Case[] = [
   { name: "custom key and themes, an unknown name saved", options: custom, page: { saved: { "myds-theme": "blue" } }, classes: ["light"] },
   { name: "custom key and themes, nothing saved", options: custom, page: {}, classes: ["light"] },
   { name: "custom key and themes, dark saved under the default key only", options: custom, page: { saved: { theme: "dark" } }, classes: ["light"] },
-  { name: "custom key and themes, getItem throwing", options: custom, page: { saved: { "myds-theme": "dark" }, storage: "getItem throws" }, classes: ["light"] },
+  { name: "custom key and themes, getItem throwing", options: custom, page: { saved: { "myds-theme": "dark" }, storage: "methods throw" }, classes: ["light"] },
   { name: "custom key and themes, <html> carrying dark and system, light saved", options: custom, page: { saved: { "myds-theme": "light" }, classes: ["dark", "system"] }, classes: ["light"] },
   // Themes that don't include light or dark
   { name: "brand themes, contrast saved", options: brand, page: { saved: { brand: "contrast" } }, classes: ["contrast"] },

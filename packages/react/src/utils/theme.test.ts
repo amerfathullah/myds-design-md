@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { getThemeScript } from "./index";
-import { restoreTheme } from "./theme";
+import { restoreTheme, type ThemeScriptOptions } from "./theme";
 import {
   cases,
   defaults,
@@ -10,11 +10,10 @@ import {
   runScript,
   type Loaded,
   type Page,
-  type ThemeOptions,
 } from "./theme-test-page";
 
 // ThemeProvider's rule, called with the options ThemeProvider passes it
-function byRule(options: ThemeOptions, page: Page): Loaded {
+function byRule(options: ThemeScriptOptions, page: Page): Loaded {
   return onPage(page, () => {
     restoreTheme(
       options.storageKey ?? defaults.storageKey,
@@ -25,7 +24,7 @@ function byRule(options: ThemeOptions, page: Page): Loaded {
 }
 
 // `getThemeScript`'s script, run in a fresh global context
-function byScript(options: ThemeOptions, page: Page): Loaded {
+function byScript(options: ThemeScriptOptions, page: Page): Loaded {
   return runScript(
     Object.keys(options).length ? getThemeScript(options) : getThemeScript(),
     page,

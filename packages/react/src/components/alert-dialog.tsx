@@ -80,7 +80,7 @@ const AlertDialogAction: ForwardRefExoticComponent<AlertDialogActionProps> =
 const AlertDialogContent: ForwardRefExoticComponent<
   ComponentProps<typeof DialogBody>
 > = forwardRef(({ children, ...props }, ref) => {
-  const { variant: name } = useContext(AlertDialogContext);
+  const { variant } = useContext(AlertDialogContext);
 
   const map = {
     default: {
@@ -107,14 +107,14 @@ const AlertDialogContent: ForwardRefExoticComponent<
 
   // JavaScript, or a cast, can pass any value, so whatever isn't one of the
   // map's own keys, such as `null` or `"toString"`, renders as `default`
-  const { variant, icon } =
-    map[Object.prototype.hasOwnProperty.call(map, name) ? name : "default"];
+  const known = Object.prototype.hasOwnProperty.call(map, variant);
+  const { variant: iconVariant, icon } = map[known ? variant : "default"];
 
   return (
     <DialogBody ref={ref} {...props}>
       <DialogContent className="py-6">
         {icon && (
-          <DialogIcon variant={variant} className="mb-4">
+          <DialogIcon variant={iconVariant} className="mb-4">
             {icon}
           </DialogIcon>
         )}

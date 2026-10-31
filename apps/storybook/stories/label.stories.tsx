@@ -34,25 +34,30 @@ const meta = {
   parameters: {
     layout: "centered",
   },
-  // Label disables nothing, so `disabled` goes to each Label and its field
-  render: ({ size, disabled }) => {
+  // Label disables nothing, so `disabled` goes to each Label and its field.
+  // The ids carry the story's id, so no two stories on the docs page share one
+  render: ({ size, disabled }, { id }) => {
     return (
       <div className="min-w-[360px] space-y-3">
         <div className="flex justify-between">
-          <Label htmlFor="checkbox" size={size} disabled={disabled}>
+          <Label htmlFor={`${id}-checkbox`} size={size} disabled={disabled}>
             Auto-delete notifications
           </Label>
           <Checkbox
-            id="checkbox"
+            id={`${id}-checkbox`}
             size={size}
             disabled={disabled ?? undefined}
           ></Checkbox>
         </div>
         <div className="flex justify-between">
-          <Label htmlFor="toggle" size={size} disabled={disabled}>
+          <Label htmlFor={`${id}-toggle`} size={size} disabled={disabled}>
             Enable 2FA security?
           </Label>
-          <Toggle id="toggle" size={size} disabled={disabled ?? undefined}>
+          <Toggle
+            id={`${id}-toggle`}
+            size={size}
+            disabled={disabled ?? undefined}
+          >
             <ToggleThumb />
           </Toggle>
         </div>
@@ -90,23 +95,27 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = createStory({});
 
 export const DefaultDark: Story = createRender(
-  ({ size = "medium" as const, disabled = false }) => (
+  ({ size = "medium" as const, disabled = false }, { id }: { id: string }) => (
     <div className="dark min-w-[360px] space-y-3">
       <div className="flex justify-between">
-        <Label htmlFor="checkbox-dark" size={size} disabled={disabled}>
+        <Label htmlFor={`${id}-checkbox`} size={size} disabled={disabled}>
           Auto-delete notifications
         </Label>
         <Checkbox
-          id="checkbox-dark"
+          id={`${id}-checkbox`}
           size={size}
           disabled={disabled ?? undefined}
         ></Checkbox>
       </div>
       <div className="group flex justify-between">
-        <Label htmlFor="toggle-dark" size={size} disabled={disabled}>
+        <Label htmlFor={`${id}-toggle`} size={size} disabled={disabled}>
           Enable 2FA security?
         </Label>
-        <Toggle id="toggle-dark" size={size} disabled={disabled ?? undefined}>
+        <Toggle
+          id={`${id}-toggle`}
+          size={size}
+          disabled={disabled ?? undefined}
+        >
           <ToggleThumb />
         </Toggle>
       </div>

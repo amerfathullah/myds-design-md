@@ -80,6 +80,19 @@ export function cvaCall(file, cvaName, props = {}) {
 }
 
 /**
+ * The fixed classes a component's JSX gives its elements, in source order: a
+ * `className` string, or the first string a `className` passes to `clx()`.
+ * @param {string} file the component's file in `packages/react/src/components`
+ * @returns {string[]}
+ */
+export function jsxClasses(file) {
+  const source = fs.readFileSync(new URL(file, componentsDir), "utf8");
+  return [
+    ...source.matchAll(/className=(?:"([^"]*)"|\{clx\(\s*"([^"]*)")/g),
+  ].map(([, literal, clx]) => literal ?? clx);
+}
+
+/**
  * The stylesheet a consumer gets for `files`: the components are scanned as
  * the full stylesheet scans the React sources.
  * @param {string[]} files component files in `packages/react/src/components`

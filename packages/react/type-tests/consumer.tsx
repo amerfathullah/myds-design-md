@@ -23,6 +23,8 @@ import {
   SiteLink,
   SiteLinkGroup,
 } from "@amerfathullah/myds-react/footer";
+import { Input, InputAddon } from "@amerfathullah/myds-react/input";
+import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
 import {
   createColumnHelper,
@@ -142,6 +144,14 @@ export const Fields = ({ error }: { error?: string }) => (
     <DateField invalid={Boolean(error)} size="medium" />
     <TimeField aria-invalid={error ? "true" : undefined} step={1} />
     <TimeField invalid aria-invalid={false} disabled />
+    <Input invalid />
+    <Input invalid={null} prepend={<InputAddon>RM</InputAddon>} />
+    <Input invalid={Boolean(error)} size="medium" />
+    <Input aria-invalid={error ? "true" : undefined} />
+    <TextArea />
+    <TextArea invalid={false} size="large" />
+    <TextArea invalid aria-invalid={false} disabled />
+    <TextArea invalid={null} />
   </>
 );
 

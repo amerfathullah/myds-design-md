@@ -10,6 +10,7 @@ import { test } from "node:test";
 import { chromium } from "playwright";
 
 import { compileComponents, cvaCall, cvaClasses } from "./components.mjs";
+import { colours } from "./field-colours.mjs";
 
 const fields = [
   {
@@ -48,24 +49,6 @@ const cases = [
     look: "invalid",
   },
 ];
-
-// The tokens the looks use, in each theme
-const colours = {
-  light: {
-    "otl-gray-200": "rgb(228, 228, 231)",
-    "otl-primary-300": "rgb(150, 183, 255)",
-    "otl-danger-300": "rgb(252, 165, 165)",
-    "fr-primary": "rgba(150, 183, 255, 0.4)",
-    "fr-danger": "rgba(252, 165, 165, 0.4)",
-  },
-  dark: {
-    "otl-gray-200": "rgb(39, 39, 42)",
-    "otl-primary-300": "rgb(29, 78, 216)",
-    "otl-danger-300": "rgb(185, 28, 28)",
-    "fr-primary": "rgba(29, 78, 216, 0.4)",
-    "fr-danger": "rgba(185, 28, 28, 0.4)",
-  },
-};
 
 // Each look's border and 3px ring
 const looks = {

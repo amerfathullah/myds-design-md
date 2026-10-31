@@ -165,11 +165,8 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .input{width:100%;border:1px solid var(--otl-gray-200);border-radius:8px}
 .input input{display:block;width:100%;padding:6px 12px;border:1px solid transparent;border-radius:8px;background:var(--bg-white);color:var(--txt-black-700);font-size:14px;line-height:20px;outline:none;transition:color .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease)}
 .input:has(.input-addon){display:flex}
-.input-addon{display:flex;align-items:center;padding:6px 12px;border:1px solid transparent;font-size:14px;line-height:20px}
-.input-addon:not(:last-child){border-right-color:var(--otl-gray-200)}
-.input-addon:not(:first-child){border-left-color:var(--otl-gray-200)}
+.input-addon{display:flex;align-items:center;padding:6px 12px;border:1px solid transparent;border-right-color:var(--otl-gray-200);font-size:14px;line-height:20px}
 .input-addon+input{border-top-left-radius:0;border-bottom-left-radius:0}
-.input input:has(+.input-addon){border-top-right-radius:0;border-bottom-right-radius:0}
 .input input::placeholder,.textarea::placeholder{color:var(--txt-black-500)}
 .input input:focus,.input input.specimen-focus,.textarea:focus,.textarea.specimen-focus{border-color:var(--otl-primary-300);box-shadow:0 0 0 3px var(--fr-primary)}
 .textarea{display:block;width:100%;min-height:120px;padding:12px;border:1px solid var(--otl-gray-200);border-radius:8px;background:var(--bg-white);color:var(--txt-black-700);font-size:16px;line-height:24px;resize:none;outline:none;transition:color .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease)}

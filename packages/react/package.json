@@ -249,6 +249,7 @@
     "@types/react-18": "npm:@types/react@^18.3.31",
     "@types/react-dom": "^19.3.0",
     "eslint": "^10.13.0",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "react": "^19.3.1",

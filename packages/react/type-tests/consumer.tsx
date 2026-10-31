@@ -23,10 +23,17 @@ import {
   SiteLink,
   SiteLinkGroup,
 } from "@amerfathullah/myds-react/footer";
+import {
+  ThemeContext,
+  ThemeProvider,
+  useTheme,
+} from "@amerfathullah/myds-react/hooks";
 import { Input, InputAddon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
+import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
+import { getThemeScript } from "@amerfathullah/myds-react/utils";
 import {
   createColumnHelper,
   type CellContext,
@@ -200,3 +207,48 @@ export const SiteFooter = () => {
     </Footer>
   );
 };
+
+// ThemeProvider takes the theme names it restores, and `getThemeScript` the
+// same options, returning the script's source. ThemeContext keeps its shape,
+// so an app can feed it from another theme library.
+const themeScript: string = getThemeScript();
+const customThemeScript: string = getThemeScript({
+  storageKey: "myds-theme",
+  defaultTheme: "dark",
+  themes: ["light", "dark", "system"],
+});
+// @ts-expect-error `themes` is a list of names
+getThemeScript({ themes: "dark" });
+
+const ThemeName = () => <span>{useTheme().theme}</span>;
+
+export const Themes = ({ resolvedTheme }: { resolvedTheme?: string }) => (
+  <>
+    <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+    <script dangerouslySetInnerHTML={{ __html: customThemeScript }} />
+    <ThemeProvider>
+      <ThemeSwitch />
+    </ThemeProvider>
+    <ThemeProvider
+      storageKey="myds-theme"
+      defaultTheme="dark"
+      themes={["light", "dark", "system"]}
+    >
+      <ThemeSwitch as="select" selectLabel="Tema" />
+      <ThemeName />
+    </ThemeProvider>
+    {/* @ts-expect-error `themes` is a list of names */}
+    <ThemeProvider themes="dark">
+      <ThemeSwitch />
+    </ThemeProvider>
+    <ThemeContext.Provider
+      value={{
+        theme: resolvedTheme ?? "light",
+        setTheme: (theme: string) => void theme,
+        defaultTheme: "light",
+      }}
+    >
+      <ThemeSwitch />
+    </ThemeContext.Provider>
+  </>
+);

@@ -1,6 +1,6 @@
 // What the field-state tests share: the props a consumer passes, the
 // attributes they give the field's native element, and the computed colours
-// of the tokens the looks use
+// of the tokens the fields' and their labels' looks use
 
 // The props a consumer passes, and the look they give at rest. A disabled
 // field can't take focus, so it keeps that look.
@@ -50,6 +50,8 @@ export const colours = {
     "otl-danger-300": "rgb(252, 165, 165)",
     "fr-primary": "rgba(150, 183, 255, 0.4)",
     "fr-danger": "rgba(252, 165, 165, 0.4)",
+    "txt-black-700": "rgb(63, 63, 70)",
+    "txt-black-disabled": "rgba(82, 82, 91, 0.4)",
   },
   dark: {
     transparent: "rgba(0, 0, 0, 0)",
@@ -60,5 +62,7 @@ export const colours = {
     "otl-danger-300": "rgb(185, 28, 28)",
     "fr-primary": "rgba(29, 78, 216, 0.4)",
     "fr-danger": "rgba(185, 28, 28, 0.4)",
+    "txt-black-700": "rgb(212, 212, 216)",
+    "txt-black-disabled": "rgba(161, 161, 170, 0.4)",
   },
 };

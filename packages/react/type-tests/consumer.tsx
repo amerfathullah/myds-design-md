@@ -24,6 +24,7 @@ import {
   SiteLinkGroup,
 } from "@amerfathullah/myds-react/footer";
 import { Input, InputAddon } from "@amerfathullah/myds-react/input";
+import { Label } from "@amerfathullah/myds-react/label";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
 import {
@@ -153,6 +154,28 @@ export const Fields = ({ error }: { error?: string }) => (
     <TextArea invalid={false} size="large" />
     <TextArea invalid aria-invalid={false} disabled />
     <TextArea invalid={null} />
+  </>
+);
+
+// `disabled` takes a boolean or null, and sets the label's `data-disabled`,
+// which a `data-disabled` prop overrides. Label disables nothing, so the field
+// takes `disabled` too.
+export const Labels = ({ locked }: { locked?: boolean }) => (
+  <>
+    <Label disabled htmlFor="name">
+      Name
+    </Label>
+    <Input id="name" disabled />
+    <Label disabled={false} size="small">
+      Name
+    </Label>
+    <Label disabled={null}>Name</Label>
+    <Label disabled={locked} asChild>
+      <span>Name</span>
+    </Label>
+    <Label disabled data-disabled={false}>
+      Name
+    </Label>
   </>
 );
 

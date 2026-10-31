@@ -16,7 +16,7 @@ import {
   cvaClasses,
   jsxClasses,
 } from "./components.mjs";
-import { colours } from "./field-looks.mjs";
+import { colours, propAttribute } from "./field-looks.mjs";
 
 // The props a consumer passes the Label, and the look they give
 const cases = [
@@ -110,13 +110,11 @@ const placements = {
 // The <label> Label renders for `props`: its classes, defaults applied, and
 // `data-disabled` from `disabled` unless a `data-disabled` prop overrides it
 function renderLabel(id, props) {
-  const dataDisabled =
-    "data-disabled" in props
-      ? props["data-disabled"]
-      : (props.disabled ?? undefined);
-  return `<label id="label-${id}" for="${id}" class="${cvaCall("label.tsx", "label_cva")}"${
-    dataDisabled == null ? "" : ` data-disabled="${dataDisabled}"`
-  }>Name</label>`;
+  return `<label id="label-${id}" for="${id}" class="${cvaCall("label.tsx", "label_cva")}"${propAttribute(
+    props,
+    "disabled",
+    "data-disabled",
+  )}>Name</label>`;
 }
 
 // Runs in the page: each label's text colour and cursor
@@ -146,15 +144,17 @@ test("Label is dimmed only when disabled, wherever it sits beside a disabled fie
     ),
     // `group-disabled:` dims a Label inside a disabled fieldset marked
     // `group`, with `disabled` or without
-    ...[cases[0], cases[3]].map(({ name, props }, i) => {
-      const id = `${field.name}-fieldset-${i}`;
-      return {
-        id,
-        key: `${field.name}, Label in <fieldset disabled class="group">, ${name}`,
-        look: "disabled",
-        html: `<fieldset disabled class="group">${renderLabel(id, props)}${field.render(id)}</fieldset>`,
-      };
-    }),
+    ...cases
+      .filter(({ name }) => ["disabled omitted", "disabled"].includes(name))
+      .map(({ name, props }, i) => {
+        const id = `${field.name}-fieldset-${i}`;
+        return {
+          id,
+          key: `${field.name}, Label in <fieldset disabled class="group">, ${name}`,
+          look: "disabled",
+          html: `<fieldset disabled class="group">${renderLabel(id, props)}${field.render(id)}</fieldset>`,
+        };
+      }),
   ]);
   const css = await compileComponents([
     "label.tsx",

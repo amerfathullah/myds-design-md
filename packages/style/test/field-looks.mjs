@@ -24,19 +24,33 @@ export const cases = [
 ];
 
 /**
+ * The attribute a component sets from a prop, before the remaining props, so
+ * an attribute prop of the same name overrides it: `aria-invalid` from
+ * `invalid`, or `data-disabled` from `disabled`. A `null` or omitted value
+ * sets none.
+ * @param {Record<string, boolean | null | undefined>} props
+ * @param {string} prop e.g. `invalid`
+ * @param {string} attribute e.g. `aria-invalid`
+ * @returns {string} the attribute with a leading space, or ""
+ */
+export function propAttribute(props, prop, attribute) {
+  const value =
+    attribute in props ? props[attribute] : (props[prop] ?? undefined);
+  return value == null ? "" : ` ${attribute}="${value}"`;
+}
+
+/**
  * The attributes a field gives its native element for `props`: `disabled`,
  * and `aria-invalid` from `invalid` unless an `aria-invalid` prop overrides it
  * @param {{ disabled?: boolean, invalid?: boolean | null, "aria-invalid"?: boolean }} props
  * @returns {string} each attribute with a leading space
  */
 export function stateAttributes(props) {
-  const ariaInvalid =
-    "aria-invalid" in props
-      ? props["aria-invalid"]
-      : (props.invalid ?? undefined);
-  return `${props.disabled ? " disabled" : ""}${
-    ariaInvalid == null ? "" : ` aria-invalid="${ariaInvalid}"`
-  }`;
+  return `${props.disabled ? " disabled" : ""}${propAttribute(
+    props,
+    "invalid",
+    "aria-invalid",
+  )}`;
 }
 
 // The computed colours of the tokens the looks use, in each theme

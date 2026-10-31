@@ -10,7 +10,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { defaultThemes, restoreTheme } from "../utils/theme";
+import {
+  restoreTheme,
+  themeDefaults,
+  type ThemeScriptOptions,
+} from "../utils/theme";
 
 interface ThemeContextType {
   theme: string;
@@ -24,14 +28,9 @@ const ThemeContext = createContext<ThemeContextType>({
   defaultTheme: "light",
 });
 
-interface ThemeProviderProps {
+// `storageKey`, `defaultTheme` and `themes`, which `getThemeScript` takes too
+interface ThemeProviderProps extends ThemeScriptOptions {
   children: ReactNode;
-  /** The theme used on load when nothing valid is saved. Default `"light"`. */
-  defaultTheme?: string;
-  /** The localStorage key the chosen theme is saved under. Default `"theme"`. */
-  storageKey?: string;
-  /** The theme names restored on load, each a class on `<html>`; `defaultTheme` always counts as one. Default `["light", "dark"]`. */
-  themes?: string[];
 }
 
 // Restores the theme before the browser paints. Layout effects don't run on
@@ -41,9 +40,9 @@ const useBeforePaint =
 
 const ThemeProvider: FunctionComponent<ThemeProviderProps> = ({
   children,
-  defaultTheme = "light",
-  storageKey = "theme",
-  themes = defaultThemes,
+  defaultTheme = themeDefaults.defaultTheme,
+  storageKey = themeDefaults.storageKey,
+  themes = themeDefaults.themes,
 }) => {
   // Render reads neither storage nor the DOM, so the server HTML and the
   // first client render match
@@ -52,11 +51,11 @@ const ThemeProvider: FunctionComponent<ThemeProviderProps> = ({
   // The known names: `themes` plus `defaultTheme`. They depend on the names,
   // not the array, so a parent passing a new array of the same names
   // restores nothing and keeps `setTheme`
-  const names = JSON.stringify(themes);
+  const themesKey = JSON.stringify(themes);
   const known = useMemo<string[]>(() => {
-    const list: string[] = JSON.parse(names);
+    const list: string[] = JSON.parse(themesKey);
     return list.indexOf(defaultTheme) === -1 ? list.concat(defaultTheme) : list;
-  }, [names, defaultTheme]);
+  }, [themesKey, defaultTheme]);
 
   // The last theme this provider put on <html>, known name or not
   const applied = useRef<string | null>(null);

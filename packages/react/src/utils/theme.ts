@@ -4,8 +4,12 @@
  * Server Component.
  */
 
-/** ThemeProvider's and `getThemeScript`'s default theme names */
-export const defaultThemes = ["light", "dark"];
+/** ThemeProvider's and `getThemeScript`'s defaults */
+export const themeDefaults = {
+  storageKey: "theme",
+  defaultTheme: "light",
+  themes: ["light", "dark"],
+};
 
 /**
  * Puts the theme on `<html>` and returns it: the value saved under
@@ -43,12 +47,13 @@ export function restoreTheme(
   return theme;
 }
 
+/** ThemeProvider's options, which `getThemeScript` takes too */
 export interface ThemeScriptOptions {
-  /** The localStorage key the theme is saved under. Default `"theme"`. */
+  /** The localStorage key the chosen theme is saved under. Default `"theme"`. */
   storageKey?: string;
   /** The theme used on load when nothing valid is saved. Default `"light"`. */
   defaultTheme?: string;
-  /** The theme names, each a class on `<html>`; `defaultTheme` always counts as one. Default `["light", "dark"]`. */
+  /** The theme names restored on load, each a class on `<html>`; `defaultTheme` always counts as one. Default `["light", "dark"]`. */
   themes?: string[];
 }
 
@@ -56,14 +61,15 @@ export interface ThemeScriptOptions {
  * The source of a self-contained script that puts on `<html>` the theme
  * ThemeProvider would pick on mount, given the same options. Run it in
  * `<head>`, before the page renders, so the page never shows the wrong theme
- * first. It never throws, and a copied script must be regenerated whenever
- * ThemeProvider's options change.
+ * first. The script never throws: with storage blocked, it uses
+ * `defaultTheme`. A copied script must be regenerated whenever ThemeProvider's
+ * options change.
  */
 export function getThemeScript(options: ThemeScriptOptions = {}): string {
   const args = JSON.stringify([
-    options.storageKey ?? "theme",
-    options.defaultTheme ?? "light",
-    options.themes ?? defaultThemes,
+    options.storageKey ?? themeDefaults.storageKey,
+    options.defaultTheme ?? themeDefaults.defaultTheme,
+    options.themes ?? themeDefaults.themes,
   ])
     // JSON is a JavaScript expression. With every `<` escaped, no value can
     // end a surrounding <script> element or stop it from closing

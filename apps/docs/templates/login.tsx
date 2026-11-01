@@ -1,11 +1,7 @@
 "use client";
 import { Button } from "@amerfathullah/myds-react/button";
 import { Input } from "@amerfathullah/myds-react/input";
-import {
-  GlobeIcon,
-  GoogleIcon,
-  JataNegaraIcon,
-} from "@amerfathullah/myds-react/icon";
+import { GlobeIcon, GoogleIcon } from "@amerfathullah/myds-react/icon";
 import { Navbar, NavbarLogo } from "@amerfathullah/myds-react/navbar";
 import {
   Select,
@@ -134,13 +130,14 @@ function FooterLogin() {
       >
         <div className="flex items-center justify-center max-sm:flex-col">
           <div className="flex items-center justify-center gap-2">
-            <JataNegaraIcon></JataNegaraIcon>
+            <span
+              aria-hidden="true"
+              className="border-otl-gray-300 size-8 shrink-0 rounded-xs border border-dashed"
+            />
             <div className="flex max-sm:flex-col">
-              <div className="font-heading font-semibold">
-                Government of Malaysia
-              </div>
+              <div className="font-heading font-semibold">Agency Name</div>
               <div className="font-body text-txt-black-500 flex items-center pl-[10px] text-xs font-normal leading-[18px] max-sm:pl-0">
-                © 2024 Government of Malaysia
+                © 2024 Agency Name
               </div>
             </div>
           </div>

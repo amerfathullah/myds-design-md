@@ -1,9 +1,10 @@
 // Both entries, rendered in Chromium. An in-page link, such as the SkipLink,
 // lands its target 65px from the top, clear of a sticky 64px header. The page
-// scrolls there smoothly, unless the user asks for reduced motion. A mouse
-// click shows no outline, even one the author sets with `focus:outline-*`,
-// while keyboard focus does. And an underlined link keeps the `decoration-*`
-// utilities on it, the `decoration-inherit` Link uses included.
+// scrolls there smoothly, unless the user asks for reduced motion. Focus that
+// isn't `:focus-visible`, as after a mouse click, shows no outline, even one
+// an outline-width utility such as TableCell's `focus:outline-[3px]` draws,
+// while keyboard focus shows it. And an underlined link keeps the
+// `decoration-*` utilities on it, the `decoration-inherit` Link uses included.
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 
@@ -11,10 +12,9 @@ import { chromium } from "playwright";
 
 import { compile, compileFull } from "./compile.mjs";
 
-// TableCell's outline, and the underlines
-const cell =
+const tableCellOutline =
   "focus:outline-primary-600/20 focus:outline-[3px] focus:outline-offset-0";
-const classes = `@source inline("${cell} underline decoration-inherit decoration-wavy decoration-3");`;
+const classes = `@source inline("${tableCellOutline} underline decoration-inherit decoration-wavy decoration-3");`;
 const entries = {
   "the Tailwind import": () => compile(classes),
   "full.css": () => compileFull(classes),
@@ -33,7 +33,7 @@ const page = (css) => `<!doctype html>
         Parent <a id="inherit" href="#" class="underline decoration-inherit">link</a>
       </p>
       <a id="own" href="#" class="underline decoration-wavy decoration-3">link</a>
-      <button id="cell" class="${cell}">Cell</button>
+      <button id="table-cell" class="${tableCellOutline}">Cell</button>
     </main>
   </body>
 </html>`;
@@ -48,23 +48,32 @@ before(async () => {
 });
 after(() => browser?.close());
 
-async function open(entry, reducedMotion) {
+// Opens the page on an entry in a context of its own, closed afterwards
+async function withTab(entry, reducedMotion, use) {
   const context = await browser.newContext({ reducedMotion });
-  const tab = await context.newPage();
-  await tab.setContent(page(stylesheets[entry]));
-  return tab;
+  try {
+    const tab = await context.newPage();
+    await tab.setContent(page(stylesheets[entry]));
+    return await use(tab);
+  } finally {
+    await context.close();
+  }
 }
 
-// Waits until the page has scrolled and then stopped for 10 frames
+// Waits until the page has scrolled and then stopped for 10 frames, and
+// fails if it hasn't within 5 seconds
 function settled() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const start = performance.now();
     let last = window.scrollY;
     let still = 0;
     const frame = () => {
       still = window.scrollY > 0 && window.scrollY === last ? still + 1 : 0;
       last = window.scrollY;
       if (still >= 10) resolve();
-      else requestAnimationFrame(frame);
+      else if (performance.now() - start > 5000) {
+        reject(new Error(`no settled scroll within 5s (at ${window.scrollY})`));
+      } else requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
   });
@@ -72,9 +81,8 @@ function settled() {
 
 for (const entry of Object.keys(entries)) {
   for (const reducedMotion of ["no-preference", "reduce"]) {
-    test(`${entry}, ${reducedMotion} motion: following #main lands it 65px from the top, clear of a sticky 64px header`, async () => {
-      const tab = await open(entry, reducedMotion);
-      try {
+    test(`${entry}, ${reducedMotion} motion: following #main lands it 65px from the top, clear of a sticky 64px header`, () =>
+      withTab(entry, reducedMotion, async (tab) => {
         await tab.keyboard.press("Tab");
         await tab.keyboard.press("Enter");
         await tab.evaluate(settled);
@@ -82,47 +90,40 @@ for (const entry of Object.keys(entries)) {
           Math.round(main.getBoundingClientRect().top),
         );
         assert.equal(top, 65);
-      } finally {
-        await tab.context().close();
-      }
-    });
+      }));
   }
 
   test(`${entry}: html scrolls smoothly, and not under reduced motion`, async () => {
     const behaviour = {};
     for (const reducedMotion of ["no-preference", "reduce"]) {
-      const tab = await open(entry, reducedMotion);
-      behaviour[reducedMotion] = await tab.evaluate(
-        () => getComputedStyle(document.documentElement).scrollBehavior,
+      behaviour[reducedMotion] = await withTab(entry, reducedMotion, (tab) =>
+        tab.evaluate(
+          () => getComputedStyle(document.documentElement).scrollBehavior,
+        ),
       );
-      await tab.context().close();
     }
     assert.deepEqual(behaviour, { "no-preference": "smooth", reduce: "auto" });
   });
 
-  test(`${entry}: a mouse click shows no outline, and keyboard focus shows the author's`, async () => {
-    const tab = await open(entry, "no-preference");
-    try {
+  test(`${entry}: a mouse click shows no outline, and keyboard focus shows the author's`, () =>
+    withTab(entry, "no-preference", async (tab) => {
+      const focused = () => tab.evaluate(() => document.activeElement.id);
       const outline = () =>
-        tab.$eval("#cell", (cell) => {
+        tab.$eval("#table-cell", (cell) => {
           const { outlineStyle, outlineWidth } = getComputedStyle(cell);
           return `${outlineStyle} ${outlineWidth}`;
         });
-      await tab.click("#cell");
-      assert.equal(await tab.evaluate(() => document.activeElement.id), "cell");
+      await tab.click("#table-cell");
+      assert.equal(await focused(), "table-cell");
       assert.match(await outline(), /^none /);
       await tab.keyboard.press("Shift+Tab");
       await tab.keyboard.press("Tab");
-      assert.equal(await tab.evaluate(() => document.activeElement.id), "cell");
+      assert.equal(await focused(), "table-cell");
       assert.equal(await outline(), "solid 3px");
-    } finally {
-      await tab.context().close();
-    }
-  });
+    }));
 
-  test(`${entry}: an underlined link keeps its decoration-* utilities and sets its line from the font`, async () => {
-    const tab = await open(entry, "no-preference");
-    try {
+  test(`${entry}: an underlined link keeps its decoration-* utilities and sets its line from the font`, () =>
+    withTab(entry, "no-preference", async (tab) => {
       const decoration = (id) =>
         tab.$eval(`#${id}`, (link) => {
           const style = getComputedStyle(link);
@@ -153,8 +154,5 @@ for (const entry of Object.keys(entries)) {
           position: "from-font",
         },
       );
-    } finally {
-      await tab.context().close();
-    }
-  });
+    }));
 }

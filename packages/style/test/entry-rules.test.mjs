@@ -3,8 +3,9 @@
 // full.css, which imports it, adds only the fonts and the box-sizing pair:
 // - html gets a 65px scroll padding, which clears the sticky Navbar, and
 //   scrolls smoothly unless the user asks for reduced motion;
-// - an element focused by the mouse, not the keyboard, shows no outline;
-// - `underline`, with any variant, sets the line from the font.
+// - focus that isn't `:focus-visible`, as after a mouse click, shows no
+//   outline, as with Tailwind's `outline-hidden`;
+// - `underline`, with any Tailwind variant, sets the line from the font.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
@@ -23,31 +24,47 @@ postcss
   )
   .walkRules((rule) => preflightSelectors.add(collapse(rule.selector)));
 
+// The at-rules and rules a node sits in, outermost first
+function ancestors(node) {
+  const found = [];
+  for (
+    let parent = node.parent;
+    parent.type !== "root";
+    parent = parent.parent
+  ) {
+    found.unshift(parent);
+  }
+  return found;
+}
+
+const atRule = ({ name, params }) => `@${name} ${params}`;
+
+// A rule's body, nested at-rules included, on one line
+const body = (rule) => collapse(rule.nodes.join("; "));
+
 // Every declaration of `prop` in a stylesheet: the selector of the rule it's
 // in, the at-rules around it (`@layer base @media (…)`), and its value
 function declarations(css, prop) {
   const found = [];
   postcss.parse(css).walkDecls(prop, (decl) => {
-    const atRules = [];
-    let selector;
-    for (let node = decl.parent; node.type !== "root"; node = node.parent) {
-      if (node.type === "atrule")
-        atRules.unshift(`@${node.name} ${node.params}`);
-      else selector ??= node.selector;
-    }
-    found.push({ selector, atRules: atRules.join(" "), value: decl.value });
+    const around = ancestors(decl);
+    found.push({
+      selector: around.findLast(({ type }) => type === "rule")?.selector,
+      atRules: around
+        .filter(({ type }) => type === "atrule")
+        .map(atRule)
+        .join(" "),
+      value: decl.value,
+    });
   });
   return found;
 }
 
-// The body of each rule with exactly this selector, nested at-rules included,
-// with its whitespace collapsed
+// The body of each rule with exactly this selector
 function bodies(css, selector) {
   const found = [];
   postcss.parse(css).walkRules((rule) => {
-    if (rule.selector === selector) {
-      found.push(rule.nodes.join("; ").replace(/\s+/g, " "));
-    }
+    if (rule.selector === selector) found.push(body(rule));
   });
   return found;
 }
@@ -57,20 +74,22 @@ function bodies(css, selector) {
 function rules(css) {
   const found = [];
   postcss.parse(css).walkRules((rule) => {
-    const around = [];
-    for (let node = rule.parent; node.type !== "root"; node = node.parent) {
-      around.unshift(
-        node.type === "atrule" ? `@${node.name} ${node.params}` : node.selector,
-      );
-    }
+    const around = ancestors(rule).map((node) =>
+      node.type === "atrule" ? atRule(node) : node.selector,
+    );
     found.push(
-      collapse(
-        `${around.join(" ")} ${rule.selector} { ${rule.nodes.join("; ")} }`,
-      ),
+      collapse(`${around.join(" ")} ${rule.selector} { ${body(rule)} }`),
     );
   });
   return found;
 }
+
+// `text-decoration` shorthands outside Tailwind's preflight. One would reset
+// the style, thickness and colour that `decoration-*` utilities set.
+const shorthands = (css) =>
+  declarations(css, "text-decoration").filter(
+    ({ selector }) => !preflightSelectors.has(collapse(selector)),
+  );
 
 // The `@import`s Tailwind leaves in a stylesheet, such as a font URL
 function imports(css) {
@@ -118,21 +137,21 @@ test("the Tailwind import hides the outline on mouse focus, as Tailwind's outlin
   );
 });
 
-const underlines = [
+// `underline` with Tailwind variants, and the selectors Tailwind gives them
+const underlineSources = `@source inline("underline hover:underline focus-visible:underline md:underline");`;
+const underlineSelectors = [
   ".underline",
   ".hover\\:underline:hover",
   ".focus-visible\\:underline:focus-visible",
   ".md\\:underline",
 ];
 
-test("underline, with any variant, sets the line's position from the font", async () => {
-  const css = await compile(
-    `@source inline("underline hover:underline focus-visible:underline md:underline");`,
-  );
+test("underline, with any Tailwind variant, sets the line's position from the font", async () => {
+  const css = await compile(underlineSources);
   const lines = declarations(css, "text-decoration-line");
   assert.deepEqual(
     lines.map(({ selector }) => selector).sort(),
-    [...underlines].sort(),
+    [...underlineSelectors].sort(),
   );
   // Tailwind may put the position in a rule of its own, later on
   const sorted = (list) => list.map((item) => JSON.stringify(item)).sort();
@@ -142,16 +161,8 @@ test("underline, with any variant, sets the line's position from the font", asyn
   );
 });
 
-// A `text-decoration` shorthand would reset the style, thickness and colour
-// that `decoration-*` utilities set on the same element
 test("underline sets no text-decoration shorthand; only Tailwind's preflight does", async () => {
-  const css = await compile(
-    `@source inline("underline hover:underline focus-visible:underline md:underline");`,
-  );
-  const shorthands = declarations(css, "text-decoration").filter(
-    ({ selector }) => !preflightSelectors.has(collapse(selector)),
-  );
-  assert.deepEqual(shorthands, []);
+  assert.deepEqual(shorthands(await compile(underlineSources)), []);
 });
 
 // `@apply` in the import would fail here: it can't apply an unprefixed class
@@ -222,10 +233,5 @@ test("full.css sets each scroll, focus and underline rule once, with no underlin
     ).length,
     1,
   );
-  assert.deepEqual(
-    declarations(full, "text-decoration").filter(
-      ({ selector }) => !preflightSelectors.has(collapse(selector)),
-    ),
-    [],
-  );
+  assert.deepEqual(shorthands(full), []);
 });

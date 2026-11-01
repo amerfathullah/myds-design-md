@@ -1,10 +1,15 @@
 import { PlopTypes } from "@turbo/gen";
 
 import {
+  componentNameError,
+  generateComponent,
+} from "./scripts/generate-component";
+import {
   type DocsGroup,
   docsGroups,
   generateDocsPage,
 } from "./scripts/generate-docs-page";
+import { generateHook, hookNameError } from "./scripts/generate-hook";
 import { generateIcons } from "./scripts/generate-icons";
 
 interface ComponentPrompt {
@@ -18,17 +23,26 @@ interface MDXPrompt {
   title: string;
 }
 
-/**
- *! DO NOT MODIFY. This is a template for the export statement in the package.json file.
- */
-const ComponentExport = `,
-    "./{{ dashCase title}}": {
-      "type": "./src/components/{{ dashCase title}}.tsx",
-      "default": "./src/components/{{ dashCase title}}.tsx"
-    }`;
-
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
-  // Component generator
+  // A component's or hook's file name is its name in dash-case, as a page's
+  // is. A component is named in PascalCase, and a hook in camelCase.
+  const dashCase: (text: string) => string = plop.getHelper("dashCase");
+  const pascalCase: (text: string) => string = plop.getHelper("pascalCase");
+  const camelCase: (text: string) => string = plop.getHelper("camelCase");
+
+  // Component generator. Its action rejects, having changed nothing, if a file
+  // it would write exists already or the package exports the name already,
+  // and turbo gen prints why.
+  plop.setActionType("write component", (answers) => {
+    const { title, has_story } = answers as ComponentPrompt;
+    return generateComponent({
+      root: answers.turbo?.paths?.root,
+      slug: dashCase(title),
+      name: pascalCase(title),
+      story: has_story,
+    });
+  });
+
   plop.setGenerator("component", {
     description: "Scaffolds a component",
     prompts: [
@@ -53,48 +67,34 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
           if (!input) {
             return "Component name is required";
           }
-          return true;
+          return componentNameError(dashCase(input), pascalCase(input)) ?? true;
         },
       },
       {
         type: "confirm",
         default: true,
         name: "has_story",
-        message: "Include the story? (@myds/storybook)",
+        message: "Include a story? (apps/storybook)",
       },
     ],
     actions: (data) => {
-      const _data = data as ComponentPrompt;
-      const actions: PlopTypes.ActionType[] = [];
-
-      if (_data.framework === "react") {
-        actions.push(
-          {
-            type: "add",
-            path: "{{ turbo.paths.root }}/packages/react/src/components/{{ dashCase title }}.tsx",
-            templateFile: "templates/react-component.hbs",
-          },
-          {
-            type: "append",
-            path: "{{ turbo.paths.root }}/packages/react/package.json",
-            pattern: /("exports":\s*{[^}]*)(})/,
-            template: ComponentExport,
-          },
-        );
-      }
-
-      if (_data.has_story) {
-        actions.push({
-          type: "add",
-          path: "{{ turbo.paths.root }}/apps/storybook/stories/{{ dashCase title }}.stories.tsx",
-          templateFile: "templates/react-story.hbs",
-        });
-      }
-      return actions;
+      const { framework } = data as ComponentPrompt;
+      return framework === "react" ? [{ type: "write component" }] : [];
     },
   });
 
-  // Hook generator
+  // Hook generator. Its action rejects, having changed nothing, if its file
+  // exists already or the hooks entry's barrel exports the name already, and
+  // turbo gen prints why.
+  plop.setActionType("write hook", (answers) => {
+    const { title } = answers as ComponentPrompt;
+    return generateHook({
+      root: answers.turbo?.paths?.root,
+      slug: dashCase(title),
+      name: camelCase(title),
+    });
+  });
+
   plop.setGenerator("hook", {
     description: "Scaffolds a hook",
     prompts: [
@@ -111,30 +111,21 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         message: "Hook name:",
         validate: (input: string) => {
           if (input.includes(".")) {
-            return "Component name cannot include an extension";
+            return "Hook name cannot include an extension";
           }
           if (input.includes(" ")) {
-            return "Component name cannot include spaces";
+            return "Hook name cannot include spaces";
           }
           if (!input) {
-            return "Component name is required";
+            return "Hook name is required";
           }
-          return true;
+          return hookNameError(dashCase(input), camelCase(input)) ?? true;
         },
       },
     ],
     actions: (data) => {
-      const _data = data as ComponentPrompt;
-      const actions: PlopTypes.ActionType[] = [];
-
-      if (_data.framework === "react") {
-        actions.push({
-          type: "add",
-          path: "{{ turbo.paths.root }}/packages/react/src/hooks/{{ dashCase title }}.ts",
-          templateFile: "templates/react-hook.hbs",
-        });
-      }
-      return actions;
+      const { framework } = data as ComponentPrompt;
+      return framework === "react" ? [{ type: "write hook" }] : [];
     },
   });
 
@@ -142,8 +133,6 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
   // exists already or it can't list it in the sidebar, and turbo gen prints
   // why. A page's file name is its title in dash-case, as the other
   // generators' are.
-  const dashCase: (text: string) => string = plop.getHelper("dashCase");
-
   plop.setActionType("write docs page", (answers) => {
     const { group, title } = answers as MDXPrompt;
     return generateDocsPage({

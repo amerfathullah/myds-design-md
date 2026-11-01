@@ -11,15 +11,15 @@ import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
-const sources = resolve(__dirname, "icons");
-const legacySources = readdirSync(sources).filter(
+const sourceDirectory = resolve(__dirname, "icons");
+const legacySources = readdirSync(sourceDirectory).filter(
   (file) => file.startsWith("legacy-") && file.endsWith(".svg"),
 );
 
 /** Each fill and stroke the source sets, and whether a mask or clip-path holds it */
 function paints(file: string) {
   const svg = new DOMParser().parseFromString(
-    readFileSync(resolve(sources, file), "utf8"),
+    readFileSync(resolve(sourceDirectory, file), "utf8"),
     "image/svg+xml",
   );
   return [...svg.querySelectorAll("[fill], [stroke]")].flatMap((element) =>
@@ -27,7 +27,13 @@ function paints(file: string) {
       const value = element.getAttribute(property);
       return value === null
         ? []
-        : [{ property, value, shape: !!element.closest("mask, clipPath") }];
+        : [
+            {
+              property,
+              value,
+              inMaskOrClipPath: !!element.closest("mask, clipPath"),
+            },
+          ];
     }),
   );
 }
@@ -45,10 +51,10 @@ describe.each(legacySources)("%s", (file) => {
 
   test("paints no other colour, apart from a mask's or clip-path's white", () => {
     const fixed = paints(file).filter(
-      ({ value, shape }) =>
+      ({ value, inMaskOrClipPath }) =>
         !isIconColour(value) &&
         value !== "none" &&
-        !(shape && value === "white"),
+        !(inMaskOrClipPath && value === "white"),
     );
     expect(fixed).toEqual([]);
   });

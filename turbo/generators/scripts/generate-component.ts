@@ -83,11 +83,11 @@ export async function generateComponent({
   const problems = [
     ...(existing.length > 0
       ? [
-          `${existing.join(", ")} already ${existing.length === 1 ? "exists" : "exist"}`,
+          `${existing.join(", ")} ${existing.length === 1 ? "exists" : "exist"} already`,
         ]
       : []),
     ...(Object.hasOwn(manifest.exports, subpath)
-      ? [`${relative(root, manifestPath)} already exports ${subpath}`]
+      ? [`${relative(root, manifestPath)} exports ${subpath} already`]
       : []),
   ];
   if (problems.length > 0) {

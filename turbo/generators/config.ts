@@ -18,6 +18,11 @@ interface ComponentPrompt {
   has_story: boolean;
 }
 
+interface HookPrompt {
+  framework: "react";
+  title: string;
+}
+
 interface MDXPrompt {
   group: DocsGroup;
   title: string;
@@ -77,17 +82,14 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         message: "Include a story? (apps/storybook)",
       },
     ],
-    actions: (data) => {
-      const { framework } = data as ComponentPrompt;
-      return framework === "react" ? [{ type: "write component" }] : [];
-    },
+    actions: [{ type: "write component" }],
   });
 
   // Hook generator. Its action rejects, having changed nothing, if its file
   // exists already or the hooks entry's barrel exports the name already, and
   // turbo gen prints why.
   plop.setActionType("write hook", (answers) => {
-    const { title } = answers as ComponentPrompt;
+    const { title } = answers as HookPrompt;
     return generateHook({
       root: answers.turbo?.paths?.root,
       slug: dashCase(title),
@@ -123,10 +125,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         },
       },
     ],
-    actions: (data) => {
-      const { framework } = data as ComponentPrompt;
-      return framework === "react" ? [{ type: "write hook" }] : [];
-    },
+    actions: [{ type: "write hook" }],
   });
 
   // MDX generator. Its action rejects, having changed nothing, if the page

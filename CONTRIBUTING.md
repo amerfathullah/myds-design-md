@@ -42,7 +42,7 @@ To start a hook, run this with its name, which starts with `use`:
 pnpm exec turbo gen hook --args react use-probe
 ```
 
-It writes `packages/react/src/hooks/use-probe.ts`, a typed hook that holds a piece of state, and exports `useProbe` from `@amerfathullah/myds-react/hooks` by adding it to the entry's barrel, `index.ts`. Change the hook into the one you need.
+It writes `packages/react/src/hooks/use-probe.ts`, a typed hook that holds a value, and exports `useProbe` from `@amerfathullah/myds-react/hooks` by adding it to the entry's barrel, `index.ts`. Change the hook into the one you need.
 
 Both are formatted with the repository's prettier. If a file a generator would add exists already, or the name is exported already, it changes nothing, not even `package.json` or the barrel, and prints why. turbo gen can exit 0 even then, so read what it prints. Neither writes tests, docs pages, `DESIGN.md` entries or a changeset: add those yourself.
 

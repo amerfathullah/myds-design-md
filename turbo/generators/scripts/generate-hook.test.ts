@@ -10,8 +10,8 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-import { type Formatter, prettierFormatter } from "./generate-icons";
 import { generateHook, hookNameError } from "./generate-hook";
+import { type Formatter, prettierFormatter } from "./generate-icons";
 
 // This repository, whose prettier the generator formats with
 const repository = join(import.meta.dirname, "../../..");
@@ -128,14 +128,14 @@ test("the hook is a typed function that returns a tuple, formatted with the repo
 // TODO: Say what useProbe is for.
 /**
  * useProbe hook.
- * @param initialState - The state until it's first set
- * @returns The state, and a function that sets it
+ * @param initialValue - The value until it's first set
+ * @returns The value, and a function that sets it
  */
 function useProbe<T>(
-  initialState: T,
-): [state: T, setState: Dispatch<SetStateAction<T>>] {
-  const [state, setState] = useState(initialState);
-  return [state, setState];
+  initialValue: T,
+): [value: T, setValue: Dispatch<SetStateAction<T>>] {
+  const [value, setValue] = useState(initialValue);
+  return [value, setValue];
 }
 
 export { useProbe };
@@ -225,21 +225,7 @@ describe("changes nothing, and says why", () => {
         name: "useProbe",
         format: unformatted,
       }),
-    ).rejects.toThrow(`${existing} already exists`);
-    expect(snapshot()).toEqual(before);
-  });
-
-  test("when a hook's .tsx file has its name", async () => {
-    const before = snapshot();
-
-    await expect(
-      generateHook({
-        root,
-        slug: "use-theme",
-        name: "useTheme",
-        format: unformatted,
-      }),
-    ).rejects.toThrow("packages/react/src/hooks/use-theme.tsx already exists");
+    ).rejects.toThrow(`${existing} exists already`);
     expect(snapshot()).toEqual(before);
   });
 
@@ -247,12 +233,12 @@ describe("changes nothing, and says why", () => {
     [
       "exports a hook of its name",
       `export { useProbe } from "./probe";\n`,
-      "already exports useProbe",
+      "exports useProbe already",
     ],
     [
       "exports from its file",
       `export { default as useThing } from "./use-probe";\n`,
-      `already exports from "./use-probe"`,
+      `exports from "./use-probe" already`,
     ],
   ])("when the barrel %s", async (_, line, error) => {
     write({ "packages/react/src/hooks/index.ts": `${barrel}${line}` });

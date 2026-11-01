@@ -77,12 +77,12 @@ export async function generateHook({
     .filter((path) => existsSync(path))
     .map((path) => relative(root, path));
   const problems = [
-    ...existing.map((path) => `${path} already exists`),
+    ...existing.map((path) => `${path} exists already`),
     ...(new RegExp(`\\b${name}\\b`).test(barrel)
-      ? [`${relative(root, barrelPath)} already exports ${name}`]
+      ? [`${relative(root, barrelPath)} exports ${name} already`]
       : []),
     ...(new RegExp(`["']\\./${slug}(\\.tsx?)?["']`).test(barrel)
-      ? [`${relative(root, barrelPath)} already exports from "./${slug}"`]
+      ? [`${relative(root, barrelPath)} exports from "./${slug}" already`]
       : []),
   ];
   if (problems.length > 0) {
@@ -113,14 +113,14 @@ function hook(name: string): string {
 // TODO: Say what ${name} is for.
 /**
  * ${name} hook.
- * @param initialState - The state until it's first set
- * @returns The state, and a function that sets it
+ * @param initialValue - The value until it's first set
+ * @returns The value, and a function that sets it
  */
 function ${name}<T>(
-  initialState: T,
-): [state: T, setState: Dispatch<SetStateAction<T>>] {
-  const [state, setState] = useState(initialState);
-  return [state, setState];
+  initialValue: T,
+): [value: T, setValue: Dispatch<SetStateAction<T>>] {
+  const [value, setValue] = useState(initialValue);
+  return [value, setValue];
 }
 
 export { ${name} };

@@ -391,7 +391,7 @@ describe("changes nothing, and says why", () => {
         story: true,
         format: unformatted,
       }),
-    ).rejects.toThrow(`${existing} already exists`);
+    ).rejects.toThrow(`${existing} exists already`);
     expect(snapshot()).toEqual(before);
   });
 
@@ -407,7 +407,7 @@ describe("changes nothing, and says why", () => {
         format: unformatted,
       }),
     ).rejects.toThrow(
-      "apps/storybook/stories/article.stories.tsx already exists",
+      "apps/storybook/stories/article.stories.tsx exists already",
     );
     expect(snapshot()).toEqual(before);
   });
@@ -425,7 +425,7 @@ describe("changes nothing, and says why", () => {
         format: unformatted,
       }),
     ).rejects.toThrow(
-      "packages/react/src/components/probe-x.tsx, apps/storybook/stories/probe-x.stories.tsx already exist",
+      "packages/react/src/components/probe-x.tsx, apps/storybook/stories/probe-x.stories.tsx exist already",
     );
   });
 
@@ -445,7 +445,7 @@ describe("changes nothing, and says why", () => {
           format: unformatted,
         }),
       ).rejects.toThrow(
-        `packages/react/package.json already exports ./${slug}`,
+        `packages/react/package.json exports ./${slug} already`,
       );
       expect(snapshot()).toEqual(before);
     },

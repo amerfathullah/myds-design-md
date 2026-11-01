@@ -8,8 +8,8 @@ The Tailwind import now sets the scroll, focus and underline rules that only `fu
 
 - `scroll-padding-top: 65px` on `html`, so an in-page link's target, the SkipLink's included, lands below the 64px sticky Navbar instead of under it. The value doesn't change with the breakpoint: below `md:` the Navbar is 56px, so targets land 9px lower than they need to.
 - Smooth scrolling (`scroll-behavior: smooth` on `html`), unless the user prefers reduced motion. Under `prefers-reduced-motion: reduce`, in-page links jump.
-- No outline when focus isn't `:focus-visible`. A mouse click shows no outline, including one you set with a `focus:outline-*` utility, so a clicked TableCell no longer shows its 3px outline. Keyboard focus still shows it. The rule doesn't use `@apply`, so the import still compiles under `@import "tailwindcss" prefix(…)`.
-- `text-underline-position: from-font` on `underline` and its variants, such as `hover:underline` and `focus-visible:underline`. Nothing is generated when your sources don't use `underline`.
+- No outline when focus isn't `:focus-visible`, as after a mouse click on a button or link. That hides an outline-width utility's outline too, so a clicked TableCell no longer shows its 3px `focus:outline-[3px]` outline; keyboard focus still shows it. An outline whose style a utility sets, such as `focus:outline-solid`, still shows on a click. The rule doesn't use `@apply`, so the import still compiles under `@import "tailwindcss" prefix(…)`.
+- `text-underline-position: from-font` on `underline` and its Tailwind variants, such as `hover:underline` and `focus-visible:underline`. Nothing is generated when your sources don't use `underline`.
 
 **`full.css` changes too:**
 

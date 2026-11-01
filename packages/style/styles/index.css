@@ -345,8 +345,9 @@
 }
 
 /*
- * Extends Tailwind's `underline`, variants included: the line sits where the
- * font's metrics put it. No shorthand, so `decoration-*` utilities still apply.
+ * Extends Tailwind's `underline`, Tailwind variants included: the line sits
+ * where the font's metrics put it. No shorthand, so `decoration-*` utilities
+ * still apply.
  */
 @utility underline {
   text-underline-position: from-font;
@@ -395,8 +396,10 @@
   }
 
   /*
-   * No outline on mouse focus, only on keyboard focus: Tailwind's
-   * outline-hidden, written out because `@apply` fails under a Tailwind prefix
+   * No outline when focus isn't :focus-visible, as after a mouse click on a
+   * button or link: Tailwind's outline-hidden, written out because `@apply`
+   * fails under a Tailwind prefix. Outline-width utilities such as
+   * `focus:outline-[3px]` read --tw-outline-style, so they're hidden too.
    */
   :focus:not(:focus-visible) {
     --tw-outline-style: none;

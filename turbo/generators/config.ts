@@ -1,6 +1,7 @@
 import { PlopTypes } from "@turbo/gen";
-import convertIcon from "./scripts/convert-icon";
-import barrelIcon from "./scripts/barrel-icon";
+
+import { generateIcons } from "./scripts/generate-icons";
+
 interface ComponentPrompt {
   framework: "react" | "vue" | "angular";
   title: string;
@@ -181,7 +182,15 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
     },
   });
 
-  // Icon generator
+  // Icon generator. Its action rejects, having changed nothing, if it can't
+  // write every icon, and turbo gen prints why.
+  plop.setActionType("write icons", (answers, config) =>
+    generateIcons({
+      root: answers.turbo?.paths?.root,
+      framework: config.framework,
+    }),
+  );
+
   plop.setGenerator("icon", {
     description: "Builds React component icons from SVG",
     prompts: [
@@ -211,12 +220,8 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
       // },
     ],
     actions: (data) => {
-      const _data = data as ComponentPrompt;
-      const actions: PlopTypes.ActionType[] = [];
-
-      convertIcon({ framework: _data.framework });
-      barrelIcon({ framework: _data.framework });
-      return actions;
+      const { framework } = data as ComponentPrompt;
+      return [{ type: "write icons", framework }];
     },
   });
 }

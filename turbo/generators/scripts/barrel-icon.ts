@@ -1,10 +1,7 @@
-import * as fs from "fs";
-import * as path from "path";
-import { icon_directory } from "./util";
-
-interface MainScriptProps {
-  framework: "react" | "vue" | "angular";
-}
+/**
+ * Writes the icon entry's barrel, `index.ts`. The output isn't formatted: the
+ * generator formats it with the repository's prettier.
+ */
 
 // National marks aren't icons (ADR-0007). Their components sit outside the
 // icon directory and their SVGs outside the icon sources, so the convert step
@@ -40,33 +37,15 @@ export const MalaysiaFlagIcon: FunctionComponent<SVGProps<SVGSVGElement>> =
   MalaysiaFlag;
 `;
 
-export default (props: MainScriptProps) => {
-  try {
-    const icon_dir = path.resolve(__dirname, icon_directory[props.framework]);
-    // Get all files in the icons directory
-    const files = fs.readdirSync(icon_dir);
-    // Filter out non-TypeScript files
-    const tsx_files = files.filter((file) => file.endsWith(".tsx"));
+/** The barrel that re-exports each icon component, in the order given */
+export function barrelIcon(icons: string[]): string {
+  const exportStatements = icons
+    .map((icon) => `export * from "./${icon}";`)
+    .join("\n");
 
-    // Generate export statements
-    const exportStatements = tsx_files
-      .map((file) => {
-        const fileNameWithoutExtension = path.basename(file, ".tsx");
-        return `export * from './${fileNameWithoutExtension}';`;
-      })
-      .join("\n");
-
-    // Write export statements to index.ts
-    fs.writeFileSync(
-      path.join(icon_dir, "index.ts"),
-      [
-        nationalMarkImports,
-        exportStatements,
-        deprecatedNationalMarkExports,
-      ].join("\n"),
-    );
-    console.log("Barrel file created successfully.");
-  } catch (error) {
-    console.error("Error creating barrel file: ", error);
-  }
-};
+  return [
+    nationalMarkImports,
+    exportStatements,
+    deprecatedNationalMarkExports,
+  ].join("\n");
+}

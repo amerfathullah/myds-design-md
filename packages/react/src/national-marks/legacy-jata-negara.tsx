@@ -2,11 +2,12 @@ import React from "react";
 import { FunctionComponent, SVGProps } from "react";
 
 /**
- * JataNegara Icon
- * @param className
- * @returns JataNegaraIcon
+ * The Jata Negara, 32×32 in full colour. It's a national mark, not an icon,
+ * and no library component shows it. No public entry exports it except
+ * `@amerfathullah/myds-react/icon`, as the deprecated `JataNegaraIcon`, and
+ * the next major deletes it (ADR-0007).
  */
-export const JataNegaraIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+export const JataNegara: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
 ) => {
   return (

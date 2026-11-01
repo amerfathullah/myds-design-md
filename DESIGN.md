@@ -1444,7 +1444,7 @@ Motion in MYDS is short and functional: the guideline says it should guide, not 
 
 ## Iconography
 
-- **Source.** Import `<Name>Icon` components from `@amerfathullah/myds-react/icon` (220 icons). `MalaysiaFlagIcon` (32×16, full colour) is among them, but it is a national mark: only an official service may show it, and the Masthead already does.
+- **Source.** Import `<Name>Icon` components from `@amerfathullah/myds-react/icon` (220 icons). Two of them, `MalaysiaFlagIcon` (32×16, full colour) and `JataNegaraIcon`, are national marks, not icons for you to import. Both are deprecated on the entry and leave it at the next major. Only an official service may show a national mark: the Masthead already shows the flag, and an official service that shows the Jata Negara supplies the image itself, through the Navbar or Footer logo slot.
 - **Drawing.** Generic, WYSIWYG and social icons are drawn on a 20×20 viewBox in `currentColor` (a stroke for outline icons, a fill for `-fill` icons, text-formatting glyphs and logos), so you colour them with a `txt-*` token. The full-size legacy marks (32×32) also take `currentColor`. An icon is a glyph, so a text token is on-role. These keep fixed colours: the `*-media` file icons (50×50), the 24×24 `Mini…` legacy set (`gray-800` #27272A, which doesn't re-theme), `JataNegaraIcon`, Google's four-colour logo, the badges on `PdfIcon`, `WordIcon` and `ExcelIcon`, the white tick in `CheckCircleFillIcon`, and the flag. The stroke is 1.5px (`stroke-[1.5px]` on button, dropdown, dialog and tab icons); checkbox ticks are 1.5px small and 2px at medium and large.
 - **Size comes from the host component.** Button icons are 16px (small) and 20px (medium and large). Tab icons are 16/20, input icons 18/20/24, date- and time-field icons 16/18/20, and select icons 16/20/20. The spinner is 16/20/24, callout and toast icons are 20px, and the alert-dialog icon is 42px.
 - **Sets.** The outline set has a few filled counterparts (`-fill`, and `document-filled`). There are also WYSIWYG glyphs (bold, italic, underline, alignment, lists …), social logos (Facebook, Instagram, X as `TwitterXIcon`, TikTok, YouTube, LinkedIn, Telegram, WhatsApp, GitHub, Figma, Google, RSS), media file icons (`PDFMediaIcon`, `WordMediaIcon`, `ExcelMediaIcon`, `PowerpointMediaIcon`) and 60 legacy icons: 30 full-size (29 agency marks and Jata Negara) and 30 24px `Mini…` icons. Their files are named `legacy-*`, but the components drop the prefix: `JataNegaraIcon`, `PolicePDRMIcon`, `MiniPolicePDRMIcon`. Every other name follows its file (`chevron-down` is `ChevronDownIcon`), except `PDFMediaIcon` and `RSSIcon`.
@@ -1611,7 +1611,7 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 ### Iconography
 
 - **Divergence:** large buttons use a 20px icon; the guideline gives 24px.
-- **Gap:** no foundation page gives usage rules for the Jata Negara, and the exported `JataNegaraIcon` (`legacy-jata-negara`) is unused by the library.
+- **Gap:** no foundation page gives usage rules for the Jata Negara. `JataNegaraIcon` (`legacy-jata-negara`) is unused by the library, and its export is deprecated.
 
 ### Components
 

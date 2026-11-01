@@ -26,6 +26,26 @@ Our code formatting rules are defined in the [prettierc](./.prettierrc) and [\_e
 
 Running tests
 
+## Components and hooks
+
+To start a component, run this from anywhere in the repository, with its name in dash-case and whether it gets a story:
+
+```sh
+pnpm exec turbo gen component --args react probe-x true
+```
+
+It writes `packages/react/src/components/probe-x.tsx`, which exports `ProbeX`: a `div` that takes a div's own props, forwards its ref and merges its `className` with `clx`. It exports the component as `@amerfathullah/myds-react/probe-x`, adding the entry last in the react package's `exports`. With `true`, it also writes a story, `apps/storybook/stories/probe-x.stories.tsx`. Each file has TODOs for you to fill in.
+
+To start a hook, run this with its name, which starts with `use`:
+
+```sh
+pnpm exec turbo gen hook --args react use-probe
+```
+
+It writes `packages/react/src/hooks/use-probe.ts`, a typed hook that holds a value, and exports `useProbe` from `@amerfathullah/myds-react/hooks` by adding it to the entry's barrel, `index.ts`. Change the hook into the one you need.
+
+Both are formatted with the repository's prettier. If a file a generator would add exists already, or the name is exported already, it changes nothing, not even `package.json` or the barrel, and prints why. turbo gen can exit 0 even then, so read what it prints. Neither writes tests, docs pages, `DESIGN.md` entries or a changeset: add those yourself.
+
 ## Icons
 
 The icon components in `packages/react/src/icons`, which `@amerfathullah/myds-react/icon` exports, are generated from the SVGs in `packages/react/src/svg/icons`, the icon sources. So is the entry's barrel, `index.ts`. To add or change an icon:

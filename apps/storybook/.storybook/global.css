@@ -8,30 +8,6 @@
 @source "../../../packages/react/src";
 @source not "../../../packages/react/src/**/*.test.ts";
 
-@layer base {
-  html {
-    box-sizing: border-box;
-    scroll-behavior: smooth;
-    scroll-padding-top: 65px;
-  }
-
-  *,
-  *:before,
-  *:after {
-    box-sizing: inherit;
-  }
-
-  :focus:not(:focus-visible) {
-    @apply outline-hidden;
-  }
-}
-
-@layer utilities {
-  .underline {
-    text-decoration: underline;
-    text-underline-position: from-font;
-  }
-}
 /* The overwrite is related to this issue https://github.com/chanzuckerberg/axe-storybook-testing/issues/39 */
 .sb-show-main,
 #addon-backgrounds-color .sb-show-main,

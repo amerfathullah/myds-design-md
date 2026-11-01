@@ -69,8 +69,13 @@
     @apply text-txt-black-700;
   }
 
+  /*
+   * Fumadocs headings carry their own scroll margin (scroll-m-28), and there's
+   * no MYDS Navbar to clear, so drop the 65px scroll padding MYDS adds for it.
+   * MYDS scrolls smoothly, except under reduced motion.
+   */
   html {
-    @apply scroll-smooth;
+    scroll-padding-top: 0;
   }
 
   /** Need to do this because fumadocs preset is overriding custom breakpoints. For: navbar, footer */

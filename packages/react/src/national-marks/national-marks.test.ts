@@ -1,11 +1,11 @@
 // The national marks: the Malaysia flag, which the Masthead shows, and the
 // Jata Negara. They aren't icons (ADR-0007), so they stay out of the icon
-// generator's directories: its convert step clears the icon directory and
-// rebuilds it from the SVG sources, and its barrel step re-exports every
-// component it finds there. A mark in either would come back from a
-// regeneration as a plain icon, or not at all. Until the next major,
-// `@amerfathullah/myds-react/icon` still exports both, deprecated, as these
-// same components.
+// generator's directories: it rebuilds the icon directory from the SVG
+// sources, writing a component for each SVG and a barrel that re-exports them
+// all, and removes any component whose SVG is gone. A mark in either would
+// come back from a regeneration as a plain icon, or not at all. Until the next
+// major, `@amerfathullah/myds-react/icon` still exports both, deprecated, as
+// these same components.
 /// <reference types="node" />
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";

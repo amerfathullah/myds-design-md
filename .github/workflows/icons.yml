@@ -58,12 +58,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The generator package's type-check and tests: the icon generator's, and
-      # this check's
-      - name: Type-check the icon generator and this check
+      # The generator package's type-check and tests: the icon generator's, the
+      # other generators', and this check's
+      - name: Type-check the generators and this check
         run: pnpm --filter @govtechmy/myds-cli check-types
 
-      - name: Test the icon generator and this check
+      - name: Test the generators and this check
         run: pnpm --filter @govtechmy/myds-cli test
 
       # So a generator that writes nothing can't pass: every committed icon

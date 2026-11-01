@@ -297,7 +297,7 @@ export const Themes = ({ resolvedTheme }: { resolvedTheme?: string }) => (
 export const Icons = () => (
   <>
     <ChevronDownIcon className="size-4" aria-hidden />
-    <MalaysiaFlagIcon className="inline-block aspect-auto w-fit shrink-0" />
+    <MalaysiaFlagIcon className="h-4 w-auto" />
     <JataNegaraIcon width={32} height={32} />
   </>
 );

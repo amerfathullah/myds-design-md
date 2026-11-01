@@ -15,14 +15,10 @@ import { describe, expect, test } from "vitest";
 
 import { MastheadHeader } from "../components/masthead";
 import * as icons from "../icons";
-import { JataNegara } from "./legacy-jata-negara";
 import { MalaysiaFlag } from "./malaysia-flag";
+import { marks, mastheadFlagClass } from "./national-marks-test-cases";
 
 const src = resolve(__dirname, "..");
-const marks = [
-  { file: "malaysia-flag", component: MalaysiaFlag, icon: "MalaysiaFlagIcon" },
-  { file: "legacy-jata-negara", component: JataNegara, icon: "JataNegaraIcon" },
-];
 
 describe("the icon generator's directories hold no national mark", () => {
   test("its SVG sources", () => {
@@ -35,13 +31,13 @@ describe("the icon generator's directories hold no national mark", () => {
     const components = readdirSync(directory).filter((file) =>
       file.endsWith(".tsx"),
     );
-    for (const { file, icon } of marks) {
+    for (const { file, iconExport } of marks) {
       expect(components).not.toContain(`${file}.tsx`);
       for (const component of components) {
         expect(
           readFileSync(resolve(directory, component), "utf8"),
           component,
-        ).not.toMatch(new RegExp(`\\b${icon}\\b`));
+        ).not.toMatch(new RegExp(`\\b${iconExport}\\b`));
       }
     }
   });
@@ -54,9 +50,9 @@ describe("the icon generator's directories hold no national mark", () => {
 });
 
 test.each(marks)(
-  "`/icon` still exports $icon, as the mark's own component",
-  ({ component, icon }) => {
-    expect((icons as Record<string, unknown>)[icon]).toBe(component);
+  "`/icon` still exports $iconExport, as the mark's own component",
+  ({ component, iconExport }) => {
+    expect((icons as Record<string, unknown>)[iconExport]).toBe(component);
   },
 );
 
@@ -67,9 +63,7 @@ test("the Masthead's header shows the flag", () => {
     ),
   ).toContain(
     renderToStaticMarkup(
-      createElement(MalaysiaFlag, {
-        className: "inline-block aspect-auto w-fit shrink-0",
-      }),
+      createElement(MalaysiaFlag, { className: mastheadFlagClass }),
     ),
   );
 });

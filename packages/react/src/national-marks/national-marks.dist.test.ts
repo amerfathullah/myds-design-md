@@ -13,8 +13,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import { describe, expect, test } from "vitest";
 
-import { JataNegara } from "./legacy-jata-negara";
-import { MalaysiaFlag } from "./malaysia-flag";
+import { marks, mastheadFlagClass } from "./national-marks-test-cases";
 
 const root = resolve(__dirname, "../..");
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
@@ -26,25 +25,12 @@ const entries = Object.keys(pkg.exports).map((key) =>
   key.replace(/^\./, pkg.name),
 );
 
-const mastheadClass = "inline-block aspect-auto w-fit shrink-0";
 const propSets = [
   {},
   { className: "h-8 w-auto" },
-  { className: mastheadClass },
+  { className: mastheadFlagClass },
 ];
-const marks = [
-  {
-    icon: "MalaysiaFlagIcon",
-    component: MalaysiaFlag,
-    note: /\bThe Masthead already shows it\b/,
-  },
-  {
-    icon: "JataNegaraIcon",
-    component: JataNegara,
-    note: /\bsupplies the image itself, through the Navbar or Footer logo slot\b/,
-  },
-] as const;
-const icons: string[] = marks.map(({ icon }) => icon);
+const iconExports = marks.map(({ iconExport }) => iconExport);
 
 // A Node program that loads every entry through the `import` or `require`
 // condition. It prints the file `/icon` resolved to, each entry's export
@@ -52,18 +38,18 @@ const icons: string[] = marks.map(({ icon }) => icon);
 // Masthead's header.
 const program = (load: string, resolveEntry: string) => `
   ${load}
-  const marks = ${JSON.stringify(icons)};
+  const iconExports = ${JSON.stringify(iconExports)};
   const propSets = ${JSON.stringify(propSets)};
-  const icon = modules[${JSON.stringify(iconEntry)}];
+  const iconModule = modules[${JSON.stringify(iconEntry)}];
   const { MastheadHeader } = modules[${JSON.stringify(`${pkg.name}/masthead`)}];
   console.log(JSON.stringify({
     file: ${resolveEntry}(${JSON.stringify(iconEntry)}),
     names: Object.fromEntries(
       Object.entries(modules).map(([entry, module]) => [entry, Object.keys(module)]),
     ),
-    markup: Object.fromEntries(marks.map((mark) => [
-      mark,
-      propSets.map((props) => renderToStaticMarkup(createElement(icon[mark], props))),
+    markup: Object.fromEntries(iconExports.map((name) => [
+      name,
+      propSets.map((props) => renderToStaticMarkup(createElement(iconModule[name], props))),
     ])),
     masthead: renderToStaticMarkup(
       createElement(MastheadHeader, null, "An official website"),
@@ -182,16 +168,16 @@ describe.each([
   test("`/icon` exports 220 names, both marks among them", () => {
     const names = built.names[iconEntry];
     expect(names).toHaveLength(220);
-    expect(names).toEqual(expect.arrayContaining(icons));
+    expect(names).toEqual(expect.arrayContaining(iconExports));
     expect(iconTypes.map(({ name }) => name).sort()).toEqual(
       [...(names ?? [])].sort(),
     );
   });
 
   test.each(marks)(
-    "`/icon` renders $icon as the mark's own component does",
-    ({ icon, component }) => {
-      expect(built.markup[icon]).toEqual(
+    "`/icon` renders $iconExport as the mark's own component does",
+    ({ iconExport, component }) => {
+      expect(built.markup[iconExport]).toEqual(
         propSets.map((props) =>
           renderToStaticMarkup(createElement(component, props)),
         ),
@@ -200,9 +186,9 @@ describe.each([
   );
 
   test.each(marks)(
-    "`/icon` declares $icon deprecated, as a national mark leaving it at the next major",
-    ({ icon, note }) => {
-      const declared = iconTypes.find(({ name }) => name === icon);
+    "`/icon` declares $iconExport deprecated, as a national mark leaving it at the next major",
+    ({ iconExport, note }) => {
+      const declared = iconTypes.find(({ name }) => name === iconExport);
       expect(declared?.type).toBe("FunctionComponent<SVGProps<SVGSVGElement>>");
       expect(declared?.deprecated).toHaveLength(1);
       const [text] = declared?.deprecated ?? [];
@@ -221,16 +207,20 @@ describe.each([
         .filter(({ deprecated }) => deprecated.length)
         .map(({ name }) => name)
         .sort(),
-    ).toEqual([...icons].sort());
+    ).toEqual([...iconExports].sort());
   });
 
+  // under either the deprecated name or the component's own
   test("no other entry exports either mark", () => {
     for (const entry of entries.filter((entry) => entry !== iconEntry)) {
       const names = [
         ...(built.names[entry] ?? []),
         ...types.exportsOf(entry).map(({ name }) => name),
       ];
-      for (const icon of icons) expect(names, entry).not.toContain(icon);
+      for (const { privateName, iconExport } of marks) {
+        expect(names, entry).not.toContain(iconExport);
+        expect(names, entry).not.toContain(privateName);
+      }
     }
   });
 

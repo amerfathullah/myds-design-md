@@ -14,13 +14,22 @@ on:
       # The icon SVG sources, and the components and barrel made from them
       - "packages/react/src/svg/icons/**"
       - "packages/react/src/icons/**"
-      # The generator, and this check's script, turbo/generators/scripts/check-icons.sh
+      # The generator, and this check's script, turbo/generators/scripts/check-icons.sh,
+      # but not the other generators' templates
       - "turbo/generators/**"
-      # turbo's version, which decides the @turbo/gen that turbo gen fetches;
-      # prettier's version and config, which the generator formats its output with
+      - "!turbo/generators/templates/**"
+      # turbo's version, which decides the @turbo/gen that turbo gen fetches,
+      # and prettier's
       - "package.json"
       - "pnpm-lock.yaml"
-      - ".prettierrc"
+      # The prettier config the generator formats its output with. Prettier
+      # reads the config nearest each icon, and .editorconfig, so these count
+      # wherever they are, and so does the react package's package.json, where
+      # a "prettier" key would be one.
+      - "**/.prettierrc*"
+      - "**/prettier.config.*"
+      - "**/.editorconfig"
+      - "packages/react/package.json"
       - ".github/workflows/icons.yml"
 
 concurrency:

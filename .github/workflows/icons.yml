@@ -1,0 +1,64 @@
+name: "icons"
+
+# The icon components in packages/react/src/icons, and their barrel, are the
+# icon generator's output and nothing else: an icon's markup changes in its SVG
+# source, and a rule for every icon in the generator, never in the component
+# (CONTRIBUTING.md). This regenerates them from the commit and fails if that
+# adds, modifies or deletes any file, anywhere.
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      # The icon SVG sources, and the components and barrel made from them
+      - "packages/react/src/svg/icons/**"
+      - "packages/react/src/icons/**"
+      # The generator, and this check's script, turbo/generators/scripts/check-icons.sh
+      - "turbo/generators/**"
+      # turbo's version, which decides the @turbo/gen that turbo gen fetches;
+      # prettier's version and config, which the generator formats its output with
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".prettierrc"
+      - ".github/workflows/icons.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # So a generator that writes nothing can't pass: every committed icon
+      # would be deleted
+      - name: Empty the icon directory
+        run: bash turbo/generators/scripts/check-icons.sh empty
+
+      # turbo gen can exit 0 when the generator fails, so the next step decides,
+      # whatever this one's exit code. Its "wrote nothing" message names this step.
+      - name: Regenerate the icons from their SVG sources
+        continue-on-error: true
+        timeout-minutes: 10
+        run: pnpm exec turbo gen icon --args react
+
+      - name: Check that regenerating the icons changed no file
+        run: bash turbo/generators/scripts/check-icons.sh check

@@ -201,4 +201,15 @@ describe("the default formatter", () => {
       ]),
     ).resolves.toEqual([{ path: file, content: `export const a = "b";\n` }]);
   });
+
+  test("names the file it can't format", async () => {
+    const file = join(repository, "packages/react/src/icons/commented.tsx");
+
+    // An SVG's XML comment isn't valid JSX
+    await expect(
+      prettierFormatter(repository)([
+        { path: file, content: `export const a = <svg><!-- hi --></svg>;` },
+      ]),
+    ).rejects.toThrow(`Can't format ${file}`);
+  });
 });

@@ -146,16 +146,22 @@ export function prettierFormatter(root: string): Formatter {
     ) as Prettier;
     return Promise.all(
       files.map(async ({ path, content }) => {
-        const config = await prettier.resolveConfig(path, {
-          editorconfig: true,
-        });
-        return {
-          path,
-          content: await prettier.format(content, {
-            ...config,
-            filepath: path,
-          }),
-        };
+        try {
+          const config = await prettier.resolveConfig(path, {
+            editorconfig: true,
+          });
+          return {
+            path,
+            content: await prettier.format(content, {
+              ...config,
+              filepath: path,
+            }),
+          };
+        } catch (error) {
+          throw new Error(`Can't format ${path}: ${message(error)}`, {
+            cause: error,
+          });
+        }
       }),
     );
   };

@@ -111,11 +111,11 @@ function jsxAttribute(name: string, value: string, singleQuoted: boolean) {
   if (name === "style") return `style={${styleObject(value)}}`;
 
   const quote = singleQuoted ? "'" : '"';
-  const color =
+  const jsxValue =
     (name === "fill" || name === "stroke") && value.toUpperCase() === "#18181B"
       ? "currentColor"
       : value;
-  return `${propName(name)}=${quote}${color}${quote}`;
+  return `${propName(name)}=${quote}${jsxValue}${quote}`;
 }
 
 function propName(name: string): string {

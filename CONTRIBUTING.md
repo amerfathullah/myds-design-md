@@ -26,6 +26,30 @@ Our code formatting rules are defined in the [prettierc](./.prettierrc) and [\_e
 
 Running tests
 
+## Icons
+
+The icon components in `packages/react/src/icons`, which `@amerfathullah/myds-react/icon` exports, are generated from the SVGs in `packages/react/src/svg/icons`, the icon sources. So is the entry's barrel, `index.ts`. To add or change an icon:
+
+1. Add or edit its SVG in `packages/react/src/svg/icons`.
+   - Name the file in lower-case dash-case. `arrow-back.svg` becomes `arrow-back.tsx`, which exports `ArrowBackIcon`.
+   - Words on the generator's upper-case list (`turbo/generators/scripts/convert-icon.ts`), mostly agency acronyms, stay upper-case. A `legacy-` prefix stays in the file name but leaves the component's: `legacy-police-pdrm.svg` exports `PolicePDRMIcon`.
+   - A fill or stroke of `#18181B` becomes `currentColor`, so that part takes the text colour. Every other colour stays fixed.
+2. From anywhere in the repository, run:
+
+   ```sh
+   pnpm exec turbo gen icon --args react
+   ```
+
+   It rebuilds every component in `packages/react/src/icons`, and the barrel, from the icon sources, formatted with the repository's prettier. It removes a component whose SVG is gone. If it can't read or convert every SVG, it changes nothing and prints why. Because it rewrites the whole directory, a change made only in a component is lost the next time it runs.
+
+3. Check `git diff`: only the icons you added, changed or removed, and the barrel, should change.
+4. Update these by hand. The generator doesn't touch them:
+   - the docs icon gallery's list, `apps/docs/components/icon/IconDataList.tsx`;
+   - the icon count under Iconography in [`DESIGN.md`](./DESIGN.md).
+5. Add a changeset for `@amerfathullah/myds-react` (see below).
+
+National marks, such as the Malaysia flag and the Jata Negara, never go in the icon sources ([ADR-0007](./docs/adr/0007-component-library-doesnt-hand-out-national-marks.md)). A national mark isn't an icon, and a regeneration would export one as an ordinary icon. The marks' SVGs sit in `packages/react/src/svg/national-marks` and their components in `packages/react/src/national-marks`, outside the generator's directories. The barrel writes their two deprecated exports itself.
+
 ## Submitting a Pull Request (PR)
 
 1. **Ensure Tests Pass**:

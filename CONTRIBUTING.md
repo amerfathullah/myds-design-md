@@ -48,6 +48,8 @@ The icon components in `packages/react/src/icons`, which `@amerfathullah/myds-re
    - the icon count under Iconography in [`DESIGN.md`](./DESIGN.md).
 5. Add a changeset for `@amerfathullah/myds-react` (see below).
 
+CI regenerates the icons from their SVGs and fails if that changes any file ([`icons.yml`](./.github/workflows/icons.yml)), so change an icon in its SVG, or a rule for every icon in the generator, never in the component.
+
 National marks, such as the Malaysia flag and the Jata Negara, never go in the icon sources ([ADR-0007](./docs/adr/0007-component-library-doesnt-hand-out-national-marks.md)). A national mark isn't an icon, and a regeneration would export one as an ordinary icon. The marks' SVGs sit in `packages/react/src/svg/national-marks` and their components in `packages/react/src/national-marks`, outside the generator's directories. The barrel writes their two deprecated exports itself.
 
 ## Submitting a Pull Request (PR)

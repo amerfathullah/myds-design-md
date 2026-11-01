@@ -10,6 +10,7 @@
     "@turbo/gen": "^2.11.10",
     "@types/node": "^26.6.5",
     "typescript": "~6.0.3",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1"
   }
 }

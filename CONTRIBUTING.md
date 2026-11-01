@@ -52,6 +52,16 @@ CI regenerates the icons from their SVGs and fails if that changes any file ([`i
 
 National marks, such as the Malaysia flag and the Jata Negara, never go in the icon sources ([ADR-0007](./docs/adr/0007-component-library-doesnt-hand-out-national-marks.md)). A national mark isn't an icon, and a regeneration would export one as an ordinary icon. The marks' SVGs sit in `packages/react/src/svg/national-marks` and their components in `packages/react/src/national-marks`, outside the generator's directories. The barrel writes their two deprecated exports itself.
 
+## Docs pages
+
+To add a page to the docs app, run this from anywhere in the repository, with the page's section and group folder, and its title:
+
+```sh
+pnpm exec turbo gen mdx --args "design/(foundation)" "Page title"
+```
+
+Or run `pnpm exec turbo gen mdx` to choose them from a list. It writes the English page, `page-title.mdx`, and the Malay one, `page-title.ms.mdx`, in the group folder, and lists the page in the section's sidebar, `meta.en.json` and `meta.ms.json`, after the group's last page. Both pages have the title as typed and an empty description: write the description, and translate the Malay page's title. If a page of that name exists anywhere in the section, it changes nothing and prints why, because group folders don't appear in URLs.
+
 ## Submitting a Pull Request (PR)
 
 1. **Ensure Tests Pass**:

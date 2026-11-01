@@ -4,7 +4,8 @@ name: "icons"
 # icon generator's output and nothing else: an icon's markup changes in its SVG
 # source, and a rule for every icon in the generator, never in the component
 # (CONTRIBUTING.md). This regenerates them from the commit and fails if that
-# adds, modifies or deletes any file, anywhere.
+# adds, modifies or deletes any file, anywhere. It runs the generator's tests
+# first.
 
 on:
   push:
@@ -56,6 +57,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # The generator package's tests: the icon generator's, and this check's
+      - name: Test the icon generator and this check
+        run: pnpm --filter @govtechmy/myds-cli test
 
       # So a generator that writes nothing can't pass: every committed icon
       # would be deleted

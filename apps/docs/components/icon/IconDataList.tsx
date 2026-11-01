@@ -19,16 +19,6 @@ export const icon_list: IconData[] = [
   //Generic Icons : 120 icons
   //Remove 1 Icon - Placeholder
   {
-    name: "malaysia-flag",
-    type: "media",
-    svg: <Icons.MalaysiaFlagIcon />,
-  },
-  {
-    name: "jata-negara",
-    type: "media",
-    svg: <Icons.JataNegaraIcon />,
-  },
-  {
     name: "hamburger-menu",
     type: "generic",
     svg: <Icons.HamburgerMenuIcon />,

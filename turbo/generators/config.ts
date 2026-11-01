@@ -1,5 +1,10 @@
 import { PlopTypes } from "@turbo/gen";
 
+import {
+  type DocsGroup,
+  docsGroups,
+  generateDocsPage,
+} from "./scripts/generate-docs-page";
 import { generateIcons } from "./scripts/generate-icons";
 
 interface ComponentPrompt {
@@ -9,7 +14,7 @@ interface ComponentPrompt {
 }
 
 interface MDXPrompt {
-  project: "design" | "develop";
+  group: DocsGroup;
   title: string;
 }
 
@@ -133,23 +138,29 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
     },
   });
 
-  // MDX generator
+  // MDX generator. Its action rejects, having changed nothing, if the page
+  // exists already or it can't list it in the sidebar, and turbo gen prints
+  // why. A page's file name is its title in dash-case, as the other
+  // generators' are.
+  const dashCase: (text: string) => string = plop.getHelper("dashCase");
+
+  plop.setActionType("write docs page", (answers) => {
+    const { group, title } = answers as MDXPrompt;
+    return generateDocsPage({
+      root: answers.turbo?.paths?.root,
+      group,
+      title,
+      slug: dashCase(title),
+    });
+  });
+
   plop.setGenerator("mdx", {
     description: "Scaffolds MDX file for MYDS docs",
     prompts: [
       {
         type: "list",
-        choices: [
-          "principle",
-          "design/(foundation)",
-          "design/(foundation)",
-          "design/(components)",
-          "develop/(getting-started)",
-          "develop/(components)",
-          "develop/(hooks)",
-          "develop/(installation)",
-        ],
-        name: "project",
+        choices: [...docsGroups],
+        name: "group",
         message: "Docs MDX for:",
       },
       {
@@ -160,26 +171,14 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
           if (!input) {
             return "MDX file name is required";
           }
+          if (!dashCase(input)) {
+            return "The title needs a letter or a digit, to name the page's files";
+          }
           return true;
         },
       },
     ],
-    actions: (data) => {
-      const actions: PlopTypes.ActionType[] = [];
-
-      actions.push({
-        type: "add",
-        path: "{{ turbo.paths.root }}/apps/docs/content/docs/{{ project }}/{{ dashCase title }}.mdx",
-        templateFile: "templates/docs-mdx.hbs",
-      });
-      actions.push({
-        type: "add",
-        path: "{{ turbo.paths.root }}/apps/docs/content/docs/{{ project }}/{{ dashCase title }}.ms.mdx",
-        templateFile: "templates/docs-mdx.hbs",
-      });
-
-      return actions;
-    },
+    actions: [{ type: "write docs page" }],
   });
 
   // Icon generator. Its action rejects, having changed nothing, if it can't

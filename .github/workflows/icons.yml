@@ -15,10 +15,8 @@ on:
       # The icon SVG sources, and the components and barrel made from them
       - "packages/react/src/svg/icons/**"
       - "packages/react/src/icons/**"
-      # The generator, and this check's script, turbo/generators/scripts/check-icons.sh,
-      # but not the other generators' templates
+      # The generators, and this check's script, turbo/generators/scripts/check-icons.sh
       - "turbo/generators/**"
-      - "!turbo/generators/templates/**"
       # The docs root and section meta files. The generator package's tests
       # check the mdx generator's choices against the docs app's group
       # folders, and a group can't be added, renamed or removed without

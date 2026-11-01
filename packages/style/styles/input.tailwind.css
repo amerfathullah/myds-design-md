@@ -9,27 +9,18 @@
 /* The whole type scale, which full.css has always shipped */
 @source inline("text-{heading-{xl,lg,md,sm,xs,2xs},body-{xl,lg,md,sm,xs}}");
 
+/*
+ * The only rules full.css adds to the Tailwind import, besides the fonts.
+ * index.css sets the scroll, focus and underline rules for both entries.
+ */
 @layer base {
   html {
     box-sizing: border-box;
-    scroll-behavior: smooth;
-    scroll-padding-top: 65px;
   }
 
   *,
   *:before,
   *:after {
     box-sizing: inherit;
-  }
-
-  :focus:not(:focus-visible) {
-    @apply outline-hidden;
-  }
-}
-
-@layer utilities {
-  .underline {
-    text-decoration: underline;
-    text-underline-position: from-font;
   }
 }

@@ -345,6 +345,14 @@
 }
 
 /*
+ * Extends Tailwind's `underline`, variants included: the line sits where the
+ * font's metrics put it. No shorthand, so `decoration-*` utilities still apply.
+ */
+@utility underline {
+  text-underline-position: from-font;
+}
+
+/*
  * Tailwind 3's preflight read these from the MYDS colours, and Tailwind 4's
  * doesn't, so components and pages that rely on them would change.
  */
@@ -366,5 +374,36 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+/*
+ * Page rules MYDS sets for every app, on either entry: full.css imports this
+ * file, so both render the same.
+ */
+@layer base {
+  /* An in-page link's target, the SkipLink's included, lands clear of the sticky Navbar */
+  html {
+    scroll-padding-top: 65px;
+  }
+
+  /* Under reduced motion, an in-page link jumps instead */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /*
+   * No outline on mouse focus, only on keyboard focus: Tailwind's
+   * outline-hidden, written out because `@apply` fails under a Tailwind prefix
+   */
+  :focus:not(:focus-visible) {
+    --tw-outline-style: none;
+    outline-style: none;
+    @media (forced-colors: active) {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
   }
 }

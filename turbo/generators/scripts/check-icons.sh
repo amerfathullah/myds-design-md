@@ -16,7 +16,7 @@ set -euo pipefail
 icons=packages/react/src/icons
 sources=packages/react/src/svg/icons
 # The most lines of the diff a failure prints
-diff_lines=500
+max_diff_lines=500
 
 cd "$(git rev-parse --show-toplevel)"
 
@@ -34,6 +34,10 @@ case "${1-}" in
     cp -- "$(git rev-parse --git-path index)" "$index"
     export GIT_INDEX_FILE="$index"
     git add --all
+    # ...and the icon directory's ignored files, which that skips: everything
+    # the generator writes is committed, whatever the ignore rules say
+    git ls-files -z --others --ignored --exclude-standard -- "$icons" |
+      xargs -0 -r git add --force --
 
     # The generator writes at least the barrel whenever it runs, so an empty
     # icon directory means it didn't, whatever else is committed
@@ -56,10 +60,10 @@ case "${1-}" in
     git --no-pager diff --cached --no-color --no-ext-diff HEAD >"$diff"
     lines="$(wc -l <"$diff")"
     echo "::group::The diff"
-    if [ "$lines" -gt "$diff_lines" ]; then
-      echo "Showing the first $diff_lines of the diff's $lines lines."
+    if [ "$lines" -gt "$max_diff_lines" ]; then
+      echo "Showing the first $max_diff_lines of the diff's $lines lines."
     fi
-    head -n "$diff_lines" "$diff"
+    head -n "$max_diff_lines" "$diff"
     echo "::endgroup::"
 
     fix="Change an icon's markup in its SVG, in $sources, or a rule for every icon in the generator, in turbo/generators, never in the component. Then run pnpm exec turbo gen icon --args react on a clean checkout and commit everything it changes."

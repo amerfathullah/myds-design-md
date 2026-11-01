@@ -1,10 +1,20 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
 const script = join(import.meta.dirname, "check-icons.sh");
+const workflow = join(
+  import.meta.dirname,
+  "../../../.github/workflows/icons.yml",
+);
 
 let repo: string;
 
@@ -35,6 +45,7 @@ function commit(message: string) {
     "commit.gpgsign=false",
     "commit",
     "--quiet",
+    "--no-verify",
     `--message=${message}`,
   );
 }
@@ -64,15 +75,15 @@ afterEach(() => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-/** What a failure's annotation says the committed files do */
-const differ =
+/** The ordinary failure's message: what the committed files do */
+const ordinaryMessage =
   "The committed files differ from what the icon generator writes from the SVG sources";
 
 /** Words CONTEXT.md keeps for other relationships */
-const reserved = /drift|divergen|stale|out of date/i;
+const reservedWords = /drift|divergen|stale|out of date/i;
 
-/** The step whose log says why the generator wrote nothing */
-const generatorStep = `"Regenerate the icons from their SVG sources"`;
+/** The icons workflow's step that runs the generator */
+const generatorStep = "Regenerate the icons from their SVG sources";
 
 /**
  * Expects a failure that names each file and ends with one error annotation
@@ -83,7 +94,7 @@ function expectFailure(
   files: string[],
 ): string {
   expect(status).toBe(1);
-  expect(output).not.toMatch(reserved);
+  expect(output).not.toMatch(reservedWords);
   for (const file of files) {
     expect(output).toContain(file);
     // In the diff, too
@@ -115,7 +126,7 @@ test("passes when the generator writes back exactly the committed files", () => 
 
   expect(status).toBe(0);
   expect(output).toContain("Regenerating the icons changed no file");
-  expect(output).not.toMatch(reserved);
+  expect(output).not.toMatch(reservedWords);
 });
 
 test("fails and names a component the generator writes differently", () => {
@@ -128,7 +139,7 @@ test("fails and names a component the generator writes differently", () => {
   const annotation = expectFailure(run("check"), [
     "packages/react/src/icons/arrow-back.tsx",
   ]);
-  expect(annotation).toContain(differ);
+  expect(annotation).toContain(ordinaryMessage);
 });
 
 test("fails and names a file the generator writes that isn't committed", () => {
@@ -141,7 +152,23 @@ test("fails and names a file the generator writes that isn't committed", () => {
   const annotation = expectFailure(run("check"), [
     "packages/react/src/icons/arrow-up.tsx",
   ]);
-  expect(annotation).toContain(differ);
+  expect(annotation).toContain(ordinaryMessage);
+});
+
+test("fails and names a file the generator writes that an ignore rule covers", () => {
+  write({ ".gitignore": "packages/react/src/icons/arrow-up.tsx\n" });
+  git("add", ".gitignore");
+  commit("ignore a component");
+  run("empty");
+  write({
+    ...generated,
+    "packages/react/src/icons/arrow-up.tsx": "export const ArrowUpIcon;\n",
+  });
+
+  const annotation = expectFailure(run("check"), [
+    "packages/react/src/icons/arrow-up.tsx",
+  ]);
+  expect(annotation).toContain(ordinaryMessage);
 });
 
 test("fails and names a committed file in the icon directory the generator doesn't write", () => {
@@ -152,7 +179,7 @@ test("fails and names a committed file in the icon directory the generator doesn
   const annotation = expectFailure(run("check"), [
     "packages/react/src/icons/arrow-back.tsx",
   ]);
-  expect(annotation).toContain(differ);
+  expect(annotation).toContain(ordinaryMessage);
 });
 
 test("fails and names a file the generator changes outside the icon directory", () => {
@@ -166,7 +193,7 @@ test("fails and names a file the generator changes outside the icon directory", 
   const annotation = expectFailure(run("check"), [
     "packages/react/src/national-marks/malaysia-flag.tsx",
   ]);
-  expect(annotation).toContain(differ);
+  expect(annotation).toContain(ordinaryMessage);
 });
 
 test("fails saying the generator wrote nothing, and where its log is, when it wrote nothing", () => {
@@ -174,8 +201,14 @@ test("fails saying the generator wrote nothing, and where its log is, when it wr
 
   const annotation = expectFailure(run("check"), Object.keys(generated));
   expect(annotation).toContain("wrote nothing");
-  expect(annotation).toContain(generatorStep);
-  expect(annotation).not.toContain(differ);
+  expect(annotation).toContain(`"${generatorStep}"`);
+  expect(annotation).not.toContain(ordinaryMessage);
+});
+
+test("names a step the icons workflow has", () => {
+  expect(readFileSync(workflow, "utf8")).toContain(
+    `- name: ${generatorStep}\n`,
+  );
 });
 
 test("fails when the generator wrote nothing, even with no icons committed", () => {

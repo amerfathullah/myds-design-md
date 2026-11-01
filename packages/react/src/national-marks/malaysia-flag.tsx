@@ -2,11 +2,12 @@ import React from "react";
 import { FunctionComponent, SVGProps } from "react";
 
 /**
- *  MalaysiaFlagIcon
- * @param className
- * @returns  MalaysiaFlagIcon
+ * The Malaysia flag, 32×16 in full colour. It's a national mark, not an icon,
+ * so no public entry exports it except `@amerfathullah/myds-react/icon`, as
+ * the deprecated `MalaysiaFlagIcon`, until the next major (ADR-0007). The
+ * Masthead shows it.
  */
-export const MalaysiaFlagIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+export const MalaysiaFlag: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
 ) => {
   return (

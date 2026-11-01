@@ -34,6 +34,11 @@ import {
   ThemeProvider,
   useTheme,
 } from "@amerfathullah/myds-react/hooks";
+import {
+  ChevronDownIcon,
+  JataNegaraIcon,
+  MalaysiaFlagIcon,
+} from "@amerfathullah/myds-react/icon";
 import { Input, InputAddon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
@@ -283,5 +288,16 @@ export const Themes = ({ resolvedTheme }: { resolvedTheme?: string }) => (
     >
       <ThemeSwitch />
     </ThemeContext.Provider>
+  </>
+);
+
+// Icons take an SVG's props. The national marks are deprecated on `/icon` and
+// leave it at the next major (ADR-0007), so these two imports, and this test,
+// stop compiling then.
+export const Icons = () => (
+  <>
+    <ChevronDownIcon className="size-4" aria-hidden />
+    <MalaysiaFlagIcon className="inline-block aspect-auto w-fit shrink-0" />
+    <JataNegaraIcon width={32} height={32} />
   </>
 );

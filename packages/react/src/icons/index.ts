@@ -1,3 +1,8 @@
+import type { FunctionComponent, SVGProps } from "react";
+
+import { JataNegara } from "../national-marks/legacy-jata-negara";
+import { MalaysiaFlag } from "../national-marks/malaysia-flag";
+
 export * from "./accessible";
 export * from "./align-center";
 export * from "./align-justify";
@@ -102,7 +107,6 @@ export * from "./legacy-hospital-moh";
 export * from "./legacy-identity-jpn";
 export * from "./legacy-internet-mcmc";
 export * from "./legacy-jakoa";
-export * from "./legacy-jata-negara";
 export * from "./legacy-light-bulb-ipr-epu";
 export * from "./legacy-mampu";
 export * from "./legacy-mini-ambulance-mers";
@@ -155,7 +159,6 @@ export * from "./lock-fill";
 export * from "./lock";
 export * from "./logout";
 export * from "./map";
-export * from "./malaysia-flag";
 export * from "./megaphone";
 export * from "./minus-circle";
 export * from "./minus";
@@ -218,3 +221,24 @@ export * from "./word";
 export * from "./youtube";
 export * from "./zoom-in";
 export * from "./zoom-out";
+
+/**
+ * The Jata Negara, 32×32 in full colour.
+ *
+ * @deprecated The Jata Negara is a national mark, and only an official service
+ * may show one. An official service that shows it supplies the image itself,
+ * through the Navbar or Footer logo slot. `JataNegaraIcon` will be removed from
+ * `@amerfathullah/myds-react/icon` in the next major version.
+ */
+export const JataNegaraIcon: FunctionComponent<SVGProps<SVGSVGElement>> =
+  JataNegara;
+
+/**
+ * The Malaysia flag, 32×16 in full colour.
+ *
+ * @deprecated The Malaysia flag is a national mark, and only an official
+ * service may show one. The Masthead already shows it. `MalaysiaFlagIcon` will
+ * be removed from `@amerfathullah/myds-react/icon` in the next major version.
+ */
+export const MalaysiaFlagIcon: FunctionComponent<SVGProps<SVGSVGElement>> =
+  MalaysiaFlag;

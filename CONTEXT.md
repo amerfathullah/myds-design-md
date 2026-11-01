@@ -57,7 +57,7 @@ The fixed arrangement of page-level components around a page's content: SkipLink
 _Avoid_: Layout, shell, chrome
 
 **National mark**:
-A mark of the Malaysian state (the flag, Jata Negara) that MYDS places itself, as opposed to the agency logo that the author supplies.
+A mark of the Malaysian state (the flag, Jata Negara), as opposed to an agency's own logo. The component library shows only the flag, in the Masthead.
 _Avoid_: Brand mark, logo
 
 **Official service**:

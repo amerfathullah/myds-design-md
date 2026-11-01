@@ -169,7 +169,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         message: "Title:",
         validate: (input: string) => {
           if (!input) {
-            return "MDX file name is required";
+            return "The page needs a title";
           }
           if (!dashCase(input)) {
             return "The title needs a letter or a digit, to name the page's files";

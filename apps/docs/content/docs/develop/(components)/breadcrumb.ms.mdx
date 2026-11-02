@@ -84,6 +84,8 @@ export default () => (
 );
 ```
 
+Pembaca skrin menyebut landmark `<nav>` breadcrumb sebagai "breadcrumb". Hantar `aria-label` kepada `Breadcrumb` untuk menamakannya dalam bahasa laman anda, contohnya `<Breadcrumb aria-label="Laluan halaman">`.
+
 ## Contoh
 
 ### Varian
@@ -257,6 +259,12 @@ Serpihan yang terlalu panjang akan dipendekkan dengan elipsis. Had lebar maksimu
       type: "enum",
       typeDescription: "default | fill",
       default: "default",
+    },
+    "aria-label": {
+      description:
+        "Nama boleh capai landmark `<nav>` breadcrumb. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "breadcrumb",
     },
   }}
 />

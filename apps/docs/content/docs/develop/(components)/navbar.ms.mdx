@@ -222,6 +222,8 @@ export default () => {
 
 ### Menu Bar Navigasi
 
+Pembaca skrin menyebut landmark `<nav>` menu ini sebagai "Main". Hantar `aria-label` kepada `NavbarMenu` untuk menamakannya dalam bahasa laman anda, contohnya `<NavbarMenu aria-label="Utama">`. Atau hantar `aria-labelledby` dengan id tajuk (heading) yang menamakannya.
+
 <Tabs items={["Pratonton", "Kod"]}>
 
 <Tab value="Pratonton" className="not-prose">
@@ -264,6 +266,8 @@ export default () => {
 </Tabs>
 
 ### Tindakan Bar Navigasi
+
+Pada skrin yang lebih sempit daripada 1280px, `NavbarAction` turut memaparkan butang yang membuka dan menutup menu mudah alih. Pembaca skrin menyebutnya sebagai "Open navigation menu", atau "Close navigation menu" semasa menu dibuka. `aria-label` pada `NavbarAction` menggantikan kedua-dua nama ini, contohnya `aria-label="Menu navigasi"`. Butang itu kemudiannya tidak lagi memberitahu pembaca skrin sama ada menu dibuka.
 
 <Tabs items={["Pratonton", "Kod"]}>
 
@@ -395,6 +399,17 @@ export default () => {
       description: "Kandungan yang akan dipaparkan di dalam Menu Bar Navigasi.",
       type: "string",
     },
+    "aria-label": {
+      description:
+        "Nama boleh capai landmark `<nav>` menu ini. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Main",
+    },
+    "aria-labelledby": {
+      description:
+        "Id elemen yang teksnya menamakan landmark `<nav>` menu ini, sebagai ganti `aria-label`.",
+      type: "string",
+    },
   }}
 />
 
@@ -446,6 +461,12 @@ export default () => {
       description:
         "Kandungan yang akan dipaparkan di dalam Tindakan Bar Navigasi.",
       type: "ReactNode",
+    },
+    "aria-label": {
+      description:
+        "Nama boleh capai butang yang membuka dan menutup menu mudah alih. Ia menggantikan kedua-dua nama lalai, jadi butang itu tidak lagi memberitahu sama ada menu dibuka.",
+      type: "string",
+      default: '"Open navigation menu" / "Close navigation menu"',
     },
   }}
 />

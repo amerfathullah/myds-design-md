@@ -27,7 +27,7 @@ import {
       <Masthead>
         <MastheadHeader>
           <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
-          <MastheadTrigger>Here's how you know</MastheadTrigger>
+          <MastheadTrigger aria-label="Here's how you know">Here's how you know</MastheadTrigger>
         </MastheadHeader>
         <MastheadContent>
           <MastheadSection
@@ -61,7 +61,9 @@ import { PutrajayaIcon, Lock2Icon, LockFillIcon } from "@amerfathullah/myds-reac
 <Masthead>
   <MastheadHeader>
     <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
-    <MastheadTrigger>Here's how you know</MastheadTrigger>
+    <MastheadTrigger aria-label="Here's how you know">
+      Here's how you know
+    </MastheadTrigger>
   </MastheadHeader>
   <MastheadContent>
     <MastheadSection
@@ -122,6 +124,8 @@ export default () => (
 );
 ```
 
+Screen readers announce `MastheadTrigger` as "Toggle masthead", in place of the text it shows. Pass an `aria-label` that contains the visible text, so people who control the page by voice can say what they see. For example, `<MastheadTrigger aria-label="Kenal pasti begini">Kenal pasti begini</MastheadTrigger>`.
+
 ## Props
 
 ### Masthead
@@ -168,6 +172,12 @@ export default () => (
     children: {
       description: "Text for the trigger action",
       type: "ReactNode",
+    },
+    "aria-label": {
+      description:
+        "Accessible name of the trigger. Screen readers announce it in place of the trigger's text, so make it contain that text.",
+      type: "string",
+      default: "Toggle masthead",
     },
   }}
 />

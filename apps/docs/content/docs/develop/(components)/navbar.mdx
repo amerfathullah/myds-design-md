@@ -222,6 +222,8 @@ export default () => {
 
 ### Navbar Menu
 
+Screen readers announce the menu's `<nav>` landmark as "Main". Pass an `aria-label` to `NavbarMenu` to name it in your site's language, for example `<NavbarMenu aria-label="Utama">`. Or pass `aria-labelledby` with the id of a heading that names it.
+
 <Tabs items={["Preview", "Code"]}>
 
 <Tab value="Preview" className="not-prose">
@@ -264,6 +266,8 @@ export default () => {
 </Tabs>
 
 ### Navbar Action
+
+On screens narrower than 1280px, `NavbarAction` also shows a button that opens and closes the mobile menu. Screen readers announce it as "Open navigation menu", or "Close navigation menu" while the menu is open. An `aria-label` on `NavbarAction` replaces both names, for example `aria-label="Menu navigasi"`. The button then no longer tells screen readers whether the menu is open.
 
 <Tabs items={["Preview", "Code"]}>
 
@@ -395,6 +399,17 @@ export default () => {
       description: "Content to be rendered inside the NavbarMenu.",
       type: "string",
     },
+    "aria-label": {
+      description:
+        "Accessible name of the menu's `<nav>` landmark. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Main",
+    },
+    "aria-labelledby": {
+      description:
+        "The id of an element whose text names the menu's `<nav>` landmark, in place of `aria-label`.",
+      type: "string",
+    },
   }}
 />
 
@@ -444,6 +459,12 @@ export default () => {
     children: {
       description: "Content to be rendered inside the NavbarAction.",
       type: "ReactNode",
+    },
+    "aria-label": {
+      description:
+        "Accessible name of the button that opens and closes the mobile menu. It replaces both default names, so the button no longer says whether the menu is open.",
+      type: "string",
+      default: '"Open navigation menu" / "Close navigation menu"',
     },
   }}
 />

@@ -12,9 +12,9 @@ import { chromium } from "playwright";
 
 import { compile, compileFull } from "./compile.mjs";
 
-const outlineWidth =
+const outlineClasses =
   "focus:outline-primary-600/20 focus:outline-[3px] focus:outline-offset-0";
-const classes = `@source inline("${outlineWidth} underline decoration-inherit decoration-wavy decoration-3");`;
+const classes = `@source inline("${outlineClasses} underline decoration-inherit decoration-wavy decoration-3");`;
 const entries = {
   "the Tailwind import": () => compile(classes),
   "full.css": () => compileFull(classes),
@@ -33,7 +33,7 @@ const page = (css) => `<!doctype html>
         Parent <a id="inherit" href="#" class="underline decoration-inherit">link</a>
       </p>
       <a id="own" href="#" class="underline decoration-wavy decoration-3">link</a>
-      <button id="outlined" class="${outlineWidth}">Outlined</button>
+      <button id="outlined" class="${outlineClasses}">Outlined</button>
     </main>
   </body>
 </html>`;

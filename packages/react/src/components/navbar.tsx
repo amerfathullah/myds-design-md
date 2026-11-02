@@ -290,7 +290,7 @@ const NavbarMenuItem: FunctionComponent<NavbarMenuItemProps> = ({
           // The child doesn't get Link's classes, so it takes Link's focus
           // ring here
           asChild &&
-            "focus-visible:ring-fr-primary focus-visible:ring-3 focus-visible:outline-hidden",
+            "focus-visible:ring-fr-primary box-decoration-clone focus-visible:ring-3 focus-visible:outline-hidden",
         )}
       >
         {children}

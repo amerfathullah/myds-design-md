@@ -104,9 +104,9 @@ const sources = readdirSync(__dirname)
 // "<file>: <class>"
 function classesMatching(pattern: RegExp) {
   return sources.flatMap(({ file, source }) =>
-    [...source.matchAll(/"([^"\n]*)"|`([^`]*)`/g)]
-      .flatMap(([, string, template]) =>
-        (string ?? template ?? "").split(/\s+/),
+    [...source.matchAll(/"([^"\n]*)"|'([^'\n]*)'|`([^`]*)`/g)]
+      .flatMap(([, double, single, template]) =>
+        (double ?? single ?? template ?? "").split(/\s+/),
       )
       .filter((name) => pattern.test(name))
       .map((name) => `${file}: ${name}`),
@@ -122,11 +122,14 @@ describe("the component sources", () => {
     ).toEqual([]);
   });
 
-  // A ring or outline is focus, so it takes an `fr-*` token
+  // A ring or outline is focus, so it takes an `fr-*` token. Anything else
+  // after `ring-` or `outline-` is a colour, an offset's included, except a
+  // width, a pixel width in brackets, an offset, `inset` and the outline
+  // styles.
   test("colour every ring and outline with an fr-* token", () => {
     expect(
       classesMatching(
-        /(?:^|:)(?:ring|outline)-(?!fr-|\d|\[|inset$|offset-|hidden$|none$|solid$|dashed$|dotted$|double$)/,
+        /(?:^|:)(?:ring|outline)-(?!fr-|\d|\[\d+(?:\.\d+)?px\]|offset-\d|inset$|hidden$|none$|solid$|dashed$|dotted$|double$)/,
       ),
     ).toEqual([]);
   });

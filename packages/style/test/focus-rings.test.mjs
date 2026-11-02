@@ -45,7 +45,7 @@ const away = { x: 1000, y: 700 };
 
 // The NavbarMenuDropdown's trigger, and the elements that draw a ring or
 // outline for a focused element inside them
-const trigger = "header button[aria-expanded]";
+const dropdownTrigger = "header button[aria-expanded]";
 const accordionItem = (test) => `div:has(> h3 > [data-test=${test}])`;
 const otpSlot = (test) =>
   `[data-input-otp-container]:has(input[data-test=${test}]) > :first-child`;
@@ -67,13 +67,14 @@ const dataTableCell = (id) => `[data-test=data-table] [id="${id}"]`;
  *   presses a key, then calls `focus()`, as on a TableCell, which is
  *   `tabIndex={-1}`
  * - `click`: whether a mouse click shows the ring too
+ * - `press`: where the mouse presses it, from its top-left, if not its middle
  * - `pixels`: whether the pixels around the ring are checked for clipping
  */
 const controls = [
   { name: "NavbarLogo", focus: 'a[href="#logo"]', pixels: true },
   { name: "NavbarMenuItem", focus: 'a[href="#nav-item"]', pixels: true },
   { name: "NavbarMenuItem asChild", focus: 'a[href="#nav-item-as-child"]' },
-  { name: "NavbarMenuDropdown's trigger", focus: trigger },
+  { name: "NavbarMenuDropdown's trigger", focus: dropdownTrigger },
   {
     name: "NavbarMenuItem in a NavbarMenuDropdown",
     focus: 'a[href="#nav-dropdown-item"]',
@@ -154,6 +155,8 @@ const controls = [
     reach: "F8",
     inset: true,
     pixels: true,
+    // Its padding, clear of the toasts
+    press: { x: 6, y: 6 },
   },
   ...[
     ["first row", 0, 1],
@@ -255,8 +258,8 @@ async function tabTo(page, selector) {
 // Gives a control keyboard focus, as its `reach` says
 async function focusByKeyboard(page, { focus, reach = "tab" }) {
   if (reach === "menu") {
-    await tabTo(page, trigger);
-    if ((await page.getAttribute(trigger, "aria-expanded")) !== "true")
+    await tabTo(page, dropdownTrigger);
+    if ((await page.getAttribute(dropdownTrigger, "aria-expanded")) !== "true")
       await page.keyboard.press("Enter");
     await tabTo(page, focus);
   } else if (reach === "F8") {
@@ -269,10 +272,10 @@ async function focusByKeyboard(page, { focus, reach = "tab" }) {
 
 // Moves focus off the page's controls, and closes the NavbarMenuDropdown
 async function reset(page) {
-  if ((await page.getAttribute(trigger, "aria-expanded")) === "true") {
-    await page.focus(trigger);
+  if ((await page.getAttribute(dropdownTrigger, "aria-expanded")) === "true") {
+    await page.focus(dropdownTrigger);
     await page.keyboard.press("Enter");
-    await page.waitForSelector(`${trigger}[aria-expanded=false]`);
+    await page.waitForSelector(`${dropdownTrigger}[aria-expanded=false]`);
   }
   await page.evaluate(() => document.activeElement?.blur());
   await page.mouse.move(away.x, away.y);
@@ -284,7 +287,7 @@ async function reset(page) {
 async function rest(page, { reach } = {}) {
   await reset(page);
   if (reach === "menu") {
-    await tabTo(page, trigger);
+    await tabTo(page, dropdownTrigger);
     await page.keyboard.press("Enter");
     await page.evaluate(() => document.activeElement?.blur());
   }
@@ -358,10 +361,11 @@ test("a mouse click shows no ring, except on SearchBar and InputOTP", async () =
           const { x, y, width, height } = element.getClientRects()[0];
           return { x, y, width, height };
         });
-        const at =
-          control.reach === "F8"
-            ? { x: box.x + 6, y: box.y + 6 } // the viewport's padding
-            : { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+        const { x, y } = control.press ?? {
+          x: box.width / 2,
+          y: box.height / 2,
+        };
+        const at = { x: box.x + x, y: box.y + y };
         await page.mouse.move(at.x, at.y);
         await page.mouse.down();
         actual[key] = await page.evaluate(readFocus, {
@@ -634,11 +638,9 @@ test("a Navbar menu item's link fills the item, so its ring outlines the item's 
       "#nav-item-as-child",
       "#nav-dropdown-item",
     ]) {
-      await reset(page);
-      if (href === "#nav-dropdown-item") {
-        await tabTo(page, trigger);
-        await page.keyboard.press("Enter");
-      }
+      await rest(page, {
+        reach: href === "#nav-dropdown-item" ? "menu" : "tab",
+      });
       const [link, item] = await page.$eval(`a[href="${href}"]`, (a) =>
         [a, a.closest("li")].map((element) => {
           const { x, y, width, height } = element.getBoundingClientRect();

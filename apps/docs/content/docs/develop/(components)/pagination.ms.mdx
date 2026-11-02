@@ -69,6 +69,25 @@ import { AutoPagination } from "@amerfathullah/myds-react/pagination";
 <AutoPagination />
 ```
 
+Pembaca skrin menyebut butang sebelumnya dan seterusnya bagi jenis `default` sebagai "previous page" dan "next page", setiap butang halaman sebagai "page" diikuti nombornya, seperti "page 3", dan setiap elipsis sebagai "More pages". Jenis `simple` dan `full` memaparkan "Previous" dan "Next" pada butangnya, dan teks itu yang menamakannya. Tetapkan `previousLabel`, `nextLabel`, `pageLabel` dan `ellipsisLabel` untuk menamakannya dalam bahasa laman anda. Elemen `<nav>` disebut sebagai "pagination"; hantar `aria-label` untuk menamakannya semula, contohnya `aria-label="Penomboran"`.
+
+```tsx copy title="Nama dalam bahasa Melayu"
+<AutoPagination
+  page={2}
+  limit={10}
+  count={200}
+  type="default"
+  onPageChange={(page) => console.log(page)}
+  aria-label="Penomboran"
+  previousLabel="Halaman sebelumnya"
+  nextLabel="Halaman seterusnya"
+  pageLabel={(page) => `Halaman ${page}`}
+  ellipsisLabel="Lebih banyak halaman"
+/>
+```
+
+Dalam jenis `simple` dan `full`, label ini dipaparkan, jadi teks yang lebih pendek lebih sesuai, contohnya `previousLabel="Sebelumnya"` dan `nextLabel="Seterusnya"`.
+
 ### Penggunaan Lanjutan
 
 Sebagai alternatif kepada komponen `AutoPagination`, fungsi paginasi masih dapat dilaksanakan dengan kombinasi subkomponen: `Pagination`, `PaginationItem`, `PaginationContent`, `PaginationEllipsis`, `PaginationNext`, `PaginationPrevious` dan `PaginationNumber`.
@@ -100,6 +119,36 @@ import {
     </PaginationItem>
     <PaginationItem>
       <PaginationNext />
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>
+```
+
+Setiap subkomponen mempunyai nama dalam bahasa Inggeris untuk pembaca skrin, dan `aria-label` menggantikannya: pada `Pagination` bagi elemen `nav` ("pagination"), pada `PaginationPrevious` dan `PaginationNext` ("previous page" dan "next page"), dan pada `PaginationNumber` ("page 3" bagi butang halaman 3). `PaginationEllipsis` menyebut "More pages"; hantar `children` untuk menggantikannya, contohnya `<PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>`.
+
+`children` menamakan `PaginationPrevious` dan `PaginationNext` menggantikan nama lalai, jadi `<PaginationPrevious>Sebelumnya</PaginationPrevious>` dinamakan "Sebelumnya". `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, `PaginationPrevious` dan `PaginationNext` tidak menambah nama: namakan elemen anda sendiri, contohnya dengan `aria-label`.
+
+```tsx copy title="Nama dalam bahasa Melayu"
+<Pagination
+  aria-label="Penomboran"
+  count={180}
+  limit={10}
+  page={4}
+  onPageChange={(page) => console.log(page)}
+  type="default"
+>
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious aria-label="Halaman sebelumnya" />
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationNumber number={3} aria-label="Halaman 3" />
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationNext aria-label="Halaman seterusnya" />
     </PaginationItem>
   </PaginationContent>
 </Pagination>
@@ -299,12 +348,41 @@ Komponen paginasi yang mengendalikan navigasi halaman. Komponen ini sudah disiap
         "Komponen lalai untuk menggantikan butang PaginationPrevious.",
       type: "ReactNode",
     },
+    previousLabel: {
+      description:
+        "Menamakan butang sebelumnya. Dalam jenis `default`, pembaca skrin menyebutnya dan ia tidak dipaparkan; dalam jenis `simple` dan `full`, ia ialah teks butang, yang juga menamakannya. Tidak digunakan apabila anda menghantar `previous`.",
+      type: "string",
+      default: '"previous page" (jenis default), "Previous" (simple dan full)',
+    },
+    nextLabel: {
+      description:
+        "Menamakan butang seterusnya. Dalam jenis `default`, pembaca skrin menyebutnya dan ia tidak dipaparkan; dalam jenis `simple` dan `full`, ia ialah teks butang, yang juga menamakannya. Tidak digunakan apabila anda menghantar `next`.",
+      type: "string",
+      default: '"next page" (jenis default), "Next" (simple dan full)',
+    },
+    pageLabel: {
+      description:
+        "Menamakan setiap butang halaman dalam jenis `default`, berdasarkan nombor halamannya. Pembaca skrin menyebutnya; butang memaparkan nombor tersebut.",
+      type: "function",
+      typeDescription: "(page: number) => string",
+      default: "(page) => `page ${page}`",
+    },
+    ellipsisLabel: {
+      description:
+        "Teks yang disebut oleh setiap elipsis dalam jenis `default` di tempat halaman dilangkau. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "More pages",
+    },
   }}
 />
+
+`AutoPagination` menghantar prop selain ini kepada elemen `<nav>` `Pagination`, jadi `aria-label` menamakan semula elemen tersebut.
 
 ### Pagination
 
 Komponen container yang menyediakan struktur navigasi melalui elemen `nav`.
+
+Pembaca skrin menyebut elemen `nav` sebagai "pagination". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Penomboran"`.
 
 <TypeTable
   type={{
@@ -353,9 +431,13 @@ Komponen yang dirender sebagai elemen `li` yang mengandungi elemen seperti `Pagi
 
 Komponen `button` yang mengendalikan navigasi ke halaman seterusnya. Komponen lalai tersebut boleh digantikan dengan menggunakan props `asChild`.
 
+Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "next page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman seterusnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama: namakan elemen anda sendiri.
+
 ### PaginationPrevious
 
 Komponen `button` yang mengendalikan navigasi ke halaman sebelumnya. Komponen lalai tersebut boleh digantikan dengan menggunakan props `asChild`.
+
+Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "previous page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman sebelumnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama: namakan elemen anda sendiri.
 
 ### PaginationLabel
 
@@ -373,3 +455,5 @@ Komponen teks yang memaparkan maklumat paginasi.
 ### PaginationEllipsis
 
 Komponen penunjuk visual yang mewakili nombor halaman yang dilangkau dalam urutan pagination.
+
+Pembaca skrin menyebutnya sebagai "More pages", yang tidak dipaparkan. Hantar `children` untuk menggantikannya, contohnya `<PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>`. Ikonnya disembunyikan daripada pembaca skrin.

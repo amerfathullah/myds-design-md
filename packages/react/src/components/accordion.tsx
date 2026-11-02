@@ -25,7 +25,12 @@ const AccordionItem = React.forwardRef<
   <AccordionBase.Item
     className={clx(
       "border-otl-gray-200 bg-bg-white group mt-px overflow-hidden border-b first:mt-0",
-      "focus:ring-fr-primary outline-hidden focus-within:relative focus-within:z-10 focus-within:shadow-lg",
+      // The item's overflow would clip a ring on its trigger, so the item
+      // draws the ring while its own trigger has keyboard focus, over the
+      // next item. A focused control inside the content doesn't ring it.
+      // Under forced colours, which drop the ring, `outline-hidden` draws an
+      // outline instead.
+      "has-[>h3>button:focus-visible]:ring-fr-primary focus-within:relative focus-within:z-10 has-[>h3>button:focus-visible]:ring-3 has-[>h3>button:focus-visible]:outline-hidden",
       className,
     )}
     {...props}
@@ -44,7 +49,7 @@ const AccordionTrigger = React.forwardRef<
     <AccordionBase.Trigger
       className={clx(
         "text-txt-black-700 font-body bg-bg-white hover:text-txt-black-900 data-[state=open]:text-txt-black-900 group flex flex-1 cursor-pointer items-center justify-between py-4 text-base font-medium leading-none hover:underline",
-        "outline-hidden focus-visible:underline",
+        "focus-visible:underline focus-visible:outline-hidden",
         "data-[disabled]:text-txt-black-disabled data-[disabled]:cursor-not-allowed data-[disabled]:hover:no-underline",
         className,
       )}

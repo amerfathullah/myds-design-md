@@ -1,7 +1,7 @@
 // SearchBar's input container shows one of three looks. At rest it has an
 // `otl-gray-200` border. Hovered, the border turns `otl-gray-300`. Focused,
 // when the <input> inside it has focus, the border turns `otl-primary-300`
-// with a 3px `otl-primary-200` ring, and focus wins over hover. Every look
+// with a 3px `fr-primary` ring, and focus wins over hover. Every look
 // keeps the `bg-white` fill, the `shadow-button` shadow, and the radius,
 // padding and text of its size.
 import assert from "node:assert/strict";
@@ -18,10 +18,10 @@ const file = "search-bar.tsx";
 const looks = {
   rest: { border: "otl-gray-200" },
   hovered: { border: "otl-gray-300" },
-  focused: { border: "otl-primary-300", ring: "otl-primary-200" },
+  focused: { border: "otl-primary-300", ring: "fr-primary" },
   "focused and hovered": {
     border: "otl-primary-300",
-    ring: "otl-primary-200",
+    ring: "fr-primary",
   },
 };
 

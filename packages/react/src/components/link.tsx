@@ -7,19 +7,23 @@ interface LinkProps extends ComponentProps<"a">, VariantProps<typeof link_cva> {
   newTab?: boolean;
 }
 
-const link_cva = cva("transition-colors", {
-  variants: {
-    underline: {
-      always: "underline",
-      hover: "no-underline hover:underline",
-      none: "no-underline",
-    },
-    primary: {
-      true: "text-txt-primary",
-      false: "text-inherit decoration-inherit",
+// A link that wraps keeps a closed ring on each line (`box-decoration-clone`)
+const link_cva = cva(
+  "transition-colors box-decoration-clone focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-fr-primary",
+  {
+    variants: {
+      underline: {
+        always: "underline",
+        hover: "no-underline hover:underline",
+        none: "no-underline",
+      },
+      primary: {
+        true: "text-txt-primary",
+        false: "text-inherit decoration-inherit",
+      },
     },
   },
-});
+);
 
 /**
  * The Link component extends the `<a>` element, customised according to the MYDS theme.

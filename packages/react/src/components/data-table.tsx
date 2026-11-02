@@ -541,7 +541,9 @@ const RadioColumn = <TData extends Record<string, any>>() => {
       <div
         className={clx(
           "shadow-button hover:border-otl-gray-300 border-otl-gray-200 flex aspect-square size-4 items-center justify-center rounded-full border",
-          "focus-within:ring-fr-primary focus-within:ring-4 focus-within:ring-opacity-40 focus:outline-hidden",
+          // The wrapper can't match :focus-visible itself, so it rings while
+          // its input does
+          "has-[:focus-visible]:ring-fr-primary focus:outline-hidden has-[:focus-visible]:ring-3",
           "has-[:checked]:bg-primary-600 has-[:disabled]:has-[:checked]::bg-primary-600 has-[:checked]:border-none has-[:disabled]:opacity-30",
         )}
       >
@@ -554,7 +556,7 @@ const RadioColumn = <TData extends Record<string, any>>() => {
           disabled={!row.getCanSelect()}
           onClick={row.getToggleSelectedHandler()}
           className={clx(
-            "disabled:bg-bg-washed relative h-full w-full disabled:cursor-not-allowed",
+            "disabled:bg-bg-washed relative h-full w-full focus-visible:outline-hidden disabled:cursor-not-allowed",
             "before:bg-bg-white before:contents-[''] appearance-none before:absolute before:left-[5px] before:top-[5px] before:size-[6px] before:rounded-full",
           )}
         />

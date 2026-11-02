@@ -48,6 +48,9 @@ type ToastViewportProps = React.ComponentPropsWithoutRef<
 const toast_viewport_cva = cva([
   "fixed flex max-h-screen w-full overflow-hidden flex-col-reverse gap-1",
   "p-4.5 sm:p-6 bottom-0 right-0 sm:top-auto sm:flex-col md:max-w-sm z-[99]",
+  // F8 focuses the viewport. It sits in the window's corner, so its ring is
+  // inset, inside the padding that keeps it clear of the toasts.
+  "focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-fr-primary",
 ]);
 
 const ToastViewport = React.forwardRef<
@@ -71,7 +74,8 @@ interface ToastRootProps
 }
 
 const toast_cva = cva([
-  "group pointer-events-auto relative bg-bg-dialog-active z-[99] p-3 flex w-full items-start gap-2 outline-hidden",
+  "group pointer-events-auto relative bg-bg-dialog-active z-[99] p-3 flex w-full items-start gap-2",
+  "focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-fr-primary",
   "overflow-hidden rounded-md border shadow-card border-bg-washed-active transition-all data-[swipe=cancel]:translate-x-0 ",
   "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",
   "data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out",
@@ -130,7 +134,7 @@ ToastRoot.displayName = ToastPrimitives.Root.displayName;
 
 const toast_close_cva = cva([
   "text-txt-black-500 hover:text-txt-black-700 absolute right-1 top-1 rounded-md p-1",
-  "focus:outline-hidden",
+  "focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-fr-primary",
 ]);
 const ToastClose = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Close>,

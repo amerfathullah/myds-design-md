@@ -244,7 +244,7 @@ describe("AutoPagination", () => {
     props: Partial<AutoPaginationProps> = {},
   ) => mount(createElement(AutoPagination, { ...pages, type, ...props }));
 
-  test("names the default type's buttons and ellipses in English by default", async () => {
+  test('names the buttons and ellipses of type="default" in English by default', async () => {
     const page = await auto("default");
     expect(buttonNames(page)).toEqual([
       "previous page",
@@ -262,7 +262,7 @@ describe("AutoPagination", () => {
     expect(ellipses(page).map(announced)).toEqual(["More pages", "More pages"]);
   });
 
-  test("names the default type's buttons and ellipses from the label props", async () => {
+  test('names the buttons and ellipses of type="default" from the label props', async () => {
     const page = await auto("default", malay);
     expect(buttonNames(page)).toEqual([
       "Halaman sebelumnya",

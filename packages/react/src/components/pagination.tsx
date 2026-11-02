@@ -14,6 +14,13 @@ import { ChevronRightIcon } from "../icons/chevron-right";
 import { Slot } from "@radix-ui/react-slot";
 import { usePagination } from "../hooks/use-pagination";
 
+// The English default names. The parts set them, and AutoPagination sets
+// them again where it passes a label prop through to a part.
+const PREVIOUS_LABEL = "previous page";
+const NEXT_LABEL = "next page";
+const pageLabelOf = (page: number) => `page ${page}`;
+const ELLIPSIS_LABEL = "More pages";
+
 /**
  * Props for Pagination component.
  * @typedef PaginatorProps
@@ -122,7 +129,7 @@ const PaginationPrevious: ForwardRefExoticComponent<
       className={clx(disabled && "shadow-transparent")}
       onClick={handlePreviousPage}
       // Children name the button. With none, it shows only the chevron.
-      aria-label={children ? undefined : "previous page"}
+      aria-label={children ? undefined : PREVIOUS_LABEL}
       {...props}
     >
       <ButtonIcon>
@@ -161,7 +168,7 @@ const PaginationNext: ForwardRefExoticComponent<
       className={clx(disabled && "shadow-transparent")}
       onClick={handleNextPage}
       // Children name the button. With none, it shows only the chevron.
-      aria-label={children ? undefined : "next page"}
+      aria-label={children ? undefined : NEXT_LABEL}
       {...props}
     >
       {children}
@@ -192,7 +199,7 @@ const PaginationNumber: ForwardRefExoticComponent<
         isActive && "bg-bg-washed-active",
         "h-10 w-10 items-center justify-center",
       )}
-      aria-label={`page ${number}`}
+      aria-label={pageLabelOf(number)}
       {...props}
     >
       {number}
@@ -217,7 +224,7 @@ PaginationLabel.displayName = "PaginationLabel";
 
 const PaginationEllipsis = ({
   className,
-  children = "More pages",
+  children = ELLIPSIS_LABEL,
   ...props
 }: ComponentProps<"span">) => (
   <span
@@ -236,31 +243,32 @@ interface AutoPaginationProps extends ComponentProps<"nav">, PaginatorProps {
   previous?: ReactNode;
   fullText?: string;
   /**
-   * Names the previous button. In the `default` type the button shows only a
-   * chevron, so screen readers announce this name and it isn't shown. In the
-   * `simple` and `full` types it is the button's visible text, which also
-   * names it. Not used when you pass `previous`. Set it in your site's
+   * Names the previous button. With `type="default"` the button shows only a
+   * chevron, so screen readers announce this name and it isn't shown. With
+   * `type="simple"` or `type="full"` it is the button's visible text, which
+   * also names it. Not used when you pass `previous`. Set it in your site's
    * language.
-   * @default "previous page" in the `default` type; "Previous" in the `simple` and `full` types
+   * @default "previous page" with `type="default"`; "Previous" with `type="simple"` or `type="full"`
    */
   previousLabel?: string;
   /**
-   * Names the next button. In the `default` type the button shows only a
-   * chevron, so screen readers announce this name and it isn't shown. In the
-   * `simple` and `full` types it is the button's visible text, which also
-   * names it. Not used when you pass `next`. Set it in your site's language.
-   * @default "next page" in the `default` type; "Next" in the `simple` and `full` types
+   * Names the next button. With `type="default"` the button shows only a
+   * chevron, so screen readers announce this name and it isn't shown. With
+   * `type="simple"` or `type="full"` it is the button's visible text, which
+   * also names it. Not used when you pass `next`. Set it in your site's
+   * language.
+   * @default "next page" with `type="default"`; "Next" with `type="simple"` or `type="full"`
    */
   nextLabel?: string;
   /**
-   * Names each page button in the `default` type, from its page number.
+   * Names each page button with `type="default"`, from its page number.
    * Screen readers announce it; the button shows the number. Set it in your
    * site's language.
    * @default (page) => `page ${page}`
    */
   pageLabel?: (page: number) => string;
   /**
-   * Text each ellipsis in the `default` type announces where pages are
+   * Text each ellipsis with `type="default"` announces where pages are
    * skipped. Screen readers announce it; it isn't shown. Set it in your
    * site's language.
    * @default "More pages"
@@ -279,8 +287,8 @@ const AutoPagination: ForwardRefExoticComponent<AutoPaginationProps> =
         fullText,
         previousLabel,
         nextLabel,
-        pageLabel = (page: number) => `page ${page}`,
-        ellipsisLabel = "More pages",
+        pageLabel = pageLabelOf,
+        ellipsisLabel = ELLIPSIS_LABEL,
         ...props
       },
       ref,
@@ -342,7 +350,7 @@ const AutoPagination: ForwardRefExoticComponent<AutoPaginationProps> =
             <PaginationItem>
               {previous || (
                 <PaginationPrevious
-                  aria-label={previousLabel ?? "previous page"}
+                  aria-label={previousLabel ?? PREVIOUS_LABEL}
                 />
               )}
             </PaginationItem>
@@ -361,7 +369,7 @@ const AutoPagination: ForwardRefExoticComponent<AutoPaginationProps> =
               </PaginationItem>
             ))}
             <PaginationItem>
-              {next || <PaginationNext aria-label={nextLabel ?? "next page"} />}
+              {next || <PaginationNext aria-label={nextLabel ?? NEXT_LABEL} />}
             </PaginationItem>
           </PaginationContent>
         </Pagination>

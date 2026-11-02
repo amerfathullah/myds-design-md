@@ -39,13 +39,15 @@ type CalendarProps = DayPickerProps & {
   daterange?: "from" | "to";
   /**
    * Accessible name of the month view's previous button, which goes back a
-   * year. Screen readers announce it; it isn't shown.
+   * year. Screen readers announce it; it isn't shown. Set it in your site's
+   * language.
    * @default "Go to the Previous Year"
    */
   previousYearLabel?: string;
   /**
    * Accessible name of the month view's next button, which goes forward a
-   * year. Screen readers announce it; it isn't shown.
+   * year. Screen readers announce it; it isn't shown. Set it in your site's
+   * language.
    * @default "Go to the Next Year"
    */
   nextYearLabel?: string;

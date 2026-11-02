@@ -75,7 +75,8 @@ interface DataTableColumnMeta {
   tooltip?: ReactNode;
   /**
    * Accessible name of the header's tooltip trigger, a question-mark icon,
-   * that `tooltip` adds. Screen readers announce it; it isn't shown.
+   * that `tooltip` adds. Screen readers announce it; it isn't shown. Set it
+   * in your site's language.
    * @default "Tooltip"
    */
   tooltipLabel?: string;
@@ -138,26 +139,31 @@ interface DataTableProps<TData extends Record<string, any>> {
      * Accessible name of each row's checkbox or radio. A string names every
      * row's control; a function is called with each row and returns its
      * name. Screen readers announce it; it isn't shown. Set it in your
-     * site's language. The default numbers the rows the table shows from 1,
-     * top to bottom in the current sort, counting expanded sub-rows.
+     * site's language. A string gives every row the same name, so prefer a
+     * function that names the row. The default numbers the rows the table
+     * shows from 1, top to bottom in the current sort, counting expanded
+     * sub-rows.
      * @default "Select row N"
      */
     rowLabel?: RowLabel<TData>;
     /**
      * Accessible name of the header's checkbox, which selects every row, in
-     * `checkbox` mode. Screen readers announce it; it isn't shown.
+     * `checkbox` mode. Screen readers announce it; it isn't shown. Set it
+     * in your site's language.
      * @default "Select all rows"
      */
     selectAllLabel?: string;
     /**
      * Accessible name of the header's reset button, which clears the
      * selection, in `radio` mode. Screen readers announce it; it isn't shown.
+     * Set it in your site's language.
      * @default "Clear selection"
      */
     clearLabel?: string;
     /**
      * Visually hidden text that heads the selection column, in either mode.
-     * Screen readers announce it as the column's header; it isn't shown.
+     * Screen readers announce it as the column's header; it isn't shown. Set
+     * it in your site's language.
      * @default "Select"
      */
     columnLabel?: string;
@@ -173,7 +179,7 @@ interface DataTableProps<TData extends Record<string, any>> {
      * row's sub-rows. A string names every toggle; a function is called with
      * each row and returns its name. The toggle's `aria-expanded` says
      * whether the row is expanded, so the name stays the same. Screen
-     * readers announce it; it isn't shown.
+     * readers announce it; it isn't shown. Set it in your site's language.
      * @default "expand row"
      */
     expandLabel?: RowLabel<TData>;

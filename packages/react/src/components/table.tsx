@@ -119,10 +119,10 @@ interface TableTooltipProps extends ComponentProps<typeof Tooltip> {
 
 const TableTooltip: ForwardRefExoticComponent<TableTooltipProps> = forwardRef(
   // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  ({ children, "aria-label": label = "Tooltip", ...props }, ref) => {
+  ({ children, "aria-label": ariaLabel = "Tooltip", ...props }, ref) => {
     return (
       <Tooltip {...props}>
-        <TooltipTrigger aria-label={label}>
+        <TooltipTrigger aria-label={ariaLabel}>
           <QuestionCircleIcon className="text-txt-black-500 size-4 cursor-help" />
         </TooltipTrigger>
         <TooltipContent side="top" align="center">

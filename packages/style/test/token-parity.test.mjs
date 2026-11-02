@@ -50,20 +50,6 @@ test("every token utility DESIGN.md documents resolves as it did in v1, in both 
   assert.deepEqual(differences, []);
 });
 
-test("Tailwind's default palette generates no CSS", async () => {
-  const offPalette = [
-    "bg-blue-500",
-    "text-red-600",
-    "border-slate-200",
-    "ring-emerald-400",
-    "fill-black",
-  ];
-  const css = await compile(`@source inline("${offPalette.join(" ")}");`);
-  for (const utility of offPalette) {
-    assert.ok(!css.includes(`.${utility}`), `${utility} generated CSS`);
-  }
-});
-
 // The utilities among `utilities` that a rule's selector names exactly, so
 // bare `drop-shadow` isn't mistaken for `drop-shadow-lg`
 async function generated(utilities) {
@@ -76,6 +62,17 @@ async function generated(utilities) {
     selectors.has(`.${utility.replace(/[^\w-]/g, "\\$&")}`),
   );
 }
+
+test("Tailwind's default palette generates no CSS", async () => {
+  const offPalette = [
+    "bg-blue-500",
+    "text-red-600",
+    "border-slate-200",
+    "ring-emerald-400",
+    "fill-black",
+  ];
+  assert.deepEqual(await generated(offPalette), []);
+});
 
 test("Tailwind's own shadow scales generate no CSS", async () => {
   // Every step Tailwind's theme defines, deprecated bare steps included

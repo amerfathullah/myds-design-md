@@ -6,4 +6,4 @@ The preset now clears Tailwind's `drop-shadow-*` and `text-shadow-*` scales, as 
 
 **If you use them in your own markup, that element loses its shadow.** Use `shadow-button`, `shadow-card` or `shadow-context-menu` instead.
 
-`drop-shadow-none`, `text-shadow-none`, colour modifiers such as `drop-shadow-primary-600`, and arbitrary values such as `drop-shadow-[0_1px_2px_black]` still work. No MYDS component used these utilities, so components look the same.
+`drop-shadow-none`, `text-shadow-none`, shadow colours such as `drop-shadow-primary-600`, and arbitrary values such as `drop-shadow-[0_1px_2px_black]` still work. No MYDS component used these utilities, so components look the same.

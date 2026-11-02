@@ -1547,7 +1547,7 @@ These frame the page; their responsive behaviour is under [Layout → Page frame
 - Don't borrow a token from another role for its colour, such as `bg-txt-*` to fill a surface.
 - Don't style new UI with primitives or inline hex.
 - Don't use Tailwind's default text sizes (`text-xs`, `text-sm`, `text-lg`, …) in place of the body and heading scale.
-- Don't use the steps of Tailwind's own shadow scales (`shadow-2xs` … `shadow-2xl`, bare `shadow`, `inset-shadow-*`, `drop-shadow-*`, `text-shadow-*`): the preset clears them, so they generate nothing. Use `shadow-button`, `shadow-card` or `shadow-context-menu`, or no class for no shadow.
+- Don't use the steps of Tailwind's own shadow scales, such as `shadow-lg`, bare `shadow`, `inset-shadow-sm`, bare `drop-shadow` or `text-shadow-md`: the preset clears all four scales, so their steps generate nothing; see Elevation & Depth. Use `shadow-button`, `shadow-card` or `shadow-context-menu`, or no class for no shadow.
 - Don't use weights above Semibold 600.
 - Don't use status colours decoratively.
 

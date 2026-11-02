@@ -174,6 +174,8 @@ export default () => (
 );
 ```
 
+`SearchBarSearchButton` and `SearchBarClearButton` show only an icon. Screen readers announce the search button as "Search" in every size, and the clear button as "Clear". Pass an `aria-label` to name each one in your site's language, for example `aria-label="Cari"` and `aria-label="Kosongkan"`.
+
 ## Examples
 
 ### Size
@@ -569,9 +571,13 @@ type={{
 
 `SearchBarSearchButton` uses the same props as MYDS' `Button`. Please refer to the API references in [this documentation](/docs/develop/button)
 
+Its accessible name is "Search" by default. Pass an `aria-label` to replace it, for example `aria-label="Cari"`.
+
 ### SearchBarClearButton
 
 `SearchBarClearButton` uses the same props as MYDS' `Button`. Please refer to the API references in [this documentation](/docs/develop/button)
+
+Its accessible name is "Clear" by default. Pass an `aria-label` to replace it, for example `aria-label="Kosongkan"`.
 
 ### SearchBarHint
 

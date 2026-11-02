@@ -127,6 +127,8 @@ export default () => (
 );
 ```
 
+Pembaca skrin menyebut butang tutup setiap toast sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `<AutoToast closeLabel="Tutup" />`.
+
 ### Penggunaan Lanjutan
 
 Sebagai alternatif kepada penggunaan AutoToast, konstituensi komponen `Toast` boleh disusun secara manual.
@@ -166,6 +168,8 @@ export default () => (
   </ToastProvider>
 );
 ```
+
+Pembaca skrin menyebut `ToastClose` sebagai "Close". Hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<ToastClose aria-label="Tutup" />`.
 
 ```tsx copy title="Anatomi"
 // to publish or emit a new event to the Toast
@@ -241,6 +245,19 @@ const { toast } = useToast();
 
 ## Props
 
+### AutoToast
+`AutoToast` menghantar prop selain `closeLabel` kepada `ToastRoot` setiap toast.
+<TypeTable
+  type={{
+    closeLabel: {
+      description:
+        "Nama boleh capai butang tutup setiap toast. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Close",
+    },
+  }}
+/>
+
 ### ToastProvider
 `ToastProvider`  menggunakan `ToastProvider` dari komponen perpustakaan Radix UI. Sila rujuk kepada rujukan API dalam [documentasi ini](https://www.radix-ui.com/primitives/docs/components/toast#provider).
 
@@ -275,3 +292,5 @@ const { toast } = useToast();
 
 ### ToastClose
 `ToastClose` menggunakan `ToastClose` dari komponen perpustakaan Radiux UI. Sila rujuk kepada rujukan API dalam  [dokumentasi ini](https://www.radix-ui.com/primitives/docs/components/toast#close).
+
+Nama boleh capainya ialah "Close" secara lalai. Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Tutup"`. Ia sentiasa memaparkan ikon silang dan mengabaikan `children`, jadi namakannya dengan `aria-label`.

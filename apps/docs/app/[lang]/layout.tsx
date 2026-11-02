@@ -40,13 +40,14 @@ export default async function RootLayout({
   children,
 }: LayoutProps<"/[lang]">) {
   const { lang } = (await params) as { lang: "en" | "ms" };
+  const { t } = getRosetta(lang);
 
   return (
     <RootProvider i18n={i18nUI.provider(lang)}>
       {/* Every live ThemeSwitch reads and sets the site theme */}
       <ThemeBridge>
         <RosettaProvider locales={{ en, ms }}>
-          <AutoToast />
+          <AutoToast closeLabel={t("common.close")} />
           {children}
         </RosettaProvider>
       </ThemeBridge>

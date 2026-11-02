@@ -49,6 +49,12 @@ interface CalloutProps
     ComponentProps<"div"> {
   dismissible?: boolean;
   onDismiss?: () => void;
+  /**
+   * Accessible name of the close button that `dismissible` adds. Screen
+   * readers announce it; it isn't shown. Set it in your site's language.
+   * @default "Close"
+   */
+  closeLabel?: string;
 }
 
 const CalloutContext = createContext({
@@ -64,6 +70,7 @@ const Callout: ForwardRefExoticComponent<CalloutProps> = forwardRef(
       children,
       dismissible = false,
       onDismiss,
+      closeLabel = "Close",
       ...props
     },
     ref,
@@ -92,6 +99,7 @@ const Callout: ForwardRefExoticComponent<CalloutProps> = forwardRef(
                 size="small"
                 className="text-txt-black-700 ml-2 p-0 hover:bg-transparent"
                 iconOnly
+                aria-label={closeLabel}
                 onClick={handleDismiss}
               >
                 <ButtonIcon>

@@ -10,6 +10,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@amerfathullah/myds-react/alert-dialog";
+import { Callout, CalloutTitle } from "@amerfathullah/myds-react/callout";
+import {
+  CookieBanner,
+  CookieBannerTitle,
+} from "@amerfathullah/myds-react/cookie-banner";
 import {
   Cell,
   DataTable,
@@ -41,9 +46,16 @@ import {
 } from "@amerfathullah/myds-react/icon";
 import { Input, InputAddon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
+import {
+  SearchBar,
+  SearchBarClearButton,
+  SearchBarInputContainer,
+  SearchBarSearchButton,
+} from "@amerfathullah/myds-react/search-bar";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
+import { AutoToast, ToastClose } from "@amerfathullah/myds-react/toast";
 import { getThemeScript } from "@amerfathullah/myds-react/utils";
 import {
   createColumnHelper,
@@ -288,6 +300,30 @@ export const Themes = ({ resolvedTheme }: { resolvedTheme?: string }) => (
     >
       <ThemeSwitch />
     </ThemeContext.Provider>
+  </>
+);
+
+// Built-in accessible names: a control the author doesn't render takes its
+// name from `closeLabel` on the component that renders it, and an icon-only
+// part from its own `aria-label`
+export const CloseLabels = () => (
+  <>
+    <Callout dismissible closeLabel="Tutup">
+      <CalloutTitle>Disimpan</CalloutTitle>
+    </Callout>
+    <AutoToast closeLabel="Tutup" />
+    <ToastClose aria-label="Tutup" />
+    <CookieBanner open closeLabel="Tutup">
+      <CookieBannerTitle>Kuki</CookieBannerTitle>
+    </CookieBanner>
+    <SearchBar>
+      <SearchBarInputContainer>
+        <SearchBarClearButton aria-label="Kosongkan" />
+        <SearchBarSearchButton aria-label="Cari" />
+      </SearchBarInputContainer>
+    </SearchBar>
+    {/* @ts-expect-error `closeLabel` is a string */}
+    <Callout dismissible closeLabel={1} />
   </>
 );
 

@@ -180,6 +180,8 @@ Gunakan prop `variant` untuk menukar gaya callout!
 Jika panggilan keluar boleh dihapuskan, anda boleh memaparkan **butang tutup** di sudut kanan atas panggilan keluar dengan mengisytiharkan prop `dismissible`.
 Untuk menangkap peristiwa hapus, anda boleh menggunakan prop `onDismiss`.
 
+Pembaca skrin menyebut butang tutup sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `closeLabel="Tutup"`.
+
 Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan `CalloutClose`. `CalloutClose` juga akan mencetuskan acara onDismiss, jika ditakrifkan.
 
 <Tabs items={["Pratonton", "Kod"]}>
@@ -263,6 +265,12 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
     onDismiss: {
       description: "Untuk menangkap peristiwa hapus",
       type: "() => void",
+    },
+    closeLabel: {
+      description:
+        "Nama boleh capai butang tutup yang ditambah oleh `dismissible`. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Close",
     },
   }}
 />

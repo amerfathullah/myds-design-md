@@ -233,6 +233,8 @@ while callouts with all three elements (**title**, **content** & **action**) wil
 If the callout is dismissible, you can display a **close button** on the top right corner by declaring the `dismissible` prop.
 To capture the dismiss event, you may use the `onDismiss` prop.
 
+Screen readers announce the close button as "Close". Set `closeLabel` to name it in your site's language, for example `closeLabel="Tutup"`.
+
 To dismiss the callout via event listener, simply wrap the target element with `CalloutClose`. `CalloutClose` will also trigger the onDismiss event, if defined.
 
 <Tabs items={["Preview", "Code"]}>
@@ -310,6 +312,12 @@ To dismiss the callout via event listener, simply wrap the target element with `
     onDismiss: {
       description: "To capture the dismiss event",
       type: "() => void",
+    },
+    closeLabel: {
+      description:
+        "Accessible name of the close button that `dismissible` adds. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Close",
     },
   }}
 />

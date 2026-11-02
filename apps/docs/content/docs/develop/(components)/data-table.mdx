@@ -353,6 +353,8 @@ You can add a tooltip to the column headers by setting the `tooltip` property in
 
 To demonstrate this, we have set the `tooltip` property to `Age` and `Position` column. Hover over the column header to view the tooltip.
 
+Screen readers announce each tooltip's trigger, a question-mark icon, as "Tooltip". Set `tooltipLabel` in the same `meta` object to name it in your site's language, for example `meta: { tooltip: "Umur pekerja", tooltipLabel: "Maklumat" }`.
+
 <Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
@@ -929,6 +931,27 @@ Enable selection mode by passing a `selection` prop to the `DataTable` component
   </Tab>
 </Tabs>
 
+Screen readers announce each row's checkbox or radio as "Select row 1", "Select row 2" and so on. The numbers count the rows the table shows, from top to bottom: expanded sub-rows count, and the numbers follow the current sort. The selection column's header is the visually hidden text "Select". To name these controls in your site's language, add these properties to `selection`:
+
+- `rowLabel`: Names each row's checkbox or radio. Defaults to "Select row N". A string names every row's control. A function is called with each row and returns its name, for example `` rowLabel: (row) => `Pilih ${row.original.name}` ``.
+- `selectAllLabel`: Names the header's checkbox, which selects every row, in `checkbox` mode. Defaults to "Select all rows". For example, `selectAllLabel: "Pilih semua baris"`.
+- `clearLabel`: Names the header's button that clears the selection in `radio` mode. Defaults to "Clear selection". For example, `clearLabel: "Kosongkan pilihan"`.
+- `columnLabel`: The selection column's visually hidden header. Defaults to "Select". For example, `columnLabel: "Pilihan"`.
+
+```tsx
+<DataTable
+  data={data}
+  columns={columns}
+  selection={{
+    id_by: "id",
+    mode: "checkbox",
+    rowLabel: (row) => `Pilih ${row.original.name}`,
+    selectAllLabel: "Pilih semua baris",
+    columnLabel: "Pilihan",
+  }}
+/>
+```
+
 ### Grouped Header
 
 You can group columns together by setting the `columns` property to an array of `ColumnGroupDef` objects. Each `ColumnGroupDef` object represents a group of columns in the table.
@@ -1164,6 +1187,9 @@ To demonstrate the sticky header, lets set a fixed height for the table. Simply 
 2. `columns`: Column responsible for expanding & collapsing should pass `Cell.Expand` in the `cell` property.
 3. `nest`: An object prop that contains the following properties:
    - `id_by`: The key that matches the nested array object in the `data` property.
+   - `expandLabel` (optional): Names each row's expand button. Defaults to "expand row". A string names every button. A function is called with each row and returns its name.
+
+Screen readers announce each row's expand button as "expand row", and its `aria-expanded` tells them whether the row is expanded. Set `expandLabel` to name it in your site's language, for example `expandLabel: "Kembangkan baris"` or `` expandLabel: (row) => `Kembangkan ${row.original.name}` ``.
 
 <Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
@@ -1570,7 +1596,13 @@ You can add footer per column by setting the `footer` in **ColumnDef** object of
     nest: {
       description:
         "Specifies which key in the data object contains the nested data",
-      type: "{ id_by: string }",
+      type: "{ id_by: string, expandLabel?: string | (row) => string }",
+    },
+    "nest.expandLabel": {
+      description:
+        "Accessible name of each row's expand button: a string, or a function of the row. Screen readers announce it; it is not shown.",
+      type: "string | (row) => string",
+      default: "expand row",
     },
     pin: {
       description:
@@ -1623,6 +1655,12 @@ You can add footer per column by setting the `footer` in **ColumnDef** object of
     "meta.tooltip": {
       description: "Tooltip for the column header",
       type: "ReactNode",
+    },
+    "meta.tooltipLabel": {
+      description:
+        "Accessible name of the tooltip's trigger, a question-mark icon. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Tooltip",
     },
   }}
 />

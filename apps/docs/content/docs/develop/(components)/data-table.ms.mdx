@@ -353,6 +353,8 @@ Anda boleh menambah tooltip pada tajuk lajur dengan menetapkan sifat `tooltip` d
 
 Untuk menunjukkan ini, kami telah menetapkan sifat `tooltip` kepada lajur `Umur` dan `Jawatan`. Arahkan kursor ke tajuk lajur untuk melihat tooltip.
 
+Pembaca skrin menyebut pencetus setiap tooltip, iaitu ikon tanda soal, sebagai "Tooltip". Tetapkan `tooltipLabel` dalam objek `meta` yang sama untuk menamakannya dalam bahasa laman anda, contohnya `meta: { tooltip: "Umur pekerja", tooltipLabel: "Maklumat" }`.
+
 <Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
@@ -929,6 +931,27 @@ Aktifkan mod pemilihan dengan menghantar prop `selection` kepada komponen `DataT
   </Tab>
 </Tabs>
 
+Pembaca skrin menyebut kotak semak atau butang radio setiap baris sebagai "Select row 1", "Select row 2" dan seterusnya. Nombor ini mengira baris yang dipaparkan oleh jadual, dari atas ke bawah: sub-baris yang dikembangkan turut dikira, dan nombor mengikut susunan isihan semasa. Tajuk lajur pemilihan ialah teks tersembunyi "Select". Untuk menamakan kawalan ini dalam bahasa laman anda, tambah sifat berikut pada `selection`:
+
+- `rowLabel`: Menamakan kotak semak atau butang radio setiap baris. Nilai lalai ialah "Select row N". Rentetan menamakan kawalan setiap baris dengan rentetan itu. Fungsi dipanggil dengan setiap baris dan memulangkan namanya, contohnya `` rowLabel: (row) => `Pilih ${row.original.name}` ``.
+- `selectAllLabel`: Menamakan kotak semak pada tajuk, yang memilih semua baris, dalam mod `checkbox`. Nilai lalai ialah "Select all rows". Contohnya, `selectAllLabel: "Pilih semua baris"`.
+- `clearLabel`: Menamakan butang pada tajuk yang mengosongkan pilihan dalam mod `radio`. Nilai lalai ialah "Clear selection". Contohnya, `clearLabel: "Kosongkan pilihan"`.
+- `columnLabel`: Tajuk tersembunyi lajur pemilihan. Nilai lalai ialah "Select". Contohnya, `columnLabel: "Pilihan"`.
+
+```tsx
+<DataTable
+  data={data}
+  columns={columns}
+  selection={{
+    id_by: "id",
+    mode: "checkbox",
+    rowLabel: (row) => `Pilih ${row.original.name}`,
+    selectAllLabel: "Pilih semua baris",
+    columnLabel: "Pilihan",
+  }}
+/>
+```
+
 ### Tajuk Berkumpulan
 
 Anda boleh mengumpulkan lajur bersama dengan menetapkan sifat `columns` kepada array objek `ColumnGroupDef`. Setiap objek `ColumnGroupDef` mewakili kumpulan lajur dalam jadual.
@@ -1164,6 +1187,9 @@ Untuk menunjukkan tajuk melekat, mari tetapkan ketinggian tetap untuk jadual. Ha
 2. `columns`: Lajur yang bertanggungjawab untuk mengembangkan & meruntuhkan harus menghantar `Cell.Expand` dalam sifat `cell`.
 3. `nest`: Prop objek yang mengandungi sifat berikut:
    - `id_by`: Kunci yang sepadan dengan objek array bersarang dalam sifat `data`.
+   - `expandLabel` (pilihan): Menamakan butang kembang setiap baris. Nilai lalai ialah "expand row". Rentetan menamakan setiap butang dengan rentetan itu. Fungsi dipanggil dengan setiap baris dan memulangkan namanya.
+
+Pembaca skrin menyebut butang kembang setiap baris sebagai "expand row", dan `aria-expanded` butang itu memberitahu sama ada baris itu dikembangkan. Tetapkan `expandLabel` untuk menamakannya dalam bahasa laman anda, contohnya `expandLabel: "Kembangkan baris"` atau `` expandLabel: (row) => `Kembangkan ${row.original.name}` ``.
 
 <Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
@@ -1570,7 +1596,13 @@ Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **Colu
     nest: {
       description:
         "Menentukan kunci dalam objek data yang mengandungi data bersarang",
-      type: "{ id_by: string }",
+      type: "{ id_by: string, expandLabel?: string | (row) => string }",
+    },
+    "nest.expandLabel": {
+      description:
+        "Nama boleh capai butang kembang setiap baris: rentetan, atau fungsi baris. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string | (row) => string",
+      default: "expand row",
     },
     pin: {
       description:
@@ -1623,6 +1655,12 @@ Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **Colu
     "meta.tooltip": {
       description: "Tooltip untuk tajuk lajur",
       type: "ReactNode",
+    },
+    "meta.tooltipLabel": {
+      description:
+        "Nama boleh capai pencetus tooltip, iaitu ikon tanda soal. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Tooltip",
     },
   }}
 />

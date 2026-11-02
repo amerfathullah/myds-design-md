@@ -67,7 +67,6 @@ export function tokenUtilities() {
       "border-success-700/20",
       "border-warning-700/20",
     ].map((utility) => ({ utility, props: ["borderTopColor"] })),
-    { utility: "outline-primary-600/20", props: ["outlineColor"] },
     // Typography
     { utility: "text", props: ["fontSize", "lineHeight"] },
     ...["font-body", "font-heading", "font-mono"].map((utility) => ({

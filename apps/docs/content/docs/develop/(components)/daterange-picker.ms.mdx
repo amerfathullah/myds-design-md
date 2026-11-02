@@ -245,6 +245,8 @@ Komponen ini menyokong dwibahasa, anda boleh menghantar prop `locale` untuk mene
 
 Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetapkan `ms`.
 
+`locale` juga menetapkan apa yang disebut oleh pembaca skrin dalam kalendar Dari dan Hingga: dengan `ms`, butang, grid, tajuk hari dan hari kedua-dua kalendar mempunyai nama dalam Bahasa Melayu. Butang tahun dalam paparan bulan adalah pengecualian. Pembaca skrin menyebutnya sebagai "Go to the Previous Year" dan "Go to the Next Year" melainkan `previousYearLabel` dan `nextYearLabel` menamakannya semula dalam kedua-dua kalendar. Tetapkan kedua-duanya dalam bahasa laman anda, contohnya `previousYearLabel="Pergi ke tahun sebelumnya"` dan `nextYearLabel="Pergi ke tahun seterusnya"`.
+
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
@@ -322,6 +324,18 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
       description: "Bahasa untuk pemilih julat tarikh",
       type: "en | ms",
       default: "en",
+    },
+    previousYearLabel: {
+      description:
+        "Nama boleh capai butang sebelumnya dalam paparan bulan kedua-dua kalendar, yang kembali setahun. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Go to the Previous Year",
+    },
+    nextYearLabel: {
+      description:
+        "Nama boleh capai butang seterusnya dalam paparan bulan kedua-dua kalendar, yang maju setahun. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Go to the Next Year",
     },
   }}
 />

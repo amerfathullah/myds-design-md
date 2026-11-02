@@ -245,6 +245,8 @@ To support different locales, you can pass the `locale` prop to the daterange pi
 
 Default value is `en`. To switch to Bahasa Melayu, pass `ms`.
 
+`locale` also sets what screen readers announce in the From and To calendars: with `ms`, their buttons, grids, weekday headings and days have Malay names. The month view's year buttons are the exception. Screen readers announce them as "Go to the Previous Year" and "Go to the Next Year" unless `previousYearLabel` and `nextYearLabel` rename them in both calendars. Set these in your site's language, for example `previousYearLabel="Pergi ke tahun sebelumnya"` and `nextYearLabel="Pergi ke tahun seterusnya"`.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
@@ -322,6 +324,18 @@ Default value is `en`. To switch to Bahasa Melayu, pass `ms`.
       description: "Locale for the daterange picker",
       type: "en | ms",
       default: "en",
+    },
+    previousYearLabel: {
+      description:
+        "Accessible name of the calendars' previous button in their month view, which goes back a year. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Go to the Previous Year",
+    },
+    nextYearLabel: {
+      description:
+        "Accessible name of the calendars' next button in their month view, which goes forward a year. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Go to the Next Year",
     },
   }}
 />

@@ -16,6 +16,13 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "./alert-dialog";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "./breadcrumb";
 import { Callout, CalloutContent, CalloutTitle } from "./callout";
 import {
   CookieBanner,
@@ -24,6 +31,13 @@ import {
 } from "./cookie-banner";
 import { Dialog, DialogBody, DialogDescription, DialogTitle } from "./dialog";
 import { Pill } from "./pill";
+import {
+  Masthead,
+  MastheadHeader,
+  MastheadTitle,
+  MastheadTrigger,
+} from "./masthead";
+import { Navbar, NavbarAction, NavbarMenu, NavbarMenuItem } from "./navbar";
 import {
   SearchBar,
   SearchBarClearButton,
@@ -644,5 +658,198 @@ describe("ToastClose in a toast composed by hand", () => {
 
   test("lets an `aria-label` rename it", async () => {
     expect(nameOf(await toast("Tutup"))).toBe("Tutup");
+  });
+});
+
+// The props that name NavbarMenu's `<nav>` landmark, and the classes it
+// passes to its desktop list and mobile menu
+type NavbarMenuProps = Omit<ComponentProps<typeof NavbarMenu>, "children">;
+
+// Every element on the page whose attribute `name` is `value`. React doesn't
+// warn when an `aria-*` attribute lands on the wrong element, or on none, so
+// check where each one lands.
+const withAttribute = (name: string, value: string) => [
+  ...document.querySelectorAll(`[${name}="${value}"]`),
+];
+
+describe("NavbarMenu's `<nav>`", () => {
+  // A Navbar with a menu and its toggle, as the docs compose one, after a
+  // heading that `aria-labelledby` can point at. `menu` goes to NavbarMenu
+  // and `header` to Navbar. Returns the page; the mobile menu, once open,
+  // portals into `<body>`.
+  const navbar = (
+    menu: NavbarMenuProps = {},
+    header: ComponentProps<typeof Navbar> = {},
+  ) =>
+    mount(
+      createElement(
+        "div",
+        null,
+        createElement("h2", { id: "menu-title" }, "Menu utama"),
+        createElement(
+          Navbar,
+          header,
+          createElement(NavbarMenu, {
+            ...menu,
+            children: createElement(NavbarMenuItem, {
+              href: "#perkhidmatan",
+              children: "Perkhidmatan",
+            }),
+          }),
+          createElement(NavbarAction),
+        ),
+      ),
+    );
+
+  test('is the page\'s one `<nav>`, named "Main" by default', async () => {
+    await navbar();
+    expect(nameOf(document, "nav")).toBe("Main");
+    expect(withAttribute("aria-label", "Main")).toEqual([
+      document.querySelector("nav"),
+    ]);
+  });
+
+  test("takes its name from an `aria-label` on NavbarMenu", async () => {
+    await navbar({ "aria-label": "Utama" });
+    expect(nameOf(document, "nav")).toBe("Utama");
+    expect(withAttribute("aria-label", "Utama")).toEqual([
+      document.querySelector("nav"),
+    ]);
+  });
+
+  test("takes its name from the element `aria-labelledby` names", async () => {
+    await navbar({ "aria-labelledby": "menu-title" });
+    expect(nameOf(document, "nav")).toBe("Menu utama");
+    expect(withAttribute("aria-labelledby", "menu-title")).toEqual([
+      document.querySelector("nav"),
+    ]);
+  });
+
+  test("leaves an `aria-label` on Navbar on the `<header>`", async () => {
+    await navbar({}, { "aria-label": "Pengepala" });
+    expect(withAttribute("aria-label", "Pengepala")).toEqual([
+      document.querySelector("header"),
+    ]);
+    expect(nameOf(document, "nav")).toBe("Main");
+  });
+
+  test("keeps its class and passes on the list's and mobile menu's", async () => {
+    const page = await navbar({
+      classNameNavDesktop: "senarai-desktop",
+      classNameNavMobile: "menu-mudah-alih",
+    });
+    const nav = document.querySelector("nav")!;
+    expect([...nav.classList]).toEqual(["grow"]);
+
+    const [list, ...otherLists] = document.querySelectorAll(".senarai-desktop");
+    expect(otherLists).toEqual([]);
+    expect(list!.tagName).toBe("UL");
+    expect(list!.closest("nav")).toBe(nav);
+    expect(list!.textContent).toBe("Perkhidmatan");
+
+    // The mobile menu renders only once the toggle opens it
+    expect(document.querySelectorAll(".menu-mudah-alih")).toHaveLength(0);
+    await act(async () => page.querySelector("button")!.click());
+    const [menu, ...otherMenus] = document.querySelectorAll(".menu-mudah-alih");
+    expect(otherMenus).toEqual([]);
+    expect([...menu!.classList]).toContain("xl:hidden");
+    expect(menu!.textContent).toBe("Perkhidmatan");
+  });
+});
+
+describe("NavbarAction's menu toggle", () => {
+  // A Navbar with only its toggle. Returns the toggle's name.
+  const toggle = async (label?: string) =>
+    nameOf(
+      await mount(
+        createElement(
+          Navbar,
+          null,
+          createElement(NavbarAction, ariaLabel(label)),
+        ),
+      ),
+    );
+
+  test('is named "Open navigation menu" by default', async () => {
+    expect(await toggle()).toBe("Open navigation menu");
+  });
+
+  test("lets an `aria-label` rename it", async () => {
+    expect(await toggle("Menu navigasi")).toBe("Menu navigasi");
+  });
+});
+
+describe("MastheadTrigger", () => {
+  // A Masthead whose trigger shows "Kenal pasti begini". Returns the
+  // trigger.
+  async function trigger(label?: string) {
+    const page = await mount(
+      createElement(
+        Masthead,
+        null,
+        createElement(
+          MastheadHeader,
+          null,
+          createElement(
+            MastheadTitle,
+            null,
+            "Laman Web Rasmi Kerajaan Malaysia",
+          ),
+          createElement(
+            MastheadTrigger,
+            ariaLabel(label),
+            "Kenal pasti begini",
+          ),
+        ),
+      ),
+    );
+    const [button, ...others] = page.querySelectorAll("button");
+    expect(others).toEqual([]);
+    expect(button!.textContent).toBe("Kenal pasti begini");
+    return button!;
+  }
+
+  // The default replaces the visible text as the name (#177)
+  test('is named "Toggle masthead" by default, whatever it shows', async () => {
+    expect(computeAccessibleName(await trigger())).toBe("Toggle masthead");
+  });
+
+  test("takes its name from an `aria-label` that repeats its text", async () => {
+    const button = await trigger("Kenal pasti begini");
+    expect(computeAccessibleName(button)).toBe("Kenal pasti begini");
+  });
+});
+
+describe("Breadcrumb's `<nav>`", () => {
+  // A breadcrumb trail of a link and the current page. Returns the trail's
+  // name.
+  const breadcrumb = async (label?: string) =>
+    nameOf(
+      await mount(
+        createElement(
+          Breadcrumb,
+          ariaLabel(label),
+          createElement(
+            BreadcrumbItem,
+            null,
+            createElement(BreadcrumbLink, { href: "#utama" }, "Laman Utama"),
+          ),
+          createElement(BreadcrumbSeparator),
+          createElement(
+            BreadcrumbItem,
+            null,
+            createElement(BreadcrumbPage, null, "Laman Anda"),
+          ),
+        ),
+      ),
+      "nav",
+    );
+
+  test('is named "breadcrumb" by default', async () => {
+    expect(await breadcrumb()).toBe("breadcrumb");
+  });
+
+  test("lets an `aria-label` rename it", async () => {
+    expect(await breadcrumb("Laluan halaman")).toBe("Laluan halaman");
   });
 });

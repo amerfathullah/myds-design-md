@@ -134,15 +134,32 @@ interface NavigationMenuProps {
   children: ReactNode;
   classNameNavDesktop?: string;
   classNameNavMobile?: string;
+  /**
+   * Accessible name of the menu's `<nav>` landmark. Screen readers announce
+   * it; it isn't shown. Set it in your site's language.
+   * @default "Main"
+   */
+  "aria-label"?: string;
+  /**
+   * The id of an element whose text names the menu's `<nav>` landmark, in
+   * place of `aria-label`.
+   */
+  "aria-labelledby"?: string;
 }
 
 const NavbarMenu: FunctionComponent<NavigationMenuProps> = ({
   children,
   classNameNavDesktop,
   classNameNavMobile,
+  "aria-label": ariaLabel = "Main",
+  "aria-labelledby": ariaLabelledBy,
 }) => {
   return (
-    <NavigationMenu className="grow">
+    <NavigationMenu
+      className="grow"
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+    >
       {/* Desktop */}
       <NavigationMenuList
         className={clx(

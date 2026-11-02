@@ -52,6 +52,11 @@ import {
 import { Input, InputAddon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
 import {
+  Navbar,
+  NavbarMenu,
+  NavbarMenuItem,
+} from "@amerfathullah/myds-react/navbar";
+import {
   AutoPagination,
   PaginationPrevious,
 } from "@amerfathullah/myds-react/pagination";
@@ -486,6 +491,29 @@ export const CloseAndRegionLabels = () => (
       Johor
     </Pill>
   </>
+);
+
+// NavbarMenu's `<nav>` takes its name from `aria-label` (default "Main") or
+// from the element `aria-labelledby` names. NavbarMenu takes no other
+// NavigationMenu props.
+export const NavbarMenuNames = () => (
+  <Navbar>
+    <h2 id="menu-title">Menu utama</h2>
+    <NavbarMenu aria-label="Utama">
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+    <NavbarMenu aria-labelledby="menu-title">
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+    {/* @ts-expect-error `aria-label` is a string */}
+    <NavbarMenu aria-label={1}>
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+    {/* @ts-expect-error `orientation` is NavigationMenu's, not NavbarMenu's */}
+    <NavbarMenu orientation="vertical">
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+  </Navbar>
 );
 
 // Icons take an SVG's props. The national marks are deprecated on `/icon` and

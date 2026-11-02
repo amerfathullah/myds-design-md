@@ -51,7 +51,9 @@ const slot_cva = cva(
   {
     variants: {
       active: {
-        true: "z-10 border-otl-primary-300 ring-3 ring-otl-primary-200 group-has-[input[aria-invalid=true]]:ring-otl-danger-200",
+        // The input is transparent, so under forced colours, which drop the
+        // ring, the slot draws the outline (`outline-hidden`)
+        true: "z-10 border-otl-primary-300 ring-3 ring-fr-primary outline-hidden group-has-[input[aria-invalid=true]]:ring-fr-danger",
         false: "",
       },
     },

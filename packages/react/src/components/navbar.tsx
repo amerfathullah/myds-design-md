@@ -103,10 +103,12 @@ const NavbarLogo: FunctionComponent<NavbarLogoProps> = ({
   ...props
 }) => {
   return (
+    // The header centres the link rather than the link filling the header's
+    // height, so the link's focus ring isn't cut off at the window's top
     <Link
       href={href}
       underline="none"
-      className={clx("flex h-full w-auto items-center gap-2.5", className)}
+      className={clx("flex w-auto items-center gap-2.5", className)}
       {...props}
     >
       <img
@@ -236,9 +238,10 @@ interface NavbarMenuItemProps
   asChild?: boolean;
 }
 
+// A menu item's hover background, which the NavbarMenuDropdown trigger shares
 const navbar_menu_item_cva = cva(
   [
-    "bg-transparent hover:bg-bg-washed text-txt-black-700 truncate px-2.5 py-1.5",
+    "bg-transparent hover:bg-bg-washed text-txt-black-700",
     "transition-colors motion-reduce:transition-none list-none",
     "w-full xl:w-fit text-body-sm flex items-center cursor-pointer",
   ],
@@ -251,6 +254,18 @@ const navbar_menu_item_cva = cva(
     },
   },
 );
+
+// The padding, truncation and radius of the area a menu item's hover
+// background fills. A menu item's link takes them and fills the item, so its
+// focus ring outlines that area; the trigger takes them itself.
+const navbar_menu_link_cva = cva(["truncate px-2.5 py-1.5"], {
+  variants: {
+    is_from_dropdown: {
+      true: "rounded-xs",
+      false: "rounded-md",
+    },
+  },
+});
 
 const NavbarMenuItem: FunctionComponent<NavbarMenuItemProps> = ({
   className,
@@ -266,7 +281,18 @@ const NavbarMenuItem: FunctionComponent<NavbarMenuItemProps> = ({
       className={clx(navbar_menu_item_cva({ is_from_dropdown }), className)}
       {...props}
     >
-      <Comp href={href} underline="none" className="w-full">
+      <Comp
+        href={href}
+        underline="none"
+        className={clx(
+          "w-full",
+          navbar_menu_link_cva({ is_from_dropdown }),
+          // The child doesn't get Link's classes, so it takes Link's focus
+          // ring here
+          asChild &&
+            "focus-visible:ring-fr-primary box-decoration-clone focus-visible:ring-3 focus-visible:outline-hidden",
+        )}
+      >
         {children}
       </Comp>
     </NavigationMenuItem>
@@ -294,7 +320,9 @@ const NavbarMenuDropdown: FunctionComponent<NavbarMenuDropdownProps> = ({
         <NavigationMenuTrigger
           className={clx(
             navbar_menu_item_cva({ is_from_dropdown: false }),
+            navbar_menu_link_cva({ is_from_dropdown: false }),
             "data-[state=open]:bg-bg-washed group w-full select-none bg-transparent transition-colors xl:w-max",
+            "focus-visible:ring-fr-primary focus-visible:ring-3 focus-visible:outline-hidden",
           )}
         >
           {title}

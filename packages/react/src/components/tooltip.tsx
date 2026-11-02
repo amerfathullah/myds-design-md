@@ -8,7 +8,7 @@ import {
 import {
   Tooltip as Root,
   TooltipProvider,
-  TooltipTrigger,
+  TooltipTrigger as Trigger,
   TooltipContent as Content,
   TooltipPortal as Portal,
   TooltipArrow as Arrow,
@@ -24,6 +24,30 @@ const Tooltip: FunctionComponent<ComponentProps<typeof Root>> = (props) => {
   );
 };
 Tooltip.displayName = TooltipProvider.displayName;
+
+/**
+ * Radix's trigger, with MYDS's focus ring when it renders its own button.
+ * With `asChild` it adds nothing: Slot appends classes without merging them,
+ * so a default ring would override the child's own.
+ */
+const TooltipTrigger: ForwardRefExoticComponent<
+  ComponentProps<typeof Trigger>
+> = forwardRef(({ asChild, className, ...props }, ref) => (
+  <Trigger
+    ref={ref}
+    asChild={asChild}
+    className={
+      asChild
+        ? className
+        : clx(
+            "focus-visible:ring-fr-primary focus-visible:ring-3 focus-visible:outline-hidden",
+            className,
+          )
+    }
+    {...props}
+  />
+));
+TooltipTrigger.displayName = Trigger.displayName;
 
 interface TooltipContentProps
   extends ComponentProps<typeof Content>,

@@ -2,9 +2,9 @@
 // lands its target 65px from the top, clear of a sticky 64px header. The page
 // scrolls there smoothly, unless the user asks for reduced motion. Focus that
 // isn't `:focus-visible`, as after a mouse click, shows no outline, even one
-// an outline-width utility such as TableCell's `focus:outline-[3px]` draws,
-// while keyboard focus shows it. And an underlined link keeps the
-// `decoration-*` utilities on it, the `decoration-inherit` Link uses included.
+// an outline-width utility such as `focus:outline-[3px]` draws, while
+// keyboard focus shows it. And an underlined link keeps the `decoration-*`
+// utilities on it, the `decoration-inherit` Link uses included.
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 
@@ -12,9 +12,9 @@ import { chromium } from "playwright";
 
 import { compile, compileFull } from "./compile.mjs";
 
-const tableCellOutline =
+const outlineClasses =
   "focus:outline-primary-600/20 focus:outline-[3px] focus:outline-offset-0";
-const classes = `@source inline("${tableCellOutline} underline decoration-inherit decoration-wavy decoration-3");`;
+const classes = `@source inline("${outlineClasses} underline decoration-inherit decoration-wavy decoration-3");`;
 const entries = {
   "the Tailwind import": () => compile(classes),
   "full.css": () => compileFull(classes),
@@ -33,7 +33,7 @@ const page = (css) => `<!doctype html>
         Parent <a id="inherit" href="#" class="underline decoration-inherit">link</a>
       </p>
       <a id="own" href="#" class="underline decoration-wavy decoration-3">link</a>
-      <button id="table-cell" class="${tableCellOutline}">Cell</button>
+      <button id="outlined" class="${outlineClasses}">Outlined</button>
     </main>
   </body>
 </html>`;
@@ -109,16 +109,16 @@ for (const entry of Object.keys(entries)) {
     withTab(entry, "no-preference", async (tab) => {
       const focused = () => tab.evaluate(() => document.activeElement.id);
       const outline = () =>
-        tab.$eval("#table-cell", (cell) => {
-          const { outlineStyle, outlineWidth } = getComputedStyle(cell);
+        tab.$eval("#outlined", (button) => {
+          const { outlineStyle, outlineWidth } = getComputedStyle(button);
           return `${outlineStyle} ${outlineWidth}`;
         });
-      await tab.click("#table-cell");
-      assert.equal(await focused(), "table-cell");
+      await tab.click("#outlined");
+      assert.equal(await focused(), "outlined");
       assert.match(await outline(), /^none /);
       await tab.keyboard.press("Shift+Tab");
       await tab.keyboard.press("Tab");
-      assert.equal(await focused(), "table-cell");
+      assert.equal(await focused(), "outlined");
       assert.equal(await outline(), "solid 3px");
     }));
 

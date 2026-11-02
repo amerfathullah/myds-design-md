@@ -207,7 +207,10 @@ const TabsContent: ForwardRefExoticComponent<
 > = forwardRef(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={clx("text-txt-black-700", className)}
+    className={clx(
+      "text-txt-black-700 focus-visible:ring-fr-primary focus-visible:ring-3 focus-visible:outline-hidden",
+      className,
+    )}
     {...props}
   />
 ));

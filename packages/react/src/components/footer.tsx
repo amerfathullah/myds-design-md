@@ -165,10 +165,14 @@ interface SiteLinkProps extends ComponentProps<typeof Link> {
 
 const SiteLink: ForwardRefExoticComponent<SiteLinkProps> = forwardRef(
   ({ children, className, asChild = false, href, ...props }, ref) => {
+    // The child doesn't get Link's classes, so it takes Link's focus ring here
     if (asChild) {
       return (
         <Slot
-          className={clx("hover:text-txt-black-900", className)}
+          className={clx(
+            "hover:text-txt-black-900 focus-visible:ring-fr-primary box-decoration-clone focus-visible:ring-3 focus-visible:outline-hidden",
+            className,
+          )}
           ref={ref}
           {...props}
         >

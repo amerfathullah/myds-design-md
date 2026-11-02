@@ -197,8 +197,8 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .radio{appearance:none;flex-shrink:0;width:20px;height:20px;border:1px solid var(--otl-gray-200);border-radius:9999px;background:transparent;box-shadow:var(--shadow-button);outline:none;cursor:pointer}
 .radio:hover{border-color:var(--otl-gray-300)}
 .radio:checked{border:0;background:var(--bg-white);box-shadow:inset 0 0 0 6px var(--primary-600),var(--shadow-button)}
-.radio:focus-visible{box-shadow:0 0 0 4px var(--fr-primary),var(--shadow-button)}
-.radio:checked:focus-visible{box-shadow:inset 0 0 0 6px var(--primary-600),0 0 0 4px var(--fr-primary),var(--shadow-button)}
+.radio:focus-visible{box-shadow:0 0 0 3px var(--fr-primary),var(--shadow-button)}
+.radio:checked:focus-visible{box-shadow:inset 0 0 0 6px var(--primary-600),0 0 0 3px var(--fr-primary),var(--shadow-button)}
 .radio-label{color:var(--txt-black-700);font-size:16px;line-height:24px;font-weight:500}
 .switch-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;max-width:360px;margin-top:12px}
 .switches{margin-top:24px}
@@ -271,10 +271,12 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 /* Accordion */
 .accordion-item{margin-top:1px;overflow:hidden;border-bottom:1px solid var(--otl-gray-200);background:var(--bg-white)}
 .accordion-item:first-child{margin-top:0}
-.accordion summary{display:flex;align-items:center;justify-content:space-between;padding:16px 0;background:var(--bg-white);color:var(--txt-black-700);font-size:16px;line-height:16px;font-weight:500;list-style:none;cursor:pointer;outline:none}
+.accordion-item:focus-within{position:relative;z-index:1}
+.accordion-item:has(>summary:focus-visible){box-shadow:0 0 0 3px var(--fr-primary)}
+.accordion summary{display:flex;align-items:center;justify-content:space-between;padding:16px 0;background:var(--bg-white);color:var(--txt-black-700);font-size:16px;line-height:16px;font-weight:500;list-style:none;cursor:pointer}
 .accordion summary::-webkit-details-marker{display:none}
 .accordion summary:hover{color:var(--txt-black-900);text-decoration:underline;text-underline-position:from-font}
-.accordion summary:focus-visible{text-decoration:underline;text-underline-position:from-font}
+.accordion summary:focus-visible{outline:none;text-decoration:underline;text-underline-position:from-font}
 .accordion details[open]>summary{color:var(--txt-black-900)}
 .accordion summary svg{flex-shrink:0;width:20px;height:20px;color:var(--txt-black-500);transition:transform .3s ease-in-out}
 .accordion details[open]>summary svg{transform:rotate(180deg)}
@@ -328,13 +330,15 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .navbar{position:relative;z-index:1;height:56px;border-bottom:1px solid var(--otl-gray-200);background:var(--bg-white);box-shadow:var(--shadow-button)}
 .navbar-inner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1280px;height:56px;margin:0 auto;padding:0 18px}
 @media (min-width:768px){.navbar,.navbar-inner{height:64px}.navbar-inner{padding:0 24px}}
-.navbar-logo{display:flex;align-items:center;gap:10px;height:100%;text-decoration:none}
+.navbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.navbar-logo:focus-visible{outline:none;box-shadow:0 0 0 3px var(--fr-primary)}
 .logo-placeholder{flex-shrink:0;width:32px;height:32px;border:1px dashed var(--otl-gray-300);border-radius:4px}
 .navbar-name{max-width:200px;color:var(--txt-black-900);font-family:var(--font-heading);font-size:18px;line-height:26px;font-weight:600}
 .navbar-menu{flex-grow:1}
 .navbar-menu ul{display:none;gap:4px;margin:0;padding:0;list-style:none}
 .navbar-item{display:flex;align-items:center;padding:6px 10px;border-radius:8px;background:transparent;color:var(--txt-black-700);font-size:14px;line-height:20px;font-weight:500;text-decoration:none;white-space:nowrap;transition:color .15s var(--ease),background-color .15s var(--ease)}
 .navbar-item:hover{background:var(--bg-washed)}
+.navbar-item:focus-visible{outline:none;box-shadow:0 0 0 3px var(--fr-primary)}
 @media (prefers-reduced-motion:reduce){.navbar-item{transition:none}}
 .navbar-action{display:flex;align-items:center;justify-content:flex-end;gap:8px}
 @media (min-width:1280px){.navbar-menu ul{display:flex}.navbar-toggle{display:none}}
@@ -361,6 +365,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 @media (min-width:1024px){.link-group-links{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:8px}.link-group-links a{grid-column:1/-1}}
 .site-link{overflow:hidden;color:var(--txt-black-700);text-decoration:none;white-space:nowrap;text-overflow:ellipsis;transition:color .15s var(--ease)}
 .site-link:hover{color:var(--txt-black-900);text-decoration:underline;text-underline-position:from-font}
+.site-link:focus-visible{outline:none;box-shadow:0 0 0 3px var(--fr-primary)}
 
 /* Copy toast: Toast tokens and geometry, message variant */
 .toast-viewport{position:fixed;right:0;bottom:0;z-index:99;display:flex;flex-direction:column;width:100%;padding:18px;pointer-events:none}
@@ -370,7 +375,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .toast.show{display:flex}
 
 /* Forced colours: outline-hidden keeps a 2px transparent outline, which the system colour paints */
-@media (forced-colors:active){.btn,.input input,.select select,.checkbox,.switch,.tab,.accordion summary,.menuitem,.textarea:focus,.radio:focus,.masthead-trigger:focus,.datefield input:focus{outline:2px solid transparent;outline-offset:2px}.swatch:focus-visible,.token:focus-visible{outline:2px solid transparent;outline-offset:-2px}}
+@media (forced-colors:active){.btn,.input input,.select select,.checkbox,.switch,.tab,.menuitem,.textarea:focus,.radio:focus,.masthead-trigger:focus,.datefield input:focus,.accordion summary:focus-visible,.accordion-item:has(>summary:focus-visible),.navbar-logo:focus-visible,.navbar-item:focus-visible,.site-link:focus-visible{outline:2px solid transparent;outline-offset:2px}.swatch:focus-visible,.token:focus-visible{outline:2px solid transparent;outline-offset:-2px}}
 </style>
 </head>
 <body>
@@ -527,7 +532,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 <button class="token" type="button" data-token="otl-primary-disabled"><i style="background:var(--otl-primary-disabled)"></i><span><b>otl-primary-disabled</b><code></code><small>40% alpha</small></span></button>
 </div></div>
 <div class="token-group"><h4>Focus ring (fr-*)</h4><div class="token-grid">
-<button class="token" type="button" data-token="fr-primary"><i style="background:var(--fr-primary)"></i><span><b>fr-primary</b><code></code><small>Most focusable controls</small></span></button>
+<button class="token" type="button" data-token="fr-primary"><i style="background:var(--fr-primary)"></i><span><b>fr-primary</b><code></code><small>Focus ring, except on invalid fields</small></span></button>
 <button class="token" type="button" data-token="fr-danger"><i style="background:var(--fr-danger)"></i><span><b>fr-danger</b><code></code><small>Invalid field, focused</small></span></button>
 </div></div>
 </div>

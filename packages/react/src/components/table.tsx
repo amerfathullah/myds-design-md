@@ -82,9 +82,13 @@ const TableCell: ForwardRefExoticComponent<ComponentProps<"td">> = forwardRef(
       tabIndex={-1}
       className={clx(
         "border-otl-gray-200 text-txt-black-900 border-b py-1.5 pr-3 align-middle text-sm leading-[33.11px]",
-        "focus:outline-primary-600/20 rounded-[1px] focus:z-20 focus:outline-[3px] focus:outline-offset-0",
+        // Inset, so the table's scroll wrapper, its sticky header and the
+        // neighbouring cells' fills don't hide the ring
+        "focus-visible:ring-fr-primary rounded-[1px] focus-visible:ring-3 focus-visible:outline-hidden focus-visible:ring-inset",
         "[&:has([role=checkbox])]:w-8 [&:has([role=checkbox])]:pl-1",
+        // A Radix radio has the role; DataTable's native radio input doesn't
         "[&:has([role=radio])]:w-8 [&:has([role=radio])]:pl-1",
+        "[&:has(input[type=radio])]:w-8 [&:has(input[type=radio])]:pl-1",
         className,
       )}
       {...props}

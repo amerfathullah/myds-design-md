@@ -36,14 +36,12 @@ Breadcrumb.displayName = "Breadcrumb";
 
 const BreadcrumbItem: ForwardRefExoticComponent<ComponentProps<"li">> =
   forwardRef(({ className, ...props }, ref) => (
-    <li
-      ref={ref}
-      {...props}
-      className={clx("line-clamp-1 max-w-[200px]", className)}
-    />
+    <li ref={ref} {...props} className={clx("max-w-[200px]", className)} />
   ));
 BreadcrumbItem.displayName = "BreadcrumbItem";
 
+// The link clamps itself to one line, rather than its item: an element's
+// own overflow doesn't clip its own focus ring, but an ancestor's would
 const BreadcrumbLink: ForwardRefExoticComponent<
   ComponentProps<"a"> & { asChild?: boolean }
 > = forwardRef(({ asChild, className, ...props }, ref) => {
@@ -53,7 +51,8 @@ const BreadcrumbLink: ForwardRefExoticComponent<
     <Comp
       ref={ref}
       className={clx(
-        "hover:text-txt-black-900 text-txt-black-500 transition-colors hover:underline",
+        "hover:text-txt-black-900 text-txt-black-500 line-clamp-1 max-w-full transition-colors hover:underline",
+        "focus-visible:ring-fr-primary focus-visible:ring-3 focus-visible:outline-hidden",
         className,
       )}
       {...props}

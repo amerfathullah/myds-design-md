@@ -80,8 +80,7 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-// No test logs an error or a warning, so a `closeLabel` that reached the DOM,
-// which React warns about, fails it. Nothing is left on the page.
+// No test logs an error or a warning, and nothing is left on the page
 afterEach(async () => {
   while (unmounts.length) await unmounts.pop()!();
   const logged = [
@@ -98,12 +97,17 @@ afterEach(async () => {
 const ariaLabel = (label?: string) =>
   label === undefined ? {} : { "aria-label": label };
 
-// No `closeLabel` reaches the DOM as an attribute
-const strayCloseLabels = () =>
-  document.querySelectorAll("[closelabel], [closeLabel]").length;
+// No `closeLabel` reaches the DOM as an attribute. React warns about an
+// unknown prop only the first time it meets its name, so the warning check
+// above would miss every leak after the first; this check catches each one.
+const strayCloseLabels = () => document.querySelectorAll("[closelabel]").length;
+
+// The props that name a close button the author doesn't render, and the
+// `aria-label` that must still reach the element it reached before
+type CloseLabelProps = { closeLabel?: string; "aria-label"?: string };
 
 describe("Callout's `dismissible` cross", () => {
-  const callout = (props: { closeLabel?: string; "aria-label"?: string }) =>
+  const callout = (props: CloseLabelProps) =>
     createElement(
       Callout,
       { dismissible: true, ...props },
@@ -140,10 +144,7 @@ const variants = ["message", "success", "info", "warning", "error"] as const;
 describe("AutoToast", () => {
   // An AutoToast with one toast of each variant, fired through the library's
   // toast hook, as an app fires them. Returns each toast's root.
-  async function autoToast(props: {
-    closeLabel?: string;
-    "aria-label"?: string;
-  }) {
+  async function autoToast(props: CloseLabelProps) {
     let toast: (event: ToastEvent) => void = () => {};
     const Fire = () => {
       toast = useToast().toast;
@@ -223,10 +224,7 @@ describe("AutoToast", () => {
 describe("CookieBanner's close cross", () => {
   // An open CookieBanner with the title and description Radix asks of a
   // dialog. Returns the dialog, which portals into `<body>`.
-  async function cookieBanner(props: {
-    closeLabel?: string;
-    "aria-label"?: string;
-  }) {
+  async function cookieBanner(props: CloseLabelProps) {
     await mount(
       createElement(
         CookieBanner,

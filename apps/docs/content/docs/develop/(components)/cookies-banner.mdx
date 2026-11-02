@@ -232,6 +232,8 @@ export default () => (
 );
 ```
 
+`CookieBanner` adds a close button with a cross icon to its top-right corner. Screen readers announce the close button as "Close". Set `closeLabel` to name it in your site's language, for example `closeLabel="Tutup"`.
+
 ## Examples
 
 ### Uncontrolled vs Controlled State
@@ -548,6 +550,12 @@ Below is an example of a **controlled Cookie Banner**.
     },
     onOpenChange: {
       type: "(value: boolean) => void",
+    },
+    closeLabel: {
+      description:
+        "Accessible name of the close button in the banner's top-right corner. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Close",
     },
   }}
 />

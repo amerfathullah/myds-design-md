@@ -69,14 +69,19 @@ const SearchBarIcon: FunctionComponent = () => {
           onFocus={() => setHasFocus(true)}
           onBlur={() => setHasFocus(false)}
         />
-        {query && <SearchBarClearButton onClick={() => setQuery("")} />}
+        {query && (
+          <SearchBarClearButton
+            aria-label={t("searchbar.clear")}
+            onClick={() => setQuery("")}
+          />
+        )}
         {!hasFocus && (
           <SearchBarHint className="hidden sm:flex">
             {t("searchbar.press")} <Pill size="small">/</Pill>{" "}
             {t("searchbar.tosearch")}
           </SearchBarHint>
         )}
-        <SearchBarSearchButton />
+        <SearchBarSearchButton aria-label={t("searchbar.search")} />
       </SearchBarInputContainer>
     </SearchBar>
   );

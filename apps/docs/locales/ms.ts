@@ -27,6 +27,7 @@ export default {
     },
     contribute: "Bantu tambah baik",
     beta: "Beta",
+    close: "Tutup",
   },
   Home: {
     title: {
@@ -292,6 +293,8 @@ export default {
     searchname: "Cari mengikut nama",
     press: "Tekan",
     tosearch: "untuk mencari",
+    clear: "Kosongkan",
+    search: "Cari",
   },
   tabfilter: {
     all: "Semua",

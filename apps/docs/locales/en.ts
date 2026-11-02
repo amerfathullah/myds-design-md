@@ -27,6 +27,7 @@ export default {
     },
     contribute: "Contribute",
     beta: "Beta",
+    close: "Close",
   },
   Home: {
     title: {
@@ -289,6 +290,8 @@ export default {
     searchname: "Search by name",
     press: "Press",
     tosearch: "to search",
+    clear: "Clear",
+    search: "Search",
   },
   tabfilter: {
     all: "All",

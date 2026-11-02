@@ -131,6 +131,8 @@ export default () => {
 };
 ```
 
+Screen readers announce each toast's close button as "Close". Set `closeLabel` to name it in your site's language, for example `<AutoToast closeLabel="Tutup" />`.
+
 ### Advanced Usage
 
 Instead of using `AutoToast`, the `Toast` component can be assembled manually for more control.
@@ -170,6 +172,8 @@ export default () => (
   </ToastProvider>
 );
 ```
+
+Screen readers announce `ToastClose` as "Close". Pass an `aria-label` to name it in your site's language, for example `<ToastClose aria-label="Tutup" />`.
 
 ## Examples
 
@@ -227,6 +231,19 @@ const { toast } = useToast();
 
 ## Props
 
+### AutoToast
+`AutoToast` passes any props other than `closeLabel` to each toast's `ToastRoot`.
+<TypeTable
+  type={{
+    closeLabel: {
+      description:
+        "Accessible name of each toast's close button. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Close",
+    },
+  }}
+/>
+
 ### ToastProvider
 `ToastProvider` is abstracted from Radix UI's `ToastProvider`. Please refer to the API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/toast#provider).
 
@@ -261,3 +278,5 @@ const { toast } = useToast();
 
 ### ToastClose
 `ToastClose` is abstracted from Radix UI's `ToastClose`. Please refer to the API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/toast#close).
+
+Its accessible name is "Close" by default. Pass an `aria-label` to replace it, for example `aria-label="Tutup"`. It always shows a cross icon and ignores `children`, so name it with `aria-label`.

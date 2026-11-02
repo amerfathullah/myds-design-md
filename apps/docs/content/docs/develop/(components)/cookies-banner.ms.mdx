@@ -230,6 +230,8 @@ export default () => (
 );
 ```
 
+`CookieBanner` menambah butang tutup dengan ikon silang di sudut kanan atasnya. Pembaca skrin menyebut butang tutup sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `closeLabel="Tutup"`.
+
 ## Contoh
 
 ### Keadaan Tidak Terkawal vs Terkawal
@@ -542,6 +544,12 @@ Berikut adalah contoh **Banner Kuki Terkawal**.
     },
     onOpenChange: {
       type: "(value: boolean) => void",
+    },
+    closeLabel: {
+      description:
+        "Nama boleh capai butang tutup di sudut kanan atas banner. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Close",
     },
   }}
 />

@@ -13,4 +13,4 @@ More built-in accessible names that were fixed in English can now be renamed in 
 
 None of the new props reaches the DOM. Nothing changes visually: the same elements, classes and icons render.
 
-The docs (EN/MS) document the new props and default names. The Toast docs also explain the `label` on `ToastViewport` and `ToastProvider` for toasts composed by hand.
+The docs (EN/MS) document the new props and default names. The Toast docs also explain the `label` on `ToastViewport` and `ToastProvider` for toasts composed by hand. The docs site names its toast region, toast announcements and the community page's dialog close button in the page's language.

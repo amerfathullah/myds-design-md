@@ -28,6 +28,8 @@ export default {
     contribute: "Bantu tambah baik",
     beta: "Beta",
     close: "Tutup",
+    notifications: "Pemberitahuan",
+    notification: "Pemberitahuan",
   },
   Home: {
     title: {

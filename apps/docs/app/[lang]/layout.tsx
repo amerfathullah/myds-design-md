@@ -47,7 +47,11 @@ export default async function RootLayout({
       {/* Every live ThemeSwitch reads and sets the site theme */}
       <ThemeBridge>
         <RosettaProvider locales={{ en, ms }}>
-          <AutoToast closeLabel={t("common.close")} />
+          <AutoToast
+            closeLabel={t("common.close")}
+            viewportLabel={`${t("common.notifications")} ({hotkey})`}
+            announceLabel={t("common.notification")}
+          />
           {children}
         </RosettaProvider>
       </ThemeBridge>

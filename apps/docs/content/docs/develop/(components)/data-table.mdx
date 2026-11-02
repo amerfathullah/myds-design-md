@@ -933,7 +933,7 @@ Enable selection mode by passing a `selection` prop to the `DataTable` component
 
 Screen readers announce each row's checkbox or radio as "Select row 1", "Select row 2" and so on. The numbers count the rows the table shows, from top to bottom: expanded sub-rows count, and the numbers follow the current sort. The selection column's header is the visually hidden text "Select". To name these controls in your site's language, add these properties to `selection`:
 
-- `rowLabel`: Names each row's checkbox or radio. Defaults to "Select row N". A string names every row's control. A function is called with each row and returns its name, for example `` rowLabel: (row) => `Pilih ${row.original.name}` ``.
+- `rowLabel`: Names each row's checkbox or radio. Defaults to "Select row N". A function is called with each row and returns its name, for example `` rowLabel: (row) => `Pilih ${row.original.name}` ``. A string names every row's control with that string, so screen reader users can't tell the rows apart; prefer a function that names the row.
 - `selectAllLabel`: Names the header's checkbox, which selects every row, in `checkbox` mode. Defaults to "Select all rows". For example, `selectAllLabel: "Pilih semua baris"`.
 - `clearLabel`: Names the header's button that clears the selection in `radio` mode. Defaults to "Clear selection". For example, `clearLabel: "Kosongkan pilihan"`.
 - `columnLabel`: The selection column's visually hidden header. Defaults to "Select". For example, `columnLabel: "Pilihan"`.

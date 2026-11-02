@@ -47,6 +47,10 @@ import {
 import { Input, InputAddon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
 import {
+  AutoPagination,
+  PaginationPrevious,
+} from "@amerfathullah/myds-react/pagination";
+import {
   SearchBar,
   SearchBarClearButton,
   SearchBarInputContainer,
@@ -324,6 +328,42 @@ export const CloseLabels = () => (
     </SearchBar>
     {/* @ts-expect-error `closeLabel` is a string */}
     <Callout dismissible closeLabel={1} />
+  </>
+);
+
+// AutoPagination names the controls it renders from its label props, and
+// `pageLabel` names each page button from its number
+const paging = {
+  count: 100,
+  limit: 10,
+  page: 5,
+  onPageChange: (page: number) => void page,
+};
+
+export const PaginationLabels = () => (
+  <>
+    <AutoPagination
+      {...paging}
+      type="default"
+      aria-label="Penomboran"
+      previousLabel="Halaman sebelumnya"
+      nextLabel="Halaman seterusnya"
+      pageLabel={(page: number) => `Halaman ${page}`}
+      ellipsisLabel="Lebih banyak halaman"
+    />
+    <AutoPagination
+      {...paging}
+      type="simple"
+      previousLabel="Sebelumnya"
+      nextLabel="Seterusnya"
+    />
+    <AutoPagination
+      {...paging}
+      type="full"
+      previous={<PaginationPrevious aria-label="Kembali" />}
+    />
+    {/* @ts-expect-error `pageLabel` is a function of the page number */}
+    <AutoPagination {...paging} type="default" pageLabel="Halaman" />
   </>
 );
 

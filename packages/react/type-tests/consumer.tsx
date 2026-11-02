@@ -56,6 +56,7 @@ import {
   SearchBarInputContainer,
   SearchBarSearchButton,
 } from "@amerfathullah/myds-react/search-bar";
+import { TableTooltip } from "@amerfathullah/myds-react/table";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
@@ -364,6 +365,61 @@ export const PaginationLabels = () => (
     />
     {/* @ts-expect-error `pageLabel` is a function of the page number */}
     <AutoPagination {...paging} type="default" pageLabel="Halaman" />
+  </>
+);
+
+// DataTable names the controls it renders from `selection`, `nest` and a
+// column's `meta.tooltipLabel`. A row label is a string or a function of the
+// table's row. TableTooltip takes its trigger's name from `aria-label`.
+export const DataTableLabels = () => (
+  <>
+    <DataTable
+      columns={[
+        { id: "name", header: "Name", accessorKey: "name", cell: Cell.Expand },
+        {
+          id: "age",
+          header: "Age",
+          accessorKey: "age",
+          meta: { tooltip: "Umur dalam tahun", tooltipLabel: "Maklumat umur" },
+        },
+      ]}
+      data={data}
+      nest={{
+        id_by: "reports",
+        expandLabel: (row) => `Kembangkan ${row.original.name}`,
+      }}
+      selection={{
+        id_by: "id",
+        mode: "checkbox",
+        rowLabel: (row) => `Pilih ${row.original.name}`,
+        selectAllLabel: "Pilih semua baris",
+        columnLabel: "Pilihan",
+      }}
+    />
+    <DataTable
+      columns={columns}
+      data={data}
+      nest={{ id_by: "reports", expandLabel: "Kembangkan baris" }}
+      selection={{
+        id_by: "id",
+        mode: "radio",
+        rowLabel: "Pilih baris",
+        clearLabel: "Kosongkan pilihan",
+      }}
+    />
+    <DataTable
+      columns={columns}
+      data={data}
+      selection={{
+        id_by: "id",
+        mode: "checkbox",
+        // @ts-expect-error `rowLabel` returns a string
+        rowLabel: (row) => row.original.age,
+      }}
+    />
+    <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
+    {/* @ts-expect-error `aria-label` is a string */}
+    <TableTooltip aria-label={1}>Umur dalam tahun</TableTooltip>
   </>
 );
 

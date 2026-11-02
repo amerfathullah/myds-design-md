@@ -107,12 +107,22 @@ const TableCaption: ForwardRefExoticComponent<ComponentProps<"caption">> =
   ));
 TableCaption.displayName = "TableCaption";
 
-const TableTooltip: ForwardRefExoticComponent<ComponentProps<typeof Tooltip>> =
+interface TableTooltipProps extends ComponentProps<typeof Tooltip> {
+  /**
+   * Accessible name of the trigger, a question-mark icon. Screen readers
+   * announce it; it isn't shown. Set it in your site's language. The other
+   * props go to the tooltip root.
+   * @default "Tooltip"
+   */
+  "aria-label"?: string;
+}
+
+const TableTooltip: ForwardRefExoticComponent<TableTooltipProps> = forwardRef(
   // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  forwardRef(({ children, ...props }, ref) => {
+  ({ children, "aria-label": label = "Tooltip", ...props }, ref) => {
     return (
       <Tooltip {...props}>
-        <TooltipTrigger aria-label="Tooltip">
+        <TooltipTrigger aria-label={label}>
           <QuestionCircleIcon className="text-txt-black-500 size-4 cursor-help" />
         </TooltipTrigger>
         <TooltipContent side="top" align="center">
@@ -120,7 +130,8 @@ const TableTooltip: ForwardRefExoticComponent<ComponentProps<typeof Tooltip>> =
         </TooltipContent>
       </Tooltip>
     );
-  });
+  },
+);
 TableTooltip.displayName = "TableTooltip";
 
 const TableSkeleton: ForwardRefExoticComponent<ComponentProps<"div">> =

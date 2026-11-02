@@ -136,6 +136,10 @@ const toast_close_cva = cva([
   "text-txt-black-500 hover:text-txt-black-700 absolute right-1 top-1 rounded-md p-1",
   "focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-fr-primary",
 ]);
+/**
+ * The toast's icon-only close button. Screen readers announce it as "Close";
+ * pass an `aria-label` to name it in your site's language.
+ */
 const ToastClose = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Close>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
@@ -144,6 +148,7 @@ const ToastClose = React.forwardRef<
     ref={ref}
     className={clx(toast_close_cva({ className }))}
     toast-close=""
+    aria-label="Close"
     {...props}
   >
     <CrossIcon className="size-5 shrink-0" />
@@ -210,6 +215,8 @@ const toast_icon_cva = cva("size-5 shrink-0", {
   },
 });
 
+// The status icon and the countdown bar are hidden from assistive
+// technology: the toast's title carries its meaning.
 const ToastIcon = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div">
@@ -220,7 +227,7 @@ const ToastIcon = React.forwardRef<
   if (!variant || variant === "message") return null;
 
   return (
-    <div ref={ref} role="img" {...props}>
+    <div ref={ref} aria-hidden="true" {...props}>
       {
         {
           success: <CheckCircleIcon className={className} />,
@@ -256,7 +263,7 @@ const ToastProgress = React.forwardRef<
 
   return (
     <div
-      role="progressbar"
+      aria-hidden="true"
       ref={ref}
       className="animate-expire group-hover:paused absolute bottom-0 left-0 w-full group-hover:transition-none"
       style={{ animationDuration: `${duration}ms` }}
@@ -269,9 +276,20 @@ const ToastProgress = React.forwardRef<
 
 /*========================================================================================================================*/
 
-const AutoToast: FunctionComponent<
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>
-> = (props) => {
+interface AutoToastProps
+  extends React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> {
+  /**
+   * Accessible name of each toast's close button. Screen readers announce
+   * it; it isn't shown. Set it in your site's language.
+   * @default "Close"
+   */
+  closeLabel?: string;
+}
+
+const AutoToast: FunctionComponent<AutoToastProps> = ({
+  closeLabel = "Close",
+  ...props
+}) => {
   const { toasts, subscribe, unsubscribe } = useToast();
 
   useEffect(() => {
@@ -296,7 +314,7 @@ const AutoToast: FunctionComponent<
               <ToastDescription>{toast.description}</ToastDescription>
             )}
           </div>
-          <ToastClose />
+          <ToastClose aria-label={closeLabel} />
           <ToastProgress />
         </ToastRoot>
       ))}

@@ -101,6 +101,10 @@ export const SearchBarInput: FunctionComponent<
   );
 });
 
+/**
+ * The icon-only search button. Screen readers announce it as "Search"; pass
+ * an `aria-label` to name it in your site's language.
+ */
 export const SearchBarSearchButton: FunctionComponent<ButtonProps> = ({
   className,
   ...props
@@ -113,6 +117,7 @@ export const SearchBarSearchButton: FunctionComponent<ButtonProps> = ({
           "border-primary-600 from-primary-400 to-primary-600 rounded-full border bg-linear-to-b/srgb p-1",
           className,
         )}
+        aria-label="Search"
         {...props}
       >
         <SearchIcon className="text-white" />
@@ -123,6 +128,7 @@ export const SearchBarSearchButton: FunctionComponent<ButtonProps> = ({
     <Button
       variant="default-ghost"
       className={clx("p-0", className)}
+      aria-label="Search"
       {...props}
     >
       <SearchIcon className="text-txt-black-500" />
@@ -130,6 +136,10 @@ export const SearchBarSearchButton: FunctionComponent<ButtonProps> = ({
   );
 };
 
+/**
+ * The icon-only clear button. Screen readers announce it as "Clear"; pass an
+ * `aria-label` to name it in your site's language.
+ */
 export const SearchBarClearButton: FunctionComponent<ButtonProps> = ({
   className,
   ...props
@@ -138,6 +148,7 @@ export const SearchBarClearButton: FunctionComponent<ButtonProps> = ({
     <Button
       variant="default-ghost"
       className={clx("p-0", className)}
+      aria-label="Clear"
       {...props}
     >
       <CrossIcon className="text-txt-black-500" />

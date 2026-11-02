@@ -33,6 +33,13 @@ const CookieBannerContext = createContext<CookieBannerContextValue>({
 
 type CookieBannerProps = ComponentProps<typeof Dialog> & {
   className?: string;
+  /**
+   * Accessible name of the close button in the banner's top-right corner.
+   * Screen readers announce it; it isn't shown. Set it in your site's
+   * language.
+   * @default "Close"
+   */
+  closeLabel?: string;
 };
 
 const cookie_content_cva = cva([
@@ -46,6 +53,7 @@ const cookie_content_cva = cva([
 const CookieBanner: FunctionComponent<CookieBannerProps> = ({
   className,
   children,
+  closeLabel = "Close",
   ...props
 }) => {
   const [showPreferences, setShowPreferences] = useState(false);
@@ -62,7 +70,10 @@ const CookieBanner: FunctionComponent<CookieBannerProps> = ({
             onInteractOutside={resetPreferences}
             {...props}
           >
-            <DialogClose className="ring-fr-primary absolute right-0 top-0 mr-4 mt-4 rounded-md p-1.5 outline-hidden transition-all focus:ring-3">
+            <DialogClose
+              className="ring-fr-primary absolute right-0 top-0 mr-4 mt-4 rounded-md p-1.5 outline-hidden transition-all focus:ring-3"
+              aria-label={closeLabel}
+            >
               <CrossIcon className="size-4 shrink-0" />
             </DialogClose>
             {children}

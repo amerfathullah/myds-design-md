@@ -15,11 +15,13 @@
 /* Enter and exit animations: animate-in, fade-in-0, zoom-in-95, slide-in-from-* … */
 @import "tw-animate-css";
 
-/* MYDS replaces these scales, so Tailwind's own steps (`blue-500`, `shadow-lg`, …) don't exist */
+/* MYDS replaces these scales, so Tailwind's own steps (`blue-500`, `shadow-lg`, `drop-shadow-md`, …) don't exist */
 @theme {
   --color-*: initial;
   --shadow-*: initial;
   --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
 
   /* Named animations tw-animate-css adds, which the Tailwind 3 preset never had */
   --animate-accordion-down: initial;

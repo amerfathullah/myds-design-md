@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
+import postcss from "postcss";
+
 import { compile } from "./compile.mjs";
 import { tokenUtilities } from "./token-utilities.mjs";
 import { measure } from "./measure.mjs";
@@ -60,4 +62,62 @@ test("Tailwind's default palette generates no CSS", async () => {
   for (const utility of offPalette) {
     assert.ok(!css.includes(`.${utility}`), `${utility} generated CSS`);
   }
+});
+
+// The utilities among `utilities` that a rule's selector names exactly, so
+// bare `drop-shadow` isn't mistaken for `drop-shadow-lg`
+async function generated(utilities) {
+  const css = await compile(`@source inline("${utilities.join(" ")}");`);
+  const selectors = new Set();
+  postcss.parse(css).walkRules((rule) => {
+    for (const selector of rule.selectors) selectors.add(selector);
+  });
+  return utilities.filter((utility) =>
+    selectors.has(`.${utility.replace(/[^\w-]/g, "\\$&")}`),
+  );
+}
+
+test("Tailwind's own shadow scales generate no CSS", async () => {
+  // Every step Tailwind's theme defines, deprecated bare steps included
+  const tailwindSteps = [
+    "shadow-2xs",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "shadow-2xl",
+    "shadow-inner",
+    "inset-shadow-2xs",
+    "inset-shadow-xs",
+    "inset-shadow-sm",
+    "drop-shadow",
+    "drop-shadow-xs",
+    "drop-shadow-sm",
+    "drop-shadow-md",
+    "drop-shadow-lg",
+    "drop-shadow-xl",
+    "drop-shadow-2xl",
+    "text-shadow-2xs",
+    "text-shadow-xs",
+    "text-shadow-sm",
+    "text-shadow-md",
+    "text-shadow-lg",
+  ];
+  assert.deepEqual(await generated(tailwindSteps), []);
+});
+
+test("the shadow utilities that take no step still generate CSS", async () => {
+  const stepless = [
+    "shadow-none",
+    "drop-shadow-none",
+    "text-shadow-none",
+    "drop-shadow-primary-600",
+    "text-shadow-primary-600",
+    "shadow-[0_1px_2px_black]",
+    "drop-shadow-[0_1px_2px_black]",
+    "text-shadow-[0_1px_2px_black]",
+  ];
+  assert.deepEqual(await generated(stepless), stepless);
 });

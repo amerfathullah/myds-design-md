@@ -1399,8 +1399,7 @@ MYDS is mostly flat. Depth comes from borders (`otl-gray-200`) and recessed `bg-
 | Context menu | `shadow-context-menu` | `0px 2px 6px 0px rgba(0,0,0,0.05), 0px 12px 50px 0px rgba(0,0,0,0.10)` | Dropdown, select content, tooltip, popover, Navbar dropdown and mobile menu, search results, SkipLink when focused          |
 
 - The shadows are pure black at a fixed alpha and **don't change in the dark theme**.
-- The preset **replaces** Tailwind's shadow scales (`--shadow-*` and `--inset-shadow-*`), so Tailwind's own `shadow-2xs` … `shadow-2xl`, bare `shadow` and `inset-shadow-*` generate nothing. `shadow-none` is Tailwind's and removes a shadow. The dialog asks for `shadow-lg` and so renders with no shadow.
-- Tailwind's `drop-shadow-*` and `text-shadow-*` are not cleared, so they still generate Tailwind's own shadows, which aren't MYDS's. Don't use them.
+- The preset **replaces** all four of Tailwind's shadow scales (`--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*` and `--text-shadow-*`), so their steps generate nothing: `shadow-2xs` … `shadow-2xl`, bare `shadow`, `shadow-inner`, `inset-shadow-2xs` … `inset-shadow-sm`, bare `drop-shadow`, `drop-shadow-xs` … `drop-shadow-2xl` and `text-shadow-2xs` … `text-shadow-lg`. `shadow-none`, `drop-shadow-none` and `text-shadow-none` are Tailwind's and remove a shadow. The dialog asks for `shadow-lg` and so renders with no shadow.
 - Overlays behind modal surfaces are `gray-700` @ 60% (`#3F3F4699`): the dialog overlay and the Navbar's mobile-menu overlay.
 
 ## Shapes
@@ -1548,7 +1547,7 @@ These frame the page; their responsive behaviour is under [Layout → Page frame
 - Don't borrow a token from another role for its colour, such as `bg-txt-*` to fill a surface.
 - Don't style new UI with primitives or inline hex.
 - Don't use Tailwind's default text sizes (`text-xs`, `text-sm`, `text-lg`, …) in place of the body and heading scale.
-- Don't use Tailwind's own shadow scale (`shadow-2xs` … `shadow-2xl`, bare `shadow`) or `inset-shadow-*`: the preset clears them, so they generate nothing. Don't use `drop-shadow-*` or `text-shadow-*` either: they still generate Tailwind's shadows, which aren't MYDS's. Use `shadow-button`, `shadow-card` or `shadow-context-menu`, or no class for no shadow.
+- Don't use the steps of Tailwind's own shadow scales (`shadow-2xs` … `shadow-2xl`, bare `shadow`, `inset-shadow-*`, `drop-shadow-*`, `text-shadow-*`): the preset clears them, so they generate nothing. Use `shadow-button`, `shadow-card` or `shadow-context-menu`, or no class for no shadow.
 - Don't use weights above Semibold 600.
 - Don't use status colours decoratively.
 

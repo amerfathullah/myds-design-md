@@ -357,10 +357,19 @@ test("a mouse click shows no ring, except on SearchBar and InputOTP", async () =
         // Press the button on the middle of the control, or of a wrapped
         // link's first line. Focus moves on the press, and releasing it
         // elsewhere follows no link and toggles nothing.
-        const box = await page.$eval(control.focus, (element) => {
-          const { x, y, width, height } = element.getClientRects()[0];
-          return { x, y, width, height };
-        });
+        const { inMenu, ...box } = await page.$eval(
+          control.focus,
+          (element) => {
+            const { x, y, width, height } = element.getClientRects()[0];
+            return {
+              x,
+              y,
+              width,
+              height,
+              inMenu: !!element.closest("header nav"),
+            };
+          },
+        );
         const { x, y } = control.press ?? {
           x: box.width / 2,
           y: box.height / 2,
@@ -374,6 +383,10 @@ test("a mouse click shows no ring, except on SearchBar and InputOTP", async () =
         });
         await page.mouse.move(away.x, away.y);
         await page.mouse.up();
+        // The pointer leaving the Navbar menu's trigger or dropdown starts
+        // Radix's 150ms timer to close the dropdown. Let it run out, or it
+        // closes the dropdown that the next control opens by keyboard.
+        if (inMenu) await page.waitForTimeout(200);
         expected[key] = {
           focused: true,
           outline: "none",

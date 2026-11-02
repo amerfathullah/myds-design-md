@@ -28,6 +28,11 @@ import {
   type DateRange,
 } from "@amerfathullah/myds-react/daterange-picker";
 import {
+  Dialog,
+  DialogBody,
+  DialogTitle,
+} from "@amerfathullah/myds-react/dialog";
+import {
   Footer,
   FooterSection,
   SiteInfo,
@@ -50,10 +55,13 @@ import {
   AutoPagination,
   PaginationPrevious,
 } from "@amerfathullah/myds-react/pagination";
+import { Pill } from "@amerfathullah/myds-react/pill";
 import {
   SearchBar,
   SearchBarClearButton,
   SearchBarInputContainer,
+  SearchBarResults,
+  SearchBarResultsList,
   SearchBarSearchButton,
 } from "@amerfathullah/myds-react/search-bar";
 import { TableTooltip } from "@amerfathullah/myds-react/table";
@@ -442,6 +450,41 @@ export const CalendarLabels = () => (
     <DatePicker previousYearLabel={1} />
     {/* @ts-expect-error `nextYearLabel` is a string */}
     <DateRangePicker nextYearLabel={1} />
+  </>
+);
+
+// DialogBody, AlertDialogContent and Pill take `closeLabel` for the close
+// button they render, and AutoToast takes `viewportLabel` and `announceLabel`
+// for its region and the word before each announcement. SearchBarResultsList
+// takes its name from its own `aria-label`.
+export const CloseAndRegionLabels = () => (
+  <>
+    <Dialog open>
+      <DialogBody closeLabel="Tutup">
+        <DialogTitle>Padam fail?</DialogTitle>
+      </DialogBody>
+    </Dialog>
+    <AlertDialog variant="danger" open>
+      <AlertDialogContent closeLabel="Tutup">
+        <AlertDialogTitle>Padam fail?</AlertDialogTitle>
+      </AlertDialogContent>
+    </AlertDialog>
+    <Pill onDismiss={() => {}} closeLabel="Tutup">
+      Johor
+    </Pill>
+    <AutoToast
+      viewportLabel="Pemberitahuan ({hotkey})"
+      announceLabel="Pemberitahuan"
+    />
+    <SearchBar>
+      <SearchBarResults open>
+        <SearchBarResultsList aria-label="Cadangan" />
+      </SearchBarResults>
+    </SearchBar>
+    {/* @ts-expect-error `closeLabel` is a string */}
+    <Pill onDismiss={() => {}} closeLabel={1}>
+      Johor
+    </Pill>
   </>
 );
 

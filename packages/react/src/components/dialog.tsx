@@ -53,6 +53,12 @@ interface DialogBodyProps
   extends ComponentProps<typeof DialogPrimitive.Content>,
     DialogBodyContextProps {
   hideClose?: boolean;
+  /**
+   * Accessible name of the close button DialogBody renders. Screen readers
+   * announce it; it isn't shown. Set it in your site's language.
+   * @default "Close"
+   */
+  closeLabel?: string;
 }
 
 const DialogBodyContext = createContext<DialogBodyContextProps>({
@@ -68,6 +74,7 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef(
       hideClose = false,
       dismissible = true,
       onDismiss,
+      closeLabel = "Close",
       ...props
     },
     ref,
@@ -118,7 +125,7 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef(
               >
                 <Button variant="default-outline" size={"small"} iconOnly>
                   <CrossIcon className="size-5 stroke-current" />
-                  <span className="sr-only">Close</span>
+                  <span className="sr-only">{closeLabel}</span>
                 </Button>
               </DialogClose>
             )}

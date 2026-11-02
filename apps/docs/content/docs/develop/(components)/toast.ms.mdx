@@ -129,6 +129,8 @@ export default () => (
 
 Pembaca skrin menyebut butang tutup setiap toast sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `<AutoToast closeLabel="Tutup" />`.
 
+Pembaca skrin menyebut kawasan yang memuatkan toast sebagai "Notifications (F8)", dan menyebut "Notification" sebelum teks setiap toast. Tetapkan `viewportLabel` dan `announceLabel` untuk menamakannya dalam bahasa laman anda, contohnya `<AutoToast viewportLabel="Pemberitahuan ({hotkey})" announceLabel="Pemberitahuan" />`. `{hotkey}` menjadi F8, kekunci yang mengalihkan fokus ke toast. Jangan hantar `announceLabel` yang kosong: Radix akan mencatat ralat.
+
 ### Penggunaan Lanjutan
 
 Sebagai alternatif kepada penggunaan AutoToast, konstituensi komponen `Toast` boleh disusun secara manual.
@@ -246,7 +248,7 @@ const { toast } = useToast();
 ## Props
 
 ### AutoToast
-`AutoToast` menghantar prop selain `closeLabel` kepada `ToastRoot` setiap toast.
+`AutoToast` menghantar prop selain `closeLabel`, `viewportLabel` dan `announceLabel` kepada `ToastRoot` setiap toast.
 <TypeTable
   type={{
     closeLabel: {
@@ -255,14 +257,30 @@ const { toast } = useToast();
       type: "string",
       default: "Close",
     },
+    viewportLabel: {
+      description:
+        "Nama boleh capai kawasan yang memuatkan toast. {hotkey} menjadi F8, kekunci yang mengalihkan fokus ke toast. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Notifications ({hotkey})",
+    },
+    announceLabel: {
+      description:
+        "Perkataan yang disebut oleh pembaca skrin sebelum teks setiap toast. Ia tidak dipaparkan. Jangan hantar nilai kosong: Radix akan mencatat ralat.",
+      type: "string",
+      default: "Notification",
+    },
   }}
 />
 
 ### ToastProvider
 `ToastProvider`  menggunakan `ToastProvider` dari komponen perpustakaan Radix UI. Sila rujuk kepada rujukan API dalam [documentasi ini](https://www.radix-ui.com/primitives/docs/components/toast#provider).
 
+Prop `label` pada `ToastProvider` menetapkan perkataan yang disebut oleh pembaca skrin sebelum teks setiap toast, iaitu "Notification" secara lalai. Tetapkannya dalam bahasa laman anda, contohnya `<ToastProvider label="Pemberitahuan">`. Jangan hantar nilai kosong: Radix akan mencatat ralat.
+
 ### ToastViewport
 `ToastViewport` menggunakan `ToastViewport` dari komponen perpustakaan Radiux UI. Sila rujuk kepada rujukan API dalam  [dokumentasi ini](https://www.radix-ui.com/primitives/docs/components/toast#viewport).
+
+Prop `label` pada `ToastViewport` menamakan kawasan yang memuatkan toast, iaitu `Notifications ({hotkey})` secara lalai, dengan `{hotkey}` menjadi F8. Tetapkannya dalam bahasa laman anda, contohnya `<ToastViewport label="Pemberitahuan ({hotkey})" />`. `aria-label` pada `ToastViewport` pula jatuh pada senarai di dalam kawasan itu, jadi ia tidak menamakan semula kawasan tersebut.
 
 ### ToastRoot
 `ToastRoot` menggunakan `ToastRoot` dari komponen perpustakaan Radiux UI. Sila rujuk kepada rujukan API dalam  [dokumentasi ini](https://www.radix-ui.com/primitives/docs/components/toast#root).

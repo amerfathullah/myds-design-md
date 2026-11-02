@@ -133,6 +133,8 @@ export default () => {
 
 Screen readers announce each toast's close button as "Close". Set `closeLabel` to name it in your site's language, for example `<AutoToast closeLabel="Tutup" />`.
 
+Screen readers announce the region that holds the toasts as "Notifications (F8)", and say "Notification" before each toast's text. Set `viewportLabel` and `announceLabel` to name them in your site's language, for example `<AutoToast viewportLabel="Pemberitahuan ({hotkey})" announceLabel="Pemberitahuan" />`. `{hotkey}` becomes F8, the key that moves focus to the toasts. Don't pass an empty `announceLabel`: Radix logs an error.
+
 ### Advanced Usage
 
 Instead of using `AutoToast`, the `Toast` component can be assembled manually for more control.
@@ -232,7 +234,7 @@ const { toast } = useToast();
 ## Props
 
 ### AutoToast
-`AutoToast` passes any props other than `closeLabel` to each toast's `ToastRoot`.
+`AutoToast` passes any props other than `closeLabel`, `viewportLabel` and `announceLabel` to each toast's `ToastRoot`.
 <TypeTable
   type={{
     closeLabel: {
@@ -241,14 +243,30 @@ const { toast } = useToast();
       type: "string",
       default: "Close",
     },
+    viewportLabel: {
+      description:
+        "Accessible name of the region that holds the toasts. {hotkey} becomes F8, the key that moves focus to the toasts. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Notifications ({hotkey})",
+    },
+    announceLabel: {
+      description:
+        "What screen readers announce before each toast's text. It is not shown. Don't pass an empty one: Radix logs an error.",
+      type: "string",
+      default: "Notification",
+    },
   }}
 />
 
 ### ToastProvider
 `ToastProvider` is abstracted from Radix UI's `ToastProvider`. Please refer to the API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/toast#provider).
 
+Its `label` sets what screen readers announce before each toast's text, "Notification" by default. Set it in your site's language, for example `<ToastProvider label="Pemberitahuan">`. Don't pass an empty one: Radix logs an error.
+
 ### ToastViewport
 `ToastViewport` is abstracted from Radix UI's `ToastViewport`. Please refer to the API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/toast#viewport).
+
+Its `label` names the region that holds the toasts, `Notifications ({hotkey})` by default, where `{hotkey}` becomes F8. Set it in your site's language, for example `<ToastViewport label="Pemberitahuan ({hotkey})" />`. An `aria-label` on `ToastViewport` lands on the list inside the region instead, so it doesn't rename the region.
 
 ### ToastRoot
 `ToastRoot` is abstracted from Radix UI's `ToastRoot`. Please refer to the API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/toast#root).

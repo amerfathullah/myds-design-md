@@ -310,6 +310,8 @@ To prevent users from dismissing the dialog, set the `dismissible` prop to `fals
 
 You can attach a callback function to the `onDismiss` prop to handle the dismiss event.
 
+`DialogBody` shows a close button in its top right corner. Screen readers announce it as "Close". Set `closeLabel` to name it in your site's language, for example `<DialogBody closeLabel="Tutup">`. Set `hideClose` to leave it out.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose space-y-2 flex flex-col items-center">
@@ -667,6 +669,12 @@ You can add special actions to the dialog by utilising the `action` prop on the 
     onDismiss: {
       description: "Change event listener for dismiss event",
       type: "() => void",
+    },
+    closeLabel: {
+      description:
+        "Accessible name of the default dismiss button. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Close",
     },
   }}
 />

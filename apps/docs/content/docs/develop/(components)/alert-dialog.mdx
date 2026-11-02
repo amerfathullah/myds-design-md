@@ -468,6 +468,8 @@ To prevent users from dismissing the dialog, set the `dismissible` prop to `fals
 
 You can attach a callback function to the `onDismiss` prop to handle the dismiss event.
 
+Screen readers announce the close button in the top right corner as "Close". Set `closeLabel` on `AlertDialogContent` to name it in your site's language, for example `closeLabel="Tutup"`.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose space-y-2 flex flex-col items-center">
@@ -739,6 +741,12 @@ You can add special actions to the dialog by utilising the `action` prop on the 
     onDismiss: {
       description: "Change event listener for dismiss event",
       type: "() => void",
+    },
+    closeLabel: {
+      description:
+        "Accessible name of the close button in the top right corner. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Close",
     },
   }}
 />

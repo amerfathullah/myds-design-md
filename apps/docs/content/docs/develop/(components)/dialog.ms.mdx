@@ -300,6 +300,8 @@ Untuk menghalang pengguna daripada menutup dialog, tetapkan prop `dismissible` k
 
 Anda boleh melampirkan fungsi panggilan balik kepada prop `onDismiss` untuk mengendalikan acara penutupan.
 
+`DialogBody` memaparkan butang tutup di sudut kanan atasnya. Pembaca skrin menyebutnya sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `<DialogBody closeLabel="Tutup">`. Tetapkan `hideClose` untuk membuangnya.
+
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose space-y-2 flex flex-col items-center">
@@ -657,6 +659,12 @@ Anda boleh menambah tindakan khas pada dialog dengan menggunakan prop `action` p
     onDismiss: {
       description: "Pendengar acara perubahan untuk acara penutupan",
       type: "() => void",
+    },
+    closeLabel: {
+      description:
+        "Nama boleh capai butang tutup. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Close",
     },
   }}
 />

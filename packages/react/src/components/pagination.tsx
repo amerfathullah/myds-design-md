@@ -14,6 +14,13 @@ import { ChevronRightIcon } from "../icons/chevron-right";
 import { Slot } from "@radix-ui/react-slot";
 import { usePagination } from "../hooks/use-pagination";
 
+// The English default names. The parts set them, and AutoPagination sets
+// them again where it passes a label prop through to a part.
+const PREVIOUS_LABEL = "previous page";
+const NEXT_LABEL = "next page";
+const pageLabelOf = (page: number) => `page ${page}`;
+const ELLIPSIS_LABEL = "More pages";
+
 /**
  * Props for Pagination component.
  * @typedef PaginatorProps
@@ -121,8 +128,9 @@ const PaginationPrevious: ForwardRefExoticComponent<
       disabled={disabled}
       className={clx(disabled && "shadow-transparent")}
       onClick={handlePreviousPage}
+      // Children name the button. With none, it shows only the chevron.
+      aria-label={children ? undefined : PREVIOUS_LABEL}
       {...props}
-      aria-label="previous page"
     >
       <ButtonIcon>
         <ChevronLeftIcon />
@@ -159,8 +167,9 @@ const PaginationNext: ForwardRefExoticComponent<
       disabled={disabled}
       className={clx(disabled && "shadow-transparent")}
       onClick={handleNextPage}
+      // Children name the button. With none, it shows only the chevron.
+      aria-label={children ? undefined : NEXT_LABEL}
       {...props}
-      aria-label="next page"
     >
       {children}
       <ButtonIcon>
@@ -190,8 +199,8 @@ const PaginationNumber: ForwardRefExoticComponent<
         isActive && "bg-bg-washed-active",
         "h-10 w-10 items-center justify-center",
       )}
+      aria-label={pageLabelOf(number)}
       {...props}
-      aria-label={`page ${number}`}
     >
       {number}
     </Button>
@@ -215,15 +224,15 @@ PaginationLabel.displayName = "PaginationLabel";
 
 const PaginationEllipsis = ({
   className,
+  children = ELLIPSIS_LABEL,
   ...props
 }: ComponentProps<"span">) => (
   <span
-    aria-hidden
     className={clx("flex size-8 items-center justify-center", className)}
     {...props}
   >
-    <EllipsisIcon className="text-txt-black-700 size-4" />
-    <span className="sr-only">More pages</span>
+    <EllipsisIcon aria-hidden className="text-txt-black-700 size-4" />
+    <span className="sr-only">{children}</span>
   </span>
 );
 PaginationEllipsis.displayName = "PaginationEllipsis";
@@ -233,12 +242,55 @@ interface AutoPaginationProps extends ComponentProps<"nav">, PaginatorProps {
   next?: ReactNode;
   previous?: ReactNode;
   fullText?: string;
+  /**
+   * Names the previous button. With `type="default"` the button shows only a
+   * chevron, so screen readers announce this name and it isn't shown. With
+   * `type="simple"` or `type="full"` it is the button's visible text, which
+   * also names it. Not used when you pass `previous`. Set it in your site's
+   * language.
+   * @default "previous page" with `type="default"`; "Previous" with `type="simple"` or `type="full"`
+   */
+  previousLabel?: string;
+  /**
+   * Names the next button. With `type="default"` the button shows only a
+   * chevron, so screen readers announce this name and it isn't shown. With
+   * `type="simple"` or `type="full"` it is the button's visible text, which
+   * also names it. Not used when you pass `next`. Set it in your site's
+   * language.
+   * @default "next page" with `type="default"`; "Next" with `type="simple"` or `type="full"`
+   */
+  nextLabel?: string;
+  /**
+   * Names each page button with `type="default"`, from its page number.
+   * Screen readers announce it; the button shows the number. Set it in your
+   * site's language.
+   * @default (page) => `page ${page}`
+   */
+  pageLabel?: (page: number) => string;
+  /**
+   * Text each ellipsis with `type="default"` announces where pages are
+   * skipped. Screen readers announce it; it isn't shown. Set it in your
+   * site's language.
+   * @default "More pages"
+   */
+  ellipsisLabel?: string;
 }
 
 const AutoPagination: ForwardRefExoticComponent<AutoPaginationProps> =
   forwardRef(
     (
-      { type = "default", maxDisplay = 4, next, previous, fullText, ...props },
+      {
+        type = "default",
+        maxDisplay = 4,
+        next,
+        previous,
+        fullText,
+        previousLabel,
+        nextLabel,
+        pageLabel = pageLabelOf,
+        ellipsisLabel = ELLIPSIS_LABEL,
+        ...props
+      },
       ref,
     ) => {
       const { visiblePages } = usePagination({
@@ -253,13 +305,17 @@ const AutoPagination: ForwardRefExoticComponent<AutoPaginationProps> =
           <Pagination ref={ref} type={type} {...props}>
             <PaginationContent>
               <PaginationItem>
-                {previous || <PaginationPrevious>Previous</PaginationPrevious>}
+                {previous || (
+                  <PaginationPrevious>
+                    {previousLabel ?? "Previous"}
+                  </PaginationPrevious>
+                )}
               </PaginationItem>
               <PaginationItem>
                 <PaginationLabel />
               </PaginationItem>
               <PaginationItem>
-                {next || <PaginationNext>Next</PaginationNext>}
+                {next || <PaginationNext>{nextLabel ?? "Next"}</PaginationNext>}
               </PaginationItem>
             </PaginationContent>
           </Pagination>
@@ -273,11 +329,15 @@ const AutoPagination: ForwardRefExoticComponent<AutoPaginationProps> =
                 <PaginationLabel content={fullText} />
               </PaginationItem>
               <PaginationItem>
-                {previous || <PaginationPrevious>Previous</PaginationPrevious>}
+                {previous || (
+                  <PaginationPrevious>
+                    {previousLabel ?? "Previous"}
+                  </PaginationPrevious>
+                )}
               </PaginationItem>
 
               <PaginationItem>
-                {next || <PaginationNext>Next</PaginationNext>}
+                {next || <PaginationNext>{nextLabel ?? "Next"}</PaginationNext>}
               </PaginationItem>
             </PaginationContent>
           </Pagination>
@@ -288,18 +348,29 @@ const AutoPagination: ForwardRefExoticComponent<AutoPaginationProps> =
         <Pagination ref={ref} type={type} {...props}>
           <PaginationContent>
             <PaginationItem>
-              {previous || <PaginationPrevious />}
+              {previous || (
+                <PaginationPrevious
+                  aria-label={previousLabel ?? PREVIOUS_LABEL}
+                />
+              )}
             </PaginationItem>
             {visiblePages.map((page, index) => (
               <PaginationItem key={index}>
                 {page === "..." ? (
-                  <PaginationEllipsis />
+                  <PaginationEllipsis>{ellipsisLabel}</PaginationEllipsis>
                 ) : (
-                  typeof page === "number" && <PaginationNumber number={page} />
+                  typeof page === "number" && (
+                    <PaginationNumber
+                      number={page}
+                      aria-label={pageLabel(page)}
+                    />
+                  )
                 )}
               </PaginationItem>
             ))}
-            <PaginationItem>{next || <PaginationNext />}</PaginationItem>
+            <PaginationItem>
+              {next || <PaginationNext aria-label={nextLabel ?? NEXT_LABEL} />}
+            </PaginationItem>
           </PaginationContent>
         </Pagination>
       );

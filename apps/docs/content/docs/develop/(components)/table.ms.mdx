@@ -628,3 +628,27 @@ Gunakan komponen `TableEmpty` untuk menunjukkan keadaan kosong.
     },
   }}
 />
+
+### TableTooltip
+
+`TableTooltip` meletakkan ikon tanda soal dalam sel tajuk dan memaparkan kandungan `children` sebagai tooltip. Pembaca skrin menyebut ikon itu sebagai "Tooltip". Hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<TableTooltip aria-label="Maklumat">`. Prop lain dihantar kepada akar tooltip, iaitu `Tooltip` Radix UI.
+
+```tsx
+<TableHead>
+  <div className="flex items-center gap-1">
+    Umur
+    <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
+  </div>
+</TableHead>
+```
+
+<TypeTable
+  type={{
+    "aria-label": {
+      description:
+        "Nama boleh capai pencetus, iaitu ikon tanda soal. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Tooltip",
+    },
+  }}
+/>

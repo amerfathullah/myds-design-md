@@ -628,3 +628,27 @@ Use the `TableEmpty` component to show the empty state.
     },
   }}
 />
+
+### TableTooltip
+
+`TableTooltip` puts a question-mark icon in a header cell and shows its `children` as a tooltip. Screen readers announce the icon as "Tooltip". Pass an `aria-label` to name it in your site's language, for example `<TableTooltip aria-label="Maklumat">`. Its other props go to the tooltip root, Radix UI's `Tooltip`.
+
+```tsx
+<TableHead>
+  <div className="flex items-center gap-1">
+    Umur
+    <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
+  </div>
+</TableHead>
+```
+
+<TypeTable
+  type={{
+    "aria-label": {
+      description:
+        "Accessible name of the trigger, a question-mark icon. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Tooltip",
+    },
+  }}
+/>

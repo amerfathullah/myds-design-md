@@ -28,6 +28,11 @@ import {
   type DateRange,
 } from "@amerfathullah/myds-react/daterange-picker";
 import {
+  Dialog,
+  DialogBody,
+  DialogTitle,
+} from "@amerfathullah/myds-react/dialog";
+import {
   Footer,
   FooterSection,
   SiteInfo,
@@ -47,11 +52,24 @@ import {
 import { Input, InputAddon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
 import {
+  Navbar,
+  NavbarMenu,
+  NavbarMenuItem,
+} from "@amerfathullah/myds-react/navbar";
+import {
+  AutoPagination,
+  PaginationPrevious,
+} from "@amerfathullah/myds-react/pagination";
+import { Pill } from "@amerfathullah/myds-react/pill";
+import {
   SearchBar,
   SearchBarClearButton,
   SearchBarInputContainer,
+  SearchBarResults,
+  SearchBarResultsList,
   SearchBarSearchButton,
 } from "@amerfathullah/myds-react/search-bar";
+import { TableTooltip } from "@amerfathullah/myds-react/table";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
@@ -325,6 +343,177 @@ export const CloseLabels = () => (
     {/* @ts-expect-error `closeLabel` is a string */}
     <Callout dismissible closeLabel={1} />
   </>
+);
+
+// AutoPagination names the controls it renders from its label props, and
+// `pageLabel` names each page button from its number
+const paging = {
+  count: 100,
+  limit: 10,
+  page: 5,
+  onPageChange: (page: number) => void page,
+};
+
+export const PaginationLabels = () => (
+  <>
+    <AutoPagination
+      {...paging}
+      type="default"
+      aria-label="Penomboran"
+      previousLabel="Halaman sebelumnya"
+      nextLabel="Halaman seterusnya"
+      pageLabel={(page: number) => `Halaman ${page}`}
+      ellipsisLabel="Lebih banyak halaman"
+    />
+    <AutoPagination
+      {...paging}
+      type="simple"
+      previousLabel="Sebelumnya"
+      nextLabel="Seterusnya"
+    />
+    <AutoPagination
+      {...paging}
+      type="full"
+      previous={<PaginationPrevious aria-label="Kembali" />}
+    />
+    {/* @ts-expect-error `pageLabel` is a function of the page number */}
+    <AutoPagination {...paging} type="default" pageLabel="Halaman" />
+  </>
+);
+
+// DataTable names the controls it renders from `selection`, `nest` and a
+// column's `meta.tooltipLabel`. A row label is a string or a function of the
+// table's row. TableTooltip takes its trigger's name from `aria-label`.
+export const DataTableLabels = () => (
+  <>
+    <DataTable
+      columns={[
+        { id: "name", header: "Name", accessorKey: "name", cell: Cell.Expand },
+        {
+          id: "age",
+          header: "Age",
+          accessorKey: "age",
+          meta: { tooltip: "Umur dalam tahun", tooltipLabel: "Maklumat umur" },
+        },
+      ]}
+      data={data}
+      nest={{
+        id_by: "reports",
+        expandLabel: (row) => `Kembangkan ${row.original.name}`,
+      }}
+      selection={{
+        id_by: "id",
+        mode: "checkbox",
+        rowLabel: (row) => `Pilih ${row.original.name}`,
+        selectAllLabel: "Pilih semua baris",
+        columnLabel: "Pilihan",
+      }}
+    />
+    <DataTable
+      columns={columns}
+      data={data}
+      nest={{ id_by: "reports", expandLabel: "Kembangkan baris" }}
+      selection={{
+        id_by: "id",
+        mode: "radio",
+        rowLabel: "Pilih baris",
+        clearLabel: "Kosongkan pilihan",
+      }}
+    />
+    <DataTable
+      columns={columns}
+      data={data}
+      selection={{
+        id_by: "id",
+        mode: "checkbox",
+        // @ts-expect-error `rowLabel` returns a string
+        rowLabel: (row) => row.original.age,
+      }}
+    />
+    <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
+    {/* @ts-expect-error `aria-label` is a string */}
+    <TableTooltip aria-label={1}>Umur dalam tahun</TableTooltip>
+  </>
+);
+
+// The date pickers' calendar takes its names from `locale`, apart from the
+// month view's year buttons, which take theirs from `previousYearLabel` and
+// `nextYearLabel`
+export const CalendarLabels = () => (
+  <>
+    <DatePicker
+      locale="ms"
+      previousYearLabel="Pergi ke tahun sebelumnya"
+      nextYearLabel="Pergi ke tahun seterusnya"
+    />
+    <DateRangePicker
+      locale="ms"
+      previousYearLabel="Pergi ke tahun sebelumnya"
+      nextYearLabel="Pergi ke tahun seterusnya"
+    />
+    {/* @ts-expect-error `previousYearLabel` is a string */}
+    <DatePicker previousYearLabel={1} />
+    {/* @ts-expect-error `nextYearLabel` is a string */}
+    <DateRangePicker nextYearLabel={1} />
+  </>
+);
+
+// DialogBody, AlertDialogContent and Pill take `closeLabel` for the close
+// button they render, and AutoToast takes `viewportLabel` and `announceLabel`
+// for its region and the word before each announcement. SearchBarResultsList
+// takes its name from its own `aria-label`.
+export const CloseAndRegionLabels = () => (
+  <>
+    <Dialog open>
+      <DialogBody closeLabel="Tutup">
+        <DialogTitle>Padam fail?</DialogTitle>
+      </DialogBody>
+    </Dialog>
+    <AlertDialog variant="danger" open>
+      <AlertDialogContent closeLabel="Tutup">
+        <AlertDialogTitle>Padam fail?</AlertDialogTitle>
+      </AlertDialogContent>
+    </AlertDialog>
+    <Pill onDismiss={() => {}} closeLabel="Tutup">
+      Johor
+    </Pill>
+    <AutoToast
+      viewportLabel="Pemberitahuan ({hotkey})"
+      announceLabel="Pemberitahuan"
+    />
+    <SearchBar>
+      <SearchBarResults open>
+        <SearchBarResultsList aria-label="Cadangan" />
+      </SearchBarResults>
+    </SearchBar>
+    {/* @ts-expect-error `closeLabel` is a string */}
+    <Pill onDismiss={() => {}} closeLabel={1}>
+      Johor
+    </Pill>
+  </>
+);
+
+// NavbarMenu's `<nav>` takes its name from `aria-label` (default "Main") or
+// from the element `aria-labelledby` names. NavbarMenu takes no other
+// NavigationMenu props.
+export const NavbarMenuNames = () => (
+  <Navbar>
+    <h2 id="menu-title">Menu utama</h2>
+    <NavbarMenu aria-label="Utama">
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+    <NavbarMenu aria-labelledby="menu-title">
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+    {/* @ts-expect-error `aria-label` is a string */}
+    <NavbarMenu aria-label={1}>
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+    {/* @ts-expect-error `orientation` is NavigationMenu's, not NavbarMenu's */}
+    <NavbarMenu orientation="vertical">
+      <NavbarMenuItem href="/">Utama</NavbarMenuItem>
+    </NavbarMenu>
+  </Navbar>
 );
 
 // Icons take an SVG's props. The national marks are deprecated on `/icon` and

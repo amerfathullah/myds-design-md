@@ -209,14 +209,17 @@ export const SearchBarResults: FunctionComponent<
 };
 
 /**
- * Uses cmdk's Command.List API.
+ * Uses cmdk's Command.List API. Screen readers announce the list as
+ * "Suggestions"; pass an `aria-label` to name it in your site's language.
  * @see https://github.com/pacocoursey/cmdk#list-cmdk-list
  */
 export const SearchBarResultsList: FunctionComponent<
   ComponentProps<typeof Command.List>
-> = ({ children, ...props }) => {
+> = ({ children, "aria-label": ariaLabel, label, ...props }) => {
   return (
-    <Command.List {...props}>
+    // cmdk names the listbox from `label`, after the props it spreads, so an
+    // `aria-label` reaches the listbox only through `label`
+    <Command.List label={ariaLabel ?? label ?? "Suggestions"} {...props}>
       {/* We include a hidden item to prevent cmdk from focusing on the first item automatically. */}
       <Command.Item className="hidden">--</Command.Item>
       {children}

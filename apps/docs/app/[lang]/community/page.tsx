@@ -64,7 +64,7 @@ export default function CommunityPage({
       {showModal && (
         <AlertDialog variant="success" open={showModal} onOpenChange={setShowModal}>
 
-          <AlertDialogContent>
+          <AlertDialogContent closeLabel={t("common.close")}>
             <AlertDialogTitle>
               {t("community.modal.title")}
             </AlertDialogTitle>

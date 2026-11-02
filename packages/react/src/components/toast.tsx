@@ -284,10 +284,27 @@ interface AutoToastProps
    * @default "Close"
    */
   closeLabel?: string;
+  /**
+   * Accessible name of the region that holds the toasts. Screen readers
+   * announce it; it isn't shown. `{hotkey}` is replaced with the key that
+   * focuses the region, F8. Set it in your site's language.
+   * @default "Notifications ({hotkey})"
+   */
+  viewportLabel?: string;
+  /**
+   * What screen readers announce before each toast's text, as in
+   * "Notification Saved". It isn't shown. Set it in your site's language.
+   * Don't pass an empty one: Radix logs an error if it's empty or only
+   * whitespace.
+   * @default "Notification"
+   */
+  announceLabel?: string;
 }
 
 const AutoToast: FunctionComponent<AutoToastProps> = ({
   closeLabel = "Close",
+  viewportLabel = "Notifications ({hotkey})",
+  announceLabel = "Notification",
   ...props
 }) => {
   const { toasts, subscribe, unsubscribe } = useToast();
@@ -300,7 +317,7 @@ const AutoToast: FunctionComponent<AutoToastProps> = ({
   }, []);
 
   return (
-    <ToastProvider>
+    <ToastProvider label={announceLabel}>
       {toasts.map((toast, index) => (
         <ToastRoot
           key={props.id || index}
@@ -319,7 +336,7 @@ const AutoToast: FunctionComponent<AutoToastProps> = ({
         </ToastRoot>
       ))}
 
-      <ToastViewport />
+      <ToastViewport label={viewportLabel} />
     </ToastProvider>
   );
 };

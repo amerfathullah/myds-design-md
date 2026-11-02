@@ -84,6 +84,16 @@ Hantarkan fungsi panggil balik ke prop `onDismiss` untuk menunjukkan butang "x" 
   </Tab>
 </Tabs>
 
+Pembaca skrin menyebut butang "x" sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda. Pil selalunya diletakkan bersebelahan, jadi namakan pil yang dibuang oleh setiap butang:
+
+```tsx
+{states.map((name) => (
+  <Pill key={name} onDismiss={...} closeLabel={`Buang ${name}`}>
+    {name}
+  </Pill>
+))}
+```
+
 ## Dinyahaktifkan
 
 Pil boleh dinyahaktifkan dengan menetapkan prop `disabled` kepada `true`. Apabila dinyahaktifkan, pil tidak akan interaktif. Jika prop `onDismiss` ditetapkan, butang "x" akan disembunyikan.
@@ -124,6 +134,12 @@ Pil boleh dinyahaktifkan dengan menetapkan prop `disabled` kepada `true`. Apabil
       description:
         'Callback function yang dipanggil apabila butang "x" mengekori diklik',
       type: "function",
+    },
+    closeLabel: {
+      description:
+        'Nama boleh capai butang "x" mengekori. Pembaca skrin menyebutnya; ia tidak dipaparkan.',
+      type: "string",
+      default: "Close",
     },
   }}
 />

@@ -84,6 +84,8 @@ export default () => (
 );
 ```
 
+Screen readers announce the breadcrumb's `<nav>` landmark as "breadcrumb". Pass an `aria-label` to `Breadcrumb` to name it in your site's language, for example `<Breadcrumb aria-label="Laluan halaman">`.
+
 ## Examples
 
 ### Variant
@@ -256,6 +258,12 @@ Crumbs that are too long will be truncated with an ellipsis. The maximum width l
       type: "enum",
       typeDescription: "default | fill",
       default: "default",
+    },
+    "aria-label": {
+      description:
+        "Accessible name of the breadcrumb's `<nav>` landmark. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "breadcrumb",
     },
   }}
 />

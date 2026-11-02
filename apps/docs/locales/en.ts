@@ -28,6 +28,8 @@ export default {
     contribute: "Contribute",
     beta: "Beta",
     close: "Close",
+    notifications: "Notifications",
+    notification: "Notification",
   },
   Home: {
     title: {

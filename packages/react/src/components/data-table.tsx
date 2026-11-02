@@ -73,6 +73,13 @@ interface DataTableColumnMeta {
   sortable?: boolean;
   expandable?: boolean;
   tooltip?: ReactNode;
+  /**
+   * Accessible name of the header's tooltip trigger, a question-mark icon,
+   * that `tooltip` adds. Screen readers announce it; it isn't shown. Set it
+   * in your site's language.
+   * @default "Tooltip"
+   */
+  tooltipLabel?: string;
 }
 
 /**
@@ -108,6 +115,13 @@ type ColumnDef<TData extends RowData, TValue = unknown> = TanStackColumnDef<
   TValue
 >;
 
+/**
+ * An accessible name for each row's control: a string names every row's
+ * control, and a function is called with each row and returns its name
+ */
+type RowLabel<TData extends RowData> =
+  string | ((row: Row<DataTableFeatures, TData>) => string);
+
 interface DataTableProps<TData extends Record<string, any>> {
   className?: string;
   columns: ColumnDef<TData>[];
@@ -121,6 +135,38 @@ interface DataTableProps<TData extends Record<string, any>> {
       boolean | ((row: Row<DataTableFeatures, TData>) => boolean);
     enableSubRowSelection?:
       boolean | ((row: Row<DataTableFeatures, TData>) => boolean);
+    /**
+     * Accessible name of each row's checkbox or radio. A string names every
+     * row's control; a function is called with each row and returns its
+     * name. Screen readers announce it; it isn't shown. Set it in your
+     * site's language. A string gives every row the same name, so prefer a
+     * function that names the row. The default numbers the rows the table
+     * shows from 1, top to bottom in the current sort, counting expanded
+     * sub-rows.
+     * @default "Select row N"
+     */
+    rowLabel?: RowLabel<TData>;
+    /**
+     * Accessible name of the header's checkbox, which selects every row, in
+     * `checkbox` mode. Screen readers announce it; it isn't shown. Set it
+     * in your site's language.
+     * @default "Select all rows"
+     */
+    selectAllLabel?: string;
+    /**
+     * Accessible name of the header's reset button, which clears the
+     * selection, in `radio` mode. Screen readers announce it; it isn't shown.
+     * Set it in your site's language.
+     * @default "Clear selection"
+     */
+    clearLabel?: string;
+    /**
+     * Visually hidden text that heads the selection column, in either mode.
+     * Screen readers announce it as the column's header; it isn't shown. Set
+     * it in your site's language.
+     * @default "Select"
+     */
+    columnLabel?: string;
   };
   pin?: {
     left?: string[];
@@ -128,6 +174,15 @@ interface DataTableProps<TData extends Record<string, any>> {
   };
   nest?: {
     id_by: keyof TData;
+    /**
+     * Accessible name of each `Cell.Expand` toggle, which shows or hides a
+     * row's sub-rows. A string names every toggle; a function is called with
+     * each row and returns its name. The toggle's `aria-expanded` says
+     * whether the row is expanded, so the name stays the same. Screen
+     * readers announce it; it isn't shown. Set it in your site's language.
+     * @default "expand row"
+     */
+    expandLabel?: RowLabel<TData>;
   };
   emptyState?: ReactNode;
 }
@@ -182,13 +237,17 @@ const cell_cva = cva([
 interface DataTableContextProps {
   /**
    * The rendering components don't depend on the row type, and TanStack's
-   * table type is invariant in it, so the context holds the table untyped.
+   * table and row types are invariant in it, so the context holds the table
+   * and DataTable's props untyped.
    */
   table: ReactTable<DataTableFeatures, any> | null;
   expandableColumns: Record<string, any>;
   toggleColumnWidth: (columnId: string) => void;
   loading?: DataTableProps<any>["loading"];
   emptyState?: DataTableProps<any>["emptyState"];
+  /** The reserved columns and cells take their labels from these */
+  selection?: DataTableProps<any>["selection"];
+  nest?: DataTableProps<any>["nest"];
 }
 
 const DataTableContext = createContext<DataTableContextProps>({
@@ -268,7 +327,7 @@ const DataTableProvider = <TData extends Record<string, any>>({
         table: table as ReactTable<DataTableFeatures, any>,
         expandableColumns,
         toggleColumnWidth,
-        ...props,
+        ...(props as DataTableProps<any>),
       }}
     >
       <Table
@@ -284,7 +343,7 @@ const DataTableProvider = <TData extends Record<string, any>>({
 };
 
 const DataTableHeader: FunctionComponent = () => {
-  const { table, expandableColumns, toggleColumnWidth } =
+  const { table, expandableColumns, toggleColumnWidth, selection } =
     useContext(DataTableContext);
 
   if (!table) return null;
@@ -295,7 +354,7 @@ const DataTableHeader: FunctionComponent = () => {
         return (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
-              const { tooltip, expandable, sortable } =
+              const { tooltip, tooltipLabel, expandable, sortable } =
                 header.column.columnDef.meta || {};
               return (
                 <TableHead
@@ -319,7 +378,7 @@ const DataTableHeader: FunctionComponent = () => {
                   <span className="sr-only">
                     {(header.column.columnDef.id == "_checkbox" ||
                       header.column.columnDef.id == "_radio") &&
-                      "selection-column"}
+                      (selection?.columnLabel ?? "Select")}
                   </span>
                   {header.isPlaceholder ? null : (
                     <div className="flex w-full items-center justify-between gap-2 whitespace-nowrap">
@@ -365,7 +424,11 @@ const DataTableHeader: FunctionComponent = () => {
                         )}
 
                         {/* Tooltip */}
-                        {tooltip && <TableTooltip>{tooltip}</TableTooltip>}
+                        {tooltip && (
+                          <TableTooltip aria-label={tooltipLabel}>
+                            {tooltip}
+                          </TableTooltip>
+                        )}
                       </div>
                     </div>
                   )}
@@ -495,27 +558,34 @@ const CheckboxColumn = <TData extends Record<string, any>>() => {
   return columnHelper.display({
     id: "_checkbox",
     size: 46,
-    header: ({ table }) => (
-      <Checkbox
-        key="checkbox-all"
-        checked={
-          table.getIsAllRowsSelected() ||
-          (table.getIsSomeRowsSelected() && "indeterminate")
-        }
-        aria-label="checkbox"
-        onClick={table.getToggleAllRowsSelectedHandler()}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        key={`checkbox-${row.id}`}
-        checked={row.getIsSelected()}
-        value={row.id}
-        disabled={!row.getCanSelect()}
-        aria-label="checkbox"
-        onClick={row.getToggleSelectedHandler()}
-      />
-    ),
+    header: function SelectAllCheckbox({ table }) {
+      const { selection } = useContext(DataTableContext);
+      return (
+        <Checkbox
+          key="checkbox-all"
+          checked={
+            table.getIsAllRowsSelected() ||
+            (table.getIsSomeRowsSelected() && "indeterminate")
+          }
+          aria-label={selection?.selectAllLabel ?? "Select all rows"}
+          onClick={table.getToggleAllRowsSelectedHandler()}
+        />
+      );
+    },
+    cell: function RowCheckbox(context) {
+      const { row } = context;
+      const { selection } = useContext(DataTableContext);
+      return (
+        <Checkbox
+          key={`checkbox-${row.id}`}
+          checked={row.getIsSelected()}
+          value={row.id}
+          disabled={!row.getCanSelect()}
+          aria-label={getSelectRowLabel(context, selection)}
+          onClick={row.getToggleSelectedHandler()}
+        />
+      );
+    },
   });
 };
 
@@ -524,51 +594,86 @@ const RadioColumn = <TData extends Record<string, any>>() => {
   return columnHelper.display({
     id: "_radio",
     size: 46,
-    header: ({ table }) => (
-      <div className="flex items-center gap-1">
-        <Button
-          size="small"
-          variant="default-ghost"
-          onClick={() => table.resetRowSelection(false)}
-          className="invisible px-1 py-0 transition data-[selected=true]:visible"
-          data-selected={table.getIsSomeRowsSelected()}
-        >
-          <ReloadIcon className="text-txt-black-500 size-4 rotate-45" />
-        </Button>
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div
-        className={clx(
-          "shadow-button hover:border-otl-gray-300 border-otl-gray-200 flex aspect-square size-4 items-center justify-center rounded-full border",
-          // The wrapper can't match :focus-visible itself, so it rings while
-          // its input does
-          "has-[:focus-visible]:ring-fr-primary focus:outline-hidden has-[:focus-visible]:ring-3",
-          "has-[:checked]:bg-primary-600 has-[:disabled]:has-[:checked]::bg-primary-600 has-[:checked]:border-none has-[:disabled]:opacity-30",
-        )}
-      >
-        <input
-          type="radio"
-          aria-label="radio"
-          id={row.id}
-          value={row.id}
-          checked={row.getIsSelected()}
-          disabled={!row.getCanSelect()}
-          onClick={row.getToggleSelectedHandler()}
+    header: function ClearSelectionButton({ table }) {
+      const { selection } = useContext(DataTableContext);
+      return (
+        <div className="flex items-center gap-1">
+          <Button
+            size="small"
+            variant="default-ghost"
+            onClick={() => table.resetRowSelection(false)}
+            className="invisible px-1 py-0 transition data-[selected=true]:visible"
+            data-selected={table.getIsSomeRowsSelected()}
+            aria-label={selection?.clearLabel ?? "Clear selection"}
+          >
+            <ReloadIcon className="text-txt-black-500 size-4 rotate-45" />
+          </Button>
+        </div>
+      );
+    },
+    cell: function RowRadio(context) {
+      const { row } = context;
+      const { selection } = useContext(DataTableContext);
+      return (
+        <div
           className={clx(
-            "disabled:bg-bg-washed relative h-full w-full focus-visible:outline-hidden disabled:cursor-not-allowed",
-            "before:bg-bg-white before:contents-[''] appearance-none before:absolute before:left-[5px] before:top-[5px] before:size-[6px] before:rounded-full",
+            "shadow-button hover:border-otl-gray-300 border-otl-gray-200 flex aspect-square size-4 items-center justify-center rounded-full border",
+            // The wrapper can't match :focus-visible itself, so it rings while
+            // its input does
+            "has-[:focus-visible]:ring-fr-primary focus:outline-hidden has-[:focus-visible]:ring-3",
+            "has-[:checked]:bg-primary-600 has-[:disabled]:has-[:checked]::bg-primary-600 has-[:checked]:border-none has-[:disabled]:opacity-30",
           )}
-        />
-      </div>
-    ),
+        >
+          <input
+            type="radio"
+            aria-label={getSelectRowLabel(context, selection)}
+            id={row.id}
+            value={row.id}
+            checked={row.getIsSelected()}
+            disabled={!row.getCanSelect()}
+            onClick={row.getToggleSelectedHandler()}
+            className={clx(
+              "disabled:bg-bg-washed relative h-full w-full focus-visible:outline-hidden disabled:cursor-not-allowed",
+              "before:bg-bg-white before:contents-[''] appearance-none before:absolute before:left-[5px] before:top-[5px] before:size-[6px] before:rounded-full",
+            )}
+          />
+        </div>
+      );
+    },
   });
 };
 
+/**
+ * The accessible name `label` gives the control in a row's cell: the string,
+ * or what the function returns for the row. Without a label, the control
+ * takes `fallback`.
+ */
+const getRowLabel = (
+  { row }: CellContext<DataTableFeatures, any, unknown>,
+  label: RowLabel<any> | undefined,
+  fallback: string,
+) => (typeof label === "function" ? label(row) : (label ?? fallback));
+
+/**
+ * The accessible name of a row's checkbox or radio: `selection.rowLabel`, or
+ * "Select row N". N is the row's 1-based position among the rows the body
+ * renders, so expanded sub-rows count and N follows the current sort.
+ */
+const getSelectRowLabel = (
+  context: CellContext<DataTableFeatures, any, unknown>,
+  selection: DataTableProps<any>["selection"],
+) => {
+  const { row, table } = context;
+  const position = table.getRowModel().rows.indexOf(row) + 1;
+  return getRowLabel(context, selection?.rowLabel, `Select row ${position}`);
+};
+
 const ExpandCell = <TData extends Record<string, any>>(
-  { row, getValue }: CellContext<DataTableFeatures, TData, unknown>,
+  context: CellContext<DataTableFeatures, TData, unknown>,
   cell?: ReactNode,
 ) => {
+  const { row, getValue } = context;
+  const { nest } = useContext(DataTableContext);
   const useDefault = !cell || JSON.stringify(cell) === JSON.stringify({});
   return (
     <div
@@ -581,11 +686,12 @@ const ExpandCell = <TData extends Record<string, any>>(
           variant="default-ghost"
           onClick={row.getToggleExpandedHandler()}
           data-expanded={row.getIsExpanded()}
+          aria-label={getRowLabel(context, nest?.expandLabel, "expand row")}
+          aria-expanded={row.getIsExpanded()}
         >
           <ButtonIcon
             data-expanded={row.getIsExpanded()}
             className="transform transition-transform data-[expanded=true]:rotate-90"
-            aria-label="expand row"
           >
             <ChevronRightIcon />
           </ButtonIcon>

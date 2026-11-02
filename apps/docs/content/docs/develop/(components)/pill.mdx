@@ -84,6 +84,16 @@ Pass a callback function to the `onDismiss` prop to show a trailing "x" button.
   </Tab>
 </Tabs>
 
+Screen readers announce the "x" button as "Close". Set `closeLabel` to name it in your site's language. Pills often sit side by side, so name which pill each button removes:
+
+```tsx
+{states.map((name) => (
+  <Pill key={name} onDismiss={...} closeLabel={`Buang ${name}`}>
+    {name}
+  </Pill>
+))}
+```
+
 ## Disabled
 
 Pill can be disabled by setting the `disabled` prop to `true`. When disabled, the pill will not be interactive. If the `onDismiss` prop is set, the "x" button will be hidden.
@@ -124,6 +134,12 @@ Pill can be disabled by setting the `disabled` prop to `true`. When disabled, th
       description:
         'A callback function that is called when the trailing "x" button is clicked',
       type: "function",
+    },
+    closeLabel: {
+      description:
+        'Accessible name of the trailing "x" button. Screen readers announce it; it is not shown.',
+      type: "string",
+      default: "Close",
     },
   }}
 />

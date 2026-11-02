@@ -31,11 +31,28 @@ interface PillProps
   asChild?: boolean;
   disabled?: boolean;
   onDismiss?: ComponentProps<typeof Button>["onClick"];
+  /**
+   * Accessible name of the remove button that `onDismiss` adds. Screen
+   * readers announce it; it isn't shown. Set it in your site's language.
+   * Pills often sit side by side, so say which one it removes, e.g.
+   * `Buang ${name}`.
+   * @default "Close"
+   */
+  closeLabel?: string;
 }
 
 export const Pill: ForwardRefExoticComponent<PillProps> = React.forwardRef(
   (
-    { asChild, children, disabled, size, className, onDismiss, ...props },
+    {
+      asChild,
+      children,
+      disabled,
+      size,
+      className,
+      onDismiss,
+      closeLabel = "Close",
+      ...props
+    },
     ref,
   ) => {
     const Comp = asChild ? Slot : "div";
@@ -51,9 +68,10 @@ export const Pill: ForwardRefExoticComponent<PillProps> = React.forwardRef(
             variant="default-ghost"
             size="small"
             className="p-0"
+            aria-label={closeLabel}
             onClick={onDismiss}
           >
-            <ButtonIcon aria-label="close button">
+            <ButtonIcon aria-hidden="true">
               <CrossIcon className="text-txt-black-500 size-4" />
             </ButtonIcon>
           </Button>

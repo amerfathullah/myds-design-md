@@ -1,6 +1,6 @@
 import { FC, ReactElement } from "react";
 import { Matcher } from "react-day-picker";
-import { enGB, ms } from "date-fns/locale";
+import { enGB, ms } from "react-day-picker/locale";
 import { format } from "date-fns";
 import { useControllableState } from "../hooks";
 import { CalendarIcon } from "../icons/calendar";
@@ -18,6 +18,20 @@ type DatePickerProps = {
   locale?: "en" | "ms";
   maxYear?: number;
   minYear?: number;
+  /**
+   * Accessible name of the calendar's previous button in its month view,
+   * which goes back a year. Screen readers announce it; it isn't shown. Set
+   * it in your site's language.
+   * @default "Go to the Previous Year"
+   */
+  previousYearLabel?: string;
+  /**
+   * Accessible name of the calendar's next button in its month view, which
+   * goes forward a year. Screen readers announce it; it isn't shown. Set it
+   * in your site's language.
+   * @default "Go to the Next Year"
+   */
+  nextYearLabel?: string;
   placeholder?: string;
   value?: Date;
   onValueChange?: (date: Date) => void;

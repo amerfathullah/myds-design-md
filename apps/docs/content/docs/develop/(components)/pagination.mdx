@@ -69,6 +69,25 @@ import { AutoPagination } from "@amerfathullah/myds-react/pagination";
 <AutoPagination />
 ```
 
+Screen readers announce the `default` type's previous and next buttons as "previous page" and "next page", each page button as "page" and its number, such as "page 3", and each ellipsis as "More pages". The `simple` and `full` types show "Previous" and "Next" on their buttons, and that text names them. Set `previousLabel`, `nextLabel`, `pageLabel` and `ellipsisLabel` to name them in your site's language. The `<nav>` landmark is announced as "pagination"; pass an `aria-label` to rename it, for example `aria-label="Penomboran"`.
+
+```tsx copy title="Malay names"
+<AutoPagination
+  page={2}
+  limit={10}
+  count={200}
+  type="default"
+  onPageChange={(page) => console.log(page)}
+  aria-label="Penomboran"
+  previousLabel="Halaman sebelumnya"
+  nextLabel="Halaman seterusnya"
+  pageLabel={(page) => `Halaman ${page}`}
+  ellipsisLabel="Lebih banyak halaman"
+/>
+```
+
+In the `simple` and `full` types the labels are shown, so shorter text reads better there, for example `previousLabel="Sebelumnya"` and `nextLabel="Seterusnya"`.
+
 ### Advanced Usage
 
 For user that requires more advanced use cases, the pagination functionality can be assembled manually. The user can use the subcomponents: `Pagination`, `PaginationItem`, `PaginationContent`, `PaginationEllipsis`, `PaginationNext`, `PaginationPrevious` and `PaginationNumber`.
@@ -100,6 +119,36 @@ import {
     </PaginationItem>
     <PaginationItem>
       <PaginationNext />
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>
+```
+
+Each part has an English name for screen readers, and an `aria-label` replaces it: on `Pagination` for the landmark ("pagination"), on `PaginationPrevious` and `PaginationNext` ("previous page" and "next page"), and on `PaginationNumber` ("page 3" on page 3's button). `PaginationEllipsis` announces "More pages"; pass children to replace it, for example `<PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>`.
+
+Children name `PaginationPrevious` and `PaginationNext` in place of the default, so `<PaginationPrevious>Sebelumnya</PaginationPrevious>` is named "Sebelumnya". Children with no text, such as an icon alone, need an `aria-label`. With `asChild`, `PaginationPrevious` and `PaginationNext` add no name: name your own element, for example with an `aria-label`.
+
+```tsx copy title="Malay names"
+<Pagination
+  aria-label="Penomboran"
+  count={180}
+  limit={10}
+  page={4}
+  onPageChange={(page) => console.log(page)}
+  type="default"
+>
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious aria-label="Halaman sebelumnya" />
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationNumber number={3} aria-label="Halaman 3" />
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationNext aria-label="Halaman seterusnya" />
     </PaginationItem>
   </PaginationContent>
 </Pagination>
@@ -299,12 +348,41 @@ A pagination component that handles page navigation and different display patter
         "Optional ReactNode to replace the default PaginationPrevious button.",
       type: "ReactNode",
     },
+    previousLabel: {
+      description:
+        "Names the previous button. In the `default` type screen readers announce it and it is not shown; in the `simple` and `full` types it is the button's text, which also names it. Not used when you pass `previous`.",
+      type: "string",
+      default: '"previous page" (default type), "Previous" (simple and full)',
+    },
+    nextLabel: {
+      description:
+        "Names the next button. In the `default` type screen readers announce it and it is not shown; in the `simple` and `full` types it is the button's text, which also names it. Not used when you pass `next`.",
+      type: "string",
+      default: '"next page" (default type), "Next" (simple and full)',
+    },
+    pageLabel: {
+      description:
+        "Names each page button in the `default` type, from its page number. Screen readers announce it; the button shows the number.",
+      type: "function",
+      typeDescription: "(page: number) => string",
+      default: "(page) => `page ${page}`",
+    },
+    ellipsisLabel: {
+      description:
+        "Text each ellipsis in the `default` type announces where pages are skipped. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "More pages",
+    },
   }}
 />
+
+`AutoPagination` passes any props other than these to `Pagination`'s `<nav>`, so an `aria-label` renames the landmark.
 
 ### Pagination
 
 A container component that provides pagination context and navigation structure through a `nav` element. It manages the core pagination state (current page, total pages, etc.).
+
+Screen readers announce the `nav` landmark as "pagination". Pass an `aria-label` to replace it, for example `aria-label="Penomboran"`.
 
 <TypeTable
   type={{
@@ -346,9 +424,13 @@ A wrapper component rendered as a list item `li` that contains individual pagina
 
 A button component that handles navigaton to the next page. The underlying component can be substituted by using the `asChild` props.
 
+With no children, it shows only a chevron and its accessible name is "next page". Pass an `aria-label` to replace it, for example `aria-label="Halaman seterusnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name: name your own element.
+
 ### PaginationPrevious
 
 A button component that handles navigaton to the previous page. The underlying component can be substituted by using the `asChild` props.
+
+With no children, it shows only a chevron and its accessible name is "previous page". Pass an `aria-label` to replace it, for example `aria-label="Halaman sebelumnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name: name your own element.
 
 ### PaginationLabel
 
@@ -366,3 +448,5 @@ A text component that displays pagination information.
 ### PaginationEllipsis
 
 A visual indicator component that represents skipped page numbers in the pagination sequence, rendered as three dots using an icon.
+
+Screen readers announce it as "More pages", which isn't shown. Pass children to replace it, for example `<PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>`. The icon is hidden from screen readers.

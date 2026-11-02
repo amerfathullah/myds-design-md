@@ -25,6 +25,7 @@ import {
   isDayOfWeekType,
   Matcher,
   rangeIncludesDate,
+  useDayPicker,
 } from "react-day-picker";
 import { ChevronLeftIcon } from "../icons/chevron-left";
 import { ChevronRightIcon } from "../icons/chevron-right";
@@ -36,6 +37,18 @@ type CalendarProps = DayPickerProps & {
   minYear?: number;
   yearOrder?: "asc" | "desc";
   daterange?: "from" | "to";
+  /**
+   * Accessible name of the month view's previous button, which goes back a
+   * year. Screen readers announce it; it isn't shown.
+   * @default "Go to the Previous Year"
+   */
+  previousYearLabel?: string;
+  /**
+   * Accessible name of the month view's next button, which goes forward a
+   * year. Screen readers announce it; it isn't shown.
+   * @default "Go to the Next Year"
+   */
+  nextYearLabel?: string;
 };
 
 const Calendar: FC<CalendarProps> = ({
@@ -45,6 +58,8 @@ const Calendar: FC<CalendarProps> = ({
   maxYear = 2099,
   month: _month,
   minYear = 1900,
+  nextYearLabel = "Go to the Next Year",
+  previousYearLabel = "Go to the Previous Year",
   showOutsideDays = true,
   yearOrder = "asc",
   ...props
@@ -74,8 +89,11 @@ const Calendar: FC<CalendarProps> = ({
 
   return (
     <DayPicker
-      // DayPicker gets no `locale` (it would move the week start), so it would set lang="en-US"
-      lang={locale?.code}
+      // react-day-picker's own locale names the calendar's controls, and sets
+      // `lang` from its code. Its `enGB` and `ms` start the week on Monday, so
+      // keep Sunday first.
+      locale={locale}
+      weekStartsOn={0}
       showOutsideDays={showOutsideDays}
       month={month}
       onMonthChange={setMonth}
@@ -167,13 +185,18 @@ const Calendar: FC<CalendarProps> = ({
           );
         },
         MonthGrid(tableProps) {
+          const { labels } = useDayPicker();
           return view === "day" ? (
             <table {...tableProps} />
           ) : view === "month" ? (
-            <table role="grid" className="table h-full">
+            <table
+              role="grid"
+              aria-label={labels.labelMonthDropdown()}
+              className="table h-full"
+            >
               <tbody>
                 {[0, 1, 2, 3].map((row_index) => (
-                  <tr>
+                  <tr key={row_index}>
                     {[0, 1, 2].map((col_index) => {
                       const date = new Date();
                       date.setHours(0, 0, 0, 0);
@@ -193,7 +216,7 @@ const Calendar: FC<CalendarProps> = ({
                         month.getMonth() === i && month.getFullYear() === year;
 
                       return (
-                        <td role="gridcell">
+                        <td key={col_index} role="gridcell">
                           <Button
                             data-selected={isSelected}
                             variant={
@@ -247,12 +270,16 @@ const Calendar: FC<CalendarProps> = ({
             </table>
           ) : (
             <div className="overflow-y-auto">
-              <table role="grid" className="w-full">
+              <table
+                role="grid"
+                aria-label={labels.labelYearDropdown()}
+                className="w-full"
+              >
                 <tbody>
                   {Array(Math.ceil((maxYear - minYear) / 3))
                     .fill(null)
                     .map((_, row_index) => (
-                      <tr>
+                      <tr key={row_index}>
                         {[0, 1, 2].map((col_index) => {
                           const i = row_index * 3 + col_index;
 
@@ -279,7 +306,7 @@ const Calendar: FC<CalendarProps> = ({
                           );
 
                           return (
-                            <td role="gridcell">
+                            <td key={col_index} role="gridcell">
                               <Button
                                 ref={isSelected ? yearRef : null}
                                 data-selected-date={date}
@@ -355,7 +382,7 @@ const Calendar: FC<CalendarProps> = ({
           ) : view === "month" ? (
             <Button
               {...props}
-              aria-label="Go to the Next Year"
+              aria-label={nextYearLabel}
               onClick={() => {
                 const date = addYears(month, 1);
                 setMonth(date);
@@ -381,7 +408,7 @@ const Calendar: FC<CalendarProps> = ({
           ) : view === "month" ? (
             <Button
               {...props}
-              aria-label="Go to the Previous Year"
+              aria-label={previousYearLabel}
               onClick={() => {
                 const date = subYears(month, 1);
                 setMonth(date);

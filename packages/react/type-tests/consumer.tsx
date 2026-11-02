@@ -423,6 +423,28 @@ export const DataTableLabels = () => (
   </>
 );
 
+// The date pickers' calendar takes its names from `locale`, apart from the
+// month view's year buttons, which take theirs from `previousYearLabel` and
+// `nextYearLabel`
+export const CalendarLabels = () => (
+  <>
+    <DatePicker
+      locale="ms"
+      previousYearLabel="Pergi ke tahun sebelumnya"
+      nextYearLabel="Pergi ke tahun seterusnya"
+    />
+    <DateRangePicker
+      locale="ms"
+      previousYearLabel="Pergi ke tahun sebelumnya"
+      nextYearLabel="Pergi ke tahun seterusnya"
+    />
+    {/* @ts-expect-error `previousYearLabel` is a string */}
+    <DatePicker previousYearLabel={1} />
+    {/* @ts-expect-error `nextYearLabel` is a string */}
+    <DateRangePicker nextYearLabel={1} />
+  </>
+);
+
 // Icons take an SVG's props. The national marks are deprecated on `/icon` and
 // leave it at the next major (ADR-0007), so these two imports, and this test,
 // stop compiling then.

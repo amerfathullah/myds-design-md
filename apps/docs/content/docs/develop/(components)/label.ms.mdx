@@ -100,76 +100,69 @@ Gunakan prop `size` untuk menukar saiz label!
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
-  <div className="flex items-center">
-    <Label size="small" className="items-center flex justify-between w-full">
-      Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
-      <Toggle size="small">
-        <ToggleThumb />
-      </Toggle>
-    </Label>
-
-  </div>
-  <div className="flex items-center">
-    <Label size="medium" className="items-center flex justify-between w-full">
-     Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
-      <Toggle size="medium">
-        <ToggleThumb />
-      </Toggle>
-    </Label>
-
-  </div>
-  <div className="flex items-center">
-    <Label size="large" className="items-center flex justify-between w-full">
+    <div className="flex items-center justify-between">
+      <Label htmlFor="toggle-small" size="small">
         Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
-      <Toggle size="large">
+      </Label>
+      <Toggle id="toggle-small" size="small">
         <ToggleThumb />
       </Toggle>
-    </Label>
-
-  </div>
+    </div>
+    <div className="flex items-center justify-between">
+      <Label htmlFor="toggle-medium" size="medium">
+        Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
+      </Label>
+      <Toggle id="toggle-medium" size="medium">
+        <ToggleThumb />
+      </Toggle>
+    </div>
+    <div className="flex items-center justify-between">
+      <Label htmlFor="toggle-large" size="large">
+        Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
+      </Label>
+      <Toggle id="toggle-large" size="large">
+        <ToggleThumb />
+      </Toggle>
+    </div>
   </Tab>
   <Tab value="Code">
+
 ```tsx
 import { Label } from "@amerfathullah/myds-react/label";
-import { Checkbox } from "@amerfathullah/myds-react/checkbox";
 import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 
 /** Saiz **/
 
 <>
-   <div className="flex items-center">
-    <Label size="small" className="items-center flex justify-between w-full">
+  <div className="flex items-center justify-between">
+    <Label htmlFor="toggle-small" size="small">
       Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
-      <Toggle size="small">
-        <ToggleThumb />
-      </Toggle>
     </Label>
-
+    <Toggle id="toggle-small" size="small">
+      <ToggleThumb />
+    </Toggle>
   </div>
-  <div className="flex items-center">
-    <Label size="medium" className="items-center flex justify-between w-full">
-     Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
-      <Toggle size="medium">
-        <ToggleThumb />
-      </Toggle>
+  <div className="flex items-center justify-between">
+    <Label htmlFor="toggle-medium" size="medium">
+      Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
     </Label>
-
+    <Toggle id="toggle-medium" size="medium">
+      <ToggleThumb />
+    </Toggle>
   </div>
-  <div className="flex items-center">
-    <Label size="large" className="items-center flex justify-between w-full">
-        Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
-      <Toggle size="large">
-        <ToggleThumb />
-      </Toggle>
+  <div className="flex items-center justify-between">
+    <Label htmlFor="toggle-large" size="large">
+      Dayakan keselamatan 2FA (Pengesahan Dua Faktor)?
     </Label>
-
+    <Toggle id="toggle-large" size="large">
+      <ToggleThumb />
+    </Toggle>
   </div>
-</>
+</>;
+```
 
-````
-    </Tab>
+  </Tab>
 </Tabs>
-
 
 ### Dilumpuhkan
 
@@ -202,7 +195,12 @@ import { Checkbox } from "@amerfathullah/myds-react/checkbox";
     <Label htmlFor="email-disabled" size="small" disabled>
       Alamat e-mel
     </Label>
-    <Input id="email-disabled" type="email" defaultValue="name@example.com" disabled />
+    <Input
+      id="email-disabled"
+      type="email"
+      defaultValue="name@example.com"
+      disabled
+    />
   </div>
   <div className="flex items-center justify-between">
     <Label htmlFor="checkbox-disabled" disabled>
@@ -234,10 +232,9 @@ import { Label } from "@amerfathullah/myds-react/label";
 /** Gunakan Sebagai Slot **/
 
 <Label asChild>
-    <span>Label Dihasilkan Secara Tersuai</span>
-</Label>
-
-````
+  <span>Label Dihasilkan Secara Tersuai</span>
+</Label>;
+```
 
     </Tab>
 
@@ -273,4 +270,4 @@ import { Label } from "@amerfathullah/myds-react/label";
       type: "string",
     },
   }}
-/>{" "}
+/>

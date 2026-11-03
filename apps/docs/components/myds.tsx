@@ -81,6 +81,7 @@ import {
 import { Tag } from "@amerfathullah/myds-react/tag";
 import { Cell, ColumnDef } from "@amerfathullah/myds-react/data-table";
 import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
+import { Label } from "@amerfathullah/myds-react/label";
 import {
   FacebookIcon,
   InstagramIcon,
@@ -184,23 +185,48 @@ export const DismissibleCalloutExample: FunctionComponent<
   );
 };
 
-type PreviewToggleProps = ComponentProps<typeof Toggle>;
+type PreviewToggleProps = Omit<
+  ComponentProps<typeof Toggle>,
+  "checked" | "onCheckedChange" | "children"
+>;
 
-export const ControlledToggle: FunctionComponent<PreviewToggleProps> = (
-  props,
-) => {
+interface ControlledToggleProps extends PreviewToggleProps {
+  /** The switch's id, which the Label's htmlFor points at */
+  id: string;
+  /** The Label's text, which names the switch */
+  label: React.ReactNode;
+  /** The words of the line that shows the state, in the page's language */
+  stateText?: string;
+  onText?: string;
+  offText?: string;
+}
+
+export const ControlledToggle: FunctionComponent<ControlledToggleProps> = ({
+  id,
+  label,
+  stateText = "State",
+  onText = "On",
+  offText = "Off",
+  ...props
+}) => {
   const [isChecked, setIsChecked] = useState(false);
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <p>State: {isChecked ? "On" : "Off"}</p>
-      <Toggle
-        checked={isChecked}
-        onCheckedChange={(checked) => setIsChecked(checked)}
-        {...props}
-      >
-        <ToggleThumb />
-      </Toggle>
+      <p>
+        {stateText}: {isChecked ? onText : offText}
+      </p>
+      <div className="not-prose flex items-center gap-3">
+        <Label htmlFor={id}>{label}</Label>
+        <Toggle
+          id={id}
+          checked={isChecked}
+          onCheckedChange={(checked) => setIsChecked(checked)}
+          {...props}
+        >
+          <ToggleThumb />
+        </Toggle>
+      </div>
     </div>
   );
 };

@@ -5,23 +5,31 @@ description: Komponen Toggle adalah suis serba guna yang membolehkan pengguna be
 
 import { Quicklinks } from "@/components/quicklinks";
 import Preview from "@/components/preview";
-import { Toggle, ToggleThumb, ControlledToggle } from "@/components/myds";
+import {
+  Label,
+  Toggle,
+  ToggleThumb,
+  ControlledToggle,
+} from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
-    <div className="flex justify-center">
-      <Toggle>
+    <div className="not-prose flex items-center justify-center gap-3">
+      <Label htmlFor="notify">Pemberitahuan e-mel</Label>
+      <Toggle id="notify">
         <ToggleThumb />
       </Toggle>
     </div>
   </Tab>
   <Tab value="Kod">
     ```tsx
+    import { Label } from "@amerfathullah/myds-react/label";
     import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 
-    <Toggle>
+    <Label htmlFor="notify">Pemberitahuan e-mel</Label>
+    <Toggle id="notify">
       <ToggleThumb />
     </Toggle>
     ```
@@ -41,92 +49,118 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 ## Penggunaan
 
 ```ts copy title="Import"
+import { Label } from "@amerfathullah/myds-react/label";
 import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 ```
 
 ```tsx copy title="Anatomi"
 export default () => (
-  <Toggle>
-    <ToggleThumb />
-  </Toggle>
+  <>
+    <Label htmlFor="notify">Pemberitahuan e-mel</Label>
+    <Toggle id="notify">
+      <ToggleThumb />
+    </Toggle>
+  </>
 );
 ```
+
+Suis tidak mempunyai nama lalai, jadi namakan setiap suis. Berikan `id` kepada `Toggle`, dan hantar id yang sama kepada `htmlFor` pada `Label`, seperti di atas. Pembaca skrin kemudian menyebut suis itu dengan teks label tersebut. Jangan letakkan `Toggle` di dalam `Label`: `ToggleThumb` memaparkan `<label>` sendiri, dan HTML tidak membenarkan label di dalam label lain.
+
+Jika tiada label yang kelihatan menamakan suis, hantar `aria-label` kepada `ToggleThumb` untuk menamakannya dalam bahasa laman anda, contohnya `<ToggleThumb aria-label="Pemberitahuan e-mel" />`. Atau hantar `aria-labelledby` dengan id elemen yang teksnya menamakannya. `aria-label` menggantikan teks `Label`, jadi jangan hantar `aria-label` kepada suis yang sudah dinamakan oleh `Label`.
+
+Kekunci Space dan Enter masing-masing menukar keadaan suis. Enter tidak menghantar borang yang mengandungi suis itu.
 
 ## Contoh
 
 ### Saiz
 
-Gunakan prop `size` untuk menukar saiz toggle!
+Gunakan prop `size` untuk menukar saiz toggle! Tetapkan `size` yang sama pada `Label`.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
-    <div className="space-y-2">
-        <div className="flex justify-center items-center h-fit gap-1">
-            <Toggle size="small">
-              <ToggleThumb/>
-            </Toggle>
-            <Toggle size='medium'>
-              <ToggleThumb/>
-            </Toggle>
-            <Toggle size="large">
-              <ToggleThumb/>
-            </Toggle>
-        </div>
+    <div className="not-prose mx-auto flex w-fit flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor="notify-small" size="small">Pemberitahuan e-mel</Label>
+        <Toggle id="notify-small" size="small">
+          <ToggleThumb />
+        </Toggle>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor="notify-medium" size="medium">Pemberitahuan e-mel</Label>
+        <Toggle id="notify-medium" size="medium">
+          <ToggleThumb />
+        </Toggle>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor="notify-large" size="large">Pemberitahuan e-mel</Label>
+        <Toggle id="notify-large" size="large">
+          <ToggleThumb />
+        </Toggle>
+      </div>
     </div>
   </Tab>
   <Tab value="Kod">
-  ```tsx 
+
+```tsx
+import { Label } from "@amerfathullah/myds-react/label";
 import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 
-<Toggle size="small">
+<Label htmlFor="notify-small" size="small">Pemberitahuan e-mel</Label>
+<Toggle id="notify-small" size="small">
   <ToggleThumb />
 </Toggle>
 
-<Toggle size="medium">
+<Label htmlFor="notify-medium" size="medium">Pemberitahuan e-mel</Label>
+<Toggle id="notify-medium" size="medium">
   <ToggleThumb />
 </Toggle>
 
-<Toggle size="large">
+<Label htmlFor="notify-large" size="large">Pemberitahuan e-mel</Label>
+<Toggle id="notify-large" size="large">
   <ToggleThumb />
 </Toggle>
+```
 
-````
   </Tab>
 </Tabs>
 
 ### Dinyahaktifkan
 
-Gunakan prop `disabled` untuk menukar kepada gaya dinyahaktifkan!
+Gunakan prop `disabled` untuk menyahaktifkan suis. `<fieldset>` yang dinyahaktifkan di sekeliling `Toggle` turut menyahaktifkannya. Tetapkan juga `disabled` pada `Label` supaya label malap.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
-  <div className="space-y-2">
-    <div className="flex justify-center items-center h-fit gap-1">
-        <Toggle disabled = {true}>
-         <ToggleThumb />
+    <div className="not-prose mx-auto flex w-fit flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor="notify-disabled" disabled>Pemberitahuan e-mel</Label>
+        <Toggle id="notify-disabled" disabled={true}>
+          <ToggleThumb />
         </Toggle>
-    </div>
-    <div className="flex justify-center items-center h-fit gap-1">
-        <Toggle disabled = {true} defaultChecked = {true}>
-         <ToggleThumb />
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor="notify-disabled-checked" disabled>Pemberitahuan e-mel</Label>
+        <Toggle id="notify-disabled-checked" disabled={true} defaultChecked={true}>
+          <ToggleThumb />
         </Toggle>
+      </div>
     </div>
-
-  </div>
   </Tab>
   <Tab value="Kod">
+
 ```tsx
+import { Label } from "@amerfathullah/myds-react/label";
 import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 
-<Toggle disabled = {true}>
-    <ToggleThumb />
+<Label htmlFor="notify-disabled" disabled>Pemberitahuan e-mel</Label>
+<Toggle id="notify-disabled" disabled={true}>
+  <ToggleThumb />
 </Toggle>
 
-<Toggle disabled = {true} defaultChecked = {true}>
-    <ToggleThumb />
+<Label htmlFor="notify-disabled-checked" disabled>Pemberitahuan e-mel</Label>
+<Toggle id="notify-disabled-checked" disabled={true} defaultChecked={true}>
+  <ToggleThumb />
 </Toggle>
-
-````
+```
 
   </Tab>
 </Tabs>
@@ -137,33 +171,45 @@ Toggle boleh dikendalikan menggunakan Kaedah Terkawal
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
-    <div className="space-y-2">
-        <div className="flex justify-center items-center h-fit ">
-            <ControlledToggle/>
-        </div>
+    <div className="flex justify-center">
+      <ControlledToggle
+        id="notify-controlled"
+        label="Pemberitahuan e-mel"
+        stateText="Keadaan"
+        onText="Hidup"
+        offText="Mati"
+      />
     </div>
   </Tab>
   <Tab value="Kod">
+
 ```tsx
+import { Label } from "@amerfathullah/myds-react/label";
 import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 
 const ControlledToggle = () => {
-const [isChecked, setIsChksecked] = React.useState(false);
-return (
+  const [isChecked, setIsChecked] = React.useState(false);
 
-<div className="flex flex-col items-center justify-center">
-  <p>State: {isChecked ? "On" : "Off"}</p>
-  <Toggle checked={isChecked} onCheckedChange={setIsChecked}>
-    <ToggleThumb />
-  </Toggle>
-</div>
-); };
-
-````
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <p>Keadaan: {isChecked ? "Hidup" : "Mati"}</p>
+      <div className="flex items-center gap-3">
+        <Label htmlFor="notify-controlled">Pemberitahuan e-mel</Label>
+        <Toggle
+          id="notify-controlled"
+          checked={isChecked}
+          onCheckedChange={setIsChecked}
+        >
+          <ToggleThumb />
+        </Toggle>
+      </div>
+    </div>
+  );
+};
+```
 
   </Tab>
 </Tabs>
-
 
 ### Toggle Tak Terkawal
 
@@ -171,26 +217,28 @@ Toggle boleh dikendalikan secara dalaman
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
-    <div className="space-y-2">
-        <div className="flex flex-col justify-center items-center h-fit ">
-          <p className="">Toggle ini menguruskan statusnya sendiri secara dalaman.</p>
-          <Toggle defaultChecked={false}>
-            <ToggleThumb />
-           </Toggle>
-        </div>
+    <div className="flex flex-col items-center justify-center">
+      <p>Toggle ini menguruskan statusnya sendiri secara dalaman.</p>
+      <div className="not-prose flex items-center gap-3">
+        <Label htmlFor="notify-uncontrolled">Pemberitahuan e-mel</Label>
+        <Toggle id="notify-uncontrolled" defaultChecked={false}>
+          <ToggleThumb />
+        </Toggle>
+      </div>
     </div>
   </Tab>
   <Tab value="Kod">
+
 ```tsx
+import { Label } from "@amerfathullah/myds-react/label";
 import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 
-<p className="">Toggle ini menguruskan statusnya sendiri secara dalaman.</p>
-<Toggle defaultChecked={false}>
+<p>Toggle ini menguruskan statusnya sendiri secara dalaman.</p>
+<Label htmlFor="notify-uncontrolled">Pemberitahuan e-mel</Label>
+<Toggle id="notify-uncontrolled" defaultChecked={false}>
   <ToggleThumb />
 </Toggle>
-
-
-````
+```
 
   </Tab>
 </Tabs>
@@ -201,6 +249,11 @@ import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
 
 <TypeTable
   type={{
+    id: {
+      description:
+        "Id suis. Hantar id yang sama kepada `htmlFor` pada `Label` untuk menamakan suis. Id unik dijana jika anda tidak menetapkannya.",
+      type: "string",
+    },
     size: {
       description: "Saiz toggle",
       type: "enum",
@@ -212,6 +265,35 @@ import { Toggle, ToggleThumb } from "@amerfathullah/myds-react/toggle";
       type: "boolean",
       typeDescription: "true | false",
       default: "false",
+    },
+  }}
+/>
+
+### ToggleThumb
+
+`ToggleThumb` memaparkan suis, jadi ia menerima prop yang menamakannya.
+
+<TypeTable
+  type={{
+    "aria-label": {
+      description:
+        "Nama boleh capai suis, apabila tiada `Label` yang menamakannya. Pembaca skrin menyebutnya; ia tidak dipaparkan. Tiada nama lalai.",
+      type: "string",
+    },
+    "aria-labelledby": {
+      description:
+        "Id elemen yang teksnya menamakan suis, sebagai ganti `Label`.",
+      type: "string",
+    },
+    "aria-describedby": {
+      description:
+        "Id elemen yang teksnya menerangkan suis, seperti teks petunjuk.",
+      type: "string",
+    },
+    className: {
+      description:
+        "Kelas CSS tambahan untuk trek suis yang kelihatan. Trek itu sendiri tidak menerima fokus, jadi gayakan fokusnya dengan `peer-focus:`, bukan `focus:`.",
+      type: "string",
     },
   }}
 />

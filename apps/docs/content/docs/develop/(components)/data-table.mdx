@@ -252,6 +252,8 @@ You can expand the size of the cells in a column by setting the `expandable` pro
 
 To demonstrate this, we have set the `expandable` property to `true` for the `Name` and `Position` columns. You can click on the expand icon to view the full content of the cell.
 
+The expand button always shows in the column's header, at every screen width, so keyboard and touch users can reach it too. Screen readers announce it as "Widen" followed by the text the column's header renders, for example "Widen Name", or as "Widen column" if the header renders no text. Its `aria-pressed` tells them whether the column is widened. Set `widenLabel` in the same `meta` object to name it in your site's language, for example `meta: { expandable: true, widenLabel: "Lebarkan Nama" }`.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex flex-col gap-3 items-center">
@@ -455,6 +457,10 @@ Screen readers announce each tooltip's trigger, a question-mark icon, as "Toolti
 You can sort the data in the table by setting the `sortable` property to `true` in the `meta` object of the column definition.
 
 To demonstrate this, we have set the `sortable` property to the `Position` column. Click the sort icon to toggle the sorts available.
+
+The sort button always shows in the column's header, at every screen width, so keyboard and touch users can reach it too. It shows only in a column that can sort, one with an `accessorKey` or `accessorFn`. Screen readers announce it as "Sort by" followed by the text the column's header renders, for example "Sort by Position", or as "Sort column" if the header renders no text. Set `sortLabel` in the same `meta` object to name it in your site's language, for example `meta: { sortable: true, sortLabel: "Isih mengikut Jawatan" }`.
+
+A sorted column's header has `aria-sort`, `ascending` or `descending`, so screen readers announce how the table is sorted. When Shift+click sorts by more than one column, only the first sorted column's header has it.
 
 <Tabs items={["Preview", "Code"]}>
  <Tab value="Preview">
@@ -1661,6 +1667,18 @@ You can add footer per column by setting the `footer` in **ColumnDef** object of
         "Accessible name of the tooltip's trigger, a question-mark icon. Screen readers announce it; it is not shown.",
       type: "string",
       default: "Tooltip",
+    },
+    "meta.sortLabel": {
+      description:
+        "Accessible name of the column's sort button. It replaces the whole default name, where {header} is the text the header renders. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Sort by {header}",
+    },
+    "meta.widenLabel": {
+      description:
+        "Accessible name of the column's expand button. It replaces the whole default name, where {header} is the text the header renders. Screen readers announce it; it is not shown.",
+      type: "string",
+      default: "Widen {header}",
     },
   }}
 />

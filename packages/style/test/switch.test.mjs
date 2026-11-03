@@ -3,8 +3,11 @@
 // stop. Space toggles it once, natively. Enter toggles it once too, and
 // doesn't submit the form around it. Inside a `<fieldset disabled>`, a Switch
 // without its own `disabled` is disabled as it looks: Tab skips it, and no
-// key, click on its track or click on its Label changes it. Each holds in a
-// Switch rendered on the client and in one hydrated from server HTML.
+// key, click on its track or click on its Label changes it, whether the
+// fieldset was disabled before it mounted or after it had focus. Each holds
+// in a Switch rendered on the client and in one hydrated from server HTML.
+// Apart from focus, the track looks as it did before the checkbox became the
+// switch.
 //
 // The page is switch.page.jsx: the React components themselves, bundled with
 // esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -24,6 +27,9 @@ const pageSource = fileURLToPath(new URL("./switch.page.jsx", import.meta.url));
 const reactModules = fileURLToPath(
   new URL("../../react/node_modules", import.meta.url),
 );
+
+// An empty part of the page, where the pointer rests
+const away = { x: 700, y: 1100 };
 
 let browser;
 let html;
@@ -45,7 +51,8 @@ before(async () => {
     "</script",
     "<\\/script",
   );
-  html = `<!doctype html><html><head><style>${css}</style><style>*,::before,::after{transition:none!important;animation:none!important}</style></head><body class="bg-bg-white"><div id="csr"></div><div id="ssr"></div><script>${script}</script></body></html>`;
+  // Transitions and animations off, so each state reads as it ends
+  html = `<!doctype html><html><head><style>${css}</style><style>*,::before,::after{transition:none!important;animation:none!important}</style></head><body class="bg-bg-white"><div id="csr"></div><div id="ssr"></div><div id="looks"></div><script>${script}</script></body></html>`;
   browser = await chromium.launch();
 });
 after(() => browser?.close());
@@ -67,7 +74,7 @@ async function withPage(use) {
         errors.push(message.text());
     });
     await page.setContent(html);
-    await page.waitForFunction(() => window.ready.length === 2);
+    await page.waitForFunction(() => window.ready.length === 3);
     assert.deepEqual(
       await page.evaluate(() => ({
         recoverable: window.recoverableErrors,
@@ -75,6 +82,7 @@ async function withPage(use) {
       })),
       { recoverable: [], kept: true },
     );
+    await page.mouse.move(away.x, away.y);
     const result = await use(page);
     assert.deepEqual(errors, []);
     return result;
@@ -95,23 +103,58 @@ async function tabTo(page, selector) {
   throw new Error(`Tab never reaches ${selector}`);
 }
 
-// What the page shows of the switch `id`: whether it's checked and focused,
-// the track's state, the changes it reported, and the times its mode's form
-// was submitted
+// What has focus: an element's id, or its `data-test`, its tag name, and its
+// type and role if it has them
+const focusedElement = (page) =>
+  page.evaluate(() => {
+    const element = document.activeElement;
+    return [
+      element.tagName,
+      element.type,
+      element.getAttribute("role"),
+      element.id ? `#${element.id}` : element.dataset.test,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  });
+
+// What the page shows of the switch `id`: its role, whether it's checked and
+// focused, the track's state, the changes it reported, and the times its
+// form was submitted
 const stateOf = (page, id) =>
   page.evaluate((id) => {
     const input = document.getElementById(id);
     return {
+      role: input.getAttribute("role"),
       checked: input.checked,
       focused: document.activeElement === input,
       track: input.nextElementSibling.dataset.state,
       changes: window.changes
         .filter((change) => change.id === id)
         .map(({ checked }) => checked),
-      submits: window.submits.filter((mode) => id.startsWith(`${mode}-`))
-        .length,
+      submits: window.submits.filter((form) => form === input.form?.id).length,
     };
   }, id);
+
+// The state of a focused switch after one toggle, then after another
+const toggledTwice = [
+  {
+    role: "switch",
+    checked: true,
+    focused: true,
+    track: "checked",
+    changes: [true],
+    submits: 0,
+  },
+  {
+    role: "switch",
+    checked: false,
+    focused: true,
+    track: "unchecked",
+    changes: [true, false],
+    submits: 0,
+  },
+];
 
 // Clicks the middle of the element `selector` picks with the mouse. Unlike
 // page.click(), it doesn't wait for a label of a disabled control to be
@@ -121,20 +164,19 @@ async function clickMiddle(page, selector) {
   await page.mouse.click(x + width / 2, y + height / 2);
 }
 
-test("Tab reaches the switch, the native checkbox, in one press from the field before it", () =>
+test("Tab reaches the switch, the native checkbox, in one press from the field before it, and the next press leaves it", () =>
   withPage(async (page) => {
     const actual = {};
     for (const mode of modes) {
       await page.focus(`#${mode}-text`);
       await page.keyboard.press("Tab");
-      actual[mode] = await page.evaluate(() => {
-        const element = document.activeElement;
-        return `${element.tagName} ${element.type} ${element.getAttribute("role")} #${element.id}`;
-      });
+      const first = await focusedElement(page);
+      await page.keyboard.press("Tab");
+      actual[mode] = [first, await focusedElement(page)];
     }
     assert.deepEqual(actual, {
-      csr: "INPUT checkbox switch #csr-switch",
-      ssr: "INPUT checkbox switch #ssr-switch",
+      csr: ["INPUT checkbox switch #csr-switch", "BUTTON submit csr-submit"],
+      ssr: ["INPUT checkbox switch #ssr-switch", "BUTTON submit ssr-submit"],
     });
   }));
 
@@ -149,23 +191,7 @@ test("Space toggles the switch once", () =>
       await page.keyboard.press(" ");
       actual[mode] = [once, await stateOf(page, id)];
     }
-    for (const mode of modes)
-      assert.deepEqual(actual[mode], [
-        {
-          checked: true,
-          focused: true,
-          track: "checked",
-          changes: [true],
-          submits: 0,
-        },
-        {
-          checked: false,
-          focused: true,
-          track: "unchecked",
-          changes: [true, false],
-          submits: 0,
-        },
-      ]);
+    assert.deepEqual(actual, { csr: toggledTwice, ssr: toggledTwice });
   }));
 
 test("Enter toggles the switch once and doesn't submit its form, which Enter in a text field does", () =>
@@ -183,24 +209,8 @@ test("Enter toggles the switch once and doesn't submit its form, which Enter in 
       await page.keyboard.press("Enter");
       actual[mode] = [once, twice, (await stateOf(page, id)).submits];
     }
-    for (const mode of modes)
-      assert.deepEqual(actual[mode], [
-        {
-          checked: true,
-          focused: true,
-          track: "checked",
-          changes: [true],
-          submits: 0,
-        },
-        {
-          checked: false,
-          focused: true,
-          track: "unchecked",
-          changes: [true, false],
-          submits: 0,
-        },
-        1,
-      ]);
+    const expected = [...toggledTwice, 1];
+    assert.deepEqual(actual, { csr: expected, ssr: expected });
   }));
 
 test("a click on the track or on the Label toggles the switch once and focuses it", () =>
@@ -213,61 +223,97 @@ test("a click on the track or on the Label toggles the switch once and focuses i
       await clickMiddle(page, `[data-test=${id}-label]`);
       actual[mode] = [byTrack, await stateOf(page, id)];
     }
-    for (const mode of modes)
-      assert.deepEqual(actual[mode], [
-        {
-          checked: true,
-          focused: true,
-          track: "checked",
-          changes: [true],
-          submits: 0,
-        },
-        {
-          checked: false,
-          focused: true,
-          track: "unchecked",
-          changes: [true, false],
-          submits: 0,
-        },
-      ]);
+    assert.deepEqual(actual, { csr: toggledTwice, ssr: toggledTwice });
   }));
+
+// Tries to use the switch `id`, in a disabled fieldset, and returns what the
+// page shows of it: whether it matches `:disabled`, its accessibility
+// snapshot, where Tab goes from the button before it, whether script can
+// focus it, and its state after Space and Enter, an Enter keydown dispatched
+// on it, and clicks on its track and its Label
+async function useDisabled(page, id) {
+  const disabled = await page.$eval(`#${id}`, (input) =>
+    input.matches(":disabled"),
+  );
+  const snapshot = await page.locator(`#${id}`).ariaSnapshot();
+  // Tab goes from the button before the fieldset to the one after it, where
+  // Space and Enter do nothing
+  await page.focus(`[data-test=${id}-before]`);
+  await page.keyboard.press("Tab");
+  const tabbedTo = await focusedElement(page);
+  await page.keyboard.press(" ");
+  await page.keyboard.press("Enter");
+  // Script can't focus it either, so Space and Enter reach the page
+  await page.focus(`#${id}`);
+  const focusedByScript = (await stateOf(page, id)).focused;
+  await page.keyboard.press(" ");
+  await page.keyboard.press("Enter");
+  // A keydown reaches it only when dispatched on it
+  await page.$eval(`#${id}`, (input) =>
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Enter",
+        bubbles: true,
+        cancelable: true,
+      }),
+    ),
+  );
+  await clickMiddle(page, `#${id} + span`);
+  await clickMiddle(page, `[data-test=${id}-label]`);
+  return {
+    disabled,
+    snapshot,
+    tabbedTo,
+    focusedByScript,
+    ...(await stateOf(page, id)),
+  };
+}
+
+// What `useDisabled` finds for the switch `id`, named `name`
+const disabledSwitch = (id, name) => ({
+  disabled: true,
+  snapshot: `- switch "${name}" [disabled]`,
+  tabbedTo: `BUTTON button ${id}-after`,
+  focusedByScript: false,
+  role: "switch",
+  checked: false,
+  focused: false,
+  track: "unchecked",
+  changes: [],
+  submits: 0,
+});
 
 test("in a disabled fieldset, a switch without `disabled` is disabled: Tab skips it, and no key or click changes it", () =>
   withPage(async (page) => {
     const actual = {};
     const expected = {};
     for (const mode of modes) {
-      const id = `${mode}-fieldset-switch`;
-      const disabled = await page.$eval(`#${id}`, (input) =>
-        input.matches(":disabled"),
-      );
-      // Tab goes from the button before the fieldset to the one after it
-      await page.focus(`[data-test=${mode}-before]`);
+      const id = `${mode}-in-fieldset`;
+      actual[mode] = await useDisabled(page, id);
+      expected[mode] = disabledSwitch(id, "Share my data");
+    }
+    assert.deepEqual(actual, expected);
+  }));
+
+test("a switch whose fieldset is disabled after it mounted and had focus is disabled the same way", () =>
+  withPage(async (page) => {
+    const actual = {};
+    const expected = {};
+    for (const mode of modes) {
+      const id = `${mode}-late`;
+      await page.focus(`[data-test=${id}-before]`);
       await page.keyboard.press("Tab");
-      const tabbedTo = await page.evaluate(() =>
-        document.activeElement.getAttribute("data-test"),
-      );
-      // Script can't focus it either, so Space and Enter reach the page
-      await page.focus(`#${id}`);
-      const focused = (await stateOf(page, id)).focused;
+      const hadFocus = (await stateOf(page, id)).focused;
+      // As React does when the fieldset's `disabled` prop changes
+      await page.$eval(`#${id}-fieldset`, (fieldset) => {
+        fieldset.disabled = true;
+      });
       await page.keyboard.press(" ");
       await page.keyboard.press("Enter");
-      await clickMiddle(page, `#${id} + span`);
-      await clickMiddle(page, `[data-test=${id}-label]`);
-      actual[mode] = {
-        disabled,
-        tabbedTo,
-        focused,
-        ...(await stateOf(page, id)),
-      };
+      actual[mode] = { hadFocus, ...(await useDisabled(page, id)) };
       expected[mode] = {
-        disabled: true,
-        tabbedTo: `${mode}-after`,
-        focused: false,
-        checked: false,
-        track: "unchecked",
-        changes: [],
-        submits: 0,
+        hadFocus: true,
+        ...disabledSwitch(id, "Pemberitahuan e-mel"),
       };
     }
     assert.deepEqual(actual, expected);
@@ -281,35 +327,139 @@ test("in a disabled fieldset, a switch's track looks like one with `disabled`", 
         return { backgroundColor, cursor };
       });
     for (const mode of modes) {
-      const inFieldset = await look(`${mode}-fieldset-switch`);
-      assert.deepEqual(inFieldset, await look(`${mode}-disabled-switch`));
+      const inFieldset = await look(`${mode}-in-fieldset`);
+      assert.deepEqual(inFieldset, await look(`${mode}-disabled`));
       assert.equal(inFieldset.cursor, "not-allowed");
       // Unlike an enabled one
       assert.notDeepEqual(inFieldset, await look(`${mode}-switch`));
     }
   }));
 
-test("a focused switch whose fieldset is then disabled doesn't toggle on Space or Enter", () =>
+// main's Toggle (4757821), before the checkbox became the switch, measured
+// in this harness: each size's track, its thumb, and how far the thumb
+// slides when checked. The thumb sits 3px in from the track's left and
+// bottom.
+const mainSizes = {
+  small: { track: "24x16", thumb: "10x10", slide: "8px" },
+  medium: { track: "30x20", thumb: "14x14", slide: "10px" },
+  large: { track: "36x24", thumb: "18x18", slide: "12px" },
+};
+
+// main's Toggle (4757821), measured in this harness: in each theme and
+// state, the track's colour at rest and hovered, the thumb's colour, and the
+// cursor. They're the same in each size.
+const mainColours = {
+  light: {
+    unchecked: {
+      track: "rgb(228, 228, 231)",
+      hovered: "rgb(212, 212, 216)",
+      thumb: "rgb(255, 255, 255)",
+      cursor: "pointer",
+    },
+    checked: {
+      track: "rgb(37, 99, 235)",
+      hovered: "rgb(37, 99, 235)",
+      thumb: "rgb(255, 255, 255)",
+      cursor: "pointer",
+    },
+    disabled: {
+      track: "rgb(244, 244, 245)",
+      hovered: "rgb(244, 244, 245)",
+      thumb: "rgb(255, 255, 255)",
+      cursor: "not-allowed",
+    },
+    "disabled-checked": {
+      track: "rgb(194, 213, 255)",
+      hovered: "rgb(194, 213, 255)",
+      thumb: "rgb(255, 255, 255)",
+      cursor: "not-allowed",
+    },
+  },
+  dark: {
+    unchecked: {
+      track: "rgb(39, 39, 42)",
+      hovered: "rgb(63, 63, 70)",
+      thumb: "rgb(255, 255, 255)",
+      cursor: "pointer",
+    },
+    checked: {
+      track: "rgb(99, 148, 255)",
+      hovered: "rgb(99, 148, 255)",
+      thumb: "rgb(255, 255, 255)",
+      cursor: "pointer",
+    },
+    disabled: {
+      track: "rgb(29, 29, 33)",
+      hovered: "rgb(29, 29, 33)",
+      thumb: "rgb(24, 24, 27)",
+      cursor: "not-allowed",
+    },
+    "disabled-checked": {
+      track: "rgb(23, 37, 84)",
+      hovered: "rgb(23, 37, 84)",
+      thumb: "rgb(24, 24, 27)",
+      cursor: "not-allowed",
+    },
+  },
+};
+
+// Runs in the page: the look of the track after the checkbox `id`, and of
+// its thumb, the track's `::before`
+function readLook(id) {
+  const track = document.getElementById(id).nextElementSibling;
+  const { width, height } = track.getBoundingClientRect();
+  const { backgroundColor, cursor } = getComputedStyle(track);
+  const thumb = getComputedStyle(track, "::before");
+  const px = (value) => parseFloat(value);
+  return {
+    track: `${width}x${height}`,
+    colour: backgroundColor,
+    cursor,
+    thumb: `${px(thumb.width)}x${px(thumb.height)}`,
+    thumbAt: `${thumb.left} ${thumb.bottom}`,
+    slide: thumb.translate,
+    thumbColour: thumb.backgroundColor,
+  };
+}
+
+test("apart from focus, each size's track looks as on main: at rest, hovered, checked, and with `disabled`", () =>
   withPage(async (page) => {
     const actual = {};
-    for (const mode of modes) {
-      const id = `${mode}-fieldset-switch`;
-      await page.$eval(`#${mode}-fieldset`, (fieldset) => {
-        fieldset.disabled = false;
-      });
-      await page.focus(`#${id}`);
-      await page.$eval(`#${mode}-fieldset`, (fieldset) => {
-        fieldset.disabled = true;
-      });
-      await page.keyboard.press(" ");
-      await page.keyboard.press("Enter");
-      const { checked, track, changes } = await stateOf(page, id);
-      actual[mode] = { checked, track, changes };
+    const expected = {};
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate(
+        (dark) => document.documentElement.classList.toggle("dark", dark),
+        theme === "dark",
+      );
+      for (const [size, { track, thumb, slide }] of Object.entries(mainSizes))
+        for (const [state, colours] of Object.entries(mainColours[theme])) {
+          const id = `look-${size}-${state}`;
+          const checked = state === "checked" || state === "disabled-checked";
+          await page.mouse.move(away.x, away.y);
+          const atRest = await page.evaluate(readLook, id);
+          const { x, y, width, height } = await page
+            .locator(`#${id} + span`)
+            .boundingBox();
+          await page.mouse.move(x + width / 2, y + height / 2);
+          const hovered = await page.evaluate(readLook, id);
+          const look = (colour) => ({
+            track,
+            colour,
+            cursor: colours.cursor,
+            thumb,
+            thumbAt: "3px 3px",
+            slide: checked ? slide : "none",
+            thumbColour: colours.thumb,
+          });
+          actual[`${size}, ${state}, at rest (${theme})`] = atRest;
+          expected[`${size}, ${state}, at rest (${theme})`] = look(
+            colours.track,
+          );
+          actual[`${size}, ${state}, hovered (${theme})`] = hovered;
+          expected[`${size}, ${state}, hovered (${theme})`] = look(
+            colours.hovered,
+          );
+        }
     }
-    for (const mode of modes)
-      assert.deepEqual(actual[mode], {
-        checked: false,
-        track: "unchecked",
-        changes: [],
-      });
+    assert.deepEqual(actual, expected);
   }));

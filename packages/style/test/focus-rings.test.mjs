@@ -9,11 +9,12 @@
 // since they follow the input's focus. Some controls draw the ring on another
 // element, where it isn't clipped: the Accordion item for its trigger,
 // SearchBar's input container, the active InputOTP slot, the radio wrapper in
-// DataTable, and the Switch's track for its visually hidden checkbox.
-// TableCell's ring and the toast viewport's are inset. The pixels around each
-// ring show it on all four sides. Under forced colours, where box-shadows
-// don't render, an outline shows focus instead. A TooltipTrigger with
-// `asChild` leaves its child's own ring alone.
+// DataTable, and the Switch's track for its visually hidden checkbox, which
+// one Tab from the control before it reaches. TableCell's ring and the toast
+// viewport's are inset. The pixels around each ring show it on all four
+// sides. Under forced colours, where box-shadows don't render, an outline
+// shows focus instead. A TooltipTrigger with `asChild` leaves its child's own
+// ring alone.
 //
 // The page is focus-rings.page.jsx: the React components themselves, bundled
 // with esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -67,6 +68,8 @@ const dataTableCell = (id) => `[data-test=data-table] [id="${id}"]`;
  *   it, then Tabs on; `F8` presses the toast viewport's hotkey; `script`
  *   presses a key, then calls `focus()`, as on a TableCell, which is
  *   `tabIndex={-1}`
+ * - `from`: the control before it in the tab order, if keyboard focus starts
+ *   there and must reach it in one Tab
  * - `click`: whether a mouse click shows the ring too
  * - `pointer`: the element the mouse presses, if not the focused one
  * - `press`: where the mouse presses it, from its top-left, if not its middle
@@ -123,6 +126,7 @@ const controls = [
   {
     name: "Switch",
     focus: "#switch",
+    from: "[data-test=radio-large]",
     ring: "#switch + span",
     outline: "#switch + span",
     pointer: "#switch + span",
@@ -269,8 +273,8 @@ async function tabTo(page, selector) {
   throw new Error(`Tab never reaches ${selector}`);
 }
 
-// Gives a control keyboard focus, as its `reach` says
-async function focusByKeyboard(page, { focus, reach = "tab" }) {
+// Gives a control keyboard focus, as its `reach` and `from` say
+async function focusByKeyboard(page, { focus, reach = "tab", from }) {
   if (reach === "menu") {
     await tabTo(page, dropdownTrigger);
     if ((await page.getAttribute(dropdownTrigger, "aria-expanded")) !== "true")
@@ -281,6 +285,9 @@ async function focusByKeyboard(page, { focus, reach = "tab" }) {
   } else if (reach === "script") {
     await page.keyboard.press("Shift");
     await page.focus(focus);
+  } else if (from) {
+    await page.focus(from);
+    await page.keyboard.press("Tab");
   } else await tabTo(page, focus);
 }
 

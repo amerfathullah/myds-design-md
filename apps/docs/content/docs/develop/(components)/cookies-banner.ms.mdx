@@ -15,7 +15,7 @@ import {
 } from "@/components/cookies-banner-preview";
 
 <Tabs items={["Pratonton", "Kod"]}>
-  <Tab value="Pratonton">
+  <Tab value="Pratonton" className="not-prose">
     <div className="flex justify-center">
       <CookiesBannerPreview />
     </div>
@@ -40,7 +40,7 @@ import {
         performance: true,
       });
 
-      // Tetapkan semula Pilihan kepada lalai apabila dialog ditutup
+      // Tetapkan semula Pilihan kepada lalai apabila banner ditutup
       useEffect(() => {
         if (!open) {
           setPreferences({
@@ -232,6 +232,48 @@ export default () => (
 
 `CookieBanner` menambah butang tutup dengan ikon silang di sudut kanan atasnya. Pembaca skrin menyebut butang tutup sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `closeLabel="Tutup"`.
 
+Sentiasa sertakan `CookieBannerTitle`. `CookieBanner` memaparkan `<section>` yang dinamakan oleh tajuknya, jadi pembaca skrin menyebut banner itu sebagai kawasan dengan nama tersebut. `aria-label` atau `aria-labelledby` yang anda hantar menamakannya sebagai ganti. Tanpa kedua-duanya dan tanpa tajuk, banner itu tidak mempunyai nama.
+
+## Kedudukan
+
+Paparkan `CookieBanner` sebagai elemen pertama dalam `<body>`, sebelum `Skiplink`. Ia dipaparkan di tempat anda meletakkannya, bukan dalam portal, dan kekal di sudut kanan bawah tetingkap. Kerana ia datang dahulu dalam halaman, pengguna papan kekunci dan pembaca skrin menemuinya apabila halaman dimuatkan.
+
+```tsx copy title="Kedudukan"
+export default () => (
+  <body>
+    <CookieBanner defaultOpen>
+      <CookieBannerTitle>Pilihan Kuki</CookieBannerTitle>
+      {/* CookieBannerDescription, CookieBannerPreferences, CookieBannerAction */}
+    </CookieBanner>
+    <Skiplink href="#main-content">Langkau ke kandungan utama</Skiplink>
+    <Masthead />
+    <Navbar>{/* … */}</Navbar>
+    <main id="main-content">{/* … */}</main>
+    <Footer>{/* … */}</Footer>
+  </body>
+);
+```
+
+## Tingkah Laku
+
+`CookieBanner` tidak menyekat halaman. Pelawat boleh terus membaca, menekan dan menggunakan Tab pada bahagian lain halaman semasa ia dipaparkan.
+
+Ia kekal sehingga pelawat membuat pilihan dengan `CookieBannerClose`, seperti Terima Semua, Tolak Semua atau Simpan Pilihan, atau menekan butang tutup bersilang. Menekan di luar banner tidak menutupnya, begitu juga kekunci Escape. Setiap kali ia dibuka, ia memaparkan paparan lalai, bukan paparan Sesuaikan.
+
+Banner tidak pernah lebih tinggi daripada tetingkap, tolak marginnya. Kandungan yang tidak muat ditatal di dalamnya.
+
+### Fokus
+
+- Membuka banner sejurus selepas klik atau tekanan kekunci, contohnya pada kawalan "Tetapan kuki", mengalihkan fokus ke banner. Pembukaan lain, seperti semasa halaman dimuatkan atau dengan `defaultOpen`, tidak mengalihkan fokus.
+- Tab dan Shift+Tab bergerak masuk dan keluar dari banner mengikut urutan halaman. Ia tidak memerangkap fokus.
+- Sesuaikan mengalihkan fokus ke kawalan pertama dalam `CookieBannerPreferences`, atau, jika tiada, ke kawalan pertama dalam `CookieBannerAction` paparan Sesuaikan. Ia tidak pernah mengalihkannya ke butang tutup bersilang. Balik mengalihkannya semula ke Sesuaikan.
+- Menutup banner semasa fokus berada di dalamnya mengalihkan fokus semula ke kawalan yang membukanya, jika ada dan ia masih dalam halaman. Jika tidak, fokus beralih ke elemen boleh fokus seterusnya selepas banner: `Skiplink`, apabila banner datang dahulu. Menutupnya semasa fokus berada di tempat lain tidak mengalihkan fokus.
+- Tiada satu pun pengalihan fokus ini menatal halaman.
+
+### Padding halaman
+
+Semasa banner dipaparkan, ia menetapkan `scroll-padding-bottom` pada `<html>` dan `padding-bottom` pada `<body>` kepada tingginya serta margin bawahnya, dan mengemas kini kedua-duanya apabila saiznya berubah. Kawalan yang menerima fokus kemudiannya ditatal ke dalam pandangan di atas banner, bukan di belakangnya (WCAG 2.2 SC 2.4.11), dan hujung halaman boleh ditatal melepasinya. Kedua-duanya ialah gaya sebaris, jadi semasa banner dipaparkan, ia menggantikan sebarang `padding-bottom` yang diberikan oleh helaian gaya anda kepada `<body>`. Apabila banner ditutup, kedua-duanya kembali seperti asal, termasuk nilai sebaris yang anda tetapkan.
+
 ## Contoh
 
 ### Keadaan Tidak Terkawal vs Terkawal
@@ -244,7 +286,7 @@ Banner Kuki boleh dikendalikan sebagai komponen **terkawal** atau **tidak terkaw
 Berikut adalah contoh **Banner Kuki Terkawal**.
 
 <Tabs items={["Pratonton", "Kod"]}>
-  <Tab value="Pratonton">
+  <Tab value="Pratonton" className="not-prose">
     <div className="flex justify-center">
       <CookiesBannerPreview />
     </div>
@@ -269,7 +311,7 @@ Berikut adalah contoh **Banner Kuki Terkawal**.
         performance: true,
       });
 
-      // Tetapkan semula Pilihan kepada lalai apabila dialog ditutup
+      // Tetapkan semula Pilihan kepada lalai apabila banner ditutup
       useEffect(() => {
         if (!open) {
           setPreferences({
@@ -432,6 +474,10 @@ Berikut adalah contoh **Banner Kuki Terkawal**.
   terkawal (melalui `defaultOpen`). Anda boleh menggunakan API storan di sisi
   klien seperti `localStorage` atau `sessionStorage` untuk menyimpan maklumat
   keadaan, dan merujuknya apabila pengguna melawat laman web semula.
+  `CookieBanner` tidak memaparkan apa-apa di pelayan dan sehingga ia dipasang
+  dalam pelayar, jadi `defaultOpen` yang dibaca daripada storan tidak
+  menyebabkan ketidakpadanan hidrasi (hydration mismatch). `localStorage` tidak
+  wujud di pelayan, jadi semak `window` sebelum anda membacanya.
 </Callout>
 
 ### Panggilan untuk Bertindak (CTA) Pilihan
@@ -439,7 +485,7 @@ Berikut adalah contoh **Banner Kuki Terkawal**.
 `CookieBannerAction` bertanggungjawab untuk memaparkan panggilan untuk bertindak (CTA) untuk banner kuki. Walau bagaimanapun, apabila membenarkan pengguna untuk memilih kuki mereka, anda mungkin ingin mempersembahkan CTA yang berbeza. Dengan `CookieBannerAction`, hanya tetapkan prop `preferences` untuk memaparkan CTA Pilihan.
 
 <Tabs items={["Pratonton", "Kod"]}>
-  <Tab value="Pratonton">
+  <Tab value="Pratonton" className="not-prose">
     <div className="flex justify-center">
       <CookiesPreferencesDemo />
     </div>
@@ -532,17 +578,24 @@ Berikut adalah contoh **Banner Kuki Terkawal**.
 
 ### CookieBanner
 
+`CookieBanner` juga menerima semua atribut `<section>`, seperti `id`, `aria-label` dan `data-*`, dan menghantarnya kepada `<section>`. Ia meneruskan `ref`nya kepada `<section>` (sebuah `HTMLElement`).
+
 <TypeTable
   type={{
     defaultOpen: {
+      description:
+        "Sama ada banner dipaparkan semasa ia dipasang, apabila anda tidak mengawalnya.",
       type: "boolean",
       default: "false",
     },
     open: {
+      description:
+        "Sama ada banner dipaparkan, apabila anda mengawalnya. Gunakan bersama onOpenChange.",
       type: "boolean",
-      default: "false",
     },
     onOpenChange: {
+      description:
+        "Dipanggil sekali dengan false setiap kali kawalan tutup menutup banner.",
       type: "(value: boolean) => void",
     },
     closeLabel: {
@@ -551,10 +604,18 @@ Berikut adalah contoh **Banner Kuki Terkawal**.
       type: "string",
       default: "Close",
     },
+    modal: {
+      description:
+        "Lapuk. Tidak melakukan apa-apa: banner tidak pernah menyekat halaman. Dibuang pada versi utama seterusnya, jadi jangan gunakannya.",
+      type: "boolean",
+      deprecated: true,
+    },
   }}
 />
 
 ### CookieBannerTitle
+
+`<h2>`. Idnya menamakan banner, jadi sentiasa sertakannya.
 
 <TypeTable
   type={{

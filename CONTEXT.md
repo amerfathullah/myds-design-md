@@ -53,7 +53,7 @@ A component that frames a whole page rather than sitting inside content: Masthea
 _Avoid_: Layout, template, page pattern
 
 **Page frame**:
-The fixed arrangement of page-level components around a page's content: SkipLink → Masthead → Navbar … Footer.
+The fixed arrangement of page-level components around a page's content: CookieBanner (while it's shown) → SkipLink → Masthead → Navbar … Footer.
 _Avoid_: Layout, shell, chrome
 
 **National mark**:

@@ -155,12 +155,12 @@ describe("Callout's `dismissible` cross", () => {
     expect(strayLabels()).toBe(0);
   });
 
-  test("leaves an `aria-label` on Callout on the alert container", async () => {
+  test("leaves an `aria-label` on Callout on the note container", async () => {
     const page = await mount(
       callout({ closeLabel: "Tutup", "aria-label": "Notis" }),
     );
     expect(
-      page.querySelector('[role="alert"]')!.getAttribute("aria-label"),
+      page.querySelector('[role="note"]')!.getAttribute("aria-label"),
     ).toBe("Notis");
     expect(nameOf(page)).toBe("Tutup");
   });

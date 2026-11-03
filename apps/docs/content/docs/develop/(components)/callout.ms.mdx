@@ -245,6 +245,48 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
   </Tab>
 </Tabs>
 
+### Pembaca skrin
+
+Callout dipaparkan dengan `role="note"`. Pembaca skrin membacanya mengikut susunan bacaan bersama kandungan lain halaman, dan tidak menyebutnya apabila ia muncul. Ini sesuai untuk callout dalam kandungan halaman.
+
+Apabila callout muncul selepas pengguna bertindak dan mesti didengar serta-merta, seperti ralat selepas penghantaran yang gagal, hantar `role="alert"`.
+
+```tsx copy title="Ralat selepas penghantaran yang gagal"
+import { useState, type FormEvent } from "react";
+import { Button } from "@amerfathullah/myds-react/button";
+import {
+  Callout,
+  CalloutContent,
+  CalloutTitle,
+} from "@amerfathullah/myds-react/callout";
+
+export default function BorangPermohonan() {
+  const [error, setError] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const response = await fetch("/api/mohon", {
+      method: "POST",
+      body: new FormData(event.currentTarget),
+    });
+    setError(!response.ok);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {error && (
+        <Callout variant="danger" role="alert">
+          <CalloutTitle>Permohonan anda tidak dihantar</CalloutTitle>
+          <CalloutContent>Semak butiran anda dan cuba lagi.</CalloutContent>
+        </Callout>
+      )}
+      {/* Medan borang */}
+      <Button type="submit">Hantar</Button>
+    </form>
+  );
+}
+```
+
 ## Props
 
 ### Callout
@@ -271,6 +313,12 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
         "Nama boleh capai butang tutup yang ditambah oleh `dismissible`. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
       type: "string",
       default: "Close",
+    },
+    role: {
+      description:
+        "Peranan callout. Pembaca skrin membaca `note` mengikut susunan bacaan dan tidak menyebutnya apabila ia muncul. Hantar `alert` apabila callout muncul selepas pengguna bertindak dan mesti didengar serta-merta, seperti ralat selepas penghantaran yang gagal.",
+      type: "string",
+      default: "note",
     },
   }}
 />

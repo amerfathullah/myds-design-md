@@ -293,6 +293,48 @@ To dismiss the callout via event listener, simply wrap the target element with `
   </Tab>
 </Tabs>
 
+### Screen readers
+
+Callout renders `role="note"`. Screen readers read it in reading order with the rest of the page, and don't announce it when it appears. That suits a callout in the page content.
+
+When a callout appears after the user acts and must be heard at once, such as an error after a failed submit, pass `role="alert"`.
+
+```tsx copy title="Error after a failed submit"
+import { useState, type FormEvent } from "react";
+import { Button } from "@amerfathullah/myds-react/button";
+import {
+  Callout,
+  CalloutContent,
+  CalloutTitle,
+} from "@amerfathullah/myds-react/callout";
+
+export default function ApplicationForm() {
+  const [error, setError] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const response = await fetch("/api/apply", {
+      method: "POST",
+      body: new FormData(event.currentTarget),
+    });
+    setError(!response.ok);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {error && (
+        <Callout variant="danger" role="alert">
+          <CalloutTitle>Your application wasn't sent</CalloutTitle>
+          <CalloutContent>Check your details and try again.</CalloutContent>
+        </Callout>
+      )}
+      {/* The form's fields */}
+      <Button type="submit">Submit</Button>
+    </form>
+  );
+}
+```
+
 ## Props
 
 ### Callout
@@ -318,6 +360,12 @@ To dismiss the callout via event listener, simply wrap the target element with `
         "Accessible name of the close button that `dismissible` adds. Screen readers announce it; it is not shown.",
       type: "string",
       default: "Close",
+    },
+    role: {
+      description:
+        "Role of the callout. Screen readers read a `note` in reading order and don't announce it when it appears. Pass `alert` when the callout appears after the user acts and must be heard at once, such as an error after a failed submit.",
+      type: "string",
+      default: "note",
     },
   }}
 />

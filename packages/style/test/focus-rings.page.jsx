@@ -22,6 +22,7 @@ import {
 import { DataTable } from "../../react/src/components/data-table";
 import { SiteLink, SiteLinkGroup } from "../../react/src/components/footer";
 import { InputOTP, InputOTPSlot } from "../../react/src/components/input-otp";
+import { Label } from "../../react/src/components/label";
 import { Link } from "../../react/src/components/link";
 import {
   Navbar,
@@ -64,6 +65,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "../../react/src/components/toast";
+import { Toggle, ToggleThumb } from "../../react/src/components/toggle";
 import {
   Tooltip,
   TooltipContent,
@@ -220,6 +222,13 @@ function Page() {
               </RadioItem>
             </Radio>
           ))}
+        </div>
+
+        <div style={{ ...gap, display: "flex", gap: 16, width: 320 }}>
+          <Label htmlFor="switch">Enable sync</Label>
+          <Toggle id="switch">
+            <ToggleThumb />
+          </Toggle>
         </div>
 
         <div style={{ ...gap, width: 320 }}>

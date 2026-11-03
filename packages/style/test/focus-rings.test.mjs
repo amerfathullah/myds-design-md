@@ -5,14 +5,15 @@
 // without `asChild`), BreadcrumbLink, the Accordion, the NavbarMenuDropdown
 // trigger, TooltipTrigger, TableCell, Radio, DataTable's radio column, the
 // Tabs panel, and the toast card, its close button and its viewport.
-// SearchBar and the active InputOTP slot ring on a click too, since they
-// follow the input's focus. Some controls draw the ring on another element,
-// where it isn't clipped: the Accordion item for its trigger, SearchBar's
-// input container, the active InputOTP slot, and the radio wrapper in
-// DataTable. TableCell's ring and the toast viewport's are inset. The pixels
-// around each ring show it on all four sides. Under forced colours, where
-// box-shadows don't render, an outline shows focus instead. A TooltipTrigger
-// with `asChild` leaves its child's own ring alone.
+// SearchBar, the active InputOTP slot and the Switch ring on a click too,
+// since they follow the input's focus. Some controls draw the ring on another
+// element, where it isn't clipped: the Accordion item for its trigger,
+// SearchBar's input container, the active InputOTP slot, the radio wrapper in
+// DataTable, and the Switch's track for its visually hidden checkbox.
+// TableCell's ring and the toast viewport's are inset. The pixels around each
+// ring show it on all four sides. Under forced colours, where box-shadows
+// don't render, an outline shows focus instead. A TooltipTrigger with
+// `asChild` leaves its child's own ring alone.
 //
 // The page is focus-rings.page.jsx: the React components themselves, bundled
 // with esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -67,7 +68,10 @@ const dataTableCell = (id) => `[data-test=data-table] [id="${id}"]`;
  *   presses a key, then calls `focus()`, as on a TableCell, which is
  *   `tabIndex={-1}`
  * - `click`: whether a mouse click shows the ring too
+ * - `pointer`: the element the mouse presses, if not the focused one
  * - `press`: where the mouse presses it, from its top-left, if not its middle
+ * - `release`: whether the mouse releases the button where it pressed, as a
+ *   label moves focus to its control only on a full click
  * - `pixels`: whether the pixels around the ring are checked for clipping
  */
 const controls = [
@@ -116,6 +120,16 @@ const controls = [
   { name: "Radio, small", focus: "[data-test=radio-small]" },
   { name: "Radio, medium", focus: "[data-test=radio-medium]" },
   { name: "Radio, large", focus: "[data-test=radio-large]" },
+  {
+    name: "Switch",
+    focus: "#switch",
+    ring: "#switch + span",
+    outline: "#switch + span",
+    pointer: "#switch + span",
+    release: true,
+    click: true,
+    pixels: true,
+  },
   {
     name: "SearchBar",
     focus: "[data-test=search-bar] input",
@@ -346,7 +360,7 @@ test("each control shows its focus ring on keyboard focus, in both themes", asyn
   assertEntries(actual, expected);
 });
 
-test("a mouse click shows no ring, except on SearchBar and InputOTP", async () => {
+test("a mouse click shows no ring, except on SearchBar, InputOTP and Switch", async () => {
   const actual = {};
   const expected = {};
   for (const theme of themes)
@@ -356,9 +370,11 @@ test("a mouse click shows no ring, except on SearchBar and InputOTP", async () =
         await rest(page, control);
         // Press the button on the middle of the control, or of a wrapped
         // link's first line. Focus moves on the press, and releasing it
-        // elsewhere follows no link and toggles nothing.
+        // elsewhere follows no link and toggles nothing. A control focused
+        // through its label, such as the Switch, takes focus on the click,
+        // so the button is released there, which toggles it.
         const { inMenu, ...box } = await page.$eval(
-          control.focus,
+          control.pointer ?? control.focus,
           (element) => {
             const { x, y, width, height } = element.getClientRects()[0];
             return {
@@ -377,12 +393,13 @@ test("a mouse click shows no ring, except on SearchBar and InputOTP", async () =
         const at = { x: box.x + x, y: box.y + y };
         await page.mouse.move(at.x, at.y);
         await page.mouse.down();
+        if (control.release) await page.mouse.up();
         actual[key] = await page.evaluate(readFocus, {
           focus: control.focus,
           ring: control.ring ?? control.focus,
         });
         await page.mouse.move(away.x, away.y);
-        await page.mouse.up();
+        if (!control.release) await page.mouse.up();
         // The pointer leaving the Navbar menu's trigger or dropdown starts
         // Radix's 150ms timer to close the dropdown. Let it run out, or it
         // closes the dropdown that the next control opens by keyboard.

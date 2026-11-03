@@ -90,13 +90,12 @@ async function mountCallout(props: CalloutProps = {}) {
 const liveRoles = ["alert", "status", "log"];
 
 // Every element in `within`, `within` too, that is a live region: it has a
-// live-region role, set or implicit, or an `aria-live`
+// live-region role, set or implicit (`getRole` reads both), or an `aria-live`
 const liveRegions = (within: Element) =>
   [within, ...within.querySelectorAll("*")]
     .filter(
       (element) =>
         liveRoles.includes(getRole(element) ?? "") ||
-        liveRoles.includes(element.getAttribute("role") ?? "") ||
         element.hasAttribute("aria-live"),
     )
     .map((element) => element.outerHTML);

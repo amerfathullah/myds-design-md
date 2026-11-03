@@ -260,12 +260,12 @@ import {
   CalloutTitle,
 } from "@amerfathullah/myds-react/callout";
 
-export default function BorangPermohonan() {
+export default function ApplicationForm() {
   const [error, setError] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const response = await fetch("/api/mohon", {
+    const response = await fetch("/api/apply", {
       method: "POST",
       body: new FormData(event.currentTarget),
     });

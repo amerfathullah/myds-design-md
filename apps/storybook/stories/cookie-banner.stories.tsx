@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { fn } from "storybook/test";
 import { createStory } from "../utils";
 import {
   CookieBanner,
@@ -24,6 +25,10 @@ import { Checkbox } from "@amerfathullah/myds-react/checkbox";
  * > Keselamatan data terpelihara.
  * > -- Claude
  *
+ * The banner is a page region named by its `CookieBannerTitle`, not a dialog. It doesn't block the page, and stays
+ * until the visitor uses a `CookieBannerClose` or the close cross. A press outside it doesn't close it, and neither
+ * does Escape. It renders where you put it, not in a portal, so on a page put it first in `<body>`, before `SkipLink`.
+ *
  * ### Anatomy
  * ``` tsx
  * <CookieBanner>
@@ -31,25 +36,31 @@ import { Checkbox } from "@amerfathullah/myds-react/checkbox";
  *   <CookieBannerDescription />
  *   <CookieBannerPreferences />
  *   <CookieBannerAction>
- *     <CookieBannerPreferencesTrigger>
+ *     <CookieBannerClose />
+ *     <CookieBannerPreferencesTrigger />
+ *   </CookieBannerAction>
+ *   <CookieBannerAction preferences>
+ *     <CookieBannerClose />
  *   </CookieBannerAction>
  * </CookieBanner>
  * ```
- * 
- 
  */
 
 const meta = {
   title: "@amerfathullah/myds-react/CookiesBanner",
-  component: (args: React.ComponentProps<typeof CookieBanner>) => {
+  component: ({ onOpenChange }: React.ComponentProps<typeof CookieBanner>) => {
     const [open, setOpen] = useState(false);
+    const changeOpen = (value: boolean) => {
+      setOpen(value);
+      onOpenChange?.(value);
+    };
     const [preferences, setPreferences] = useState({
       necessary: true,
       analytics: true,
       performance: true,
     });
 
-    // Reset preferences back to default when dialog closes
+    // Reset preferences back to default when the banner closes
     useEffect(() => {
       if (!open) {
         setPreferences({
@@ -65,7 +76,7 @@ const meta = {
         <Button variant="primary-fill" onClick={() => setOpen(true)}>
           Open Cookie Settings
         </Button>
-        <CookieBanner open={open} onOpenChange={setOpen}>
+        <CookieBanner open={open} onOpenChange={changeOpen}>
           <CookieBannerTitle>Cookies Preferences</CookieBannerTitle>
           <CookieBannerDescription>
             This website uses cookies to improve user experience. We need your
@@ -199,26 +210,29 @@ const meta = {
   },
   parameters: {
     layout: "centered",
+    // The docs page shows each story in its own frame. Inline, a story's
+    // block is transformed, so the banner would be fixed to the block, not
+    // the window, and cut off by it.
+    docs: { story: { inline: false, height: "520px" } },
   },
   tags: ["autodocs"],
   args: {
-    open: false,
-    onOpenChange: () => {},
+    onOpenChange: fn(),
   },
   argTypes: {
     open: {
-      control: "boolean",
-      description: "Controls the visibility of the cookie banner (controlled)",
-      defaultValue: false,
+      description:
+        "Whether the banner is shown, when you control it. Use with onOpenChange. The story's button opens it.",
+      control: false,
       table: {
         category: "CookieBanner",
       },
     },
     onOpenChange: {
       description:
-        "Event listener for when the cookie banner is opened or closed (controlled)",
+        "Called once with false each time a close control closes the banner. Only a CookieBannerClose and the close cross close it: a press outside it doesn't, and neither does Escape.",
       action: "onOpenChange",
-      control: undefined,
+      control: false,
       table: {
         category: "CookieBanner",
       },

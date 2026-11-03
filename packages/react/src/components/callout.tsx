@@ -83,9 +83,12 @@ const Callout: ForwardRefExoticComponent<CalloutProps> = forwardRef(
     return (
       <CalloutContext.Provider value={{ show, handleDismiss }}>
         {show && (
+          // A note, not a live region (ADR-0010): screen readers read it in
+          // reading order. A `role` the author passes, such as "alert",
+          // replaces it.
           <div
             ref={ref}
-            role="alert"
+            role="note"
             className={calloutVariants({ variant, className })}
             {...props}
           >

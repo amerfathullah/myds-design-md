@@ -3,6 +3,7 @@ import {
   act,
   createElement,
   type ComponentProps,
+  type FormEvent,
   type ReactElement,
 } from "react";
 import { createRoot } from "react-dom/client";
@@ -48,7 +49,7 @@ beforeEach(() => {
 // the first time it meets its name, so the warning check below would miss
 // every leak after the first; checking the attributes catches each one.
 const labelAttributes =
-  "[rowlabel], [selectalllabel], [clearlabel], [columnlabel], [expandlabel], [tooltiplabel]";
+  "[rowlabel], [selectalllabel], [clearlabel], [columnlabel], [expandlabel], [tooltiplabel], [sortlabel], [widenlabel]";
 
 // No label option reaches the DOM, no test logs an error or a warning apart
 // from an allowed radio warning, and nothing is left on the page
@@ -126,6 +127,21 @@ const toggles = "tbody button[data-expanded]";
 // The text of each row in the table body, top to bottom
 const rowTexts = (within: ParentNode) =>
   [...within.querySelectorAll("tbody tr")].map((row) => row.textContent);
+
+// The text of each body row's first cell, top to bottom
+const firstColumn = (within: ParentNode) =>
+  [...within.querySelectorAll("tbody tr td:first-child")].map(
+    (cell) => cell.textContent,
+  );
+
+// The button in `within` whose accessible name is `name`
+function buttonNamed(within: ParentNode, name: string) {
+  const button = [...within.querySelectorAll("button")].find(
+    (element) => computeAccessibleName(element) === name,
+  );
+  if (!button) throw new Error(`No button is named "${name}"`);
+  return button;
+}
 
 async function click(element: Element) {
   await act(async () => (element as HTMLElement).click());
@@ -384,6 +400,279 @@ describe("A column header's tooltip trigger", () => {
       tooltipLabel: "Maklumat umur",
     });
     expect(namesOf(page, "thead button")).toEqual(["Maklumat umur"]);
+  });
+});
+
+type Officer = {
+  id: string;
+  name: string;
+  unit: string;
+  office: string;
+  age: number;
+};
+
+// Out of order by name and by age, so a first sort of either reorders them
+const officers: Officer[] = [
+  { id: "c", name: "Chong", unit: "Records", office: "Ipoh", age: 34 },
+  { id: "a", name: "Aminah", unit: "Licensing", office: "Kuantan", age: 41 },
+  { id: "b", name: "Badrul", unit: "Finance", office: "Arau", age: 25 },
+];
+
+// Mounts a DataTable of officers with `props`, and returns its container
+async function officerTable(
+  props: Partial<ComponentProps<typeof DataTable<Officer>>>,
+) {
+  if (props.selection?.mode === "radio") radioWarningAllowed = true;
+  return mount(
+    createElement(DataTable<Officer>, {
+      columns: officerColumns,
+      data: officers,
+      ...props,
+    }),
+  );
+}
+
+// A header of each form: a string, a function that renders an element, and
+// none, which TanStack's default renders as the accessor key
+const officerColumns: ColumnDef<Officer>[] = [
+  {
+    id: "name",
+    accessorKey: "name",
+    header: "Name",
+    meta: { sortable: true, expandable: true },
+  },
+  {
+    id: "unit",
+    accessorKey: "unit",
+    header: () => createElement("b", null, "Unit"),
+    meta: { sortable: true },
+  },
+  { accessorKey: "office", meta: { sortable: true } },
+];
+
+describe("A column header's sort and widen buttons", () => {
+  test('are named "Sort by {header}" and "Widen {header}" from the text each header renders', async () => {
+    const page = await officerTable({});
+    expect(namesOf(page, "thead button")).toEqual([
+      "Widen Name",
+      "Sort by Name",
+      "Sort by Unit",
+      "Sort by office",
+    ]);
+  });
+
+  test('are named "Sort column" and "Widen column" when the header renders no text', async () => {
+    const page = await officerTable({
+      columns: [
+        {
+          id: "office",
+          accessorKey: "office",
+          header: () => null,
+          meta: { sortable: true, expandable: true },
+        },
+      ],
+    });
+    expect(namesOf(page, "thead button")).toEqual([
+      "Widen column",
+      "Sort column",
+    ]);
+  });
+
+  test("take their names from the column's `meta.sortLabel` and `meta.widenLabel`", async () => {
+    const page = await officerTable({
+      columns: [
+        {
+          id: "name",
+          accessorKey: "name",
+          header: "Nama",
+          meta: {
+            sortable: true,
+            expandable: true,
+            sortLabel: "Isih mengikut Nama",
+            widenLabel: "Lebarkan Nama",
+          },
+        },
+      ],
+    });
+    expect(namesOf(page, "thead button")).toEqual([
+      "Lebarkan Nama",
+      "Isih mengikut Nama",
+    ]);
+  });
+
+  test("hide their icons from assistive technology", async () => {
+    const page = await officerTable({});
+    const buttons = page.querySelectorAll("thead button");
+    expect(buttons).toHaveLength(4);
+    const exposedIcons = [...buttons]
+      .flatMap((button) => [...button.querySelectorAll("svg")])
+      .filter((icon) => !icon.closest('[aria-hidden="true"]'))
+      .map((icon) => icon.outerHTML);
+    expect(exposedIcons).toEqual([]);
+  });
+
+  test("leave out the sort button of a `sortable` column with no accessor, which can't sort", async () => {
+    const page = await officerTable({
+      columns: [
+        { id: "name", accessorKey: "name", header: "Name" },
+        {
+          id: "actions",
+          header: "Actions",
+          cell: () => "Edit",
+          meta: { sortable: true, expandable: true },
+        },
+      ],
+    });
+    expect(namesOf(page, "thead button")).toEqual(["Widen Actions"]);
+  });
+
+  test('are `type="button"`, so activating one inside a form submits nothing', async () => {
+    const submits: string[] = [];
+    const page = await mount(
+      createElement(
+        "form",
+        {
+          onSubmit: (event: FormEvent) => {
+            event.preventDefault();
+            submits.push("submitted");
+          },
+        },
+        createElement(DataTable<Officer>, {
+          columns: officerColumns,
+          data: officers,
+        }),
+        createElement("button", { type: "submit" }, "Save"),
+      ),
+    );
+    const buttons = [
+      buttonNamed(page, "Sort by Name"),
+      buttonNamed(page, "Widen Name"),
+    ];
+    for (const button of buttons) await click(button);
+    expect(submits).toEqual([]);
+    expect(buttons.map((button) => button.getAttribute("type"))).toEqual([
+      "button",
+      "button",
+    ]);
+    // The form does submit, from its submit button
+    await click(buttonNamed(page, "Save"));
+    expect(submits).toEqual(["submitted"]);
+  });
+
+  test("keep their names after sorting ascending, sorting descending and widening", async () => {
+    const page = await officerTable({});
+    const names = [
+      "Widen Name",
+      "Sort by Name",
+      "Sort by Unit",
+      "Sort by office",
+    ];
+    const sort = buttonNamed(page, "Sort by Name");
+    const widen = buttonNamed(page, "Widen Name");
+    await click(sort);
+    expect(firstColumn(page)).toEqual(["Aminah", "Badrul", "Chong"]);
+    expect(namesOf(page, "thead button")).toEqual(names);
+    await click(sort);
+    expect(firstColumn(page)).toEqual(["Chong", "Badrul", "Aminah"]);
+    expect(namesOf(page, "thead button")).toEqual(names);
+    await click(widen);
+    expect(widen.getAttribute("data-expanded")).toBe("true");
+    expect(namesOf(page, "thead button")).toEqual(names);
+  });
+});
+
+describe.each(modes)(
+  "A sortable and expandable table in %s selection",
+  (mode) => {
+    // Every column header has a sort or widen button, and Age a tooltip too
+    const columns: ColumnDef<Officer>[] = [
+      ...officerColumns,
+      {
+        id: "age",
+        accessorKey: "age",
+        header: "Age",
+        meta: { sortable: true, tooltip: "Umur dalam tahun" },
+      },
+    ];
+
+    test("has no unnamed button, at rest, sorted or widened", async () => {
+      const page = await officerTable({
+        columns,
+        selection: { id_by: "id", mode },
+      });
+      expect(unnamed(page)).toEqual([]);
+      await click(buttonNamed(page, "Sort by Name"));
+      expect(unnamed(page)).toEqual([]);
+      await click(buttonNamed(page, "Widen Name"));
+      expect(unnamed(page)).toEqual([]);
+    });
+  },
+);
+
+describe("A column header's widen button", () => {
+  test('is `aria-pressed` "false", then "true" while its column is widened, then "false"', async () => {
+    const page = await officerTable({});
+    const widen = buttonNamed(page, "Widen Name");
+    expect(widen.getAttribute("aria-pressed")).toBe("false");
+    await click(widen);
+    expect(widen.getAttribute("aria-pressed")).toBe("true");
+    await click(widen);
+    expect(widen.getAttribute("aria-pressed")).toBe("false");
+  });
+});
+
+describe("A sorted column's header", () => {
+  // The headers that have `aria-sort`, as "header text: value"
+  const sortedHeaders = (within: ParentNode) =>
+    [...within.querySelectorAll("thead th[aria-sort]")].map(
+      (header) => `${header.textContent}: ${header.getAttribute("aria-sort")}`,
+    );
+
+  test('has `aria-sort` "ascending", then "descending", then none as its sort button cycles', async () => {
+    const page = await officerTable({});
+    const sort = buttonNamed(page, "Sort by Name");
+    expect(sortedHeaders(page)).toEqual([]);
+    await click(sort);
+    expect(firstColumn(page)).toEqual(["Aminah", "Badrul", "Chong"]);
+    expect(sortedHeaders(page)).toEqual(["Name: ascending"]);
+    await click(sort);
+    expect(firstColumn(page)).toEqual(["Chong", "Badrul", "Aminah"]);
+    expect(sortedHeaders(page)).toEqual(["Name: descending"]);
+    await click(sort);
+    expect(firstColumn(page)).toEqual(["Chong", "Aminah", "Badrul"]);
+    expect(sortedHeaders(page)).toEqual([]);
+  });
+
+  test('has `aria-sort` "descending" after a number column\'s first sort', async () => {
+    const page = await officerTable({
+      columns: [
+        { id: "name", accessorKey: "name", header: "Name" },
+        {
+          id: "age",
+          accessorKey: "age",
+          header: "Age",
+          meta: { sortable: true },
+        },
+      ],
+    });
+    await click(buttonNamed(page, "Sort by Age"));
+    expect(firstColumn(page)).toEqual(["Aminah", "Chong", "Badrul"]);
+    expect(sortedHeaders(page)).toEqual(["Age: descending"]);
+  });
+
+  test("is only the first column in a Shift+click multi-sort", async () => {
+    const page = await officerTable({});
+    await click(buttonNamed(page, "Sort by Unit"));
+    // Badrul's unit is Finance, Aminah's Licensing and Chong's Records
+    expect(firstColumn(page)).toEqual(["Badrul", "Aminah", "Chong"]);
+    await act(async () =>
+      buttonNamed(page, "Sort by Name").dispatchEvent(
+        new MouseEvent("click", { bubbles: true, shiftKey: true }),
+      ),
+    );
+    // Name joined the sort after Unit, rather than replacing it
+    expect(firstColumn(page)).toEqual(["Badrul", "Aminah", "Chong"]);
+    expect(sortedHeaders(page)).toEqual(["Unit: ascending"]);
   });
 });
 

@@ -387,13 +387,25 @@ export const PaginationLabels = () => (
 );
 
 // DataTable names the controls it renders from `selection`, `nest` and a
-// column's `meta.tooltipLabel`. A row label is a string or a function of the
-// table's row. TableTooltip takes its trigger's name from `aria-label`.
+// column's `meta.tooltipLabel`, `meta.sortLabel` and `meta.widenLabel`. A row
+// label is a string or a function of the table's row. TableTooltip takes its
+// trigger's name from `aria-label`.
 export const DataTableLabels = () => (
   <>
     <DataTable
       columns={[
-        { id: "name", header: "Name", accessorKey: "name", cell: Cell.Expand },
+        {
+          id: "name",
+          header: "Name",
+          accessorKey: "name",
+          cell: Cell.Expand,
+          meta: {
+            sortable: true,
+            expandable: true,
+            sortLabel: "Isih mengikut Nama",
+            widenLabel: "Lebarkan Nama",
+          },
+        },
         {
           id: "age",
           header: "Age",
@@ -434,6 +446,25 @@ export const DataTableLabels = () => (
         // @ts-expect-error `rowLabel` returns a string
         rowLabel: (row) => row.original.age,
       }}
+    />
+    <DataTable
+      columns={[
+        {
+          id: "name",
+          header: "Name",
+          accessorKey: "name",
+          // @ts-expect-error `sortLabel` is a string
+          meta: { sortable: true, sortLabel: 1 },
+        },
+        {
+          id: "age",
+          header: "Age",
+          accessorKey: "age",
+          // @ts-expect-error `widenLabel` is a string
+          meta: { expandable: true, widenLabel: 1 },
+        },
+      ]}
+      data={data}
     />
     <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
     {/* @ts-expect-error `aria-label` is a string */}

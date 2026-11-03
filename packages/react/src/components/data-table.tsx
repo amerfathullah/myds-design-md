@@ -3,6 +3,7 @@ import {
   type Column,
   type ColumnDef as TanStackColumnDef,
   type ExpandedState,
+  type Header,
   type ReactTable,
   type Row,
   type RowData,
@@ -45,7 +46,10 @@ import {
   ReactNode,
   useContext,
   useEffect,
+  useId,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ColumnCollapseIcon } from "../icons/column-collapse";
@@ -80,6 +84,22 @@ interface DataTableColumnMeta {
    * @default "Tooltip"
    */
   tooltipLabel?: string;
+  /**
+   * Accessible name of the header's sort button, which `sortable` adds. It
+   * replaces the whole default name, whose `{header}` is the text the header
+   * renders ("Sort column" if it renders none). Screen readers announce it;
+   * it isn't shown. Set it in your site's language.
+   * @default "Sort by {header}"
+   */
+  sortLabel?: string;
+  /**
+   * Accessible name of the header's widen button, which `expandable` adds.
+   * It replaces the whole default name, whose `{header}` is the text the
+   * header renders ("Widen column" if it renders none). Screen readers
+   * announce it; it isn't shown. Set it in your site's language.
+   * @default "Widen {header}"
+   */
+  widenLabel?: string;
 }
 
 /**
@@ -343,8 +363,7 @@ const DataTableProvider = <TData extends Record<string, any>>({
 };
 
 const DataTableHeader: FunctionComponent = () => {
-  const { table, expandableColumns, toggleColumnWidth, selection } =
-    useContext(DataTableContext);
+  const { table } = useContext(DataTableContext);
 
   if (!table) return null;
 
@@ -353,92 +372,146 @@ const DataTableHeader: FunctionComponent = () => {
       {table.getHeaderGroups().map((headerGroup) => {
         return (
           <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => {
-              const { tooltip, tooltipLabel, expandable, sortable } =
-                header.column.columnDef.meta || {};
-              return (
-                <TableHead
-                  id={header.id}
-                  key={header.id}
-                  colSpan={header.colSpan}
-                  data-expanded={expandableColumns[header.id]}
-                  data-pinned={getPinnedSide(header.column)}
-                  className={clx(
-                    th_cva({ expandable, sortable }),
-                    pin_cva({
-                      pin_direction: getPinnedSide(header.column),
-                      pin_last: header.column.getIsLastColumn(
-                        header.column.getIsPinned(),
-                      ),
-                    }),
-                    header.column.columnDef.meta?.className?.header,
-                  )}
-                  style={{ ...getCommonPinningStyles(header.column) }}
-                >
-                  <span className="sr-only">
-                    {(header.column.columnDef.id == "_checkbox" ||
-                      header.column.columnDef.id == "_radio") &&
-                      (selection?.columnLabel ?? "Select")}
-                  </span>
-                  {header.isPlaceholder ? null : (
-                    <div className="flex w-full items-center justify-between gap-2 whitespace-nowrap">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-
-                      <div className="flex justify-end gap-1">
-                        {/* Expand */}
-                        {expandable && (
-                          <Button
-                            size="small"
-                            variant={"primary-outline"}
-                            onClick={() => toggleColumnWidth(header.id)}
-                            className="invisible hidden rounded-md px-1 py-0 group-hover:visible data-[expanded=true]:visible lg:block"
-                            data-expanded={expandableColumns[header.id]}
-                          >
-                            {expandableColumns[header.id] ? (
-                              <ColumnCollapseIcon className="text-txt-primary size-4" />
-                            ) : (
-                              <ColumnExpandIcon className="text-txt-primary size-4" />
-                            )}
-                          </Button>
-                        )}
-
-                        {/* Sortable */}
-                        {sortable && (
-                          <Button
-                            size="small"
-                            variant={"primary-outline"}
-                            onClick={header.column.getToggleSortingHandler()}
-                            className="invisible hidden rounded-md px-1 py-0 group-hover:visible data-[sorted=true]:visible lg:block"
-                            data-sorted={Boolean(header.column.getIsSorted())}
-                          >
-                            {{
-                              desc: <FilterDescIcon className="size-4" />,
-                              asc: <FilterAscIcon className="size-4" />,
-                            }[header.column.getIsSorted() as string] ?? (
-                              <FilterIcon className="size-4" />
-                            )}
-                          </Button>
-                        )}
-
-                        {/* Tooltip */}
-                        {tooltip && (
-                          <TableTooltip aria-label={tooltipLabel}>
-                            {tooltip}
-                          </TableTooltip>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </TableHead>
-              );
-            })}
+            {headerGroup.headers.map((header) => (
+              <DataTableHead key={header.id} header={header} />
+            ))}
           </TableRow>
         );
       })}
     </TableHeader>
+  );
+};
+
+// Layout effects don't run on the server, and React 18 warns there, so the
+// server gets useEffect
+const useBeforePaint =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/** The text an element renders, its runs of whitespace collapsed */
+const renderedText = (element: HTMLElement | null) =>
+  element?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+
+const DataTableHead: FunctionComponent<{
+  header: Header<DataTableFeatures, any, unknown>;
+}> = ({ header }) => {
+  const { expandableColumns, toggleColumnWidth, selection } =
+    useContext(DataTableContext);
+  const { tooltip, tooltipLabel, expandable, sortable, sortLabel, widenLabel } =
+    header.column.columnDef.meta || {};
+
+  // A selection column is headed by its visually hidden label, and any other
+  // by the text its header renders. The header is named by that text alone,
+  // so its name leaves out the names of the buttons and tooltip trigger
+  // inside it.
+  const isSelection =
+    header.column.columnDef.id == "_checkbox" ||
+    header.column.columnDef.id == "_radio";
+  const labelId = useId();
+
+  // The text the header renders names its buttons. A header can be a string,
+  // a function or TanStack's default, so the text is read once it renders.
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [text, setText] = useState("");
+  useBeforePaint(() => setText(renderedText(textRef.current)));
+
+  // Only the primary sort column, the first in the sorting state, has
+  // `aria-sort`, so a Shift+click multi-sort doesn't give it to the others
+  const sorted =
+    !header.isPlaceholder &&
+    header.column.getSortIndex() === 0 &&
+    header.column.getIsSorted();
+
+  return (
+    <TableHead
+      id={header.id}
+      colSpan={header.colSpan}
+      aria-labelledby={
+        isSelection || !header.isPlaceholder ? labelId : undefined
+      }
+      aria-sort={
+        sorted ? (sorted === "desc" ? "descending" : "ascending") : undefined
+      }
+      data-expanded={expandableColumns[header.id]}
+      data-pinned={getPinnedSide(header.column)}
+      className={clx(
+        th_cva({ expandable, sortable }),
+        pin_cva({
+          pin_direction: getPinnedSide(header.column),
+          pin_last: header.column.getIsLastColumn(header.column.getIsPinned()),
+        }),
+        header.column.columnDef.meta?.className?.header,
+      )}
+      style={{ ...getCommonPinningStyles(header.column) }}
+    >
+      <span className="sr-only" id={isSelection ? labelId : undefined}>
+        {isSelection && (selection?.columnLabel ?? "Select")}
+      </span>
+      {header.isPlaceholder ? null : (
+        <div className="flex w-full items-center justify-between gap-2 whitespace-nowrap">
+          <span ref={textRef} id={isSelection ? undefined : labelId}>
+            {flexRender(header.column.columnDef.header, header.getContext())}
+          </span>
+
+          <div className="flex justify-end gap-1">
+            {/* Expand */}
+            {expandable && (
+              <Button
+                type="button"
+                size="small"
+                variant={"primary-outline"}
+                onClick={() => toggleColumnWidth(header.id)}
+                className="rounded-md px-1 py-0"
+                data-expanded={expandableColumns[header.id]}
+                aria-label={
+                  widenLabel ?? (text ? `Widen ${text}` : "Widen column")
+                }
+                aria-pressed={Boolean(expandableColumns[header.id])}
+              >
+                {expandableColumns[header.id] ? (
+                  <ColumnCollapseIcon
+                    aria-hidden
+                    className="text-txt-primary size-4"
+                  />
+                ) : (
+                  <ColumnExpandIcon
+                    aria-hidden
+                    className="text-txt-primary size-4"
+                  />
+                )}
+              </Button>
+            )}
+
+            {/* Sortable, if TanStack can sort it: a column without an
+                accessor can't sort */}
+            {sortable && header.column.getCanSort() && (
+              <Button
+                type="button"
+                size="small"
+                variant={"primary-outline"}
+                onClick={header.column.getToggleSortingHandler()}
+                className="rounded-md px-1 py-0"
+                data-sorted={Boolean(header.column.getIsSorted())}
+                aria-label={
+                  sortLabel ?? (text ? `Sort by ${text}` : "Sort column")
+                }
+              >
+                {{
+                  desc: <FilterDescIcon aria-hidden className="size-4" />,
+                  asc: <FilterAscIcon aria-hidden className="size-4" />,
+                }[header.column.getIsSorted() as string] ?? (
+                  <FilterIcon aria-hidden className="size-4" />
+                )}
+              </Button>
+            )}
+
+            {/* Tooltip */}
+            {tooltip && (
+              <TableTooltip aria-label={tooltipLabel}>{tooltip}</TableTooltip>
+            )}
+          </div>
+        </div>
+      )}
+    </TableHead>
   );
 };
 

@@ -185,6 +185,44 @@ function keepInline(element: HTMLElement, property: string) {
   };
 }
 
+// Each document's shown banners, the padding each needs, and what puts the
+// page's inline values back as they were before the first was shown
+const pagePaddings = new WeakMap<
+  Document,
+  { needs: Map<HTMLElement, number>; restore: () => void }
+>();
+
+// Pads `banner`'s page by the most any shown banner needs, `need` pixels for
+// this one, or with `need` undefined, by what the others need. Once none is
+// shown, the page's inline values go back as they were.
+function padPage(banner: HTMLElement, need: number | undefined) {
+  const document = banner.ownerDocument;
+  const { documentElement: html, body } = document;
+  let padding = pagePaddings.get(document);
+  if (!padding) {
+    if (need === undefined) return;
+    const restore = [
+      keepInline(html, "scroll-padding-bottom"),
+      keepInline(body, "padding-bottom"),
+    ];
+    padding = {
+      needs: new Map(),
+      restore: () => restore.forEach((put) => put()),
+    };
+    pagePaddings.set(document, padding);
+  }
+  if (need === undefined) padding.needs.delete(banner);
+  else padding.needs.set(banner, need);
+  if (!padding.needs.size) {
+    padding.restore();
+    pagePaddings.delete(document);
+    return;
+  }
+  const value = `${Math.max(...padding.needs.values())}px`;
+  html.style.setProperty("scroll-padding-bottom", value);
+  body.style.setProperty("padding-bottom", value);
+}
+
 /*========================================================================================================================*/
 
 interface CookieBannerProps extends ComponentPropsWithoutRef<"section"> {
@@ -370,20 +408,13 @@ const CookieBanner: ForwardRefExoticComponent<
     // it (WCAG 2.2 SC 2.4.11)
     useBrowserLayoutEffect(() => {
       if (!open || !node) return;
-      const { documentElement: html, body, defaultView } = node.ownerDocument;
-      const view = defaultView ?? window;
-      const restore = [
-        keepInline(html, "scroll-padding-bottom"),
-        keepInline(body, "padding-bottom"),
-      ];
+      const view = node.ownerDocument.defaultView ?? window;
       const pad = () => {
         const style = view.getComputedStyle(node);
         const offset =
           (parseFloat(style.bottom) || 0) +
           (parseFloat(style.marginBottom) || 0);
-        const padding = `${Math.ceil(node.getBoundingClientRect().height + offset)}px`;
-        html.style.setProperty("scroll-padding-bottom", padding);
-        body.style.setProperty("padding-bottom", padding);
+        padPage(node, Math.ceil(node.getBoundingClientRect().height + offset));
       };
       pad();
       const observer =
@@ -395,7 +426,7 @@ const CookieBanner: ForwardRefExoticComponent<
       return () => {
         observer?.disconnect();
         view.removeEventListener("resize", pad);
-        for (const put of restore) put();
+        padPage(node, undefined);
       };
     }, [open, node]);
 

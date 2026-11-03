@@ -618,6 +618,31 @@ describe("the page padding that keeps a focused control in view", () => {
     expect(body.getPropertyValue("padding-bottom")).toBe("8px");
   });
 
+  test("with two banners shown, the page stays padded until both close, in either order, then goes back to the author's values", async () => {
+    const html = document.documentElement.style;
+    const body = document.body.style;
+    body.setProperty("padding-bottom", "8px");
+    for (const order of [
+      ["first", "second"],
+      ["second", "first"],
+    ]) {
+      const banners = {
+        first: await mount(page(banner({ open: true }))),
+        second: await mount(page(banner({ open: true }))),
+      };
+      for (const [index, name] of order.entries()) {
+        await banners[name as keyof typeof banners].rerender(
+          page(banner({ open: false })),
+        );
+        if (index === 0)
+          expect(html.getPropertyValue("scroll-padding-bottom")).not.toBe("");
+      }
+      expect(html.getPropertyValue("scroll-padding-bottom")).toBe("");
+      expect(body.getPropertyValue("padding-bottom")).toBe("8px");
+      while (unmounts.length) await unmounts.pop()!();
+    }
+  });
+
   test("unmounting an open banner removes them", async () => {
     const html = document.documentElement.style;
     const body = document.body.style;

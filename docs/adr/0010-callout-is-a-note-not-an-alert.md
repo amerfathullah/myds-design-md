@@ -1,0 +1,19 @@
+# Callout is a note, not an alert
+
+Callout came from upstream with `role="alert"` on every callout, whatever its Variant (#84). An alert is an assertive live region, so screen readers interrupted the user to read a callout when it was inserted: one that appears after the user acts, or every callout on a page reached by client-side navigation. The design guideline calls an Information callout "non-critical but useful", and DESIGN.md's Known Gaps recorded the alert as a Divergence. So Callout's root renders `role="note"` for every Variant, including when `variant` is left out. A note isn't a live region: screen readers read it in reading order and don't announce it when it appears. The default stays before `{...props}`, the order ADR-0008 sets for built-in names, so a `role` the author passes replaces it. An author passes `role="alert"` when a callout appears after the user acts and must be heard at once, such as an error after a failed submit.
+
+## Considered Options
+
+- **No default role**, a plain `<div>`: rejected. A `<div>` with no role is generic, and ARIA 1.2 prohibits `aria-label` and `aria-labelledby` on a generic element. #79's fix promises that an author's `aria-label` still reaches the Callout container, and its test checks that it does. A note can be named, so that label stays valid.
+- **A role chosen by Variant**, such as `status` for `info` and `success`, and `alert` for `warning` and `danger`: rejected. The guideline splits callouts by where they're used, not by Variant. In forms, the callout "appears when a user performs an action". On a page, the guideline says to "Place it at the beginning of the page content". Information is "non-critical but useful", yet one of its examples, "Your settings have been saved", is feedback after an action. And a `status` is a polite live region, but still a live region. If screen readers announce a `status` that mounts with its text already in it, an Information callout in page content would be announced after every client-side navigation. If they don't, a `status` wouldn't announce an Information callout that appears after an action either. Which of the two happens is unverified.
+- **A new `announce` or `live` prop**: rejected. It would do what `role` already does. One can be added later, as another way to set the same role, without breaking anything that passes `role`.
+
+## Consequences
+
+- A callout in the page content is read in reading order, with the rest of the page. It no longer interrupts the user when a client-side navigation brings in its page.
+- A callout that appears after the user acts is no longer announced unless the author passes `role="alert"`. The docs (EN, MS) and DESIGN.md say when to pass it. They don't recommend `role="status"` for a callout that appears with its text already in it, because whether that is announced reliably is unverified.
+- An author's `aria-label` names the note, e.g. `aria-label="Notis"`.
+- A callout's Variant is still shown only by its colour and an icon with no name, as it was under `role="alert"`. Nothing tells a screen-reader user whether a callout is a warning or an error unless its text says so (#197).
+- Only the root's role changes. CalloutTitle keeps `role="term"` and CalloutContent `role="definition"`, because Callout's layout CSS selects `[role=definition]` to stack a callout that has a description.
+- Tests and CSS that select Callout by `role="alert"` must change, unless that callout passes `role="alert"` itself.
+- The change ships as a minor release of `@amerfathullah/myds-react`, as CookieBanner's move to a region does (ADR-0009). Callout's props and ref types don't change, and the old behaviour was a Divergence that DESIGN.md's Known Gaps already recorded. The changeset tells authors to pass `role="alert"` to a callout that appears after an action and must be announced, and to update tests or CSS that select Callout by `role="alert"`.

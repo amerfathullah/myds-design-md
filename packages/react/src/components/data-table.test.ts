@@ -95,11 +95,13 @@ type ExpandLabel = NonNullable<
   ComponentProps<typeof DataTable<Person>>["nest"]
 >["expandLabel"];
 
-// Mounts a DataTable of people with `props`, and returns its container. Radio
-// selection allows the radio warning, and no other.
-async function dataTable(props: ComponentProps<typeof DataTable<Person>>) {
+// Mounts a DataTable with `props`, and returns its container. Radio selection
+// allows the radio warning, and no other.
+async function dataTable<TData extends Record<string, any>>(
+  props: ComponentProps<typeof DataTable<TData>>,
+) {
   if (props.selection?.mode === "radio") radioWarningAllowed = true;
-  return mount(createElement(DataTable<Person>, props));
+  return mount(createElement(DataTable<TData>, props));
 }
 
 // The accessible names of the elements in `within` that match `selector`,
@@ -418,19 +420,11 @@ const officers: Officer[] = [
   { id: "b", name: "Badrul", unit: "Finance", office: "Arau", age: 25 },
 ];
 
-// Mounts a DataTable of officers with `props`, and returns its container
-async function officerTable(
+// Mounts a DataTable of officers, with `officerColumns` unless `props` gives
+// other columns, and returns its container
+const officerTable = (
   props: Partial<ComponentProps<typeof DataTable<Officer>>>,
-) {
-  if (props.selection?.mode === "radio") radioWarningAllowed = true;
-  return mount(
-    createElement(DataTable<Officer>, {
-      columns: officerColumns,
-      data: officers,
-      ...props,
-    }),
-  );
-}
+) => dataTable<Officer>({ columns: officerColumns, data: officers, ...props });
 
 // A header of each form: a string, a function that renders an element, and
 // none, which TanStack's default renders as the accessor key

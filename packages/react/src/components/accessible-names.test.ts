@@ -319,42 +319,40 @@ describe("AutoToast's region and announcement", () => {
 });
 
 describe("CookieBanner's close cross", () => {
-  // An open CookieBanner with the title and description Radix asks of a
-  // dialog. Returns the dialog, which portals into `<body>`.
+  // An open CookieBanner with a title, which names it, and a description.
+  // Returns its region, which renders in place.
   async function cookieBanner(props: CloseLabelProps) {
-    await mount(
+    const container = await mount(
       createElement(
         CookieBanner,
-        // CookieBanner's type has no `aria-label`, but its props reach the
-        // dialog (#83), so an author can pass one from JavaScript or a cast
-        { open: true, ...props } as ComponentProps<typeof CookieBanner>,
+        { open: true, ...props },
         createElement(CookieBannerTitle, null, "This site uses cookies"),
         createElement(CookieBannerDescription, null, "Choose which to allow."),
       ),
     );
-    return document.querySelector('[role="dialog"]')!;
+    return container.querySelector("section")!;
   }
 
   test('is named "Close" by default', async () => {
-    const dialog = await cookieBanner({});
-    expect(nameOf(dialog)).toBe("Close");
-    expect(unnamed(dialog)).toEqual([]);
+    const region = await cookieBanner({});
+    expect(computeAccessibleName(region)).toBe("This site uses cookies");
+    expect(nameOf(region)).toBe("Close");
+    expect(unnamed(region)).toEqual([]);
   });
 
   test("takes its name from `closeLabel`", async () => {
-    const dialog = await cookieBanner({ closeLabel: "Tutup" });
-    expect(nameOf(dialog)).toBe("Tutup");
+    const region = await cookieBanner({ closeLabel: "Tutup" });
+    expect(nameOf(region)).toBe("Tutup");
     expect(strayLabels()).toBe(0);
   });
 
-  // The dialog takes its name from its title, so check the attribute
-  test("leaves an `aria-label` on CookieBanner on the dialog", async () => {
-    const dialog = await cookieBanner({
+  test("leaves an `aria-label` on CookieBanner to name the region", async () => {
+    const region = await cookieBanner({
       closeLabel: "Tutup",
       "aria-label": "Kuki",
     });
-    expect(dialog.getAttribute("aria-label")).toBe("Kuki");
-    expect(nameOf(dialog)).toBe("Tutup");
+    expect(computeAccessibleName(region)).toBe("Kuki");
+    expect(nameOf(region)).toBe("Tutup");
   });
 });
 

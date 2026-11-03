@@ -15,7 +15,7 @@ import {
 } from "@/components/cookies-banner-preview";
 
 <Tabs items={["Preview", "Code"]}>
-  <Tab value="Preview">
+  <Tab value="Preview" className="not-prose">
     <div className="flex justify-center">
       <CookiesBannerPreview />
     </div>
@@ -40,7 +40,7 @@ import {
         performance: true,
       });
 
-      // Reset preferences back to default when dialog closes
+      // Reset preferences back to default when the banner closes
       useEffect(() => {
         if (!open) {
           setPreferences({
@@ -234,6 +234,48 @@ export default () => (
 
 `CookieBanner` adds a close button with a cross icon to its top-right corner. Screen readers announce the close button as "Close". Set `closeLabel` to name it in your site's language, for example `closeLabel="Tutup"`.
 
+Always include a `CookieBannerTitle`. `CookieBanner` renders a `<section>` named by its title, so screen readers announce the banner as a region with that name. An `aria-label` or `aria-labelledby` you pass names it instead. With neither and no title, the banner has no name.
+
+## Placement
+
+Render `CookieBanner` first in `<body>`, before `Skiplink`. It renders where you put it, not in a portal, and is fixed to the bottom-right of the window. Coming first in the page is how keyboard and screen-reader users reach it when the page loads.
+
+```tsx copy title="Placement"
+export default () => (
+  <body>
+    <CookieBanner defaultOpen>
+      <CookieBannerTitle>Cookie Preferences</CookieBannerTitle>
+      {/* CookieBannerDescription, CookieBannerPreferences, CookieBannerAction */}
+    </CookieBanner>
+    <Skiplink href="#main-content">Skip to main content</Skiplink>
+    <Masthead />
+    <Navbar>{/* … */}</Navbar>
+    <main id="main-content">{/* … */}</main>
+    <Footer>{/* … */}</Footer>
+  </body>
+);
+```
+
+## Behaviour
+
+`CookieBanner` doesn't block the page. Visitors can read, press and Tab through the rest of the page while it's shown.
+
+It stays until the visitor makes a choice with a `CookieBannerClose`, such as Accept All, Reject All or Save preferences, or uses the close cross. A press outside it doesn't close it, and neither does Escape. Every time it opens, it shows the default view, not the Customise view.
+
+The banner is never taller than the window, less its margin. Content that doesn't fit scrolls inside it.
+
+### Focus
+
+- Opening it right after a click or key press, such as on a "Cookie settings" control, moves focus to the banner. Any other opening, such as a `defaultOpen` banner on page load, leaves focus where it is.
+- Tab and Shift+Tab move into and out of the banner in page order. It doesn't trap focus.
+- Customise moves focus to the first control in `CookieBannerPreferences`, or, if there's none, to the first control in the Customise view's `CookieBannerAction`. It never moves it to the close cross. Back moves it to Customise.
+- Closing it with focus inside moves focus back to the control that opened it, if there is one and it's still on the page. Otherwise focus moves to the next focusable element after the banner: `Skiplink`, when the banner comes first. Closing it with focus elsewhere leaves focus where it is.
+- None of these focus moves scrolls the page.
+
+### Page padding
+
+While the banner is shown, it sets `scroll-padding-bottom` on `<html>` and `padding-bottom` on `<body>` to its height plus its bottom margin, and keeps them up to date as it resizes. A control that takes focus then scrolls into view above the banner, not behind it (WCAG 2.2 SC 2.4.11), and the end of the page can scroll clear of it. Both are inline styles, so while the banner is shown they replace any `padding-bottom` your stylesheet gives `<body>`. When the banner closes, both go back to what they were, including an inline value you set.
+
 ## Examples
 
 ### Uncontrolled vs Controlled State
@@ -246,7 +288,7 @@ Cookie Banner can be handled as a **controlled** or **uncontrolled** component.
 Below is an example of a **controlled Cookie Banner**.
 
 <Tabs items={["Preview", "Code"]}>
-  <Tab value="Preview">
+  <Tab value="Preview" className="not-prose">
     <div className="flex justify-center">
       <CookiesBannerPreview />
     </div>
@@ -271,7 +313,7 @@ Below is an example of a **controlled Cookie Banner**.
         performance: true,
       });
 
-      // Reset preferences back to default when dialog closes
+      // Reset preferences back to default when the banner closes
       useEffect(() => {
         if (!open) {
           setPreferences({
@@ -436,7 +478,10 @@ Below is an example of a **controlled Cookie Banner**.
   We recommend to keep **CookieBanner** as an uncontrolled component (via
   `defaultOpen`). You may use client-side storage APIs such as `localStorage` or
   `sessionStorage` to store the state, and retrieve it when the user visits the
-  website again.
+  website again. `CookieBanner` renders nothing on the server and until it has
+  mounted in the browser, so a `defaultOpen` read from storage doesn't cause a
+  hydration mismatch. `localStorage` doesn't exist on the server, so check for
+  `window` before you read it.
 </Callout>
 
 ### Preference Call-to-Action (CTA)
@@ -444,7 +489,7 @@ Below is an example of a **controlled Cookie Banner**.
 `CookieBannerAction` is responsible for displaying the call-to-action (CTAs) for the cookie banner. However, when allowing user to choose their cookie preferences, you may want to present a different CTAs. With `CookieBannerAction`, simply pass the `preferences` prop to display the preference CTAs.
 
 <Tabs items={["Preview", "Code"]}>
-  <Tab value="Preview">
+  <Tab value="Preview" className="not-prose">
     <div className="flex justify-center">
       <CookiesPreferencesDemo />
     </div>
@@ -538,17 +583,24 @@ Below is an example of a **controlled Cookie Banner**.
 
 ### CookieBanner
 
+`CookieBanner` also accepts every `<section>` attribute, such as `id`, `aria-label` and `data-*`, and passes them to the `<section>`. It forwards its `ref` to the `<section>` (an `HTMLElement`).
+
 <TypeTable
   type={{
     defaultOpen: {
+      description:
+        "Whether the banner is shown when it mounts, when you don't control it.",
       type: "boolean",
       default: "false",
     },
     open: {
+      description:
+        "Whether the banner is shown, when you control it. Use with onOpenChange.",
       type: "boolean",
-      default: "false",
     },
     onOpenChange: {
+      description:
+        "Called once with false each time a close control closes the banner.",
       type: "(value: boolean) => void",
     },
     closeLabel: {
@@ -557,10 +609,18 @@ Below is an example of a **controlled Cookie Banner**.
       type: "string",
       default: "Close",
     },
+    modal: {
+      description:
+        "Deprecated. Does nothing: the banner never blocks the page. Removed at the next major, so leave it out.",
+      type: "boolean",
+      deprecated: true,
+    },
   }}
 />
 
 ### CookieBannerTitle
+
+An `<h2>`. Its id names the banner, so always include one.
 
 <TypeTable
   type={{

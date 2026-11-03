@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory, createRender } from "../utils";
@@ -35,8 +36,10 @@ const meta = {
     layout: "centered",
   },
   // Label disables nothing, so `disabled` goes to each Label and its field.
-  // The ids carry the story's id, so no two stories on the docs page share one
-  render: ({ size, disabled }, { id }) => {
+  // useId gives each field its own id. An id built from the story's id would
+  // repeat on the docs page, which shows the first story twice
+  render: ({ size, disabled }) => {
+    const id = useId();
     return (
       <div className="min-w-[360px] space-y-3">
         <div className="flex justify-between">
@@ -95,32 +98,35 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = createStory({});
 
 export const DefaultDark: Story = createRender(
-  ({ size = "medium" as const, disabled = false }, { id }: { id: string }) => (
-    <div className="dark min-w-[360px] space-y-3">
-      <div className="flex justify-between">
-        <Label htmlFor={`${id}-checkbox`} size={size} disabled={disabled}>
-          Auto-delete notifications
-        </Label>
-        <Checkbox
-          id={`${id}-checkbox`}
-          size={size}
-          disabled={disabled ?? undefined}
-        ></Checkbox>
+  ({ size = "medium" as const, disabled = false }) => {
+    const id = useId();
+    return (
+      <div className="dark min-w-[360px] space-y-3">
+        <div className="flex justify-between">
+          <Label htmlFor={`${id}-checkbox`} size={size} disabled={disabled}>
+            Auto-delete notifications
+          </Label>
+          <Checkbox
+            id={`${id}-checkbox`}
+            size={size}
+            disabled={disabled ?? undefined}
+          ></Checkbox>
+        </div>
+        <div className="group flex justify-between">
+          <Label htmlFor={`${id}-toggle`} size={size} disabled={disabled}>
+            Enable 2FA security?
+          </Label>
+          <Toggle
+            id={`${id}-toggle`}
+            size={size}
+            disabled={disabled ?? undefined}
+          >
+            <ToggleThumb />
+          </Toggle>
+        </div>
       </div>
-      <div className="group flex justify-between">
-        <Label htmlFor={`${id}-toggle`} size={size} disabled={disabled}>
-          Enable 2FA security?
-        </Label>
-        <Toggle
-          id={`${id}-toggle`}
-          size={size}
-          disabled={disabled ?? undefined}
-        >
-          <ToggleThumb />
-        </Toggle>
-      </div>
-    </div>
-  ),
+    );
+  },
   "dark",
 );
 

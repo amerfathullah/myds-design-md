@@ -2,9 +2,16 @@ import React, { createContext, useContext, useId } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clx } from "../utils";
 
+// The visual track. The native checkbox before it, marked `peer`, is the
+// switch, so the track follows its state: its focus (`peer-focus:`), which a
+// click on the track gives it too, and its disabled state (`peer-disabled:`),
+// which a disabled `<fieldset>` sets as well as the `disabled` prop.
 const thumbVariants = cva(
   [
-    "block outline-hidden focus:ring-[3px] focus:ring-fr-primary bg-otl-gray-200 hover:bg-otl-gray-300 data-[state=checked]:bg-bg-primary-600 cursor-pointer rounded-full transition-color duration-200 z-10",
+    "block bg-otl-gray-200 hover:bg-otl-gray-300 data-[state=checked]:bg-bg-primary-600 cursor-pointer rounded-full transition-color duration-200 z-10",
+    // Under forced colours, which drop the ring, `outline-hidden` draws an
+    // outline instead
+    "peer-focus:ring-3 peer-focus:ring-fr-primary peer-focus:outline-hidden",
     "before:content-[''] before:left-[3px] before:bottom-[3px] before:bg-white before:absolute before:rounded-full before:transition-all before:duration-200",
     "peer-disabled:data-[state=checked]:bg-bg-primary-disabled peer-disabled:cursor-not-allowed peer-disabled:data-[state=checked]:before:bg-bg-white",
     "peer-disabled:data-[state=unchecked]:bg-bg-washed peer-disabled:data-[state=unchecked]:before:bg-bg-white",
@@ -36,6 +43,10 @@ interface ToggleContextType extends VariantProps<typeof thumbVariants> {
 const ToggleContext = createContext<ToggleContextType | undefined>(undefined);
 
 export interface ToggleProps extends VariantProps<typeof thumbVariants> {
+  /**
+   * The switch's id: the id of ToggleThumb's checkbox, so a `<Label htmlFor>`
+   * with this id names the switch. Without it, the switch gets a unique id.
+   */
   id?: string;
   defaultChecked?: boolean;
   checked?: boolean;
@@ -55,6 +66,7 @@ const Toggle: React.FC<ToggleProps> = ({
   className = "",
   children,
 }) => {
+  const generatedId = useId();
   const [_checked, set_checked] = React.useState(
     checked || defaultChecked || false,
   );
@@ -78,7 +90,7 @@ const Toggle: React.FC<ToggleProps> = ({
         disabled,
         size,
         onChange: handleChange,
-        id: id || useId(),
+        id: id || generatedId,
       }}
     >
       <div
@@ -92,41 +104,72 @@ const Toggle: React.FC<ToggleProps> = ({
 };
 Toggle.displayName = "Toggle";
 
-interface ToggleThumbProps {
+export interface ToggleThumbProps {
+  /**
+   * Classes for the track. The track follows the switch's focus, so style
+   * its focus with `peer-focus:`, not `focus:`.
+   */
   className?: string;
+  /**
+   * Accessible name of the switch, when no `<Label htmlFor>` names it. Screen
+   * readers announce it; it isn't shown. Set it in your site's language, e.g.
+   * `"Pemberitahuan e-mel"`. The switch has no default name.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of an element whose text names the switch, in place of
+   * `aria-label`.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * The id of an element whose text describes the switch, such as a hint
+   * under its label.
+   */
+  "aria-describedby"?: string;
 }
 
-const ToggleThumb: React.FC<ToggleThumbProps> = ({ className }) => {
+const ToggleThumb: React.FC<ToggleThumbProps> = ({
+  className,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-describedby": ariaDescribedBy,
+}) => {
   const context = useContext(ToggleContext);
   if (!context) throw new Error("ToggleThumb must be used within Toggle");
 
-  //* Handles keyboard interaction: Enter | Space
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      context.onChange();
-    }
+  // Space toggles a checkbox natively. Enter toggles it too, as it did, and
+  // never submits an enclosing form. It clicks the checkbox, so it fires the
+  // same events as Space, and does nothing while the checkbox is disabled, by
+  // the `disabled` prop or by a disabled `<fieldset>`.
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    event.currentTarget.click();
   };
 
+  // The checkbox is the switch: the one element that takes focus, named by a
+  // `<Label htmlFor>` or the aria props. A click on the track reaches it
+  // through the label around them. The focused checkbox draws no outline of
+  // its own; the track rings instead.
   return (
-    <label tabIndex={-1} className="relative inline-block">
+    <label className="relative inline-block">
       <input
         id={context.id}
         type="checkbox"
-        className="peer sr-only"
+        role="switch"
+        className="peer sr-only outline-hidden"
         checked={context.checked}
         onChange={context.onChange}
+        onKeyDown={handleKeyDown}
         disabled={context.disabled}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        aria-describedby={ariaDescribedBy}
       />
       <span
-        tabIndex={0}
-        role="switch"
+        aria-hidden="true"
         className={clx(thumbVariants({ size: context.size }), className)}
-        onKeyDown={handleKeyDown}
         data-state={context.checked ? "checked" : "unchecked"}
-        aria-checked={context.checked}
-        aria-disabled={context.disabled}
-        aria-label="Toggle"
       />
     </label>
   );

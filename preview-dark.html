@@ -202,7 +202,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .radio-label{color:var(--txt-black-700);font-size:16px;line-height:24px;font-weight:500}
 .switch-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;max-width:360px;margin-top:12px}
 .switches{margin-top:24px}
-.switch{position:relative;flex-shrink:0;width:30px;height:20px;padding:0;border:0;border-radius:9999px;background:var(--otl-gray-200);outline:none}
+.switch{position:relative;flex-shrink:0;width:30px;height:20px;padding:0;border:0;border-radius:9999px;background:var(--otl-gray-200);outline:none;transition:all .2s ease}
 .switch::before{content:"";position:absolute;left:3px;bottom:3px;width:14px;height:14px;border-radius:9999px;background:var(--white);transition:all .2s var(--ease)}
 .switch:hover{background:var(--otl-gray-300)}
 .switch[aria-checked=true]{background:var(--bg-primary-600)}
@@ -375,7 +375,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .toast.show{display:flex}
 
 /* Forced colours: outline-hidden keeps a 2px transparent outline, which the system colour paints */
-@media (forced-colors:active){.btn,.input input,.select select,.checkbox,.switch,.tab,.menuitem,.textarea:focus,.radio:focus,.masthead-trigger:focus,.datefield input:focus,.accordion summary:focus-visible,.accordion-item:has(>summary:focus-visible),.navbar-logo:focus-visible,.navbar-item:focus-visible,.site-link:focus-visible{outline:2px solid transparent;outline-offset:2px}.swatch:focus-visible,.token:focus-visible{outline:2px solid transparent;outline-offset:-2px}}
+@media (forced-colors:active){.btn,.input input,.select select,.checkbox,.tab,.menuitem,.textarea:focus,.radio:focus,.switch:focus,.masthead-trigger:focus,.datefield input:focus,.accordion summary:focus-visible,.accordion-item:has(>summary:focus-visible),.navbar-logo:focus-visible,.navbar-item:focus-visible,.site-link:focus-visible{outline:2px solid transparent;outline-offset:2px}.swatch:focus-visible,.token:focus-visible{outline:2px solid transparent;outline-offset:-2px}}
 </style>
 </head>
 <body>

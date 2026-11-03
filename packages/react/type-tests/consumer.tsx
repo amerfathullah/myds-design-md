@@ -74,6 +74,11 @@ import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
 import { AutoToast, ToastClose } from "@amerfathullah/myds-react/toast";
+import {
+  Toggle,
+  ToggleThumb,
+  type ToggleThumbProps,
+} from "@amerfathullah/myds-react/toggle";
 import { getThemeScript } from "@amerfathullah/myds-react/utils";
 import {
   createColumnHelper,
@@ -524,5 +529,46 @@ export const Icons = () => (
     <ChevronDownIcon className="size-4" aria-hidden />
     <MalaysiaFlagIcon className="h-4 w-auto" />
     <JataNegaraIcon width={32} height={32} />
+  </>
+);
+
+// The Switch takes its name from a Label's `htmlFor` (Toggle's `id`), or from
+// `aria-label` or `aria-labelledby` on ToggleThumb, and has no default name.
+// ToggleThumb also takes `aria-describedby`, and no other input props.
+const thumbProps: ToggleThumbProps = {
+  "aria-label": "Pemberitahuan e-mel",
+  "aria-labelledby": "notify-title",
+  "aria-describedby": "notify-hint",
+};
+
+export const Switches = () => (
+  <>
+    <Label htmlFor="notify">Email notifications</Label>
+    <Toggle id="notify" onCheckedChange={(checked: boolean) => void checked}>
+      <ToggleThumb />
+    </Toggle>
+    <Toggle size="small" defaultChecked>
+      <ToggleThumb aria-label="Pemberitahuan e-mel" />
+    </Toggle>
+    <h3 id="notify-title">Pemberitahuan e-mel</h3>
+    <p id="notify-hint">Disimpan secara automatik</p>
+    <Toggle disabled>
+      <ToggleThumb
+        aria-labelledby="notify-title"
+        aria-describedby="notify-hint"
+        className="mt-1"
+      />
+    </Toggle>
+    <Toggle>
+      <ToggleThumb {...thumbProps} />
+    </Toggle>
+    <Toggle>
+      {/* @ts-expect-error `aria-label` is a string */}
+      <ToggleThumb aria-label={1} />
+    </Toggle>
+    <Toggle>
+      {/* @ts-expect-error `name` is out of ToggleThumb's scope */}
+      <ToggleThumb name="notify" />
+    </Toggle>
   </>
 );

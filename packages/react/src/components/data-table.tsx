@@ -450,6 +450,12 @@ const DataTableHead: FunctionComponent<{
         <div className="flex w-full items-center justify-between gap-2 whitespace-nowrap">
           <span ref={textRef} id={isSelection ? undefined : labelId}>
             {flexRender(header.column.columnDef.header, header.getContext())}
+            {/* A header that renders no text would be named by its buttons:
+                Chromium names a header from its content when aria-labelledby
+                gives it an empty name, and only a no-break space stops that */}
+            {!isSelection && !text && (
+              <span className="sr-only">{"\u00a0"}</span>
+            )}
           </span>
 
           <div className="flex justify-end gap-1">

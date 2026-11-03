@@ -2,7 +2,8 @@
 // sortable and expandable columns. The first has checkbox selection and sits
 // in a form, which logs its submits to `window.submits`. The second has no
 // selection. Buttons that don't submit the form sit before, between and after
-// them. The test bundles this file with esbuild.
+// them. After them, a third DataTable's one column has a header that renders
+// no text. The test bundles this file with esbuild.
 import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -51,6 +52,17 @@ const columns = [
   },
 ];
 
+// A column whose header renders no text, with every control a header can
+// hold
+const blankColumns = [
+  {
+    id: "position",
+    accessorKey: "position",
+    header: () => null,
+    meta: { sortable: true, expandable: true, tooltip: "Jawatan" },
+  },
+];
+
 function Page() {
   useEffect(() => void window.ready.push("page"), []);
   return (
@@ -81,6 +93,9 @@ function Page() {
       <button type="button" data-test="after">
         After
       </button>
+      <div data-test="blank">
+        <DataTable columns={blankColumns} data={people} />
+      </div>
     </main>
   );
 }

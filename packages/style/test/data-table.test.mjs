@@ -412,6 +412,27 @@ test("each column header is named by its text alone, at rest, hovered, sorted an
   });
 });
 
+test("a column header that renders no text isn't named by the buttons and tooltip trigger inside it", async () => {
+  await withPage(1280, async (page) => {
+    const buttons = await page
+      .locator("[data-test=blank] thead button")
+      .evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute("aria-label")),
+      );
+    // Its name is blank: no text, and none of its controls' names
+    const names = (await headerNames(page, "blank")).map((name) =>
+      (name ?? "").trim(),
+    );
+    assert.deepEqual(
+      { buttons, names },
+      {
+        buttons: ["Widen column", "Sort column", "Tooltip"],
+        names: [""],
+      },
+    );
+  });
+});
+
 test("with two DataTables on one page, no id their names use repeats", async () => {
   await withPage(1280, async (page) => {
     // The ids each table's names refer to. TanStack's header and cell ids

@@ -13,6 +13,11 @@ import {
 import { Callout, CalloutTitle } from "@amerfathullah/myds-react/callout";
 import {
   CookieBanner,
+  CookieBannerAction,
+  CookieBannerClose,
+  CookieBannerDescription,
+  CookieBannerPreferences,
+  CookieBannerPreferencesTrigger,
   CookieBannerTitle,
 } from "@amerfathullah/myds-react/cookie-banner";
 import {
@@ -603,3 +608,58 @@ export const Switches = () => (
     </Toggle>
   </>
 );
+
+// CookieBanner is a page region: section attributes and a ref reach its
+// `<section>`, and `modal` still compiles, though it does nothing. Its parts
+// keep their prop and ref types.
+export const CookieBannerRegion = () => {
+  const region = useRef<HTMLElement>(null);
+  const title = useRef<HTMLHeadingElement>(null);
+  const description = useRef<HTMLParagraphElement>(null);
+  const preferences = useRef<HTMLParagraphElement>(null);
+  const close = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <CookieBanner
+        ref={region}
+        id="kuki"
+        aria-label="Kuki"
+        style={{ zIndex: 40 }}
+        data-test="cookie-banner"
+        defaultOpen
+        modal={false}
+        closeLabel="Tutup"
+        onOpenChange={(open: boolean) => void open}
+      >
+        <CookieBannerTitle ref={title}>Kuki</CookieBannerTitle>
+        <CookieBannerDescription ref={description}>
+          Laman ini menggunakan kuki.
+        </CookieBannerDescription>
+        <CookieBannerPreferences ref={preferences} className="gap-3" />
+        <CookieBannerPreferences asChild>
+          <fieldset />
+        </CookieBannerPreferences>
+        <CookieBannerAction>
+          <CookieBannerClose
+            ref={close}
+            onClick={(event) => event.preventDefault()}
+          >
+            Terima semua
+          </CookieBannerClose>
+          <CookieBannerPreferencesTrigger
+            onClick={(event) => event.preventDefault()}
+          >
+            Sesuaikan
+          </CookieBannerPreferencesTrigger>
+        </CookieBannerAction>
+      </CookieBanner>
+      <CookieBanner open onOpenChange={(open: boolean) => void open} modal>
+        <CookieBannerTitle asChild>
+          <h3>Kuki</h3>
+        </CookieBannerTitle>
+      </CookieBanner>
+      {/* @ts-expect-error Radix dialog props no longer reach the banner */}
+      <CookieBanner onInteractOutside={() => {}} />
+    </>
+  );
+};

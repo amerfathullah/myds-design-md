@@ -1,38 +1,215 @@
-import React, {
+import {
   ComponentProps,
+  ComponentPropsWithoutRef,
   createContext,
+  Dispatch,
   forwardRef,
   ForwardRefExoticComponent,
-  FunctionComponent,
+  ReactNode,
+  Ref,
+  RefAttributes,
+  SetStateAction,
+  useCallback,
   useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
-import { Button } from "./button";
-import {
-  Dialog,
-  DialogContent,
-  DialogClose,
-  DialogDescription,
-  DialogTitle,
-  DialogPortal,
-} from "@radix-ui/react-dialog";
-import { clx } from "../utils";
+import { Presence } from "@radix-ui/react-presence";
 import { Slot } from "@radix-ui/react-slot";
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { cva } from "class-variance-authority";
 import { CrossIcon } from "../icons/cross";
+import { clx } from "../utils";
+import { composeEventHandlers } from "../utils/compose-event-handlers";
+import { Button } from "./button";
+
+/*========================================================================================================================*/
+
+// The parts of a banner it finds again to move focus between its views
+type Part = "preferences" | "default-action" | "preferences-action" | "trigger";
 
 interface CookieBannerContextValue {
   showPreferences: boolean;
-  setShowPreferences: (show: boolean) => void;
+  // Switches views and moves focus into the new one
+  togglePreferences: () => void;
+  close: () => void;
+  // The id of the CookieBannerTitle, which names the banner
+  setTitleId: Dispatch<SetStateAction<string | undefined>>;
+  // Records `node` as a part of the banner, and returns what forgets it
+  registerPart: (node: HTMLElement, part: Part) => () => void;
 }
 
-const CookieBannerContext = createContext<CookieBannerContextValue>({
-  showPreferences: false,
-  setShowPreferences: () => {},
-});
+const CookieBannerContext = createContext<CookieBannerContextValue | null>(
+  null,
+);
 
-type CookieBannerProps = ComponentProps<typeof Dialog> & {
-  className?: string;
+// What the parts that don't need a banner use outside one: the default view,
+// and a CookieBannerPreferencesTrigger that does nothing
+const outsideBanner: Pick<
+  CookieBannerContextValue,
+  "showPreferences" | "togglePreferences"
+> = { showPreferences: false, togglePreferences: () => {} };
+
+// A layout effect in the browser. On the server, where CookieBanner renders
+// nothing, an effect that never runs, so React 18 doesn't warn.
+const useBrowserLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+// False on the server and while hydrating, then true: the banner renders only
+// in the browser, so a `defaultOpen` read from browser storage doesn't cause
+// a hydration mismatch
+const subscribeToNothing = () => () => {};
+const useIsBrowser = () =>
+  useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+
+function assignRef<T>(ref: Ref<T> | undefined, node: T | null) {
+  if (typeof ref === "function") ref(node);
+  else if (ref) (ref as { current: T | null }).current = node;
+}
+
+// One callback ref that sets both `a` and `b`
+function useMergedRef<T>(a: Ref<T> | undefined, b: Ref<T> | undefined) {
+  return useCallback(
+    (node: T | null) => {
+      assignRef(a, node);
+      assignRef(b, node);
+    },
+    [a, b],
+  );
+}
+
+// A callback ref that records its element as the banner's `part`. It runs as
+// the element is attached, before the banner's layout effects.
+function usePartRef(
+  context: CookieBannerContextValue | null,
+  part: Part,
+): (node: HTMLElement | null) => void {
+  const registerPart = context?.registerPart;
+  const forgetRef = useRef<(() => void) | undefined>(undefined);
+  return useCallback(
+    (node: HTMLElement | null) => {
+      forgetRef.current?.();
+      forgetRef.current =
+        node && registerPart ? registerPart(node, part) : undefined;
+    },
+    [registerPart, part],
+  );
+}
+
+/*========================================================================================================================*/
+
+// What can take focus
+const FOCUSABLE = [
+  "a[href]",
+  "area[href]",
+  "button",
+  "input:not([type='hidden'])",
+  "select",
+  "textarea",
+  "iframe",
+  "summary",
+  "audio[controls]",
+  "video[controls]",
+  "[contenteditable]:not([contenteditable='false'])",
+  "[tabindex]",
+].join(",");
+
+// Whether Tab can reach `element`
+function isTabbable(element: Element): element is HTMLElement {
+  return (
+    element instanceof HTMLElement &&
+    element.tabIndex >= 0 &&
+    !element.matches(":disabled") &&
+    !element.closest("[inert]") &&
+    (typeof element.checkVisibility !== "function" ||
+      element.checkVisibility({
+        checkVisibilityCSS: true,
+        visibilityProperty: true,
+      }))
+  );
+}
+
+// Moves focus to `element` without scrolling the page, and returns whether
+// it took focus
+function focusWithoutScroll(element: HTMLElement) {
+  element.focus({ preventScroll: true });
+  return element.ownerDocument.activeElement === element;
+}
+
+// Focuses the first of `elements` that Tab can reach and that takes focus,
+// and returns whether one did
+function focusFirstTabbable(elements: Iterable<Element>) {
+  for (const element of elements)
+    if (isTabbable(element) && focusWithoutScroll(element)) return true;
+  return false;
+}
+
+// What can take focus inside each of `roots`, in order
+const focusablesIn = (roots: HTMLElement[]) =>
+  roots.flatMap((root) => [...root.querySelectorAll(FOCUSABLE)]);
+
+// What can take focus after `node` in DOM order, outside it
+function* focusablesAfter(node: HTMLElement) {
+  for (const element of node.ownerDocument.querySelectorAll(FOCUSABLE))
+    if (
+      !node.contains(element) &&
+      node.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING
+    )
+      yield element;
+}
+
+const inDocumentOrder = (a: Node, b: Node) =>
+  a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+
+// Whether the browser has just seen a visitor action, such as a click or a
+// key press
+const userActivated = () =>
+  typeof navigator !== "undefined" && navigator.userActivation?.isActive;
+
+// Returns what puts `element`'s inline `property` back as it is now
+function keepInline(element: HTMLElement, property: string) {
+  const value = element.style.getPropertyValue(property);
+  const priority = element.style.getPropertyPriority(property);
+  return () => {
+    if (value) element.style.setProperty(property, value, priority);
+    else element.style.removeProperty(property);
+  };
+}
+
+/*========================================================================================================================*/
+
+interface CookieBannerProps extends ComponentPropsWithoutRef<"section"> {
+  /**
+   * Whether the banner is shown, when you control it. Use with
+   * `onOpenChange`.
+   */
+  open?: boolean;
+  /**
+   * Whether the banner is shown when it mounts, when you don't control it.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  /**
+   * Called when the banner opens or closes. Only a CookieBannerClose and the
+   * close cross close it: a press or focus outside it doesn't, and neither
+   * does Escape.
+   */
+  onOpenChange?: (open: boolean) => void;
+  /**
+   * Does nothing. CookieBanner is a page region, not a dialog, so it never
+   * blocks the page.
+   * @deprecated Removed at the next major. Leave it out.
+   */
+  modal?: boolean;
   /**
    * Accessible name of the close button in the banner's top-right corner.
    * Screen readers announce it; it isn't shown. Set it in your site's
@@ -40,49 +217,232 @@ type CookieBannerProps = ComponentProps<typeof Dialog> & {
    * @default "Close"
    */
   closeLabel?: string;
-};
+  className?: string;
+  children?: ReactNode;
+}
 
 const cookie_content_cva = cva([
   "bg-bg-white p-4.5 shadow-card border-otl-gray-200 fixed bottom-0 right-0 z-30 max-w-[500px]",
   "space-y-1 rounded-lg border transition-all outline-hidden",
+  "max-h-dvh overflow-y-auto sm:max-h-[calc(100dvh-1rem)]",
   "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-full data-[state=open]:fade-in data-[state=open]:duration-400",
   "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-full data-[state=closed]:fade-out data-[state=closed]:duration-200",
   "sm:mb-4 sm:mr-4 sm:p-6",
 ]);
 
-const CookieBanner: FunctionComponent<CookieBannerProps> = ({
-  className,
-  children,
-  closeLabel = "Close",
-  ...props
-}) => {
-  const [showPreferences, setShowPreferences] = useState(false);
-  const resetPreferences = () => setShowPreferences(false);
+/**
+ * The page's cookie banner: a `<section>` named by its CookieBannerTitle.
+ * Render it first in `<body>`, before SkipLink. It doesn't block the page,
+ * and stays until the visitor uses one of its close controls.
+ */
+const CookieBanner: ForwardRefExoticComponent<
+  CookieBannerProps & RefAttributes<HTMLElement>
+> = forwardRef(
+  (
+    {
+      open: openProp,
+      defaultOpen,
+      onOpenChange,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deprecated; taken out so it doesn't reach the section
+      modal,
+      closeLabel = "Close",
+      className,
+      children,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const [open, setOpen] = useControllableState({
+      prop: openProp,
+      defaultProp: defaultOpen ?? false,
+      onChange: onOpenChange,
+      caller: "CookieBanner",
+    });
+    const isBrowser = useIsBrowser();
+    const [showPreferences, setShowPreferences] = useState(false);
+    const [titleId, setTitleId] = useState<string | undefined>();
 
-  return (
-    <CookieBannerContext.Provider
-      value={{ showPreferences, setShowPreferences }}
-    >
-      <Dialog {...props}>
-        <DialogPortal>
-          <DialogContent
-            className={clx(cookie_content_cva(), className)}
-            onInteractOutside={resetPreferences}
+    // Every opening starts in the default view
+    const [lastOpen, setLastOpen] = useState(open);
+    if (open !== lastOpen) {
+      setLastOpen(open);
+      if (open) setShowPreferences(false);
+    }
+
+    const [node, setNode] = useState<HTMLElement | null>(null);
+    const nodeRef = useRef<HTMLElement | null>(null);
+    const ownRef = useCallback((element: HTMLElement | null) => {
+      nodeRef.current = element;
+      setNode(element);
+    }, []);
+    const sectionRef = useMergedRef(forwardedRef, ownRef);
+
+    const partsRef = useRef(new Map<HTMLElement, Part>());
+    const registerPart = useCallback((element: HTMLElement, part: Part) => {
+      partsRef.current.set(element, part);
+      return () => {
+        if (partsRef.current.get(element) === part)
+          partsRef.current.delete(element);
+      };
+    }, []);
+    // The parts recorded as `part`, in DOM order
+    const partsOf = (part: Part) =>
+      [...partsRef.current]
+        .filter(([element, kind]) => kind === part && element.isConnected)
+        .map(([element]) => element)
+        .sort(inDocumentOrder);
+
+    const close = useCallback(() => setOpen(false), [setOpen]);
+    const viewFocusRef = useRef(false);
+    const togglePreferences = useCallback(() => {
+      viewFocusRef.current = true;
+      setShowPreferences((shown) => !shown);
+    }, []);
+
+    // Opening right after a visitor action moves focus to the banner, and
+    // remembers what had it. Closing with focus inside moves it out: back to
+    // what had it, else to what follows the banner, else to `<body>`.
+    const wasOpenRef = useRef(false);
+    const focusOnShowRef = useRef(false);
+    const returnFocusRef = useRef<HTMLElement | null>(null);
+    useBrowserLayoutEffect(() => {
+      const wasOpen = wasOpenRef.current;
+      wasOpenRef.current = open;
+      if (open && !wasOpen) {
+        const activated = userActivated() === true;
+        const active = document.activeElement;
+        focusOnShowRef.current = activated;
+        returnFocusRef.current =
+          activated && active instanceof HTMLElement && active !== document.body
+            ? active
+            : null;
+      } else if (!open && wasOpen) {
+        focusOnShowRef.current = false;
+        const section = nodeRef.current;
+        const active = document.activeElement;
+        const remembered = returnFocusRef.current;
+        returnFocusRef.current = null;
+        if (
+          section &&
+          active instanceof HTMLElement &&
+          section.contains(active)
+        ) {
+          const returned =
+            remembered?.isConnected &&
+            !section.contains(remembered) &&
+            focusWithoutScroll(remembered);
+          if (!returned && !focusFirstTabbable(focusablesAfter(section)))
+            active.blur();
+        }
+      }
+    }, [open]);
+    // The section mounts after `open` turns true, so it takes focus here
+    useBrowserLayoutEffect(() => {
+      if (open && node && focusOnShowRef.current) {
+        focusOnShowRef.current = false;
+        focusWithoutScroll(node);
+      }
+    }, [open, node]);
+
+    // A CookieBannerPreferencesTrigger moves focus into the view it shows:
+    // the Customise view's first preference, else its first action; the
+    // default view's trigger
+    useBrowserLayoutEffect(() => {
+      if (!viewFocusRef.current) return;
+      viewFocusRef.current = false;
+      const moved = showPreferences
+        ? focusFirstTabbable(focusablesIn(partsOf("preferences"))) ||
+          focusFirstTabbable(focusablesIn(partsOf("preferences-action")))
+        : focusFirstTabbable(
+            partsOf("trigger").filter((trigger) =>
+              partsOf("default-action").some((action) =>
+                action.contains(trigger),
+              ),
+            ),
+          ) || focusFirstTabbable(focusablesIn(partsOf("default-action")));
+      if (!moved && nodeRef.current) focusWithoutScroll(nodeRef.current);
+    }, [showPreferences]);
+
+    // While the banner is shown, the page's scroll area is padded by its
+    // height and bottom offset, so a focused control scrolls into view above
+    // it (WCAG 2.2 SC 2.4.11)
+    useBrowserLayoutEffect(() => {
+      if (!open || !node) return;
+      const { documentElement: html, body, defaultView } = node.ownerDocument;
+      const view = defaultView ?? window;
+      const restore = [
+        keepInline(html, "scroll-padding-bottom"),
+        keepInline(body, "padding-bottom"),
+      ];
+      const pad = () => {
+        const style = view.getComputedStyle(node);
+        const offset =
+          (parseFloat(style.bottom) || 0) +
+          (parseFloat(style.marginBottom) || 0);
+        const padding = `${Math.ceil(node.getBoundingClientRect().height + offset)}px`;
+        html.style.setProperty("scroll-padding-bottom", padding);
+        body.style.setProperty("padding-bottom", padding);
+      };
+      pad();
+      const observer =
+        typeof ResizeObserver === "undefined"
+          ? undefined
+          : new ResizeObserver(pad);
+      observer?.observe(node);
+      view.addEventListener("resize", pad);
+      return () => {
+        observer?.disconnect();
+        view.removeEventListener("resize", pad);
+        for (const put of restore) put();
+      };
+    }, [open, node]);
+
+    const context = useMemo(
+      () => ({
+        showPreferences,
+        togglePreferences,
+        close,
+        setTitleId,
+        registerPart,
+      }),
+      [showPreferences, togglePreferences, close, registerPart],
+    );
+
+    if (!isBrowser) return null;
+
+    return (
+      <CookieBannerContext.Provider value={context}>
+        <Presence present={open}>
+          <section
+            tabIndex={-1}
+            aria-label={ariaLabel}
+            aria-labelledby={
+              ariaLabelledBy ?? (ariaLabel ? undefined : titleId)
+            }
             {...props}
+            ref={sectionRef}
+            data-state={open ? "open" : "closed"}
+            className={clx(cookie_content_cva(), className)}
           >
-            <DialogClose
-              className="ring-fr-primary absolute right-0 top-0 mr-4 mt-4 rounded-md p-1.5 outline-hidden transition-all focus:ring-3"
+            <button
+              type="button"
+              className="ring-fr-primary absolute top-0 right-0 mt-4 mr-4 rounded-md p-1.5 outline-hidden transition-all focus:ring-3"
               aria-label={closeLabel}
+              onClick={close}
             >
               <CrossIcon className="size-4 shrink-0" />
-            </DialogClose>
+            </button>
             {children}
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    </CookieBannerContext.Provider>
-  );
-};
+          </section>
+        </Presence>
+      </CookieBannerContext.Provider>
+    );
+  },
+);
+
+/*========================================================================================================================*/
 
 const cookie_action_cva = cva(
   ["w-full flex-col justify-start gap-[0.5rem] p-0 pt-3 sm:flex-row"],
@@ -99,12 +459,31 @@ const cookie_action_cva = cva(
   },
 );
 
+/** The banner's heading, an `<h2>`. Its id names the banner. */
 const CookieBannerTitle: ForwardRefExoticComponent<
-  ComponentProps<typeof DialogTitle>
-> = forwardRef(({ className, ...props }, ref) => {
+  ComponentPropsWithoutRef<"h2"> & {
+    asChild?: boolean;
+  } & RefAttributes<HTMLHeadingElement>
+> = forwardRef(({ className, asChild = false, id, ...props }, ref) => {
+  const context = useContext(CookieBannerContext);
+  const generatedId = useId();
+  const titleId = id ?? generatedId;
+  const setTitleId = context?.setTitleId;
+  useBrowserLayoutEffect(() => {
+    if (!setTitleId) return;
+    setTitleId(titleId);
+    return () =>
+      setTitleId((current) => (current === titleId ? undefined : current));
+  }, [setTitleId, titleId]);
+
+  if (!context)
+    throw new Error("CookieBannerTitle must be used within CookieBanner");
+
+  const Comp = asChild ? Slot : "h2";
   return (
-    <DialogTitle
+    <Comp
       ref={ref}
+      id={titleId}
       className={clx(
         "text-body-md font-body text-txt-black-900 font-semibold",
         className,
@@ -113,11 +492,20 @@ const CookieBannerTitle: ForwardRefExoticComponent<
     />
   );
 });
+
+/** The banner's text, a `<p>`, read in reading order. */
 const CookieBannerDescription: ForwardRefExoticComponent<
-  ComponentProps<typeof DialogDescription>
-> = forwardRef(({ className, ...props }, ref) => {
+  ComponentPropsWithoutRef<"p"> & {
+    asChild?: boolean;
+  } & RefAttributes<HTMLParagraphElement>
+> = forwardRef(({ className, asChild = false, ...props }, ref) => {
+  const context = useContext(CookieBannerContext);
+  if (!context)
+    throw new Error("CookieBannerDescription must be used within CookieBanner");
+
+  const Comp = asChild ? Slot : "p";
   return (
-    <DialogDescription
+    <Comp
       ref={ref}
       className={clx(
         "text-body-sm font-body text-txt-black-900 font-normal",
@@ -128,20 +516,27 @@ const CookieBannerDescription: ForwardRefExoticComponent<
   );
 });
 
+/**
+ * A row of the banner's controls. It shows in the default view, or with
+ * `preferences` in the Customise view.
+ */
 const CookieBannerAction: ForwardRefExoticComponent<
   ComponentProps<"div"> & { preferences?: boolean }
 > = forwardRef(({ className, preferences = false, ...props }, ref) => {
   const context = useContext(CookieBannerContext);
-
-  if (!context)
-    throw new Error("CookieBannerAction must be used within CookieBanner");
+  const partRef = usePartRef(
+    context,
+    preferences ? "preferences-action" : "default-action",
+  );
+  const actionRef = useMergedRef(ref, partRef);
+  const { showPreferences } = context ?? outsideBanner;
 
   return (
     <div
-      ref={ref}
+      ref={actionRef}
       className={clx(
         cookie_action_cva({
-          showPreferences: context.showPreferences === preferences,
+          showPreferences: showPreferences === preferences,
         }),
         className,
       )}
@@ -150,55 +545,83 @@ const CookieBannerAction: ForwardRefExoticComponent<
   );
 });
 
+/** The Customise view's preferences, a `<div>`. It renders only in that view. */
 const CookieBannerPreferences: ForwardRefExoticComponent<
-  ComponentProps<typeof DialogDescription>
-> = forwardRef(({ children, className, ...props }, ref) => {
+  ComponentPropsWithoutRef<"div"> & {
+    asChild?: boolean;
+  } & RefAttributes<HTMLDivElement>
+> = forwardRef(({ className, asChild = false, ...props }, ref) => {
   const context = useContext(CookieBannerContext);
+  const partRef = usePartRef(context, "preferences");
+  const preferencesRef = useMergedRef(ref, partRef);
+  const { showPreferences } = context ?? outsideBanner;
 
-  if (!context)
-    throw new Error("CookieBannerPreferences must be used within CookieBanner");
-  if (!context.showPreferences) return null;
+  if (!showPreferences) return null;
 
-  return (
-    <DialogDescription
-      ref={ref}
-      className={clx("flex flex-col gap-2 px-0 py-3", className)}
-      {...props}
-    >
-      {children}
-    </DialogDescription>
-  );
-});
-
-const CookieBannerPreferencesTrigger: ForwardRefExoticComponent<
-  ComponentProps<typeof Button>
-> = forwardRef(({ children, className, asChild = false, ...props }, ref) => {
-  const context = useContext(CookieBannerContext);
-  if (!context)
-    throw new Error(
-      "CookieBannerPreferencesTrigger must be used within CookieBanner",
-    );
-
-  const togglePreferences = () => {
-    context.setShowPreferences(!context.showPreferences);
-  };
-
-  const Comp = asChild ? Slot : Button;
+  const Comp = asChild ? Slot : "div";
   return (
     <Comp
-      variant="primary-outline"
-      size="medium"
-      className={clx("w-full justify-center sm:w-auto", className)}
-      onClick={togglePreferences}
+      ref={preferencesRef}
+      className={clx("flex flex-col gap-2 px-0 py-3", className)}
       {...props}
-      ref={ref}
-    >
-      {children}
-    </Comp>
+    />
   );
 });
 
-const CookieBannerClose = DialogClose;
+/**
+ * Switches between the default view and the Customise view, and moves focus
+ * into the view it shows. Its `onClick` runs first; calling
+ * `preventDefault()` there keeps the view.
+ */
+const CookieBannerPreferencesTrigger: ForwardRefExoticComponent<
+  ComponentProps<typeof Button>
+> = forwardRef(
+  ({ children, className, asChild = false, onClick, ...props }, ref) => {
+    const context = useContext(CookieBannerContext);
+    const partRef = usePartRef(context, "trigger");
+    const triggerRef = useMergedRef(ref, partRef);
+    const { togglePreferences } = context ?? outsideBanner;
+
+    const Comp = asChild ? Slot : Button;
+    return (
+      <Comp
+        variant="primary-outline"
+        size="medium"
+        className={clx("w-full justify-center sm:w-auto", className)}
+        {...props}
+        ref={triggerRef}
+        onClick={composeEventHandlers(onClick, togglePreferences)}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
+
+/**
+ * Closes the banner: Accept, Reject or Save. Its `onClick` runs first;
+ * calling `preventDefault()` there keeps the banner open.
+ */
+const CookieBannerClose: ForwardRefExoticComponent<
+  ComponentPropsWithoutRef<"button"> & {
+    asChild?: boolean;
+  } & RefAttributes<HTMLButtonElement>
+> = forwardRef(({ asChild = false, onClick, ...props }, ref) => {
+  const context = useContext(CookieBannerContext);
+  if (!context)
+    throw new Error("CookieBannerClose must be used within CookieBanner");
+
+  const Comp = asChild ? Slot : "button";
+  return (
+    <Comp
+      type="button"
+      {...props}
+      ref={ref}
+      onClick={composeEventHandlers(onClick, context.close)}
+    />
+  );
+});
+
 CookieBanner.displayName = "CookieBanner";
 CookieBannerAction.displayName = "CookieBannerAction";
 CookieBannerDescription.displayName = "CookieBannerDescription";

@@ -3,9 +3,9 @@ import {
   ComponentPropsWithoutRef,
   createContext,
   Dispatch,
+  ElementType,
   forwardRef,
   ForwardRefExoticComponent,
-  ReactNode,
   Ref,
   RefAttributes,
   SetStateAction,
@@ -17,7 +17,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { Presence } from "@radix-ui/react-presence";
 import { Slot } from "@radix-ui/react-slot";
@@ -48,28 +47,39 @@ const CookieBannerContext = createContext<CookieBannerContextValue | null>(
   null,
 );
 
-// What the parts that don't need a banner use outside one: the default view,
-// and a CookieBannerPreferencesTrigger that does nothing
-const outsideBanner: Pick<
+// What CookieBannerAction, CookieBannerPreferences and
+// CookieBannerPreferencesTrigger read of their banner
+type PartContext = Pick<
   CookieBannerContextValue,
   "showPreferences" | "togglePreferences"
-> = { showPreferences: false, togglePreferences: () => {} };
+>;
 
-// A layout effect in the browser. On the server, where CookieBanner renders
-// nothing, an effect that never runs, so React 18 doesn't warn.
-const useBrowserLayoutEffect =
+// What those parts read outside a banner, where they don't throw: the default
+// view, and a CookieBannerPreferencesTrigger that does nothing
+const outsideBanner: PartContext = {
+  showPreferences: false,
+  togglePreferences: () => {},
+};
+
+// A part's props: those of the element it renders, and `asChild`, which
+// renders its one child in its place
+type SlottableProps<T extends ElementType> = ComponentPropsWithoutRef<T> & {
+  asChild?: boolean;
+};
+
+// Runs before the browser paints, as a layout effect. On the server, where
+// CookieBanner renders nothing, it never runs, so React 18 doesn't warn.
+const useBeforePaint =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-// False on the server and while hydrating, then true: the banner renders only
-// in the browser, so a `defaultOpen` read from browser storage doesn't cause
-// a hydration mismatch
-const subscribeToNothing = () => () => {};
-const useIsBrowser = () =>
-  useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false,
-  );
+// False on the server and until the banner has mounted in the browser, as for
+// a portal: the banner renders only then, so a `defaultOpen` read from
+// browser storage doesn't cause a hydration mismatch
+function useMounted() {
+  const [mounted, setMounted] = useState(false);
+  useBeforePaint(() => setMounted(true), []);
+  return mounted;
+}
 
 function assignRef<T>(ref: Ref<T> | undefined, node: T | null) {
   if (typeof ref === "function") ref(node);
@@ -87,15 +97,17 @@ function useMergedRef<T>(a: Ref<T> | undefined, b: Ref<T> | undefined) {
   );
 }
 
-// A callback ref that records its element as the banner's `part`. It runs as
-// the element is attached, before the banner's layout effects.
-function usePartRef(
-  context: CookieBannerContextValue | null,
+// A part's banner, and the ref for its element: it sets `ref`, and records
+// the element as the banner's `part` as it's attached, before the banner's
+// layout effects run
+function useBannerPart<T extends HTMLElement>(
+  ref: Ref<T> | undefined,
   part: Part,
-): (node: HTMLElement | null) => void {
+): { banner: PartContext; ref: (node: T | null) => void } {
+  const context = useContext(CookieBannerContext);
   const registerPart = context?.registerPart;
   const forgetRef = useRef<(() => void) | undefined>(undefined);
-  return useCallback(
+  const partRef = useCallback(
     (node: HTMLElement | null) => {
       forgetRef.current?.();
       forgetRef.current =
@@ -103,6 +115,7 @@ function usePartRef(
     },
     [registerPart, part],
   );
+  return { banner: context ?? outsideBanner, ref: useMergedRef(ref, partRef) };
 }
 
 /*========================================================================================================================*/
@@ -176,7 +189,7 @@ const userActivated = () =>
   typeof navigator !== "undefined" && navigator.userActivation?.isActive;
 
 // Returns what puts `element`'s inline `property` back as it is now
-function keepInline(element: HTMLElement, property: string) {
+function snapshotInline(element: HTMLElement, property: string) {
   const value = element.style.getPropertyValue(property);
   const priority = element.style.getPropertyPriority(property);
   return () => {
@@ -192,18 +205,22 @@ const pagePaddings = new WeakMap<
   { needs: Map<HTMLElement, number>; restore: () => void }
 >();
 
+// Sets `document`'s page padding to the most any of `needs` asks for
+function setPagePadding(document: Document, needs: Map<HTMLElement, number>) {
+  const value = `${Math.max(...needs.values())}px`;
+  document.documentElement.style.setProperty("scroll-padding-bottom", value);
+  document.body.style.setProperty("padding-bottom", value);
+}
+
 // Pads `banner`'s page by the most any shown banner needs, `need` pixels for
-// this one, or with `need` undefined, by what the others need. Once none is
-// shown, the page's inline values go back as they were.
-function padPage(banner: HTMLElement, need: number | undefined) {
+// this one
+function padPage(banner: HTMLElement, need: number) {
   const document = banner.ownerDocument;
-  const { documentElement: html, body } = document;
   let padding = pagePaddings.get(document);
   if (!padding) {
-    if (need === undefined) return;
     const restore = [
-      keepInline(html, "scroll-padding-bottom"),
-      keepInline(body, "padding-bottom"),
+      snapshotInline(document.documentElement, "scroll-padding-bottom"),
+      snapshotInline(document.body, "padding-bottom"),
     ];
     padding = {
       needs: new Map(),
@@ -211,16 +228,19 @@ function padPage(banner: HTMLElement, need: number | undefined) {
     };
     pagePaddings.set(document, padding);
   }
-  if (need === undefined) padding.needs.delete(banner);
-  else padding.needs.set(banner, need);
-  if (!padding.needs.size) {
-    padding.restore();
-    pagePaddings.delete(document);
-    return;
-  }
-  const value = `${Math.max(...padding.needs.values())}px`;
-  html.style.setProperty("scroll-padding-bottom", value);
-  body.style.setProperty("padding-bottom", value);
+  padding.needs.set(banner, need);
+  setPagePadding(document, padding.needs);
+}
+
+// Stops padding `banner`'s page for it. Once no banner is shown, the page's
+// inline values go back as they were before the first one was.
+function unpadPage(banner: HTMLElement) {
+  const document = banner.ownerDocument;
+  const padding = pagePaddings.get(document);
+  if (!padding?.needs.delete(banner)) return;
+  if (padding.needs.size) return setPagePadding(document, padding.needs);
+  padding.restore();
+  pagePaddings.delete(document);
 }
 
 /*========================================================================================================================*/
@@ -255,8 +275,6 @@ interface CookieBannerProps extends ComponentPropsWithoutRef<"section"> {
    * @default "Close"
    */
   closeLabel?: string;
-  className?: string;
-  children?: ReactNode;
 }
 
 const cookie_content_cva = cva([
@@ -298,7 +316,7 @@ const CookieBanner: ForwardRefExoticComponent<
       onChange: onOpenChange,
       caller: "CookieBanner",
     });
-    const isBrowser = useIsBrowser();
+    const mounted = useMounted();
     const [showPreferences, setShowPreferences] = useState(false);
     const [titleId, setTitleId] = useState<string | undefined>();
 
@@ -328,7 +346,9 @@ const CookieBanner: ForwardRefExoticComponent<
     // The parts recorded as `part`, in DOM order
     const partsOf = (part: Part) =>
       [...partsRef.current]
-        .filter(([element, kind]) => kind === part && element.isConnected)
+        .filter(
+          ([element, recorded]) => recorded === part && element.isConnected,
+        )
         .map(([element]) => element)
         .sort(inDocumentOrder);
 
@@ -345,7 +365,7 @@ const CookieBanner: ForwardRefExoticComponent<
     const wasOpenRef = useRef(false);
     const focusOnShowRef = useRef(false);
     const returnFocusRef = useRef<HTMLElement | null>(null);
-    useBrowserLayoutEffect(() => {
+    useBeforePaint(() => {
       const wasOpen = wasOpenRef.current;
       wasOpenRef.current = open;
       if (open && !wasOpen) {
@@ -377,7 +397,7 @@ const CookieBanner: ForwardRefExoticComponent<
       }
     }, [open]);
     // The section mounts after `open` turns true, so it takes focus here
-    useBrowserLayoutEffect(() => {
+    useBeforePaint(() => {
       if (open && node && focusOnShowRef.current) {
         focusOnShowRef.current = false;
         focusWithoutScroll(node);
@@ -387,7 +407,7 @@ const CookieBanner: ForwardRefExoticComponent<
     // A CookieBannerPreferencesTrigger moves focus into the view it shows:
     // the Customise view's first preference, else its first action; the
     // default view's trigger
-    useBrowserLayoutEffect(() => {
+    useBeforePaint(() => {
       if (!viewFocusRef.current) return;
       viewFocusRef.current = false;
       const moved = showPreferences
@@ -406,7 +426,7 @@ const CookieBanner: ForwardRefExoticComponent<
     // While the banner is shown, the page's scroll area is padded by its
     // height and bottom offset, so a focused control scrolls into view above
     // it (WCAG 2.2 SC 2.4.11)
-    useBrowserLayoutEffect(() => {
+    useBeforePaint(() => {
       if (!open || !node) return;
       const view = node.ownerDocument.defaultView ?? window;
       const pad = () => {
@@ -426,7 +446,7 @@ const CookieBanner: ForwardRefExoticComponent<
       return () => {
         observer?.disconnect();
         view.removeEventListener("resize", pad);
-        padPage(node, undefined);
+        unpadPage(node);
       };
     }, [open, node]);
 
@@ -441,7 +461,7 @@ const CookieBanner: ForwardRefExoticComponent<
       [showPreferences, togglePreferences, close, registerPart],
     );
 
-    if (!isBrowser) return null;
+    if (!mounted) return null;
 
     return (
       <CookieBannerContext.Provider value={context}>
@@ -492,15 +512,13 @@ const cookie_action_cva = cva(
 
 /** The banner's heading, an `<h2>`. Its id names the banner. */
 const CookieBannerTitle: ForwardRefExoticComponent<
-  ComponentPropsWithoutRef<"h2"> & {
-    asChild?: boolean;
-  } & RefAttributes<HTMLHeadingElement>
+  SlottableProps<"h2"> & RefAttributes<HTMLHeadingElement>
 > = forwardRef(({ className, asChild = false, id, ...props }, ref) => {
   const context = useContext(CookieBannerContext);
   const generatedId = useId();
   const titleId = id ?? generatedId;
   const setTitleId = context?.setTitleId;
-  useBrowserLayoutEffect(() => {
+  useBeforePaint(() => {
     if (!setTitleId) return;
     setTitleId(titleId);
     return () =>
@@ -526,9 +544,7 @@ const CookieBannerTitle: ForwardRefExoticComponent<
 
 /** The banner's text, a `<p>`, read in reading order. */
 const CookieBannerDescription: ForwardRefExoticComponent<
-  ComponentPropsWithoutRef<"p"> & {
-    asChild?: boolean;
-  } & RefAttributes<HTMLParagraphElement>
+  SlottableProps<"p"> & RefAttributes<HTMLParagraphElement>
 > = forwardRef(({ className, asChild = false, ...props }, ref) => {
   const context = useContext(CookieBannerContext);
   if (!context)
@@ -554,13 +570,10 @@ const CookieBannerDescription: ForwardRefExoticComponent<
 const CookieBannerAction: ForwardRefExoticComponent<
   ComponentProps<"div"> & { preferences?: boolean }
 > = forwardRef(({ className, preferences = false, ...props }, ref) => {
-  const context = useContext(CookieBannerContext);
-  const partRef = usePartRef(
-    context,
-    preferences ? "preferences-action" : "default-action",
-  );
-  const actionRef = useMergedRef(ref, partRef);
-  const { showPreferences } = context ?? outsideBanner;
+  const {
+    banner: { showPreferences },
+    ref: actionRef,
+  } = useBannerPart(ref, preferences ? "preferences-action" : "default-action");
 
   return (
     <div
@@ -578,14 +591,12 @@ const CookieBannerAction: ForwardRefExoticComponent<
 
 /** The Customise view's preferences, a `<div>`. It renders only in that view. */
 const CookieBannerPreferences: ForwardRefExoticComponent<
-  ComponentPropsWithoutRef<"div"> & {
-    asChild?: boolean;
-  } & RefAttributes<HTMLDivElement>
+  SlottableProps<"div"> & RefAttributes<HTMLDivElement>
 > = forwardRef(({ className, asChild = false, ...props }, ref) => {
-  const context = useContext(CookieBannerContext);
-  const partRef = usePartRef(context, "preferences");
-  const preferencesRef = useMergedRef(ref, partRef);
-  const { showPreferences } = context ?? outsideBanner;
+  const {
+    banner: { showPreferences },
+    ref: preferencesRef,
+  } = useBannerPart(ref, "preferences");
 
   if (!showPreferences) return null;
 
@@ -608,10 +619,10 @@ const CookieBannerPreferencesTrigger: ForwardRefExoticComponent<
   ComponentProps<typeof Button>
 > = forwardRef(
   ({ children, className, asChild = false, onClick, ...props }, ref) => {
-    const context = useContext(CookieBannerContext);
-    const partRef = usePartRef(context, "trigger");
-    const triggerRef = useMergedRef(ref, partRef);
-    const { togglePreferences } = context ?? outsideBanner;
+    const {
+      banner: { togglePreferences },
+      ref: triggerRef,
+    } = useBannerPart(ref, "trigger");
 
     const Comp = asChild ? Slot : Button;
     return (
@@ -634,9 +645,7 @@ const CookieBannerPreferencesTrigger: ForwardRefExoticComponent<
  * calling `preventDefault()` there keeps the banner open.
  */
 const CookieBannerClose: ForwardRefExoticComponent<
-  ComponentPropsWithoutRef<"button"> & {
-    asChild?: boolean;
-  } & RefAttributes<HTMLButtonElement>
+  SlottableProps<"button"> & RefAttributes<HTMLButtonElement>
 > = forwardRef(({ asChild = false, onClick, ...props }, ref) => {
   const context = useContext(CookieBannerContext);
   if (!context)

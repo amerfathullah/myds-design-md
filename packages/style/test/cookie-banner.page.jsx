@@ -89,7 +89,9 @@ function Banner(props) {
       <CookieBannerAction>
         <Choice>Accept all</Choice>
         <Choice>Reject all</Choice>
-        <CookieBannerPreferencesTrigger>Customise</CookieBannerPreferencesTrigger>
+        <CookieBannerPreferencesTrigger>
+          Customise
+        </CookieBannerPreferencesTrigger>
       </CookieBannerAction>
       <CookieBannerAction preferences>
         <CookieBannerPreferencesTrigger>Back</CookieBannerPreferencesTrigger>
@@ -135,7 +137,6 @@ function Page() {
             key={index}
             type="button"
             id={`control-${index}`}
-            data-control
             className="h-10 text-left"
             onClick={log(`control-${index}`)}
           >

@@ -94,8 +94,8 @@ function banner(
       null,
       createElement(CookieBannerClose, { onClick: onAccept }, "Accept all"),
       createElement(CookieBannerClose, null, "Reject all"),
-      // Only a handler the author passes, so main's trigger, whose props
-      // replace its own `onClick`, still toggles without one
+      // Only a handler the author passes: the trigger's props used to replace
+      // its own `onClick`, so an `onClick: undefined` stopped it toggling
       createElement(
         CookieBannerPreferencesTrigger,
         onCustomise ? { onClick: onCustomise } : null,
@@ -181,8 +181,17 @@ async function mount(element: ReactElement) {
   };
 }
 
-afterEach(async () => {
+// Unmounts every mounted page, the last first
+async function unmountAll() {
   while (unmounts.length) await unmounts.pop()!();
+}
+
+// The inline styles of `<html>` and `<body>`, where the banner pads the page
+const html = () => document.documentElement.style;
+const body = () => document.body.style;
+
+afterEach(async () => {
+  await unmountAll();
   vi.restoreAllMocks();
   outsideClicks.mockClear();
   Reflect.deleteProperty(navigator, "userActivation");
@@ -213,8 +222,9 @@ function button(name: string) {
 const click = (element: HTMLElement) => act(async () => element.click());
 const focus = (element: HTMLElement) => act(async () => element.focus());
 
-// One zero-delay timer: on main, Radix starts listening for presses outside
-// the dialog on one
+// One zero-delay timer. The Radix dialog CookieBanner used to be started
+// listening for presses outside it on one, so waiting for it makes sure a
+// press outside is one that would have closed the dialog.
 const tick = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
 
 // Presses `element` with the primary mouse button, dispatching what a click
@@ -594,34 +604,28 @@ describe("the page padding that keeps a focused control in view", () => {
   // happy-dom has no layout and its ResizeObserver never calls back, so this
   // checks only that the values are set, not their size
   test("while the banner is open, `<html>`'s `scroll-padding-bottom` and `<body>`'s `padding-bottom` are set, and closing removes them", async () => {
-    const html = document.documentElement.style;
-    const body = document.body.style;
     const { rerender } = await mount(page(banner({ open: true })));
-    expect(html.getPropertyValue("scroll-padding-bottom")).not.toBe("");
-    expect(body.getPropertyValue("padding-bottom")).not.toBe("");
+    expect(html().getPropertyValue("scroll-padding-bottom")).not.toBe("");
+    expect(body().getPropertyValue("padding-bottom")).not.toBe("");
     await rerender(page(banner({ open: false })));
-    expect(html.getPropertyValue("scroll-padding-bottom")).toBe("");
-    expect(body.getPropertyValue("padding-bottom")).toBe("");
+    expect(html().getPropertyValue("scroll-padding-bottom")).toBe("");
+    expect(body().getPropertyValue("padding-bottom")).toBe("");
   });
 
   test("closing restores inline values the author set", async () => {
-    const html = document.documentElement.style;
-    const body = document.body.style;
-    html.setProperty("scroll-padding-bottom", "5px");
-    body.setProperty("padding-bottom", "8px");
+    html().setProperty("scroll-padding-bottom", "5px");
+    body().setProperty("padding-bottom", "8px");
     const { rerender } = await mount(page(banner({ open: true })));
     // The banner sets its own, which in happy-dom measure 0px
-    expect(html.getPropertyValue("scroll-padding-bottom")).not.toBe("5px");
-    expect(body.getPropertyValue("padding-bottom")).not.toBe("8px");
+    expect(html().getPropertyValue("scroll-padding-bottom")).not.toBe("5px");
+    expect(body().getPropertyValue("padding-bottom")).not.toBe("8px");
     await rerender(page(banner({ open: false })));
-    expect(html.getPropertyValue("scroll-padding-bottom")).toBe("5px");
-    expect(body.getPropertyValue("padding-bottom")).toBe("8px");
+    expect(html().getPropertyValue("scroll-padding-bottom")).toBe("5px");
+    expect(body().getPropertyValue("padding-bottom")).toBe("8px");
   });
 
   test("with two banners shown, the page stays padded until both close, in either order, then goes back to the author's values", async () => {
-    const html = document.documentElement.style;
-    const body = document.body.style;
-    body.setProperty("padding-bottom", "8px");
+    body().setProperty("padding-bottom", "8px");
     for (const order of [
       ["first", "second"],
       ["second", "first"],
@@ -635,21 +639,19 @@ describe("the page padding that keeps a focused control in view", () => {
           page(banner({ open: false })),
         );
         if (index === 0)
-          expect(html.getPropertyValue("scroll-padding-bottom")).not.toBe("");
+          expect(html().getPropertyValue("scroll-padding-bottom")).not.toBe("");
       }
-      expect(html.getPropertyValue("scroll-padding-bottom")).toBe("");
-      expect(body.getPropertyValue("padding-bottom")).toBe("8px");
-      while (unmounts.length) await unmounts.pop()!();
+      expect(html().getPropertyValue("scroll-padding-bottom")).toBe("");
+      expect(body().getPropertyValue("padding-bottom")).toBe("8px");
+      await unmountAll();
     }
   });
 
   test("unmounting an open banner removes them", async () => {
-    const html = document.documentElement.style;
-    const body = document.body.style;
     await mount(page(banner({ open: true })));
-    expect(html.getPropertyValue("scroll-padding-bottom")).not.toBe("");
-    while (unmounts.length) await unmounts.pop()!();
-    expect(html.getPropertyValue("scroll-padding-bottom")).toBe("");
-    expect(body.getPropertyValue("padding-bottom")).toBe("");
+    expect(html().getPropertyValue("scroll-padding-bottom")).not.toBe("");
+    await unmountAll();
+    expect(html().getPropertyValue("scroll-padding-bottom")).toBe("");
+    expect(body().getPropertyValue("padding-bottom")).toBe("");
   });
 });

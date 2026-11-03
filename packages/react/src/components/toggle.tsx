@@ -43,7 +43,10 @@ interface ToggleContextType extends VariantProps<typeof thumbVariants> {
 const ToggleContext = createContext<ToggleContextType | undefined>(undefined);
 
 export interface ToggleProps extends VariantProps<typeof thumbVariants> {
-  /** The switch's id, so a `<Label htmlFor>` names it */
+  /**
+   * The switch's id: the id of ToggleThumb's checkbox, so a `<Label htmlFor>`
+   * with this id names the switch. Without it, the switch gets a unique id.
+   */
   id?: string;
   defaultChecked?: boolean;
   checked?: boolean;
@@ -87,7 +90,7 @@ const Toggle: React.FC<ToggleProps> = ({
         disabled,
         size,
         onChange: handleChange,
-        id: id ?? generatedId,
+        id: id || generatedId,
       }}
     >
       <div
@@ -102,12 +105,26 @@ const Toggle: React.FC<ToggleProps> = ({
 Toggle.displayName = "Toggle";
 
 export interface ToggleThumbProps {
+  /**
+   * Classes for the track. The track follows the switch's focus, so style
+   * its focus with `peer-focus:`, not `focus:`.
+   */
   className?: string;
-  /** Names the switch when no `<Label htmlFor>` does. It has no default name. */
+  /**
+   * Accessible name of the switch, when no `<Label htmlFor>` names it. Screen
+   * readers announce it; it isn't shown. Set it in your site's language, e.g.
+   * `"Pemberitahuan e-mel"`. The switch has no default name.
+   */
   "aria-label"?: string;
-  /** Names the switch from the element with this id */
+  /**
+   * The id of an element whose text names the switch, in place of
+   * `aria-label`.
+   */
   "aria-labelledby"?: string;
-  /** Describes the switch from the element with this id */
+  /**
+   * The id of an element whose text describes the switch, such as a hint
+   * under its label.
+   */
   "aria-describedby"?: string;
 }
 
@@ -121,11 +138,13 @@ const ToggleThumb: React.FC<ToggleThumbProps> = ({
   if (!context) throw new Error("ToggleThumb must be used within Toggle");
 
   // Space toggles a checkbox natively. Enter toggles it too, as it did, and
-  // doesn't submit an enclosing form.
+  // never submits an enclosing form. It clicks the checkbox, so it fires the
+  // same events as Space, and does nothing while the checkbox is disabled, by
+  // the `disabled` prop or by a disabled `<fieldset>`.
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return;
     event.preventDefault();
-    context.onChange();
+    event.currentTarget.click();
   };
 
   // The checkbox is the switch: the one element that takes focus, named by a

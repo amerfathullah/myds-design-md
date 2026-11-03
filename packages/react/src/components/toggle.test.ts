@@ -2,7 +2,10 @@
 import { act, createElement, type ReactElement } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { computeAccessibleName } from "dom-accessibility-api";
+import {
+  computeAccessibleDescription,
+  computeAccessibleName,
+} from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { Label } from "./label";
@@ -36,18 +39,20 @@ async function mount(element: ReactElement) {
   };
 }
 
+const consoleMethods = ["error", "warn", "log", "info"] as const;
+
 beforeEach(() => {
-  vi.spyOn(console, "error").mockImplementation(() => {});
-  vi.spyOn(console, "warn").mockImplementation(() => {});
+  for (const method of consoleMethods)
+    vi.spyOn(console, method).mockImplementation(() => {});
 });
 
-// No test logs an error or a warning, and nothing is left on the page
+// No test logs anything, React's warnings and errors included, and nothing
+// is left on the page
 afterEach(async () => {
   while (unmounts.length) await unmounts.pop()!();
-  const logged = [
-    ...vi.mocked(console.error).mock.calls,
-    ...vi.mocked(console.warn).mock.calls,
-  ];
+  const logged = consoleMethods.flatMap((method) =>
+    vi.mocked(console[method]).mock.calls.map((call) => [method, ...call]),
+  );
   vi.restoreAllMocks();
   expect(logged).toEqual([]);
   expect(document.body.innerHTML).toBe("");
@@ -63,11 +68,14 @@ const toggle = (
     children: createElement(ToggleThumb, thumb),
   });
 
-// The one switch in `within`, and the track beside it
+// The one Switch's native checkbox in `within`, which is the switch, and the
+// track beside it
 function parts(within: ParentNode) {
-  const switches = within.querySelectorAll('[role="switch"]');
-  expect(switches).toHaveLength(1);
-  const input = switches[0] as HTMLInputElement;
+  const inputs = within.querySelectorAll<HTMLInputElement>(
+    'input[type="checkbox"]',
+  );
+  expect(inputs).toHaveLength(1);
+  const input = inputs[0]!;
   return { input, track: input.nextElementSibling as HTMLElement };
 }
 
@@ -89,18 +97,19 @@ describe("the switch", () => {
   test("is the one focusable element: the native checkbox, with role switch", async () => {
     const { container } = await mount(toggle({}, { "aria-label": "Sync" }));
     const { input, track } = parts(container);
-    expect(input.tagName).toBe("INPUT");
-    expect(input.type).toBe("checkbox");
+    expect([...container.querySelectorAll('[role="switch"]')]).toEqual([input]);
     expect(input.tabIndex).toBe(0);
-    // Nothing else is a tab stop, or exposes a role or state
+    // Nothing else is a tab stop
     expect(
-      [...container.querySelectorAll("[tabindex]")].filter(
-        (element) => element.getAttribute("tabindex") !== "-1",
+      [...container.querySelectorAll<HTMLElement>("*")].filter(
+        (element) => element !== input && element.tabIndex >= 0,
       ),
     ).toEqual([]);
     expect(container.querySelector("label")!.hasAttribute("tabindex")).toBe(
       false,
     );
+    // The track exposes no role or state, and keeps the state its styles
+    // key off
     expect(track.tagName).toBe("SPAN");
     expect(track.getAttribute("aria-hidden")).toBe("true");
     expect(track.hasAttribute("tabindex")).toBe(false);
@@ -108,8 +117,9 @@ describe("the switch", () => {
     expect(
       track.getAttributeNames().filter((name) => name.startsWith("aria-")),
     ).toEqual(["aria-hidden"]);
-    // The track keeps the state its styles key off
     expect(track.getAttribute("data-state")).toBe("unchecked");
+    await click(input);
+    expect(track.getAttribute("data-state")).toBe("checked");
   });
 
   test("has no default name, and nothing is named Toggle", async () => {
@@ -117,6 +127,10 @@ describe("the switch", () => {
     const { input } = parts(container);
     expect(input.hasAttribute("aria-label")).toBe(false);
     expect(computeAccessibleName(input)).toBe("");
+    for (const element of container.querySelectorAll("*")) {
+      expect(element.getAttribute("aria-label")).not.toBe("Toggle");
+      expect(computeAccessibleName(element)).not.toBe("Toggle");
+    }
     expect(container.innerHTML).not.toMatch(/Toggle/);
   });
 
@@ -147,18 +161,22 @@ describe("the switch", () => {
         "div",
         null,
         createElement("h3", { id: "title" }, "Pemberitahuan e-mel"),
-        createElement("p", { id: "hint" }, "Hantar ringkasan mingguan"),
+        createElement("p", { id: "hint" }, "Disimpan secara automatik"),
         toggle({}, { "aria-labelledby": "title", "aria-describedby": "hint" }),
       ),
     );
     const { input } = parts(container);
     expect(computeAccessibleName(input)).toBe("Pemberitahuan e-mel");
-    expect(input.getAttribute("aria-describedby")).toBe("hint");
+    expect(computeAccessibleDescription(input)).toBe(
+      "Disimpan secara automatik",
+    );
   });
 
-  test("passes className to the track", async () => {
+  test("passes className to the track, not the checkbox", async () => {
     const { container } = await mount(toggle({}, { className: "mt-1" }));
-    expect(parts(container).track.classList).toContain("mt-1");
+    const { input, track } = parts(container);
+    expect(track.classList).toContain("mt-1");
+    expect(input.classList).not.toContain("mt-1");
   });
 });
 
@@ -217,7 +235,7 @@ describe("toggling", () => {
     const onCheckedChange = vi.fn();
     const { container } = await mount(toggle({ onCheckedChange }));
     const { input } = parts(container);
-    for (const key of [" ", "a", "Tab"])
+    for (const key of [" ", "a", "Escape", "Tab", "ArrowRight"])
       expect(keydown(input, key)).toBe(false);
     expect(onCheckedChange).not.toHaveBeenCalled();
     expect(input.checked).toBe(false);
@@ -235,7 +253,7 @@ describe("toggling", () => {
     expect(onCheckedChange).not.toHaveBeenCalled();
   });
 
-  test("the disabled prop blocks clicks on the switch, its track and its Label, and Enter", async () => {
+  test("the disabled prop takes the switch out of the tab order, and blocks clicks on the switch, its track and its Label, and Enter", async () => {
     const onCheckedChange = vi.fn();
     const { container } = await mount(
       createElement(
@@ -247,6 +265,12 @@ describe("toggling", () => {
     );
     const { input, track } = parts(container);
     expect(input.disabled).toBe(true);
+    // Tab skips the disabled checkbox, and nothing else is a tab stop
+    expect(
+      [...container.querySelectorAll<HTMLElement>("*")].filter(
+        (element) => element !== input && element.tabIndex >= 0,
+      ),
+    ).toEqual([]);
     await click(input);
     await click(track);
     await click(container.querySelector("label[for=sync]")!);
@@ -272,14 +296,14 @@ describe("ids", () => {
   // useId() was called only without an id, so adding or removing one
   // changed the number of hooks
   test("adding and removing the id keeps the hooks in order", async () => {
-    const { container, rerender } = await mount(toggle({ id: "sync" }));
+    const { container, rerender } = await mount(toggle({ id: "a" }));
     const id = () => container.querySelector("input")!.id;
-    expect(id()).toBe("sync");
+    expect(id()).toBe("a");
     await rerender(toggle());
-    expect(id()).not.toBe("sync");
+    expect(id()).not.toBe("a");
     expect(id()).toBeTruthy();
-    await rerender(toggle({ id: "sync" }));
-    expect(id()).toBe("sync");
+    await rerender(toggle({ id: "a" }));
+    expect(id()).toBe("a");
   });
 
   test("server HTML hydrates without a warning, and the switch works after", async () => {
@@ -297,14 +321,18 @@ describe("ids", () => {
     const serverIds = [...container.querySelectorAll("input")].map(
       ({ id }) => id,
     );
+    const recoverable: unknown[] = [];
     let root: ReturnType<typeof hydrateRoot> | undefined;
     await act(async () => {
-      root = hydrateRoot(container, tree);
+      root = hydrateRoot(container, tree, {
+        onRecoverableError: (error) => void recoverable.push(error),
+      });
     });
     unmounts.push(async () => {
       await act(async () => root?.unmount());
       container.remove();
     });
+    expect(recoverable).toEqual([]);
     expect(
       [...container.querySelectorAll("input")].map(({ id }) => id),
     ).toEqual(serverIds);

@@ -534,23 +534,30 @@ export const Icons = () => (
 
 // The Switch takes its name from a Label's `htmlFor` (Toggle's `id`), or from
 // `aria-label` or `aria-labelledby` on ToggleThumb, and has no default name.
-// ToggleThumb takes no other input props.
+// ToggleThumb also takes `aria-describedby`, and no other input props.
 const thumbProps: ToggleThumbProps = {
-  "aria-label": "Tetapan awam",
-  "aria-describedby": "hint",
+  "aria-label": "Pemberitahuan e-mel",
+  "aria-labelledby": "notify-title",
+  "aria-describedby": "notify-hint",
 };
 
 export const Switches = () => (
   <>
-    <Label htmlFor="sync">Enable sync</Label>
-    <Toggle id="sync" onCheckedChange={(checked: boolean) => void checked}>
+    <Label htmlFor="notify">Email notifications</Label>
+    <Toggle id="notify" onCheckedChange={(checked: boolean) => void checked}>
       <ToggleThumb />
     </Toggle>
     <Toggle size="small" defaultChecked>
-      <ToggleThumb aria-label="Tetapan awam" />
+      <ToggleThumb aria-label="Pemberitahuan e-mel" />
     </Toggle>
+    <h3 id="notify-title">Pemberitahuan e-mel</h3>
+    <p id="notify-hint">Disimpan secara automatik</p>
     <Toggle disabled>
-      <ToggleThumb aria-labelledby="title" className="mt-1" />
+      <ToggleThumb
+        aria-labelledby="notify-title"
+        aria-describedby="notify-hint"
+        className="mt-1"
+      />
     </Toggle>
     <Toggle>
       <ToggleThumb {...thumbProps} />
@@ -561,7 +568,7 @@ export const Switches = () => (
     </Toggle>
     <Toggle>
       {/* @ts-expect-error `name` is out of ToggleThumb's scope */}
-      <ToggleThumb name="sync" />
+      <ToggleThumb name="notify" />
     </Toggle>
   </>
 );

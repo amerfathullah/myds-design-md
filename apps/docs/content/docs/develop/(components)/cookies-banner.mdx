@@ -266,7 +266,7 @@ The banner is never taller than the window, less its margin. Content that doesn'
 
 ### Focus
 
-- Opening it right after a click or key press, such as on a "Cookie settings" control, moves focus to the banner. Any other opening, such as on page load or with `defaultOpen`, leaves focus where it is.
+- Opening it right after a click or key press, such as on a "Cookie settings" control, moves focus to the banner. Any other opening, such as a `defaultOpen` banner on page load, leaves focus where it is.
 - Tab and Shift+Tab move into and out of the banner in page order. It doesn't trap focus.
 - Customise moves focus to the first control in `CookieBannerPreferences`, or, if there's none, to the first control in the Customise view's `CookieBannerAction`. It never moves it to the close cross. Back moves it to Customise.
 - Closing it with focus inside moves focus back to the control that opened it, if there is one and it's still on the page. Otherwise focus moves to the next focusable element after the banner: `Skiplink`, when the banner comes first. Closing it with focus elsewhere leaves focus where it is.

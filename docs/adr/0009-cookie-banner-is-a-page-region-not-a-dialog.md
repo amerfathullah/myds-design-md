@@ -11,7 +11,10 @@ CookieBanner came from upstream as a Radix modal dialog with no overlay (#83). W
 ## Consequences
 
 - The page frame starts with CookieBanner while it's shown (CONTEXT.md, DESIGN.md). Coming first in the page is how keyboard and screen-reader users reach it on page load, so opening on load doesn't move focus. When a visitor reopens it from a control in the page, focus moves to the banner.
+- When it closes with focus inside it, focus goes back to the control that reopened it. If nothing reopened it, focus goes to the first focusable element after it, which is SkipLink in the page frame. As a dialog it left focus on `<body>`.
+- It renders nothing on the server, as the dialog's portal did. So a `defaultOpen` read from browser storage, as the docs recommend, doesn't cause a hydration mismatch.
 - Every opening starts in the default view, never the preferences view.
 - The banner no longer blocks the page, so on a small screen it could hide a control that takes focus (WCAG 2.2 SC 2.4.11). While it's shown, the library pads the page's scroll area by the banner's height, so a focused control scrolls into view above it.
 - The `modal` prop does nothing. It's deprecated in 2.x and removed at the next major. Radix's dialog-only props, such as `onInteractOutside` and `onEscapeKeyDown`, used to reach the banner without being typed. They stop working.
 - Tests and CSS that select CookieBanner by `role="dialog"` must select the region instead.
+- The change ships as a minor release. The props and ref types stay compatible, unlike the Footer's landmark fix, which changed them and shipped as a major. The old behaviour was a Divergence from the guideline. The changeset tells authors to render CookieBanner first in `<body>` and to update anything that selects it as a dialog.

@@ -8,9 +8,9 @@ import { s3 } from "@/lib/constant";
 ![table-anatomy.png](/design/table-anatomy.png)
 
 1. **Header**: Title of the column, providing clear context for the data beneath.
-2. **Expand column button**: Initially hidden, this button appears when the user hovers over the entire column. Clicking it expands the column horizontally, revealing longer descriptions for better readability.
+2. **Expand column button**: Always shown in a column that can expand, so keyboard and touch users can reach it too. Clicking it expands the column horizontally, revealing longer descriptions for better readability.
 3. **Tooltip**: Hover on this icon to show tooltips. Useful to explain the role of the table column.
-4. **Sort column button**: Initially hidden, this button appears on hover over the column. Clicking it toggles between ascending and descending order for easy data sorting.
+4. **Sort column button**: Always shown in a column that can be sorted, so keyboard and touch users can reach it too. Clicking it toggles between ascending and descending order for easy data sorting.
 5. **Cell for Text**: Left-aligned by default
 6. **Cell for Button**: Contains action buttons aligned left, allowing users to take specific actions for each row.
 7. **Cell for Status Pill**: Displays a colour-coded status indicator (pill) aligned left, providing a quick visual reference for the status of each row

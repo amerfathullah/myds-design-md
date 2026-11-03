@@ -252,6 +252,8 @@ Anda boleh mengembangkan saiz sel dalam lajur dengan menetapkan sifat `expandabl
 
 Untuk menunjukkan ini, kami telah menetapkan sifat `expandable` kepada `true` untuk lajur `Nama` dan `Jawatan`. Anda boleh mengklik ikon pengembangan untuk melihat kandungan penuh sel.
 
+Butang pengembangan sentiasa dipaparkan pada tajuk lajur, pada setiap lebar skrin, supaya pengguna papan kekunci dan skrin sentuh juga boleh mencapainya. Pembaca skrin menyebutnya sebagai "Widen" diikuti teks yang dipaparkan oleh tajuk lajur, contohnya "Widen Name", atau sebagai "Widen column" jika tajuk tidak memaparkan teks. `aria-pressed` butang itu memberitahu sama ada lajur itu dikembangkan. Tetapkan `widenLabel` dalam objek `meta` yang sama untuk menamakannya dalam bahasa laman anda, contohnya `meta: { expandable: true, widenLabel: "Lebarkan Nama" }`.
+
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose flex flex-col gap-3 items-center">
@@ -455,6 +457,10 @@ Pembaca skrin menyebut pencetus setiap tooltip, iaitu ikon tanda soal, sebagai "
 Anda boleh mengisih data dalam jadual dengan menetapkan sifat `sortable` kepada `true` dalam objek `meta` definisi lajur.
 
 Untuk menunjukkan ini, kami telah menetapkan sifat `sortable` kepada lajur `Jawatan`. Klik ikon pengisihan untuk menukar pengisihan yang tersedia.
+
+Butang pengisihan sentiasa dipaparkan pada tajuk lajur, pada setiap lebar skrin, supaya pengguna papan kekunci dan skrin sentuh juga boleh mencapainya. Ia dipaparkan hanya dalam lajur yang boleh diisih, iaitu lajur yang mempunyai `accessorKey` atau `accessorFn`. Pembaca skrin menyebutnya sebagai "Sort by" diikuti teks yang dipaparkan oleh tajuk lajur, contohnya "Sort by Position", atau sebagai "Sort column" jika tajuk tidak memaparkan teks. Tetapkan `sortLabel` dalam objek `meta` yang sama untuk menamakannya dalam bahasa laman anda, contohnya `meta: { sortable: true, sortLabel: "Isih mengikut Jawatan" }`.
+
+Tajuk lajur yang diisih mempunyai `aria-sort`, `ascending` atau `descending`, supaya pembaca skrin menyebut cara jadual diisih. Apabila Shift+klik mengisih mengikut lebih daripada satu lajur, hanya tajuk lajur pertama yang diisih mempunyainya.
 
 <Tabs items={["Pratonton", "Kod"]}>
  <Tab value="Pratonton">
@@ -1661,6 +1667,18 @@ Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **Colu
         "Nama boleh capai pencetus tooltip, iaitu ikon tanda soal. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
       type: "string",
       default: "Tooltip",
+    },
+    "meta.sortLabel": {
+      description:
+        "Nama boleh capai butang pengisihan lajur. Ia menggantikan seluruh nama lalai, dengan {header} ialah teks yang dipaparkan oleh tajuk. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Sort by {header}",
+    },
+    "meta.widenLabel": {
+      description:
+        "Nama boleh capai butang pengembangan lajur. Ia menggantikan seluruh nama lalai, dengan {header} ialah teks yang dipaparkan oleh tajuk. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+      type: "string",
+      default: "Widen {header}",
     },
   }}
 />

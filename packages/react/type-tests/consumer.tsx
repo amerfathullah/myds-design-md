@@ -75,6 +75,10 @@ import {
   SearchBarResultsList,
   SearchBarSearchButton,
 } from "@amerfathullah/myds-react/search-bar";
+import {
+  SummaryList,
+  SummaryListHeader,
+} from "@amerfathullah/myds-react/summary-list";
 import { TableTooltip } from "@amerfathullah/myds-react/table";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
@@ -91,7 +95,13 @@ import {
   type CellContext,
   type Row,
 } from "@tanstack/react-table";
-import { useRef } from "react";
+import {
+  createRef,
+  useRef,
+  type ComponentProps,
+  type FunctionComponent,
+  type MouseEvent,
+} from "react";
 
 type Employee = {
   id: string;
@@ -703,3 +713,39 @@ export const CookieBannerRegion = () => {
     </>
   );
 };
+
+// SummaryListHeader is an `<h2>` by default, or the heading it's given with
+// `asChild`, and its ref is that heading. Code written for the `<div>` its
+// props used to be typed as still compiles: a `<div>` ref, a `<div>` event
+// handler, spread `<div>` props, and its old component type.
+export const SummaryListTitle = () => {
+  const heading = useRef<HTMLHeadingElement>(null);
+  const div = createRef<HTMLDivElement>();
+  return (
+    <SummaryList>
+      <SummaryListHeader>Permohonan</SummaryListHeader>
+      <SummaryListHeader asChild>
+        <h3>Permohonan</h3>
+      </SummaryListHeader>
+      <SummaryListHeader ref={heading}>Permohonan</SummaryListHeader>
+      <SummaryListHeader ref={div}>Permohonan</SummaryListHeader>
+      <SummaryListHeader
+        onClick={(event: MouseEvent<HTMLDivElement>) => event.preventDefault()}
+      >
+        Permohonan
+      </SummaryListHeader>
+      {/* @ts-expect-error `asChild` is the one way to choose its element */}
+      <SummaryListHeader as="h3">Permohonan</SummaryListHeader>
+      {/* @ts-expect-error `asChild` is the one way to choose its element */}
+      <SummaryListHeader level={3}>Permohonan</SummaryListHeader>
+    </SummaryList>
+  );
+};
+
+export const SummaryListTitleFromDivProps = (props: ComponentProps<"div">) => (
+  <SummaryListHeader {...props} />
+);
+
+export const SummaryListTitleAsDivComponent: FunctionComponent<
+  ComponentProps<"div">
+> = SummaryListHeader;

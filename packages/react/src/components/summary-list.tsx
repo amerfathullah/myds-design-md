@@ -1,4 +1,12 @@
-import { ComponentProps, FunctionComponent } from "react";
+import {
+  ComponentProps,
+  ComponentPropsWithoutRef,
+  forwardRef,
+  ForwardRefExoticComponent,
+  FunctionComponent,
+  RefAttributes,
+} from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { clx } from "../utils";
 
 const SummaryList: FunctionComponent<ComponentProps<"div">> = ({
@@ -11,21 +19,29 @@ const SummaryList: FunctionComponent<ComponentProps<"div">> = ({
   </div>
 );
 
-const SummaryListHeader: FunctionComponent<ComponentProps<"div">> = ({
-  children,
-  className,
-  ...props
-}) => (
-  <h1
-    className={clx(
-      "text-txt-black-900 text-xl font-semibold leading-[30px]",
-      className,
-    )}
-    {...props}
-  >
-    {children}
-  </h1>
-);
+/**
+ * The list's title: an `<h2>` by default. With `asChild`, it renders its one
+ * child in its place, so you can give it the heading level your page needs,
+ * e.g. an `<h3>` under an `<h2>` section.
+ */
+const SummaryListHeader: ForwardRefExoticComponent<
+  ComponentPropsWithoutRef<"h2"> & {
+    asChild?: boolean;
+  } & RefAttributes<HTMLHeadingElement>
+> = forwardRef(({ className, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : "h2";
+  return (
+    <Comp
+      ref={ref}
+      className={clx(
+        "text-txt-black-900 text-xl font-semibold leading-[30px]",
+        className,
+      )}
+      {...props}
+    />
+  );
+});
+SummaryListHeader.displayName = "SummaryListHeader";
 
 const SummaryListBody: FunctionComponent<ComponentProps<"table">> = ({
   children,

@@ -165,7 +165,7 @@ export default () => (
 
 ## 1. SummaryListHeader
 
-`SummaryListHeader` digunakan untuk memaparkan tajuk senarai ringkasan.
+`SummaryListHeader` digunakan untuk memaparkan tajuk senarai ringkasan. Ia memaparkan `<h2>` secara lalai.
 
 **Contoh**:
 
@@ -180,6 +180,34 @@ export default () => (
     ```
   </Tab>
 </Tabs>
+
+Untuk memberi tajuk itu aras tajuk yang diperlukan oleh halaman anda, hantar `asChild` dan tajuk anda sendiri. Tajuk anda mengambil tempat header, bersama kelas dan ref-nya. Contohnya, gunakan `<h3>` untuk senarai ringkasan dalam bahagian `<h2>`:
+
+**Contoh**:
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview">
+    <SummaryListHeader asChild>
+      <h3>Applicant Details</h3>
+    </SummaryListHeader>
+  </Tab>
+
+  <Tab value="Code">
+    ```tsx
+    <section>
+      <h2>Government Subsidy Application</h2>
+      <SummaryList>
+        <SummaryListHeader asChild>
+          <h3>Applicant Details</h3>
+        </SummaryListHeader>
+        <SummaryListBody>{/* … */}</SummaryListBody>
+      </SummaryList>
+    </section>
+    ```
+  </Tab>
+</Tabs>
+
+Untuk menggayakan semula tajuk, hantar `className` kepada `SummaryListHeader`, bukan kepada tajuk anda. Header menggabungkan kelas anda dengan kelasnya sendiri, jadi kelas anda yang bercanggah dengan kelasnya diutamakan: contohnya, `text-body-lg` menggantikan kedua-dua `text-xl` dan `leading-[30px]`, jadi tajuk mengambil ketinggian baris body-lg sendiri. Dengan `asChild`, kelas pada tajuk anda ditambah selepas kelas header tanpa penggabungan itu, jadi kelas yang bercanggah di situ mungkin tidak diutamakan.
 
 ## 2. SummaryListBody
 
@@ -358,6 +386,12 @@ export default () => (
 
 <TypeTable
   type={{
+    asChild: {
+      description:
+        "Jika `true`, memaparkan satu-satunya anaknya, seperti `<h3>`, sebagai ganti `<h2>`.",
+      type: "boolean",
+      default: "false",
+    },
     className: {
       description: "Gaya tambahan untuk header.",
       type: "string",

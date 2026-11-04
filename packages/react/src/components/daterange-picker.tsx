@@ -3,6 +3,7 @@ import { DateAfter, DateBefore, DateRange, Matcher } from "react-day-picker";
 import { enGB, ms } from "react-day-picker/locale";
 import { format } from "date-fns";
 import { useControllableState } from "../hooks";
+import { useTriggerNames } from "../hooks/use-trigger-names";
 import { Button, button_cva } from "./button";
 import { Calendar } from "./calendar";
 import { Dialog, DialogBody, DialogContent, DialogTrigger } from "./dialog";
@@ -38,7 +39,31 @@ export type DateRangePickerProps = {
   size?: VariantProps<typeof button_cva>["size"];
   toLabel?: string;
   yearOrder?: "asc" | "desc";
+  /**
+   * The id of the field's visible label, such as a Label's `id`. Every
+   * trigger is named by it, followed by what the trigger shows, e.g. "Travel
+   * dates From: 12 Mar 2024". A Label's `htmlFor` can't name the picker, so
+   * use this.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * Accessible name of the picker, when no visible label names it. Every
+   * trigger is named by it, followed by what the trigger shows, e.g. "Tarikh
+   * perjalanan Dari: 12 Mac 2024". Screen readers announce it; it isn't
+   * shown. Set it in your site's language. `aria-labelledby` wins if you pass
+   * both.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of an element whose text describes the picker, such as a hint
+   * under its label. Every trigger takes it.
+   */
+  "aria-describedby"?: string;
 };
+
+// The triggers DateRangePicker renders: a dialog's and a popover's for each
+// end of the range
+type Trigger = "dialog-from" | "dialog-to" | "popover-from" | "popover-to";
 
 /**
  * The DateRangePicker component allows users to select a range of dates from an interactive calendar.
@@ -55,6 +80,9 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
   value,
   size,
   toLabel,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
   ...props
 }) => {
   const [selectedDateRange, setSelectedDateRange] = useControllableState({
@@ -62,6 +90,14 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
     onChange: onValueChange,
     defaultProp: defaultValue,
   });
+
+  const names = useTriggerNames(ariaLabelledBy, ariaLabel);
+  // The ids of the elements in each trigger that hold its prefix and its date
+  const prefixId = (trigger: Trigger) => `${names.id}${trigger}-prefix`;
+  const dateId = (trigger: Trigger) => `${names.id}${trigger}-date`;
+  // A trigger's `aria-labelledby`: the label, then its prefix and date
+  const labelledBy = (trigger: Trigger) =>
+    names.labelledBy(prefixId(trigger), dateId(trigger));
 
   const isMS = locale === "ms";
   const _locale = isMS ? ms : enGB;
@@ -81,6 +117,8 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
 
   return (
     <>
+      {names.hiddenLabel}
+
       {/* Mobile */}
       <div className="text-txt-black-900 flex items-center gap-1.5 lg:hidden">
         <Dialog>
@@ -89,13 +127,17 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              aria-labelledby={labelledBy("dialog-from")}
+              aria-describedby={ariaDescribedBy}
             >
-              <span className="text-txt-black-500">
+              <span id={prefixId("dialog-from")} className="text-txt-black-500">
                 {fromLabel ? fromLabel : isMS ? "Dari:" : "From:"}
               </span>
-              {selectedDateRange?.from
-                ? formatDate(selectedDateRange.from)
-                : placeholder}
+              <span id={dateId("dialog-from")}>
+                {selectedDateRange?.from
+                  ? formatDate(selectedDateRange.from)
+                  : placeholder}
+              </span>
             </Button>
           </DialogTrigger>
           <DialogBody className="w-fit min-w-fit" hideClose>
@@ -132,13 +174,17 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              aria-labelledby={labelledBy("dialog-to")}
+              aria-describedby={ariaDescribedBy}
             >
-              <span className="text-txt-black-500">
+              <span id={prefixId("dialog-to")} className="text-txt-black-500">
                 {toLabel ? toLabel : isMS ? "Hingga:" : "To:"}
               </span>
-              {selectedDateRange?.to
-                ? formatDate(selectedDateRange.to)
-                : placeholder}
+              <span id={dateId("dialog-to")}>
+                {selectedDateRange?.to
+                  ? formatDate(selectedDateRange.to)
+                  : placeholder}
+              </span>
             </Button>
           </DialogTrigger>
           <DialogBody className="w-fit min-w-fit" hideClose>
@@ -175,13 +221,20 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              aria-labelledby={labelledBy("popover-from")}
+              aria-describedby={ariaDescribedBy}
             >
-              <span className="text-txt-black-500">
+              <span
+                id={prefixId("popover-from")}
+                className="text-txt-black-500"
+              >
                 {fromLabel ? fromLabel : isMS ? "Dari:" : "From:"}
               </span>
-              {selectedDateRange?.from
-                ? formatDate(selectedDateRange.from)
-                : placeholder}
+              <span id={dateId("popover-from")}>
+                {selectedDateRange?.from
+                  ? formatDate(selectedDateRange.from)
+                  : placeholder}
+              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[304px] p-0" align="start">
@@ -216,13 +269,17 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              aria-labelledby={labelledBy("popover-to")}
+              aria-describedby={ariaDescribedBy}
             >
-              <span className="text-txt-black-500">
+              <span id={prefixId("popover-to")} className="text-txt-black-500">
                 {toLabel ? toLabel : isMS ? "Hingga:" : "To:"}
               </span>
-              {selectedDateRange?.to
-                ? formatDate(selectedDateRange.to)
-                : placeholder}
+              <span id={dateId("popover-to")}>
+                {selectedDateRange?.to
+                  ? formatDate(selectedDateRange.to)
+                  : placeholder}
+              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[304px] p-0" align="end">

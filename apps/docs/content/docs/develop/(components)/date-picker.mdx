@@ -4,7 +4,7 @@ description: Allows users to select a date from an interactive calendar.
 ---
 
 import { Quicklinks } from "@/components/quicklinks";
-import { DatePicker, CustomDisableDatePicker } from "@/components/myds";
+import { DatePicker, CustomDisableDatePicker, Label } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
@@ -12,11 +12,19 @@ export const NOW = new Date();
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
-    <DatePicker />
+    <div className="flex flex-col gap-2">
+      <Label id="date-of-birth" size="small">
+        Date of birth
+      </Label>
+      <DatePicker aria-labelledby="date-of-birth" />
+    </div>
   </Tab>
   <Tab value="Code">
     ```tsx
-    <DatePicker />
+    <Label id="date-of-birth" size="small">
+      Date of birth
+    </Label>
+    <DatePicker aria-labelledby="date-of-birth" />
     ```
   </Tab>
 </Tabs>
@@ -34,11 +42,25 @@ export const NOW = new Date();
 
 ```ts copy title="Import"
 import { DatePicker } from "@amerfathullah/myds-react/date-picker";
+import { Label } from "@amerfathullah/myds-react/label";
 ```
 
 ```tsx copy title="Anatomy"
-export default () => <DatePicker />;
+export default () => (
+  <>
+    <Label id="date-of-birth" size="small">
+      Date of birth
+    </Label>
+    <DatePicker aria-labelledby="date-of-birth" />
+  </>
+);
 ```
+
+Name each date picker. Give a `Label` an `id`, and pass the same id to the picker's `aria-labelledby`, as above. Screen readers then announce the picker's button by the label's text, then the date it shows: "Date of birth 12 Mar 2024", or "Date of birth dd / mm / yyyy" before a date is chosen.
+
+Unlike the date field, a `Label`'s `htmlFor` doesn't work here: the date picker takes no `id`, and a `Label` whose `htmlFor` matches nothing names nothing, with no error. Clicking the `Label` doesn't open the picker either.
+
+If no visible label names the picker, pass an `aria-label` to name it in your site's language, for example `<DatePicker locale="ms" aria-label="Tarikh lahir" />`. Screen readers announce it, then the date. If you pass both, `aria-labelledby` wins. To describe the picker, for example with a hint under its label, pass the hint's id as `aria-describedby`.
 
 ## Examples
 
@@ -318,6 +340,21 @@ Default value is English `en`. To switch to Bahasa Melayu, pass `ms`.
         "Accessible name of the calendar's next button in its month view, which goes forward a year. Screen readers announce it; it is not shown.",
       type: "string",
       default: "Go to the Next Year",
+    },
+    "aria-labelledby": {
+      description:
+        "The id of the `Label`, or other element, whose text names the date picker. Screen readers announce that text, then the date the picker shows. A `Label`'s `htmlFor` doesn't name the picker.",
+      type: "string",
+    },
+    "aria-label": {
+      description:
+        "Accessible name of the date picker, when no visible label names it. Screen readers announce it, then the date the picker shows; it is not shown. There is no default name.",
+      type: "string",
+    },
+    "aria-describedby": {
+      description:
+        "The id of an element whose text describes the date picker, such as a hint.",
+      type: "string",
     },
   }}
 />

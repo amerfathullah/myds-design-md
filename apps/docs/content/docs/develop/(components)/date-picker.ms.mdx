@@ -4,7 +4,7 @@ description: Membolehkan pengguna memilih tarikh dari kalendar interaktif.
 ---
 
 import { Quicklinks } from "@/components/quicklinks";
-import { DatePicker, CustomDisableDatePicker } from "@/components/myds";
+import { DatePicker, CustomDisableDatePicker, Label } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
@@ -12,11 +12,19 @@ export const NOW = new Date();
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
-    <DatePicker />
+    <div className="flex flex-col gap-2">
+      <Label id="tarikh-lahir" size="small">
+        Tarikh lahir
+      </Label>
+      <DatePicker locale="ms" aria-labelledby="tarikh-lahir" />
+    </div>
   </Tab>
   <Tab value="Kod">
     ```tsx
-    <DatePicker />
+    <Label id="tarikh-lahir" size="small">
+      Tarikh lahir
+    </Label>
+    <DatePicker locale="ms" aria-labelledby="tarikh-lahir" />
     ```
   </Tab>
 </Tabs>
@@ -34,11 +42,25 @@ export const NOW = new Date();
 
 ```ts copy title="Import"
 import { DatePicker } from "@amerfathullah/myds-react/date-picker";
+import { Label } from "@amerfathullah/myds-react/label";
 ```
 
 ```tsx copy title="Anatomi"
-export default () => <DatePicker />;
+export default () => (
+  <>
+    <Label id="tarikh-lahir" size="small">
+      Tarikh lahir
+    </Label>
+    <DatePicker locale="ms" aria-labelledby="tarikh-lahir" />
+  </>
+);
 ```
+
+Namakan setiap pemilih tarikh. Berikan `id` kepada `Label`, dan hantar id yang sama kepada `aria-labelledby` pada pemilih, seperti di atas. Pembaca skrin kemudian menyebut butang pemilih dengan teks label, diikuti tarikh yang dipaparkannya: "Tarikh lahir 12 Mac 2024", atau "Tarikh lahir dd / mm / yyyy" sebelum tarikh dipilih.
+
+Tidak seperti medan tarikh, `htmlFor` pada `Label` tidak berfungsi di sini: pemilih tarikh tidak menerima `id`, dan `Label` yang `htmlFor`nya tidak sepadan dengan apa-apa tidak menamakan apa-apa, tanpa sebarang ralat. Mengklik `Label` juga tidak membuka pemilih.
+
+Jika tiada label yang kelihatan menamakan pemilih, hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<DatePicker locale="ms" aria-label="Tarikh lahir" />`. Pembaca skrin menyebutnya, diikuti tarikh. Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan. Untuk menerangkan pemilih, contohnya dengan petunjuk di bawah labelnya, hantar id petunjuk itu sebagai `aria-describedby`.
 
 ## Contoh
 
@@ -316,6 +338,21 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
         "Nama boleh capai butang seterusnya dalam paparan bulan kalendar, yang maju setahun. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
       type: "string",
       default: "Go to the Next Year",
+    },
+    "aria-labelledby": {
+      description:
+        "Id `Label`, atau elemen lain, yang teksnya menamakan pemilih tarikh. Pembaca skrin menyebut teks itu, diikuti tarikh yang dipaparkan pemilih. `htmlFor` pada `Label` tidak menamakan pemilih.",
+      type: "string",
+    },
+    "aria-label": {
+      description:
+        "Nama boleh capai pemilih tarikh, apabila tiada label yang kelihatan menamakannya. Pembaca skrin menyebutnya, diikuti tarikh yang dipaparkan pemilih; ia tidak dipaparkan. Tiada nama lalai.",
+      type: "string",
+    },
+    "aria-describedby": {
+      description:
+        "Id elemen yang teksnya menerangkan pemilih tarikh, seperti petunjuk.",
+      type: "string",
     },
   }}
 />

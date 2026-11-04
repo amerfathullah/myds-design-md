@@ -1,6 +1,8 @@
+import { useId, type ComponentProps } from "react";
 import { DatePicker } from "@amerfathullah/myds-react/date-picker";
+import { Label } from "@amerfathullah/myds-react/label";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { createStory } from "../utils";
+import { createRender, createStory } from "../utils";
 import { fn } from "storybook/test";
 
 /**
@@ -8,19 +10,33 @@ import { fn } from "storybook/test";
  * The Date Picker component allows users to select a date from an interactive calendar.
  *
  * ### Usage
- * ```ts
+ * ```tsx
  * import * as React from "react"
- * import DatePicker from "@amerfathullah/myds-react/date-picker";
+ * import { DatePicker } from "@amerfathullah/myds-react/date-picker";
+ * import { Label } from "@amerfathullah/myds-react/label";
  *
  * export function DatePickerDemo() {
  *    const [date, setDate] = React.useState<Date>();
  *
  *    return (
- *      <DatePicker value={date} onValueChange={setDate} />
+ *      <>
+ *        <Label id="date-of-birth">Date of birth</Label>
+ *        <DatePicker
+ *          aria-labelledby="date-of-birth"
+ *          value={date}
+ *          onValueChange={setDate}
+ *        />
+ *      </>
  *    )
  * }
- *
  * ```
+ *
+ * ### Naming
+ * Name each date picker with a `Label`: give the `Label` an `id`, and pass the same id to the picker's `aria-labelledby`.
+ * A `Label`'s `htmlFor` doesn't work, because the picker takes no `id`, and clicking the `Label` doesn't open the picker.
+ * Screen readers announce the label, then the date the picker shows, e.g. "Date of birth 31 Aug 1957".
+ * If no visible label names the picker, pass an `aria-label`, e.g. `<DatePicker locale="ms" aria-label="Tarikh lahir" />`.
+ * Pass a hint's id as `aria-describedby`.
  */
 const meta = {
   title: "@amerfathullah/myds-react/DatePicker",
@@ -119,6 +135,18 @@ const meta = {
       control: "inline-radio",
       options: ["asc", "desc"],
     },
+    "aria-labelledby": {
+      description:
+        "The id of the `Label` whose text names the date picker. Screen readers announce it, then the date the picker shows.",
+    },
+    "aria-label": {
+      description:
+        "Accessible name of the date picker, when no visible label names it. Screen readers announce it, then the date the picker shows.",
+    },
+    "aria-describedby": {
+      description:
+        "The id of an element whose text describes the date picker, such as a hint.",
+    },
   },
 } satisfies Meta<typeof DatePicker>;
 
@@ -131,3 +159,27 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = createStory({
   defaultValue: new Date(1957, 7, 31),
 });
+
+// A Label names the date picker through `aria-labelledby`. useId gives the
+// Label its own id, which doesn't repeat when the docs page shows the story
+// twice.
+const Labelled = (args: ComponentProps<typeof DatePicker>) => {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-2">
+      <Label id={id} size="small">
+        Date of birth
+      </Label>
+      <DatePicker
+        defaultValue={new Date(1957, 7, 31)}
+        {...args}
+        aria-labelledby={id}
+      />
+    </div>
+  );
+};
+
+/**
+ * A DatePicker named by a Label: screen readers announce "Date of birth 31 Aug 1957"
+ */
+export const LabelledByLabel: Story = createRender(Labelled);

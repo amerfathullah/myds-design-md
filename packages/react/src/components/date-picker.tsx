@@ -3,6 +3,7 @@ import { Matcher } from "react-day-picker";
 import { enGB, ms } from "react-day-picker/locale";
 import { format } from "date-fns";
 import { useControllableState } from "../hooks";
+import { useTriggerNames } from "../hooks/use-trigger-names";
 import { CalendarIcon } from "../icons/calendar";
 import { Button, button_cva, ButtonIcon } from "./button";
 import { Calendar } from "./calendar";
@@ -37,6 +38,25 @@ type DatePickerProps = {
   onValueChange?: (date: Date) => void;
   size?: VariantProps<typeof button_cva>["size"];
   yearOrder?: "asc" | "desc";
+  /**
+   * The id of the field's visible label, such as a Label's `id`. Every
+   * trigger is named by it, followed by what the trigger shows, e.g. "Date of
+   * birth 12 Mar 2024". A Label's `htmlFor` can't name the picker, so use
+   * this.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * Accessible name of the picker, when no visible label names it. Every
+   * trigger is named by it, followed by what the trigger shows, e.g. "Tarikh
+   * lahir 12 Mac 2024". Screen readers announce it; it isn't shown. Set it in
+   * your site's language. `aria-labelledby` wins if you pass both.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of an element whose text describes the picker, such as a hint
+   * under its label. Every trigger takes it.
+   */
+  "aria-describedby"?: string;
 };
 
 /**
@@ -53,6 +73,9 @@ const DatePicker: FC<DatePickerProps> = ({
   placeholder = "dd / mm / yyyy",
   value,
   size,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
   ...props
 }) => {
   const [date, setDate] = useControllableState({
@@ -60,6 +83,14 @@ const DatePicker: FC<DatePickerProps> = ({
     onChange: onValueChange,
     defaultProp: defaultValue,
   });
+
+  const { id, hiddenLabel, labelledBy } = useTriggerNames(
+    ariaLabelledBy,
+    ariaLabel,
+  );
+  // The id of the element in each trigger that holds its text
+  const dialogTextId = `${id}dialog-text`;
+  const popoverTextId = `${id}popover-text`;
 
   const _locale = locale === "en" ? enGB : ms;
   const formatDate = (date: Date) =>
@@ -69,6 +100,8 @@ const DatePicker: FC<DatePickerProps> = ({
 
   return (
     <>
+      {hiddenLabel}
+
       {/* Mobile */}
       <Dialog>
         <DialogTrigger asChild>
@@ -77,9 +110,13 @@ const DatePicker: FC<DatePickerProps> = ({
             size={size}
             className="flex lg:hidden"
             disabled={disabled === true}
+            aria-labelledby={labelledBy(dialogTextId)}
+            aria-describedby={ariaDescribedBy}
           >
             <ButtonIcon>{icon ?? <CalendarIcon />}</ButtonIcon>
-            {date ? formatDate(date) : placeholder}
+            <span id={dialogTextId}>
+              {date ? formatDate(date) : placeholder}
+            </span>
           </Button>
         </DialogTrigger>
         <DialogBody hideClose className="sm:w-fit">
@@ -106,9 +143,13 @@ const DatePicker: FC<DatePickerProps> = ({
             size={size}
             className="hidden lg:flex"
             disabled={disabled === true}
+            aria-labelledby={labelledBy(popoverTextId)}
+            aria-describedby={ariaDescribedBy}
           >
             <ButtonIcon>{icon ?? <CalendarIcon />}</ButtonIcon>
-            {date ? formatDate(date) : placeholder}
+            <span id={popoverTextId}>
+              {date ? formatDate(date) : placeholder}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[304px] p-0" align="start">

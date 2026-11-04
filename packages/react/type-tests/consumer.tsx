@@ -31,6 +31,7 @@ import { DatePicker } from "@amerfathullah/myds-react/date-picker";
 import {
   DateRangePicker,
   type DateRange,
+  type DateRangePickerProps,
 } from "@amerfathullah/myds-react/daterange-picker";
 import {
   Dialog,
@@ -496,6 +497,45 @@ export const CalendarLabels = () => (
     <DatePicker previousYearLabel={1} />
     {/* @ts-expect-error `nextYearLabel` is a string */}
     <DateRangePicker nextYearLabel={1} />
+  </>
+);
+
+// The date pickers' triggers take their names from `aria-labelledby`, the id
+// of a Label, or from `aria-label`, and take `aria-describedby`. The pickers
+// take no `id`, so a Label's `htmlFor` can't name them (ADR-0011).
+const rangeNames: DateRangePickerProps = {
+  "aria-labelledby": "travel",
+  "aria-label": "Tarikh perjalanan",
+  "aria-describedby": "travel-hint",
+};
+
+export const DatePickerNames = () => (
+  <>
+    <Label id="dob">Date of birth</Label>
+    <p id="dob-hint">No earlier than 1 January 1950</p>
+    <DatePicker aria-labelledby="dob" aria-describedby="dob-hint" />
+    <DatePicker locale="ms" aria-label="Tarikh lahir" />
+    <Label id="travel">Travel dates</Label>
+    <p id="travel-hint">Up to 30 days</p>
+    <DateRangePicker aria-labelledby="travel" aria-describedby="travel-hint" />
+    <DateRangePicker locale="ms" aria-label="Tarikh perjalanan" />
+    <DateRangePicker {...rangeNames} />
+    {/* @ts-expect-error the pickers take no `id` */}
+    <DatePicker id="dob" />
+    {/* @ts-expect-error the pickers take no `id` */}
+    <DateRangePicker id="travel" />
+    {/* @ts-expect-error `aria-labelledby` is a string */}
+    <DatePicker aria-labelledby={1} />
+    {/* @ts-expect-error `aria-label` is a string */}
+    <DatePicker aria-label={1} />
+    {/* @ts-expect-error `aria-describedby` is a string */}
+    <DatePicker aria-describedby={1} />
+    {/* @ts-expect-error `aria-labelledby` is a string */}
+    <DateRangePicker aria-labelledby={1} />
+    {/* @ts-expect-error `aria-label` is a string */}
+    <DateRangePicker aria-label={1} />
+    {/* @ts-expect-error `aria-describedby` is a string */}
+    <DateRangePicker aria-describedby={1} />
   </>
 );
 

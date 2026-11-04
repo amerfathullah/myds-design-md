@@ -8,6 +8,7 @@ import {
   DatePicker,
   DateRangePicker,
   CustomDisableDateRangePicker,
+  Label,
   NOW,
   YESTERDAY,
   TOMORROW,
@@ -19,11 +20,19 @@ export const DEFAULT_DATERANGE = { from: YESTERDAY, to: TOMORROW };
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
-    <DateRangePicker />
+    <div className="flex flex-col gap-2">
+      <Label id="tarikh-perjalanan" size="small">
+        Tarikh perjalanan
+      </Label>
+      <DateRangePicker locale="ms" aria-labelledby="tarikh-perjalanan" />
+    </div>
   </Tab>
   <Tab value="Kod">
     ```tsx
-    <DateRangePicker />
+    <Label id="tarikh-perjalanan" size="small">
+      Tarikh perjalanan
+    </Label>
+    <DateRangePicker locale="ms" aria-labelledby="tarikh-perjalanan" />
     ```
   </Tab>
 </Tabs>
@@ -40,12 +49,26 @@ export const DEFAULT_DATERANGE = { from: YESTERDAY, to: TOMORROW };
 ## Penggunaan
 
 ```ts copy title="Import"
-import { DateRangePicker } from "@amerfathullah/myds-react/date-picker";
+import { DateRangePicker } from "@amerfathullah/myds-react/daterange-picker";
+import { Label } from "@amerfathullah/myds-react/label";
 ```
 
 ```tsx copy title="Anatomi"
-export default () => <DateRangePicker />;
+export default () => (
+  <>
+    <Label id="tarikh-perjalanan" size="small">
+      Tarikh perjalanan
+    </Label>
+    <DateRangePicker locale="ms" aria-labelledby="tarikh-perjalanan" />
+  </>
+);
 ```
+
+Namakan setiap pemilih julat tarikh. Berikan `id` kepada `Label`, dan hantar id yang sama kepada `aria-labelledby` pada pemilih, seperti di atas. Pembaca skrin kemudian menyebut setiap satu daripada dua butangnya dengan teks label, diikuti awalan dan tarikh yang dipaparkan butang itu: "Tarikh perjalanan Dari: 12 Mac 2024" dan "Tarikh perjalanan Hingga: 20 Mac 2024", atau "Tarikh perjalanan Dari: dd / mm / yyyy" sebelum tarikh dipilih. Awalan membezakan kedua-dua butang: "Dari:" dan "Hingga:" dengan `locale="ms"`, "From:" dan "To:" tanpanya, atau `fromLabel` dan `toLabel` anda sendiri.
+
+Tidak seperti medan tarikh, `htmlFor` pada `Label` tidak berfungsi di sini: pemilih julat tarikh tidak menerima `id`, dan `Label` yang `htmlFor`nya tidak sepadan dengan apa-apa tidak menamakan apa-apa, tanpa sebarang ralat. Mengklik `Label` juga tidak membuka pemilih.
+
+Jika tiada label yang kelihatan menamakan pemilih, hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<DateRangePicker locale="ms" aria-label="Tarikh perjalanan" />`. Pembaca skrin menyebutnya, diikuti awalan dan tarikh setiap butang: "Tarikh perjalanan Dari: 12 Mac 2024". Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan. Untuk menerangkan pemilih, contohnya dengan petunjuk di bawah labelnya, hantar id petunjuk itu sebagai `aria-describedby`.
 
 ## Contoh
 
@@ -336,6 +359,33 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
         "Nama boleh capai butang seterusnya dalam paparan bulan kedua-dua kalendar, yang maju setahun. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
       type: "string",
       default: "Go to the Next Year",
+    },
+    fromLabel: {
+      description:
+        'Teks sebelum tarikh mula pada butangnya, yang disebut oleh pembaca skrin bersama tarikh. Tetapkan dalam bahasa laman anda, dan akhiri dengan titik bertindih, contohnya `fromLabel="Mula:"`.',
+      type: "string",
+      default: 'From: (Dari: dengan locale="ms")',
+    },
+    toLabel: {
+      description:
+        'Teks sebelum tarikh akhir pada butangnya, yang disebut oleh pembaca skrin bersama tarikh. Tetapkan dalam bahasa laman anda, dan akhiri dengan titik bertindih, contohnya `toLabel="Tamat:"`.',
+      type: "string",
+      default: 'To: (Hingga: dengan locale="ms")',
+    },
+    "aria-labelledby": {
+      description:
+        "Id `Label`, atau elemen lain, yang teksnya menamakan pemilih julat tarikh. Pembaca skrin menyebut teks itu, diikuti awalan dan tarikh setiap butang. `htmlFor` pada `Label` tidak menamakan pemilih.",
+      type: "string",
+    },
+    "aria-label": {
+      description:
+        "Nama boleh capai pemilih julat tarikh, apabila tiada label yang kelihatan menamakannya. Pembaca skrin menyebutnya, diikuti awalan dan tarikh setiap butang; ia tidak dipaparkan. Tiada nama lalai.",
+      type: "string",
+    },
+    "aria-describedby": {
+      description:
+        "Id elemen yang teksnya menerangkan pemilih julat tarikh, seperti petunjuk.",
+      type: "string",
     },
   }}
 />

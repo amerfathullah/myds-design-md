@@ -1,5 +1,10 @@
 // @vitest-environment happy-dom
-import { act, createElement, type ReactElement } from "react";
+import {
+  act,
+  createElement,
+  type ComponentProps,
+  type ReactElement,
+} from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -36,6 +41,31 @@ async function mount(element: ReactElement) {
   };
 }
 
+// Puts `tree`'s server-rendered HTML in a container on the page, as a server
+// sends it, and returns the container
+function serverRender(tree: ReactElement) {
+  const container = document.body.appendChild(document.createElement("div"));
+  container.innerHTML = renderToString(tree);
+  unmounts.push(async () => container.remove());
+  return container;
+}
+
+// Hydrates the server HTML in `container` with `tree`, as the browser does,
+// and returns the errors React recovered from, such as a hydration mismatch
+async function hydrate(container: HTMLElement, tree: ReactElement) {
+  const recoverable: unknown[] = [];
+  let root: ReturnType<typeof hydrateRoot> | undefined;
+  await act(async () => {
+    root = hydrateRoot(container, tree, {
+      onRecoverableError: (error) => void recoverable.push(error),
+    });
+  });
+  unmounts.push(async () => {
+    await act(async () => root?.unmount());
+  });
+  return recoverable;
+}
+
 const consoleMethods = ["error", "warn", "log", "info"] as const;
 
 beforeEach(() => {
@@ -70,7 +100,7 @@ const searchBar = (
 ): ReactElement =>
   createElement(
     SearchBar,
-    { "data-bar": name } as object,
+    { "data-bar": name } as ComponentProps<typeof SearchBar>,
     createElement(
       SearchBarInputContainer,
       null,
@@ -188,7 +218,7 @@ describe("an id on SearchBarResults", () => {
   test("is let go when the results panel unmounts", async () => {
     const withoutResults = createElement(
       SearchBar,
-      { "data-bar": "header" } as object,
+      { "data-bar": "header" } as ComponentProps<typeof SearchBar>,
       createElement(SearchBarInput, { value: "", onValueChange: () => {} }),
     );
     const { container, rerender } = await mount(
@@ -236,25 +266,17 @@ describe("the input", () => {
 
 describe("server rendering", () => {
   test("wires each input to its own panel in the server HTML", () => {
-    const container = document.createElement("div");
-    container.innerHTML = renderToString(page());
-    document.body.append(container);
-    try {
-      expect(duplicateIds(container)).toEqual([]);
-      for (const name of ["header", "main"]) {
-        const { input, panel } = parts(container, name);
-        expect(controlled(input)).toBe(panel);
-      }
-    } finally {
-      container.remove();
+    const container = serverRender(page());
+    expect(duplicateIds(container)).toEqual([]);
+    for (const name of ["header", "main"]) {
+      const { input, panel } = parts(container, name);
+      expect(controlled(input)).toBe(panel);
     }
   });
 
   test("server HTML hydrates without a warning, and keeps its wiring", async () => {
     const tree = page();
-    const container = document.createElement("div");
-    container.innerHTML = renderToString(tree);
-    document.body.append(container);
+    const container = serverRender(tree);
     // Each bar's wiring as the server rendered it. cmdk selects an item after
     // mounting, so the rest of the markup changes.
     const wiring = () =>
@@ -263,18 +285,7 @@ describe("server rendering", () => {
         return [input.getAttribute("aria-controls"), panel.id];
       });
     const serverWiring = wiring();
-    const recoverable: unknown[] = [];
-    let root: ReturnType<typeof hydrateRoot> | undefined;
-    await act(async () => {
-      root = hydrateRoot(container, tree, {
-        onRecoverableError: (error) => void recoverable.push(error),
-      });
-    });
-    unmounts.push(async () => {
-      await act(async () => root?.unmount());
-      container.remove();
-    });
-    expect(recoverable).toEqual([]);
+    expect(await hydrate(container, tree)).toEqual([]);
     expect(wiring()).toEqual(serverWiring);
     for (const name of ["header", "main"]) {
       const { input, panel } = parts(container, name);
@@ -284,21 +295,8 @@ describe("server rendering", () => {
 
   test("an id on SearchBarResults hydrates without a warning, and the input follows it", async () => {
     const tree = page({ results: { id: "x" } });
-    const container = document.createElement("div");
-    container.innerHTML = renderToString(tree);
-    document.body.append(container);
-    const recoverable: unknown[] = [];
-    let root: ReturnType<typeof hydrateRoot> | undefined;
-    await act(async () => {
-      root = hydrateRoot(container, tree, {
-        onRecoverableError: (error) => void recoverable.push(error),
-      });
-    });
-    unmounts.push(async () => {
-      await act(async () => root?.unmount());
-      container.remove();
-    });
-    expect(recoverable).toEqual([]);
+    const container = serverRender(tree);
+    expect(await hydrate(container, tree)).toEqual([]);
     const { input, panel } = parts(container, "header");
     expect(panel.id).toBe("x");
     expect(input.getAttribute("aria-controls")).toBe("x");

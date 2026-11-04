@@ -192,6 +192,45 @@ export const SummaryListCustomDark: Story = {
   ),
 };
 
+/**
+ * `SummaryListHeader` is an `<h2>` by default. With `asChild` it renders your
+ * own heading in its place, of the level your page needs: here an `<h3>`, for
+ * a summary list in an `<h2>` section.
+ */
+export const SummaryListHeaderAsChild: Story = {
+  ...createStory({}),
+  render: () => (
+    <section className="w-[660px] space-y-6">
+      <h2 className="text-txt-black-900 font-heading text-heading-sm font-semibold">
+        Government Subsidy Application
+      </h2>
+      <SummaryList>
+        <SummaryListHeader asChild>
+          <h3>Applicant Details</h3>
+        </SummaryListHeader>
+
+        <SummaryListBody>
+          <SummaryListRow>
+            <SummaryListTerm>Applicant Name</SummaryListTerm>
+            <SummaryListDetail>Lee Ming Wei</SummaryListDetail>
+            <SummaryListAction>
+              <Button variant="primary-ghost" className="h-8">
+                Change
+              </Button>
+            </SummaryListAction>
+          </SummaryListRow>
+
+          <SummaryListRow>
+            <SummaryListTerm>Submission Date</SummaryListTerm>
+            <SummaryListDetail>15/10/2024 17:35:00</SummaryListDetail>
+            <SummaryListAction></SummaryListAction>
+          </SummaryListRow>
+        </SummaryListBody>
+      </SummaryList>
+    </section>
+  ),
+};
+
 export const SummaryListCustomWithAdditionalTab: Story = {
   ...createStory({}),
   render: () => (

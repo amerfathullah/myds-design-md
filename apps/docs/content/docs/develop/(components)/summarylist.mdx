@@ -165,7 +165,7 @@ The `SummaryList` is the primary container for presenting a summary of items in 
 
 ## 1. SummaryListHeader
 
-The `SummaryListHeader` is used to display the title of the summary list.
+The `SummaryListHeader` is used to display the title of the summary list. It renders an `<h2>` by default.
 
 **Example**:
 
@@ -180,6 +180,34 @@ The `SummaryListHeader` is used to display the title of the summary list.
     ```
   </Tab>
 </Tabs>
+
+To give the title the heading level your page needs, pass `asChild` and your own heading. Your heading takes the header's place, with its classes and its ref. For example, use an `<h3>` for a summary list in an `<h2>` section:
+
+**Example**:
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview">
+    <SummaryListHeader asChild>
+      <h3>Applicant Details</h3>
+    </SummaryListHeader>
+  </Tab>
+
+  <Tab value="Code">
+    ```tsx
+    <section>
+      <h2>Government Subsidy Application</h2>
+      <SummaryList>
+        <SummaryListHeader asChild>
+          <h3>Applicant Details</h3>
+        </SummaryListHeader>
+        <SummaryListBody>{/* … */}</SummaryListBody>
+      </SummaryList>
+    </section>
+    ```
+  </Tab>
+</Tabs>
+
+To restyle the title, pass `className` to `SummaryListHeader`, not to your heading. The header merges your classes with its own, so a class of yours that conflicts with one of its own, such as `text-body-lg`, wins. With `asChild`, the classes on your heading are added after the header's without that merge, so a conflicting class there may not win.
 
 ## 2. SummaryListBody
 
@@ -358,6 +386,12 @@ The SummaryListAddition provides extra information or actions in the row.
 
 <TypeTable
   type={{
+    asChild: {
+      description:
+        "If `true`, renders its one child, such as an `<h3>`, in place of the `<h2>`.",
+      type: "boolean",
+      default: "false",
+    },
     className: {
       description: "Additional styles for the header.",
       type: "string",

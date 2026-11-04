@@ -722,7 +722,10 @@ type PreviewSummaryList = ComponentProps<typeof SummaryList>;
 export const PreviewSummaryList: FunctionComponent<PreviewSummaryList> = () => {
   return (
     <SummaryList>
-      <SummaryListHeader>Government Subsidy Application</SummaryListHeader>
+      {/* `not-prose` keeps the docs' prose `h2` margins off the title */}
+      <SummaryListHeader className="not-prose">
+        Government Subsidy Application
+      </SummaryListHeader>
 
       <SummaryListBody>
         <SummaryListRow>

@@ -95,7 +95,13 @@ import {
   type CellContext,
   type Row,
 } from "@tanstack/react-table";
-import { createRef, useRef } from "react";
+import {
+  createRef,
+  useRef,
+  type ComponentProps,
+  type FunctionComponent,
+  type MouseEvent,
+} from "react";
 
 type Employee = {
   id: string;
@@ -709,8 +715,9 @@ export const CookieBannerRegion = () => {
 };
 
 // SummaryListHeader is an `<h2>` by default, or the heading it's given with
-// `asChild`, and its ref is that heading. A ref typed for the `<div>` its props
-// used to be typed as still compiles.
+// `asChild`, and its ref is that heading. Code written for the `<div>` its
+// props used to be typed as still compiles: a `<div>` ref, a `<div>` event
+// handler, spread `<div>` props, and its old component type.
 export const SummaryListTitle = () => {
   const heading = useRef<HTMLHeadingElement>(null);
   const div = createRef<HTMLDivElement>();
@@ -722,6 +729,11 @@ export const SummaryListTitle = () => {
       </SummaryListHeader>
       <SummaryListHeader ref={heading}>Permohonan</SummaryListHeader>
       <SummaryListHeader ref={div}>Permohonan</SummaryListHeader>
+      <SummaryListHeader
+        onClick={(event: MouseEvent<HTMLDivElement>) => event.preventDefault()}
+      >
+        Permohonan
+      </SummaryListHeader>
       {/* @ts-expect-error `asChild` is the one way to choose its element */}
       <SummaryListHeader as="h3">Permohonan</SummaryListHeader>
       {/* @ts-expect-error `asChild` is the one way to choose its element */}
@@ -729,3 +741,11 @@ export const SummaryListTitle = () => {
     </SummaryList>
   );
 };
+
+export const SummaryListTitleFromDivProps = (props: ComponentProps<"div">) => (
+  <SummaryListHeader {...props} />
+);
+
+export const SummaryListTitleAsDivComponent: FunctionComponent<
+  ComponentProps<"div">
+> = SummaryListHeader;

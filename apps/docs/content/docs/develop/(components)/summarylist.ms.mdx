@@ -188,17 +188,17 @@ Untuk memberi tajuk itu aras tajuk yang diperlukan oleh halaman anda, hantar `as
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <SummaryListHeader asChild>
-      <h3>Butiran Pemohon</h3>
+      <h3>Applicant Details</h3>
     </SummaryListHeader>
   </Tab>
 
   <Tab value="Code">
     ```tsx
     <section>
-      <h2>Permohonan Subsidi Kerajaan</h2>
+      <h2>Government Subsidy Application</h2>
       <SummaryList>
         <SummaryListHeader asChild>
-          <h3>Butiran Pemohon</h3>
+          <h3>Applicant Details</h3>
         </SummaryListHeader>
         <SummaryListBody>{/* … */}</SummaryListBody>
       </SummaryList>
@@ -207,7 +207,7 @@ Untuk memberi tajuk itu aras tajuk yang diperlukan oleh halaman anda, hantar `as
   </Tab>
 </Tabs>
 
-Untuk menggayakan semula tajuk, hantar `className` kepada `SummaryListHeader`, bukan kepada tajuk anda. Header menggabungkan kelas anda dengan kelasnya sendiri, jadi kelas anda yang bercanggah dengan salah satu kelasnya, seperti `text-body-lg`, diutamakan. Dengan `asChild`, kelas pada tajuk anda ditambah selepas kelas header tanpa penggabungan itu, jadi kelas yang bercanggah di situ mungkin tidak diutamakan.
+Untuk menggayakan semula tajuk, hantar `className` kepada `SummaryListHeader`, bukan kepada tajuk anda. Header menggabungkan kelas anda dengan kelasnya sendiri, jadi kelas anda yang bercanggah dengan kelasnya diutamakan: contohnya, `text-body-lg` menggantikan kedua-dua `text-xl` dan `leading-[30px]`, jadi tajuk mengambil ketinggian baris body-lg sendiri. Dengan `asChild`, kelas pada tajuk anda ditambah selepas kelas header tanpa penggabungan itu, jadi kelas yang bercanggah di situ mungkin tidak diutamakan.
 
 ## 2. SummaryListBody
 

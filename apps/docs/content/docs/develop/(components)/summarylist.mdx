@@ -207,7 +207,7 @@ To give the title the heading level your page needs, pass `asChild` and your own
   </Tab>
 </Tabs>
 
-To restyle the title, pass `className` to `SummaryListHeader`, not to your heading. The header merges your classes with its own, so a class of yours that conflicts with one of its own, such as `text-body-lg`, wins. With `asChild`, the classes on your heading are added after the header's without that merge, so a conflicting class there may not win.
+To restyle the title, pass `className` to `SummaryListHeader`, not to your heading. The header merges your classes with its own, so a class of yours that conflicts with its own wins: `text-body-lg`, for example, replaces both `text-xl` and `leading-[30px]`, so the title takes body-lg's own line height. With `asChild`, the classes on your heading are added after the header's without that merge, so a conflicting class there may not win.
 
 ## 2. SummaryListBody
 

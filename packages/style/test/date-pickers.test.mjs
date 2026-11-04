@@ -92,17 +92,6 @@ async function withPage(width, use) {
   }
 }
 
-// The fields on the page, each a picker in a `<div data-test>`
-const fields = [
-  "date-labelled",
-  "date-aria-label",
-  "date-unnamed",
-  "range-labelled",
-  "range-aria-label",
-  "range-from-to",
-  "range-unnamed",
-];
-
 // The buttons in the field `<mode>-<field>` that Chromium's accessibility
 // tree holds, as each one's number among the field's triggers, its name and
 // its description
@@ -151,29 +140,46 @@ const shown = {
   1280: { date: [1], range: [2, 3] },
 };
 
-// What each field's shown triggers are named, and described by
-const expected = {
-  "date-labelled": [
-    ["Date of birth 30 Oct 2026", "No earlier than 1 January 1950"],
-  ],
-  "date-aria-label": [["Tarikh lahir 30 Okt 2026", ""]],
-  "date-unnamed": [["30 Oct 2026", ""]],
-  "range-labelled": [
-    ["Travel dates From: 01 Oct 2026", "Up to 30 days"],
-    ["Travel dates To: 30 Oct 2026", "Up to 30 days"],
-  ],
-  "range-aria-label": [
-    ["Tarikh perjalanan Dari: 01 Okt 2026", ""],
-    ["Tarikh perjalanan Hingga: 30 Okt 2026", ""],
-  ],
-  "range-from-to": [
-    ["Stay Check-in: 01 Oct 2026", ""],
-    ["Stay Check-out: 30 Oct 2026", ""],
-  ],
-  "range-unnamed": [
-    ["From: 01 Oct 2026", ""],
-    ["To: 30 Oct 2026", ""],
-  ],
+// The fields on the page, each a picker in a `<div data-test>`: which
+// picker it is, and what its shown triggers are named and described by
+const fields = {
+  "date-labelled": {
+    picker: "date",
+    triggers: [["Date of birth 30 Oct 2026", "No earlier than 1 January 1950"]],
+  },
+  "date-aria-label": {
+    picker: "date",
+    triggers: [["Tarikh lahir 30 Okt 2026", ""]],
+  },
+  "date-unnamed": { picker: "date", triggers: [["30 Oct 2026", ""]] },
+  "range-labelled": {
+    picker: "range",
+    triggers: [
+      ["Travel dates From: 01 Oct 2026", "Up to 30 days"],
+      ["Travel dates To: 30 Oct 2026", "Up to 30 days"],
+    ],
+  },
+  "range-aria-label": {
+    picker: "range",
+    triggers: [
+      ["Tarikh perjalanan Dari: 01 Okt 2026", ""],
+      ["Tarikh perjalanan Hingga: 30 Okt 2026", ""],
+    ],
+  },
+  "range-from-to": {
+    picker: "range",
+    triggers: [
+      ["Stay Check-in: 01 Oct 2026", ""],
+      ["Stay Check-out: 30 Oct 2026", ""],
+    ],
+  },
+  "range-unnamed": {
+    picker: "range",
+    triggers: [
+      ["From: 01 Oct 2026", ""],
+      ["To: 30 Oct 2026", ""],
+    ],
+  },
 };
 
 for (const width of widths) {
@@ -182,10 +188,12 @@ for (const width of widths) {
       const actual = {};
       const want = {};
       for (const mode of modes) {
-        for (const field of fields) {
+        for (const [field, { picker, triggers: names }] of Object.entries(
+          fields,
+        )) {
           actual[`${mode} ${field}`] = await treeButtons(page, mode, field);
-          const triggers = shown[width][field.split("-")[0]];
-          want[`${mode} ${field}`] = expected[field].map(
+          const triggers = shown[width][picker];
+          want[`${mode} ${field}`] = names.map(
             ([name, description], index) => ({
               trigger: triggers[index],
               name,
@@ -202,7 +210,7 @@ for (const width of widths) {
       const actual = {};
       for (const mode of modes) {
         for (const field of ["date-labelled", "range-labelled"]) {
-          const [trigger] = shown[width][field.split("-")[0]];
+          const [trigger] = shown[width][fields[field].picker];
           await page
             .locator(`[data-test="${mode}-${field}"] button`)
             .nth(trigger)

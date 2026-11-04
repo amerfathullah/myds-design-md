@@ -1,8 +1,9 @@
-import { FC, useId } from "react";
+import { FC } from "react";
 import { DateAfter, DateBefore, DateRange, Matcher } from "react-day-picker";
 import { enGB, ms } from "react-day-picker/locale";
 import { format } from "date-fns";
 import { useControllableState } from "../hooks";
+import { useTriggerNames } from "../hooks/use-trigger-names";
 import { Button, button_cva } from "./button";
 import { Calendar } from "./calendar";
 import { Dialog, DialogBody, DialogContent, DialogTrigger } from "./dialog";
@@ -90,18 +91,13 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
     defaultProp: defaultValue,
   });
 
-  const id = useId();
+  const names = useTriggerNames(ariaLabelledBy, ariaLabel);
   // The ids of the elements in each trigger that hold its prefix and its date
-  const prefixId = (trigger: Trigger) => `${id}${trigger}-prefix`;
-  const dateId = (trigger: Trigger) => `${id}${trigger}-date`;
-  // What names every trigger before its text: the author's label, or the
-  // hidden element that holds `aria-label`, which `aria-labelledby` beats
-  const hiddenLabel = !ariaLabelledBy && ariaLabel ? `${id}label` : undefined;
-  const label = ariaLabelledBy || hiddenLabel;
-  // A trigger's `aria-labelledby`: the label, then the elements that hold the
-  // trigger's prefix and date, not the trigger itself (ADR-0011)
+  const prefixId = (trigger: Trigger) => `${names.id}${trigger}-prefix`;
+  const dateId = (trigger: Trigger) => `${names.id}${trigger}-date`;
+  // A trigger's `aria-labelledby`: the label, then its prefix and date
   const labelledBy = (trigger: Trigger) =>
-    label ? `${label} ${prefixId(trigger)} ${dateId(trigger)}` : undefined;
+    names.labelledBy(prefixId(trigger), dateId(trigger));
 
   const isMS = locale === "ms";
   const _locale = isMS ? ms : enGB;
@@ -121,11 +117,7 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
 
   return (
     <>
-      {hiddenLabel && (
-        <span id={hiddenLabel} hidden>
-          {ariaLabel}
-        </span>
-      )}
+      {names.hiddenLabel}
 
       {/* Mobile */}
       <div className="text-txt-black-900 flex items-center gap-1.5 lg:hidden">

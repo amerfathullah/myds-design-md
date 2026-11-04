@@ -1,7 +1,14 @@
 import React, {
   FunctionComponent,
   ComponentProps,
+  Dispatch,
+  SetStateAction,
   useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useState,
   forwardRef,
 } from "react";
 import { Command } from "cmdk";
@@ -15,11 +22,26 @@ const DEFAULT_SIZE: SearchBarSize = "medium";
 
 type Context = {
   size: SearchBarSize;
+  /** The id SearchBarResults renders when it's given none */
+  generatedResultsId?: string;
+  /**
+   * The id SearchBarInput's <input> points `aria-controls` at: the id given
+   * to SearchBarResults, else the generated one
+   */
+  resultsId?: string;
+  /** Registers the id given to SearchBarResults, or clears it */
+  setGivenResultsId: Dispatch<SetStateAction<string | undefined>>;
 };
 
 const SearchBarContext = React.createContext<Context>({
   size: DEFAULT_SIZE,
+  setGivenResultsId: () => {},
 });
+
+// Layout effects don't run on the server, and React 18 warns there, so the
+// server gets useEffect
+const useBeforePaint =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 interface SearchBarProps extends ComponentProps<typeof Command> {
   size?: SearchBarSize;
@@ -31,8 +53,20 @@ interface SearchBarProps extends ComponentProps<typeof Command> {
  */
 const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
   ({ children, className, size = DEFAULT_SIZE, ...props }, ref) => {
+    // One id per SearchBar, so two on a page don't share their results' id
+    const generatedResultsId = useId();
+    const [givenResultsId, setGivenResultsId] = useState<string>();
+    const context = useMemo(
+      () => ({
+        size,
+        generatedResultsId,
+        resultsId: givenResultsId ?? generatedResultsId,
+        setGivenResultsId,
+      }),
+      [size, generatedResultsId, givenResultsId],
+    );
     return (
-      <SearchBarContext.Provider value={{ size }}>
+      <SearchBarContext.Provider value={context}>
         <Command
           ref={ref}
           className={clx("relative z-0", className)}
@@ -82,24 +116,31 @@ export const SearchBarInputContainer: FunctionComponent<
  */
 export const SearchBarInput: FunctionComponent<
   ComponentProps<typeof Command.Input>
-> = forwardRef(({ className, ...props }, ref) => {
-  return (
-    <Command.Input
-      ref={ref}
-      className={clx(
-        "text-txt-black-900 placeholder:text-txt-black-500 flex-1 bg-transparent focus:outline-hidden",
-        className,
-      )}
-      asChild
-      {...props}
-    >
-      <input
-        aria-controls="search-input"
-        // The hardcoded aria-controls here is a temporary fix such that it matches the id of SearchBarResults. It is related to this error (https://github.com/dequelabs/axe-core/issues/4172)
-      />
-    </Command.Input>
-  );
-});
+> = forwardRef(
+  ({ className, "aria-controls": ariaControls, ...props }, ref) => {
+    const { resultsId } = useContext(SearchBarContext);
+    return (
+      <Command.Input
+        ref={ref}
+        className={clx(
+          "text-txt-black-900 placeholder:text-txt-black-500 flex-1 bg-transparent focus:outline-hidden",
+          className,
+        )}
+        asChild
+        {...props}
+      >
+        {/* cmdk points `aria-controls` at its listbox, SearchBarResultsList,
+        while always reporting `aria-expanded="true"`. The listbox may be
+        unmounted, as when there are no results, which would leave the input
+        controlling an element that doesn't exist. So the input points at the
+        SearchBarResults panel, which stays mounted. The value sits on this
+        child because its props win over the ones cmdk passes, and cmdk sets
+        its own after spreading ours. */}
+        <input aria-controls={ariaControls ?? resultsId} />
+      </Command.Input>
+    );
+  },
+);
 
 /**
  * The icon-only search button. Screen readers announce it as "Search"; pass
@@ -189,21 +230,33 @@ const search_bar_results_dropdown_cva = cva(
     },
   },
 );
+/**
+ * The results panel, which SearchBarInput's `aria-controls` points at. Its id
+ * is generated, one per SearchBar, unless you pass one.
+ */
 export const SearchBarResults: FunctionComponent<
   ComponentProps<"div"> & {
     open: boolean;
   }
-> = ({ className, open, ...props }) => {
-  const { size } = useContext(SearchBarContext);
+> = ({ className, open, id, ...props }) => {
+  const { size, generatedResultsId, setGivenResultsId } =
+    useContext(SearchBarContext);
+  // Point the input at a given id before the browser paints, and stop when
+  // it's taken away, unless another has replaced it by then
+  useBeforePaint(() => {
+    if (!id) return;
+    setGivenResultsId(id);
+    return () =>
+      setGivenResultsId((current) => (current === id ? undefined : current));
+  }, [id, setGivenResultsId]);
   return (
     <div
       className={clx(
         search_bar_results_dropdown_cva({ size, className }),
         !open && "hidden",
       )}
-      // The hardcoded id here is a temporary fix such that it matches the value of aria-controls props of SearchBarInput. It is related to this error (https://github.com/dequelabs/axe-core/issues/4172)
       {...props}
-      id="search-input"
+      id={id || generatedResultsId}
     />
   );
 };

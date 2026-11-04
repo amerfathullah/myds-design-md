@@ -585,11 +585,18 @@ Nama boleh capainya ialah "Clear" secara lalai. Hantar `aria-label` untuk mengga
 
 ### SearchBarResults
 
+`SearchBarResults` menggunakan prop yang sama seperti elemen `div` biasa.
+
 <TypeTable
 type={{
   open: {
     description: "Sama ada pop-up keputusan dibuka atau ditutup",
     type: "boolean",
+  },
+  id: {
+    description:
+      "Id panel keputusan. `aria-controls` pada input search bar menunjuk kepadanya. Id unik dijana jika anda tidak menetapkannya.",
+    type: "string",
   },
 }}
 />

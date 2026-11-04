@@ -585,11 +585,18 @@ Its accessible name is "Clear" by default. Pass an `aria-label` to replace it, f
 
 ### SearchBarResults
 
+`SearchBarResults` uses the same props as a regular `div` element.
+
 <TypeTable
 type={{
   open: {
     description: "Whether the results pop-up is open or closed",
     type: "boolean",
+  },
+  id: {
+    description:
+      "The results panel's id. The search bar's input points its `aria-controls` at it. A unique id is generated if you leave it out.",
+    type: "string",
   },
 }}
 />

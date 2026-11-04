@@ -120,8 +120,10 @@ afterEach(async () => {
 
 describe("SummaryListHeader by default", () => {
   test("server markup is an `<h2>` with the header's classes", () => {
-    const html = serverRender(createElement(SummaryListHeader, null, "Title"));
-    expect(headings(html)).toEqual([title("h2", headerClasses)]);
+    const fragment = serverRender(
+      createElement(SummaryListHeader, null, "Title"),
+    );
+    expect(headings(fragment)).toEqual([title("h2", headerClasses)]);
   });
 
   test("mounted in a list, its title is the list's one heading: an `<h2>` with the header's classes, and no part renders an `<h1>`", async () => {
@@ -133,14 +135,14 @@ describe("SummaryListHeader by default", () => {
 
 describe("an author's props on SummaryListHeader", () => {
   test("`className` merges through clx: an author's text colour replaces the header's", () => {
-    const html = serverRender(
+    const fragment = serverRender(
       createElement(
         SummaryListHeader,
         { className: "text-txt-black-700" },
         "Title",
       ),
     );
-    expect(headings(html)).toEqual([
+    expect(headings(fragment)).toEqual([
       title("h2", [
         "text-txt-black-700",
         "text-xl",

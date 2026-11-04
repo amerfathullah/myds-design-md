@@ -66,7 +66,7 @@ export default () => (
 
 Namakan setiap pemilih julat tarikh. Berikan `id` kepada `Label`, dan hantar id yang sama kepada `aria-labelledby` pada pemilih, seperti di atas. Pembaca skrin kemudian menyebut setiap satu daripada dua butangnya dengan teks label, diikuti awalan dan tarikh yang dipaparkan butang itu: "Tarikh perjalanan Dari: 12 Mac 2024" dan "Tarikh perjalanan Hingga: 20 Mac 2024", atau "Tarikh perjalanan Dari: dd / mm / yyyy" sebelum tarikh dipilih. Awalan membezakan kedua-dua butang: "Dari:" dan "Hingga:" dengan `locale="ms"`, "From:" dan "To:" tanpanya, atau `fromLabel` dan `toLabel` anda sendiri.
 
-`htmlFor` pada `Label` tidak berfungsi di sini seperti pada medan tarikh: pemilih julat tarikh tidak menerima `id`, dan `Label` yang `htmlFor`nya tidak sepadan dengan apa-apa tidak menamakan apa-apa, tanpa sebarang ralat. Mengklik `Label` juga tidak membuka pemilih.
+Tidak seperti medan tarikh, `htmlFor` pada `Label` tidak berfungsi di sini: pemilih julat tarikh tidak menerima `id`, dan `Label` yang `htmlFor`nya tidak sepadan dengan apa-apa tidak menamakan apa-apa, tanpa sebarang ralat. Mengklik `Label` juga tidak membuka pemilih.
 
 Jika tiada label yang kelihatan menamakan pemilih, hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<DateRangePicker locale="ms" aria-label="Tarikh perjalanan" />`. Pembaca skrin menyebutnya, diikuti awalan dan tarikh setiap butang: "Tarikh perjalanan Dari: 12 Mac 2024". Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan. Untuk menerangkan pemilih, contohnya dengan petunjuk di bawah labelnya, hantar id petunjuk itu sebagai `aria-describedby`.
 

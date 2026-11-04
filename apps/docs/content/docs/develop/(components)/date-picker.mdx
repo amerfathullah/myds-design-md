@@ -58,9 +58,9 @@ export default () => (
 
 Name each date picker. Give a `Label` an `id`, and pass the same id to the picker's `aria-labelledby`, as above. Screen readers then announce the picker's button by the label's text, then the date it shows: "Date of birth 12 Mar 2024", or "Date of birth dd / mm / yyyy" before a date is chosen.
 
-A `Label`'s `htmlFor` doesn't work here, as it does for the date field: the date picker takes no `id`, and a `Label` whose `htmlFor` matches nothing names nothing, with no error. Clicking the `Label` doesn't open the picker either.
+Unlike the date field, a `Label`'s `htmlFor` doesn't work here: the date picker takes no `id`, and a `Label` whose `htmlFor` matches nothing names nothing, with no error. Clicking the `Label` doesn't open the picker either.
 
-If no visible label names the picker, pass an `aria-label` to name it in your site's language, for example `<DatePicker aria-label="Tarikh lahir" />`. Screen readers announce it, then the date. If you pass both, `aria-labelledby` wins. To describe the picker, for example with a hint under its label, pass the hint's id as `aria-describedby`.
+If no visible label names the picker, pass an `aria-label` to name it in your site's language, for example `<DatePicker locale="ms" aria-label="Tarikh lahir" />`. Screen readers announce it, then the date. If you pass both, `aria-labelledby` wins. To describe the picker, for example with a hint under its label, pass the hint's id as `aria-describedby`.
 
 ## Examples
 

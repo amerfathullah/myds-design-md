@@ -58,7 +58,7 @@ export default () => (
 
 Namakan setiap pemilih tarikh. Berikan `id` kepada `Label`, dan hantar id yang sama kepada `aria-labelledby` pada pemilih, seperti di atas. Pembaca skrin kemudian menyebut butang pemilih dengan teks label, diikuti tarikh yang dipaparkannya: "Tarikh lahir 12 Mac 2024", atau "Tarikh lahir dd / mm / yyyy" sebelum tarikh dipilih.
 
-`htmlFor` pada `Label` tidak berfungsi di sini seperti pada medan tarikh: pemilih tarikh tidak menerima `id`, dan `Label` yang `htmlFor`nya tidak sepadan dengan apa-apa tidak menamakan apa-apa, tanpa sebarang ralat. Mengklik `Label` juga tidak membuka pemilih.
+Tidak seperti medan tarikh, `htmlFor` pada `Label` tidak berfungsi di sini: pemilih tarikh tidak menerima `id`, dan `Label` yang `htmlFor`nya tidak sepadan dengan apa-apa tidak menamakan apa-apa, tanpa sebarang ralat. Mengklik `Label` juga tidak membuka pemilih.
 
 Jika tiada label yang kelihatan menamakan pemilih, hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<DatePicker locale="ms" aria-label="Tarikh lahir" />`. Pembaca skrin menyebutnya, diikuti tarikh. Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan. Untuk menerangkan pemilih, contohnya dengan petunjuk di bawah labelnya, hantar id petunjuk itu sebagai `aria-describedby`.
 

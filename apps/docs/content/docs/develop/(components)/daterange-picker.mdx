@@ -66,7 +66,7 @@ export default () => (
 
 Name each date range picker. Give a `Label` an `id`, and pass the same id to the picker's `aria-labelledby`, as above. Screen readers then announce each of its two buttons by the label's text, then the prefix and date the button shows: "Travel dates From: 12 Mar 2024" and "Travel dates To: 20 Mar 2024", or "Travel dates From: dd / mm / yyyy" before a date is chosen. The prefixes tell the two buttons apart: "From:" and "To:", "Dari:" and "Hingga:" with `locale="ms"`, or your own `fromLabel` and `toLabel`.
 
-A `Label`'s `htmlFor` doesn't work here, as it does for the date field: the date range picker takes no `id`, and a `Label` whose `htmlFor` matches nothing names nothing, with no error. Clicking the `Label` doesn't open the picker either.
+Unlike the date field, a `Label`'s `htmlFor` doesn't work here: the date range picker takes no `id`, and a `Label` whose `htmlFor` matches nothing names nothing, with no error. Clicking the `Label` doesn't open the picker either.
 
 If no visible label names the picker, pass an `aria-label` to name it in your site's language, for example `<DateRangePicker locale="ms" aria-label="Tarikh perjalanan" />`. Screen readers announce it, then each button's prefix and date: "Tarikh perjalanan Dari: 12 Mac 2024". If you pass both, `aria-labelledby` wins. To describe the picker, for example with a hint under its label, pass the hint's id as `aria-describedby`.
 

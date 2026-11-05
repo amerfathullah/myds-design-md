@@ -11,7 +11,7 @@ Every `gov.my` page should have a skip link placed immediately after `<body>` ta
 
 However if cookie banner is used, place skip links immediately after cookie banner.
 
-If `<header>` is present, wrap skip links inside header. Do not wrap skip links inside `<nav>`.
+If `<header>` is present, skip links still come first (after the cookie banner, if one is used), outside any `<header>`. Do not wrap skip links inside `<nav>`.
 
 ```jsx
 <body>
@@ -19,7 +19,7 @@ If `<header>` is present, wrap skip links inside header. Do not wrap skip links 
    <cookie-banner />
 
    <!-- 1. Place skip links here -->
-   <a href=”#main-content” class=”myds-skip-link”>
+   <a href="#main-content" class="myds-skip-link">
       Skip to main content
    </a>
 
@@ -27,15 +27,15 @@ If `<header>` is present, wrap skip links inside header. Do not wrap skip links 
    <nav />
 
    <!-- 2. Main content -->
-   <div id=”#main-content” class=”container”>
-      <input class=”myds-search-bar” tabindex=”0”>
+   <div id="main-content" class="container">
+      <input class="myds-search-bar" tabindex="0">
    </div>
 
 </body>
 ```
 
 1. Skip link component which link to main content section ID.
-2. To add a focusable element in anywhere of the section or page just add tabindex=”0”.
+2. To add a focusable element in anywhere of the section or page just add `tabindex="0"`.
 
 ## How it works?
 

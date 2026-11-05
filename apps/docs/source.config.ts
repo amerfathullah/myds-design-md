@@ -10,8 +10,8 @@ interface MarkdownNode {
 }
 
 // Gives a Markdown image the URL `s3()` loads it from. remark-image then reads
-// the size of an image under /design/ from public/ (its default `publicDir`),
-// and fetches the size of any other image from upstream's bucket.
+// the size of an image under /design/ or /common/ from public/ (its default
+// `publicDir`), and fetches the size of any other image from upstream's bucket.
 function remarkImageUrl() {
   const visit = (node: MarkdownNode) => {
     if (node.type === "image" && node.url?.startsWith("/")) {

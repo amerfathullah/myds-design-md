@@ -69,8 +69,8 @@ pnpm --filter @amerfathullah/myds-react test             # Vitest unit tests
 pnpm --filter @amerfathullah/myds-react check-types      # type-check against React 18 and 19 types
 pnpm --filter @amerfathullah/myds-react check-exports    # check the package's published exports (run build first)
 pnpm --filter @amerfathullah/myds-style test             # token-parity, focused-segment, segment-clip, segment-scroll, field-states, input-states, label-states, search-bar-states, entry-rendering and focus-rings tests, rendered in Chromium, and the DESIGN.md lint check
-pnpm --filter @govtechmy/myds-docs test                  # tests of the design guideline's file check
-pnpm --filter @govtechmy/myds-docs check-design-files    # fail if a design guideline page references a /design/ file the repository doesn't hold
+pnpm --filter @govtechmy/myds-docs test                  # tests of the docs site's file check
+pnpm --filter @govtechmy/myds-docs check-design-files    # fail if a design guideline page references a /design/ file, or a docs page or component a /common/ file, that the repository doesn't hold
 ```
 
 The token-parity, focused-segment, segment-clip, segment-scroll, field-states, input-states, label-states, search-bar-states, entry-rendering and focus-rings tests render in Chromium through Playwright. If Playwright reports a missing browser, install the one that matches its version: `pnpm --filter @amerfathullah/myds-style exec playwright install chromium`.

@@ -9,22 +9,28 @@ import {
   findMissingDesignFiles,
 } from "./check-design-files.mjs";
 
+// Writes each source (path relative to `dir`) under `dir`.
+async function writeFiles(dir, sources) {
+  for (const [name, source] of Object.entries(sources)) {
+    const file = path.join(dir, name);
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, source);
+  }
+}
+
+// An empty file at each of these paths, standing in for the files public/
+// holds.
+const emptyFiles = (names) =>
+  Object.fromEntries(names.map((name) => [name, ""]));
+
 // A docs app with these design guideline pages (paths under the guideline's
 // content folder) and these files under public/.
 async function docsApp({ pages, files = [] }) {
   const root = await mkdtemp(path.join(tmpdir(), "design-files-"));
   const contentDir = path.join(root, "content");
   const publicDir = path.join(root, "public");
-  for (const [page, source] of Object.entries(pages)) {
-    const file = path.join(contentDir, page);
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, source);
-  }
-  for (const name of files) {
-    const file = path.join(publicDir, name);
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, "");
-  }
+  await writeFiles(contentDir, pages);
+  await writeFiles(publicDir, emptyFiles(files));
   return { contentDir, publicDir };
 }
 
@@ -139,16 +145,8 @@ test("doesn't name a file listed as known missing", async () => {
 async function docsAppSources({ sources, files = [] }) {
   const appDir = await mkdtemp(path.join(tmpdir(), "common-files-"));
   const publicDir = path.join(appDir, "public");
-  for (const [name, source] of Object.entries(sources)) {
-    const file = path.join(appDir, name);
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, source);
-  }
-  for (const name of files) {
-    const file = path.join(publicDir, name);
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, "");
-  }
+  await writeFiles(appDir, sources);
+  await writeFiles(publicDir, emptyFiles(files));
   return { appDir, publicDir };
 }
 

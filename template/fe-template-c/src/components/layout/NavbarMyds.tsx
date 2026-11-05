@@ -41,10 +41,7 @@ export default function NavbarMyds() {
 
   return (
     <Navbar>
-      <NavbarLogo
-        src="https://d2391uizq0pg2.cloudfront.net/common/logo.svg"
-        alt="Malaysian Government Design System"
-      >
+      <NavbarLogo src="/logo.svg" alt="Malaysian Government Design System">
         MYDS
       </NavbarLogo>
 

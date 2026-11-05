@@ -11,5 +11,5 @@ The docs site, the npm READMEs, Storybook and the templates loaded their images 
 
 - The repository now redistributes upstream's unlicensed images and videos, on the same footing as the upstream code it already holds (see [the root licence entry](../../.out-of-scope/root-licence.md) in `.out-of-scope/`).
 - The npm READMEs' hero image depends on this repository's name and default branch.
-- The files are in Git's history for good. The design guideline's 444 files add 63 MB, so a file is copied once and changed only when what it shows changes.
+- The files are in Git's history for good, and each changed copy of one adds to it. The design guideline's 444 files add 63 MB.
 - The `docs` workflow fails when a design guideline page references a file under `/design/` that the repository doesn't hold, the `-dark` copy of each Markdown image included (`pnpm --filter @govtechmy/myds-docs check-design-files`). A file the bucket didn't serve is listed in that check as known missing, not recreated.

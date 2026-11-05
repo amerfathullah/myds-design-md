@@ -12,6 +12,8 @@ Part 1 : Layout Prep
 7. Create NavbarMyds.tsx in layout file
 8. Paste in navbar the code from
    [fe-template-b/src/components/layout/NavbarMyds.tsx](fe-template-b/src/components/layout/NavbarMyds.tsx)
+
+   Its logo loads `/logo.svg`, so copy [fe-template-b/public/logo.svg](fe-template-b/public/logo.svg) into your app's `public` folder.
 9. Create FooterMyds.tsx in layout file
 10. Paste in footer the code from
     [fe-template-b/src/components/layout/FooterMyds.tsx](fe-template-b/src/components/layout/FooterMyds.tsx)

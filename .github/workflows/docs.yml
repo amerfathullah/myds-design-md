@@ -1,0 +1,44 @@
+name: "docs"
+
+# The design guideline's images and videos live in apps/docs/public/design
+# (ADR-0006). This fails when a guideline page references a file under /design/
+# that the repository doesn't hold.
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "apps/docs/**"
+      - ".github/workflows/docs.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  design-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test the design guideline's file check
+        run: pnpm --filter @govtechmy/myds-docs test
+
+      - name: Check the design guideline's files
+        run: pnpm --filter @govtechmy/myds-docs check-design-files

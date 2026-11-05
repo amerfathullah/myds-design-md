@@ -4,8 +4,9 @@ import { i18n } from "@/i18n";
 export const proxy = createI18nMiddleware(i18n);
 
 export const config = {
-  // Matcher ignoring `/_next/` and `/api/`
+  // Matcher ignoring `/_next/`, `/api/` and the files in public/assets and
+  // public/design, which have no locale
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon.ico|sitemap.xml|assets).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.ico|sitemap.xml|assets|design/).*)",
   ],
 };

@@ -207,13 +207,20 @@ export const Dates = () => {
 };
 
 // `invalid` takes a boolean or null, and an `aria-invalid` prop, as a form
-// library passes it, overrides it.
+// library passes it, overrides it. DateField's and TimeField's `disabled`
+// takes a boolean, as an <input>'s does.
 export const Fields = ({ error }: { error?: string }) => (
   <>
     <DateField invalid={null} />
     <DateField invalid={Boolean(error)} size="medium" />
     <TimeField aria-invalid={error ? "true" : undefined} step={1} />
     <TimeField invalid aria-invalid={false} disabled />
+    <DateField disabled={Boolean(error)} />
+    <TimeField disabled={undefined} />
+    {/* @ts-expect-error `disabled` takes no `null` */}
+    <DateField disabled={null} />
+    {/* @ts-expect-error `disabled` takes no `null` */}
+    <TimeField disabled={null} />
     <Input invalid />
     <Input invalid={null} prepend={<InputAddon>RM</InputAddon>} />
     <Input invalid={Boolean(error)} size="medium" />

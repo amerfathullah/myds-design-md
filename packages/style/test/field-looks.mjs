@@ -68,7 +68,9 @@ export const colours = {
     "otl-danger-300": "rgb(252, 165, 165)",
     "fr-primary": "rgba(150, 183, 255, 0.4)",
     "fr-danger": "rgba(252, 165, 165, 0.4)",
+    "txt-black-900": "rgb(24, 24, 27)",
     "txt-black-700": "rgb(63, 63, 70)",
+    "txt-black-500": "rgb(107, 107, 116)",
     "txt-black-disabled": "rgba(82, 82, 91, 0.4)",
   },
   dark: {
@@ -81,7 +83,9 @@ export const colours = {
     "otl-danger-300": "rgb(185, 28, 28)",
     "fr-primary": "rgba(29, 78, 216, 0.4)",
     "fr-danger": "rgba(185, 28, 28, 0.4)",
+    "txt-black-900": "rgb(255, 255, 255)",
     "txt-black-700": "rgb(212, 212, 216)",
+    "txt-black-500": "rgb(161, 161, 170)",
     "txt-black-disabled": "rgba(161, 161, 170, 0.4)",
   },
 };

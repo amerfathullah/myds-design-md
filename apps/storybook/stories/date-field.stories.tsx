@@ -1,5 +1,7 @@
+import { useId } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { createStory } from "../utils";
+import { createRender, createStory } from "../utils";
+import { Label } from "@amerfathullah/myds-react/label";
 import { DateField } from "@amerfathullah/myds-react/date-field";
 
 /**
@@ -84,3 +86,24 @@ export const ErrorDark: Story = createStory(
   { invalid: true, className: "dark" },
   "dark",
 );
+
+// A disabled fieldset disables the date field, with no `disabled` prop on
+// DateField, and gives it the disabled look. Label disables nothing, so it
+// takes `disabled` for its dimmed look
+const InDisabledFieldset = () => {
+  const id = useId();
+  return (
+    <fieldset disabled>
+      <legend className="text-body-sm text-txt-black-900 mb-2">
+        Applicant
+      </legend>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={id} disabled>
+          Date of birth
+        </Label>
+        <DateField id={id} size="medium" defaultValue="1957-08-31" />
+      </div>
+    </fieldset>
+  );
+};
+export const DisabledFieldset = createRender(InDisabledFieldset, "light");

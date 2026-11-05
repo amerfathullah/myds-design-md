@@ -4,7 +4,7 @@ import { cva, VariantProps } from "class-variance-authority";
 
 const timefield_container_cva = cva(
   [
-    "flex items-center gap-2 border border-otl-gray-200 rounded-md text-txt-black-900 shadow-button focus:outline-hidden font-body font-normal",
+    "flex items-center gap-2 border border-otl-gray-200 rounded-md bg-bg-white text-txt-black-900 shadow-button focus:outline-hidden font-body font-normal",
     "focus-within:border-otl-primary-300 focus-within:ring-3 focus-within:ring-fr-primary",
     // The input's aria-invalid, which the invalid prop sets, picks the error
     // styling, so it matches what assistive technology announces. has-
@@ -12,6 +12,14 @@ const timefield_container_cva = cva(
     // border and rings fr-danger. Unlike InputOTP's group-has-, it can't match
     // a group ancestor the consumer adds
     "has-[input[aria-invalid=true]]:border-otl-danger-300 has-[input[aria-invalid=true]]:ring-fr-danger",
+    // The input's :disabled picks the disabled styling, so a disabled
+    // fieldset, which disables the input without the disabled prop, gives
+    // the frame and icon the look the prop does. has- outranks the base and
+    // a background passed in className. The icon's colour is set from here,
+    // on this field's own svg, so that no group ancestor the consumer adds
+    // can dim it
+    "has-[input:disabled]:bg-bg-washed has-[input:disabled]:text-txt-black-500 has-[input:disabled]:cursor-not-allowed",
+    "[&:has(input:disabled)>svg]:text-txt-black-500",
   ],
   {
     variants: {
@@ -20,14 +28,9 @@ const timefield_container_cva = cva(
         medium: "px-[12px] py-[8px] text-base",
         large: "px-[14px] py-[10px] text-lg",
       },
-      disabled: {
-        true: "bg-bg-washed text-txt-black-500 cursor-not-allowed",
-        false: "bg-bg-white",
-      },
     },
     defaultVariants: {
       size: "small",
-      disabled: false,
     },
   },
 );
@@ -54,21 +57,16 @@ const timefield_cva = cva([
   "[&::-webkit-datetime-edit-ampm-field:focus-within]:bg-primary-600 [&::-webkit-datetime-edit-ampm-field:focus-within]:text-white",
 ]);
 
-const icon_cva = cva([], {
+const icon_cva = cva(["text-txt-black-700"], {
   variants: {
     size: {
       small: "size-4",
       medium: "size-4.5",
       large: "size-5",
     },
-    disabled: {
-      true: "text-txt-black-500",
-      false: "text-txt-black-700",
-    },
   },
   defaultVariants: {
     size: "small",
-    disabled: false,
   },
 });
 
@@ -85,7 +83,6 @@ type TimeFieldProps = Omit<ComponentProps<"input">, "type" | "size"> &
 const TimeField: FunctionComponent<TimeFieldProps> = ({
   className,
   size,
-  disabled,
   invalid,
   step = 60,
   ...props
@@ -94,15 +91,13 @@ const TimeField: FunctionComponent<TimeFieldProps> = ({
     <div
       className={timefield_container_cva({
         size,
-        disabled,
         className,
       })}
     >
-      <ClockIcon className={icon_cva({ size, disabled })} aria-hidden />
+      <ClockIcon className={icon_cva({ size })} aria-hidden />
       <input
         type="time"
         className={timefield_cva()}
-        disabled={disabled}
         aria-invalid={invalid ?? undefined}
         step={step}
         {...props}

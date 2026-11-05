@@ -2,7 +2,7 @@
 
 > This package continues `@govtechmy/myds-*` 1.x under a new name, from version 2.0.0. To switch, follow the migration guide in the [2.0.0 changelog](https://github.com/amerfathullah/myds-design-md/blob/main/packages/style/CHANGELOG.md).
 
-![myds-hero-img](https://d2391uizq0pg2.cloudfront.net/design/myds-hero-img.png)
+![myds-hero-img](https://raw.githubusercontent.com/amerfathullah/myds-design-md/main/apps/docs/public/design/myds-hero-img.png)
 
 > The Malaysian Government Design System (MYDS) is an open-source design system to build products for the Malaysian government. It contains the design guideline and the component library for creating consistent and accessible digital services.
 

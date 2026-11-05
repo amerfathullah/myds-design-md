@@ -8,7 +8,9 @@
     "start": "next start --port 4000",
     "postinstall": "fumadocs-mdx",
     "lint": "eslint app components lib",
-    "lint-staged": "eslint --fix app components lib"
+    "lint-staged": "eslint --fix app components lib",
+    "check-design-files": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-design-files.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"scripts/*.test.mjs\""
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1158.0",

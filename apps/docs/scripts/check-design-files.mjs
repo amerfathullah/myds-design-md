@@ -19,9 +19,9 @@ import { darkify } from "../lib/constant.ts";
  */
 export const KNOWN_MISSING = [];
 
-// A /design/ path in any syntax: a Markdown image, an <Image> `src` or an
-// `s3()` call. Not the end of a longer path or URL, such as /docs/design/… or
-// figma.com/design/….
+// A /design/ path in any syntax: a Markdown image, or an <Image> or a video's
+// <source> `src`. Not the end of a longer path or URL, such as /docs/design/…
+// or figma.com/design/….
 const DESIGN_FILE = /(?<![\w./-])\/design\/[^\s"'`()<>{}[\]]+/g;
 const MARKDOWN_IMAGE = /!\[[^\]]*\]\(\s*<?(\/design\/[^\s)>]+)/g;
 

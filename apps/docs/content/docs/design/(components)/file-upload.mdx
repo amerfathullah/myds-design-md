@@ -3,8 +3,6 @@ title: File upload
 description: Allows users to upload and preview files. It features a title, upload guidelines, an upload button, and a list displaying the uploaded items, with built-in error handling for file uploads.
 ---
 
-import { s3 } from "@/lib/constant";
-
 ## File preview
 
 The file preview is used to display details about a file or media item once it has been uploaded, including the file name, type, and an option to remove the file.
@@ -72,6 +70,6 @@ Usually displayed in a form that required to upload single or multiple files.
 
 <figure>
   <video controls="true" allowfullscreen="true">
-    <source src={s3("/design/file-upload-demo.mov")} type="video/mp4" />
+    <source src="/design/file-upload-demo.mov" type="video/mp4" />
   </video>
 </figure>

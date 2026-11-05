@@ -3,8 +3,6 @@ title: Skip link
 description: Enables users to bypass repetitive navigation links and jump directly to the main content. It enhances accessibility for keyboard and screen reader users by improving navigation efficiency and is typically hidden until focused.
 ---
 
-import { s3 } from "@/lib/constant";
-
 ## Where to use?
 
 Every `gov.my` page should have a skip link placed immediately after `<body>` tab.
@@ -63,7 +61,7 @@ Skip to main content.
 
 <figure>
   <video controls="true" allowfullscreen="true">
-    <source src={s3("/design/skip-link-demo1.mov")} type="video/mp4" />
+    <source src="/design/skip-link-demo1.mov" type="video/mp4" />
   </video>
 </figure>
 
@@ -73,6 +71,6 @@ To focus on first focusable links (Usually the links in navbar).
 
 <figure>
   <video controls="true" allowfullscreen="true">
-    <source src={s3("/design/skip-link-demo2.mov")} type="video/mp4" />
+    <source src="/design/skip-link-demo2.mov" type="video/mp4" />
   </video>
 </figure>

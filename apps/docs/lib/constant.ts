@@ -8,12 +8,12 @@ export const links = {
 
 /**
  * The URL a docs page loads the static file at `path` from. Files under
- * `/design/` are in this repository, in `public/design` (ADR-0006). Every other
- * path, such as the site's own `/common/` assets, still loads from upstream's
- * CloudFront bucket (#110, #111).
+ * `/design/` and `/common/` are in this repository, in `public/design` and
+ * `public/common` (ADR-0006). Any other path still loads from upstream's
+ * CloudFront bucket (#111).
  */
 export const s3 = (path: string) => {
-  if (path.startsWith("/design/")) return path;
+  if (path.startsWith("/design/") || path.startsWith("/common/")) return path;
   return `https://d2391uizq0pg2.cloudfront.net${path}`;
 };
 

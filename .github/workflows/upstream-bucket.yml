@@ -1,9 +1,9 @@
 name: "upstream bucket"
 
-# The images and videos that the docs site, the READMEs, Storybook and the
-# templates show live in this repository (ADR-0006). Upstream's CloudFront
-# bucket stays only in history: the CHANGELOGs and the ADRs. The pattern
-# brackets each dot so that it doesn't match this file.
+# The images and videos from upstream's CloudFront bucket that the docs site,
+# the READMEs, Storybook and the templates show now live in this repository
+# (ADR-0006). The bucket stays only in history: the CHANGELOGs and the ADRs.
+# The pattern brackets each dot so that it doesn't match this file.
 
 on:
   push:

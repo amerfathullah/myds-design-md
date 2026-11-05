@@ -6,16 +6,9 @@ const withMDX = createMDX();
 const config = {
   reactStrictMode: true,
   images: {
-    loader: "custom",
-    loaderFile: "./lib/s3-loader.ts",
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "d2391uizq0pg2.cloudfront.net",
-        port: "",
-        pathname: "/**",
-      },
-    ],
+    // Serve each image in public/ as it is committed (ADR-0006), not
+    // re-encoded through the Image Optimization API.
+    unoptimized: true,
   },
 };
 

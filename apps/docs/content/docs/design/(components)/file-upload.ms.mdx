@@ -3,8 +3,6 @@ title: Muat naik fail
 description: Membolehkan pengguna memuat naik dan pratonton fail. Ia mempunyai tajuk, garis panduan muat naik, butang muat naik, dan senarai yang memaparkan item yang dimuat naik, dengan pengendalian ralat terbina dalam untuk muat naik fail.
 ---
 
-import { s3 } from "@/lib/constant";
-
 ## Pratonton Fail
 
 Pratonton fail digunakan untuk memaparkan butiran tentang fail atau media yang telah dimuat naik, termasuk nama fail, jenis, dan pilihan untuk menghapuskan fail.
@@ -72,6 +70,6 @@ Biasanya dipaparkan dalam borang yang memerlukan pengguna memuat naik satu atau 
 
 <figure>
   <video controls="true" allowfullscreen="true">
-    <source src={s3("/design/file-upload-demo.mov")} type="video/mp4" />
+    <source src="/design/file-upload-demo.mov" type="video/mp4" />
   </video>
 </figure>

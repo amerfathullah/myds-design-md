@@ -28,7 +28,7 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
  * ### Usage
  * ```tsx
  *   <Navbar>
- *      <NavbarLogo src="https://d2391uizq0pg2.cloudfront.net/common/logo.svg">MYDS</NavbarLogo>
+ *      <NavbarLogo src="/common/logo.svg">MYDS</NavbarLogo>
  *         <NavbarMenu>
  *             <NavbarMenuItem href="/menu1">
  *                 MinistryProfile
@@ -143,7 +143,7 @@ export const NavbarCustomMyds = createStory(
     children: (
       <>
         <NavbarLogo
-          src="https://d2391uizq0pg2.cloudfront.net/common/logo.svg"
+          src="/common/logo.svg"
           alt="Malaysian Government Design System"
         >
           MYDS

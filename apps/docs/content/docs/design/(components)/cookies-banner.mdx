@@ -3,8 +3,6 @@ title: Cookies banner
 description: Notifies users that the website uses cookies to improve their experience and gives them the option to manage their consent preferences through cookie settings. It typically appears when a user lands on the website for the first time.
 ---
 
-import { s3 } from "@/lib/constant";
-
 ![cookie-anatomy.png](/design/cookie-anatomy.png)
 
 1. **Description**: A message informing the user about the website's use of cookies. Template: Cookies on `{website}.gov.my`
@@ -47,6 +45,6 @@ The cookies banner automatically appears once the page is loaded. Users can then
 
 <figure>
   <video controls="true" allowfullscreen="true">
-    <source src={s3("/design/cookie-demo.mov")} type="video/mp4" />
+    <source src="/design/cookie-demo.mov" type="video/mp4" />
   </video>
 </figure>

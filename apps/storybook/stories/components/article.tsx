@@ -48,7 +48,7 @@ export default function Article() {
       </div>
       <picture className="col-span-full mx-auto mt-6 md:max-w-[740px]">
         <img
-          src="https://d2391uizq0pg2.cloudfront.net/common/preview-2.svg"
+          src="/common/preview-2.svg"
           className="w-full object-cover"
           alt=""
         />

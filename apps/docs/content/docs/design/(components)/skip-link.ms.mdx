@@ -3,8 +3,6 @@ title: Pautan langkau
 description: Membenarkan pengguna melangkau pautan navigasi berulang dan terus ke kandungan utama. Ia meningkatkan kebolehcapaian untuk pengguna papan kekunci dan pembaca skrin dengan memperbaiki kecekapan navigasi dan biasanya tersembunyi sehingga difokuskan.
 ---
 
-import { s3 } from "@/lib/constant";
-
 ## Where to use?
 
 Setiap halaman `gov.my` seharusnya mempunyai pautan langkau yang diletakkan sejurus selepas tab `<body>`.
@@ -63,7 +61,7 @@ Langkau ke kandungan utama.
 
 <figure>
   <video controls="true" allowfullscreen="true">
-    <source src={s3("/design/skip-link-demo1.mov")} type="video/mp4" />
+    <source src="/design/skip-link-demo1.mov" type="video/mp4" />
   </video>
 </figure>
 
@@ -73,6 +71,6 @@ Untuk fokus pada pautan yang boleh difokuskan pertama (Biasanya pautan dalam nav
 
 <figure>
   <video controls="true" allowfullscreen="true">
-    <source src={s3("/design/skip-link-demo2.mov")} type="video/mp4" />
+    <source src="/design/skip-link-demo2.mov" type="video/mp4" />
   </video>
 </figure>

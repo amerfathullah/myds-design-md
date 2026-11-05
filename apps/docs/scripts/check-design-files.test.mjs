@@ -77,7 +77,7 @@ test("names an <Image> file the repository doesn't hold, and no -dark copy of it
 
 test("names a demo video the repository doesn't hold, with every page in a group folder that plays it", async () => {
   const video = `<video controls="true">
-  <source src={s3("/design/tooltip-demo1.mov")} type="video/mp4" />
+  <source src="/design/tooltip-demo1.mov" type="video/mp4" />
 </video>
 `;
   const app = await docsApp({
@@ -273,7 +273,7 @@ test("doesn't name a URL, an import path or a route that ends in /common/", asyn
       "templates/login.tsx": `import { Brand } from "@/common/brand";
 import { Seal } from "~/common/seal";
 
-<img src="https://d2391uizq0pg2.cloudfront.net/common/logo.svg" alt="MYDS Logo" />
+<img src="https://cdn.example.com/common/logo.svg" alt="MYDS Logo" />
 `,
       "content/docs/develop/index.mdx":
         "See [the shared props](/docs/common/props) and [Malay](/ms/docs/common/props).\n",

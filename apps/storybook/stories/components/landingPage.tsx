@@ -192,11 +192,7 @@ export default function LandingPage() {
               "lg:col-span-5 lg:col-start-6",
             )}
           >
-            <img
-              alt=""
-              src="https://d2391uizq0pg2.cloudfront.net/common/preview-2.svg"
-              className="h-auto w-full"
-            />
+            <img alt="" src="/common/preview-2.svg" className="h-auto w-full" />
           </picture>
           <div
             className={clx(

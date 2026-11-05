@@ -1623,7 +1623,6 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 - **Divergence:** the dialog overlay is `gray-700` @ 60%; the guideline gives black @ 50%.
 - **Divergence:** Toast is at most 384px wide (`md:max-w-sm`); the guideline gives 300–600px.
 - **Divergence:** CookieBanner sits bottom-right, 16px from the edges from `sm:` and edge to edge on mobile. The guideline puts it bottom-left with a 24px margin on desktop and tablet, and centred with 18px margins on mobile.
-- **Divergence:** the guideline puts the skip link first after `<body>` (right after the cookie banner, if there is one) and, when the page has a `<header>`, inside it. The Navbar renders the page's `<header>` after the Masthead, so SkipLink can't be both. Put it first after CookieBanner, outside any header: wrapping SkipLink and the Masthead in a second `<header>` adds a second banner landmark, and HTML doesn't allow a `<header>` inside another.
 - **Gap:** the guideline caps search results at 400px high; the component sets no maximum.
 - **Defect:** Pagination's JSDoc names its types `basic`, `basic-alternate` and `number`, but the prop accepts `default`, `simple` and `full`.
 - **Defect:** AnnounceBar asks for `min-height-[28px]`, which is not a Tailwind class (`min-h-[28px]` is), so it has no minimum height.

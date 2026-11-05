@@ -70,14 +70,14 @@ const fields = [
     name: "DateField",
     file: "date-field.tsx",
     render(id) {
-      return `<div class="${cvaCall(this.file, "datefield_container_cva", { disabled: true })}"><input id="${id}" type="date" value="2026-09-26" class="${cvaClasses(this.file, "datefield_cva")}" disabled></div>`;
+      return `<div class="${cvaCall(this.file, "datefield_container_cva")}"><input id="${id}" type="date" value="2026-09-26" class="${cvaClasses(this.file, "datefield_cva")}" disabled></div>`;
     },
   },
   {
     name: "TimeField",
     file: "time-field.tsx",
     render(id) {
-      return `<div class="${cvaCall(this.file, "timefield_container_cva", { disabled: true })}"><input id="${id}" type="time" value="09:30" class="${cvaClasses(this.file, "timefield_cva")}" disabled></div>`;
+      return `<div class="${cvaCall(this.file, "timefield_container_cva")}"><input id="${id}" type="time" value="09:30" class="${cvaClasses(this.file, "timefield_cva")}" disabled></div>`;
     },
   },
   {

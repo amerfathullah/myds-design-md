@@ -1,0 +1,27 @@
+name: "upstream bucket"
+
+# The images and videos that the docs site, the READMEs, Storybook and the
+# templates show live in this repository (ADR-0006). Upstream's CloudFront
+# bucket stays only in history: the CHANGELOGs and the ADRs. The pattern
+# brackets each dot so that it doesn't match this file.
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check for upstream's CloudFront bucket
+        run: |
+          if git grep -niE 'd2391uizq0pg2[.]cloudfront[.]net' -- . \
+            ':(exclude,glob)**/CHANGELOG.md' \
+            ':(exclude)docs/adr'; then
+            echo "::error::Load the file from this repository, not from upstream's CloudFront bucket (ADR-0006)."
+            exit 1
+          fi

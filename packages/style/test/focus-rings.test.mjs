@@ -27,6 +27,7 @@ import { isDeepStrictEqual } from "node:util";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 
+import { registryDefine } from "../../react/registry-define.mjs";
 import { compile, fullCssSources } from "./compile.mjs";
 import { colours } from "./field-looks.mjs";
 
@@ -213,7 +214,7 @@ before(async () => {
       format: "iife",
       jsx: "automatic",
       nodePaths: [reactModules],
-      define: { "process.env.NODE_ENV": '"production"' },
+      define: { ...registryDefine, "process.env.NODE_ENV": '"production"' },
       logLevel: "silent",
     }),
     compile(`${fullCssSources()}\n@source "${pageSource}";`),

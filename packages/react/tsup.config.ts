@@ -1,6 +1,6 @@
 import { defineConfig } from "tsup";
 
-import { name, version } from "./package.json";
+import { registryDefine } from "./registry-define.mjs";
 
 export default defineConfig((options) => ({
   ...options,
@@ -18,8 +18,5 @@ export default defineConfig((options) => ({
   minify: true,
   // The package's name and version, which key the store that every bundled
   // copy shares its contexts through (`src/utils/registry.ts`)
-  define: {
-    __MYDS_REACT_NAME__: JSON.stringify(name),
-    __MYDS_REACT_VERSION__: JSON.stringify(version),
-  },
+  define: registryDefine,
 }));

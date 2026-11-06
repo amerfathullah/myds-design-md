@@ -13,8 +13,8 @@ import type { Context, createContext as CreateContext } from "react";
 // context's value must be optional, with a fallback wherever it's read; and a
 // change an older copy can't handle needs a new name.
 
-// The package's name and version, from its package.json, which tsup and
-// Vitest put in (`define`)
+// The package's name and version, from its package.json, which whatever
+// compiles this module puts in (`registry-define.mjs`)
 declare const __MYDS_REACT_NAME__: string;
 declare const __MYDS_REACT_VERSION__: string;
 

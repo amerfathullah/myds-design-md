@@ -1,11 +1,6 @@
 import { defineConfig } from "vitest/config";
 
-import { name, version } from "./package.json";
+import { registryDefine } from "./registry-define.mjs";
 
 // The package's name and version, as tsup puts them in (`tsup.config.ts`)
-export default defineConfig({
-  define: {
-    __MYDS_REACT_NAME__: JSON.stringify(name),
-    __MYDS_REACT_VERSION__: JSON.stringify(version),
-  },
-});
+export default defineConfig({ define: registryDefine });

@@ -56,6 +56,8 @@ Make every React context with `sharedContext` from `packages/react/src/utils/reg
 
 `registry.guard.test.ts` fails on a context or an emitter made any other way, and keeps each name and default value in a snapshot. Change the snapshot only as a reviewed decision.
 
+The registry's key takes the package's name and version from `package.json`, which whatever compiles `src` puts in with `define`. tsup, Vitest and the style package's page tests take them from `packages/react/registry-define.mjs`. Anything else that bundles `src` itself must do the same, or the page throws `__MYDS_REACT_NAME__ is not defined` as it loads.
+
 A module evaluated again gets back the context it made first. So after you change a context's default value, restart `next dev` in the workspace-linked Next apps (`apps/docs`, `apps/standard`). Until you do, their server rendering keeps the old default, and the page reports hydration errors.
 
 ## Icons

@@ -39,6 +39,28 @@ const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
 const subpaths = Object.keys(pkg.exports);
 const registryKey = `${pkg.name}@${pkg.version.split(".")[0]}/registry-v1`;
 const conditions = ["require", "import"] as const;
+// What the registry stores, each under the name of the const it makes
+const sharedNames = [
+  "AlertDialogContext",
+  "ButtonContext",
+  "CalloutContext",
+  "CookieBannerContext",
+  "DataTableContext",
+  "DialogBodyContext",
+  "InputContext",
+  "NavbarContext",
+  "NavbarMenuDropdownContext",
+  "PaginationContext",
+  "RadioContext",
+  "RadioItemContext",
+  "SearchBarContext",
+  "SelectContext",
+  "TabsContext",
+  "ThemeContext",
+  "ToastContext",
+  "ToggleContext",
+  "emitter",
+];
 
 // Runs a Node program from the package root and parses the JSON it prints.
 // Every program starts as this file loads and runs alongside the others. A
@@ -115,7 +137,7 @@ interface Mixed {
   oneReact: boolean;
   files: Record<Condition, Record<string, string>>;
   directions: Record<
-    string,
+    `${Condition} to ${Condition}`,
     {
       themeProvider: Case<string>;
       themeContext: Case<string>;
@@ -129,6 +151,7 @@ interface Census {
   failed: Record<string, string>;
   contexts: string[];
   emitters: string[];
+  stored: string[] | null;
 }
 interface FallbackResult {
   failed: Record<string, string>;
@@ -164,7 +187,7 @@ const censusRun = Object.fromEntries(
     start<Census>(
       `${condition} census`,
       ["--enable-source-maps", inputType(condition)],
-      censusProgram(condition, pkg.name, subpaths),
+      censusProgram(condition, pkg.name, subpaths, registryKey),
     ),
   ]),
 ) as Record<Condition, () => Promise<Census>>;
@@ -179,7 +202,7 @@ const fallbackRun = Object.fromEntries(
       ),
     ]),
   ),
-) as Record<string, () => Promise<FallbackResult>>;
+) as Record<`${Condition} ${Fallback}`, () => Promise<FallbackResult>>;
 const reactServerRun = Object.fromEntries(
   conditions.map((condition) => [
     condition,
@@ -300,7 +323,7 @@ describe(
       'ThemeProvider defaultTheme="dark" from `%s` reaches ThemeSwitch as="select" from `%s`',
       async (from, to) => {
         const results = (await mixedRun()).directions[`${from} to ${to}`];
-        expect(resultOf(results?.themeProvider)).toBe("Dark");
+        expect(resultOf(results.themeProvider)).toBe("Dark");
       },
     );
 
@@ -308,7 +331,7 @@ describe(
       'ThemeContext.Provider with the theme "dark" from `%s` reaches ThemeSwitch as="select" from `%s`',
       async (from, to) => {
         const results = (await mixedRun()).directions[`${from} to ${to}`];
-        expect(resultOf(results?.themeContext)).toBe("Dark");
+        expect(resultOf(results.themeContext)).toBe("Dark");
       },
     );
 
@@ -317,7 +340,7 @@ describe(
       async (from, to) => {
         const results = (await mixedRun()).directions[`${from} to ${to}`];
         const { title, description } = toastText(`${from} to ${to}`);
-        expect(resultOf(results?.toast)).toEqual([title + description]);
+        expect(resultOf(results.toast)).toEqual([title + description]);
       },
     );
   },
@@ -358,6 +381,13 @@ describe.each(conditions)(
     test("makes one toast emitter", async () => {
       const { emitters } = await census();
       expect(emitters).toHaveLength(1);
+    });
+
+    // So a second copy of the major finds them, and the fallbacks below put
+    // their foreign value where the build looks
+    test("stores them on globalThis under the registry's key, for the React it loads", async () => {
+      const { stored } = await census();
+      expect(stored).toEqual([...sharedNames].sort());
     });
   },
 );
@@ -446,9 +476,7 @@ describe.each(
   "every exported entry, loaded through `%s` with %s",
   { timeout },
   (condition, fallback: Fallback) => {
-    const run = fallbackRun[
-      `${condition} ${fallback}`
-    ] as () => Promise<FallbackResult>;
+    const run = fallbackRun[`${condition} ${fallback}`];
 
     test("loads", async () => {
       expect((await run()).failed).toEqual({});

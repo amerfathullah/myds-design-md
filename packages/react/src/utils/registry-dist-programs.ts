@@ -419,6 +419,7 @@ export const censusProgram = (
   condition: Condition,
   pkgName: string,
   subpaths: string[],
+  registryKey: string,
 ) =>
   (condition === "import"
     ? `import { registerHooks } from "node:module";`
@@ -496,6 +497,9 @@ export const censusProgram = (
       }
     }
     const seen = await load("react");
+    // What the entries stored under the registry's key for this React
+    const store = globalThis[Symbol.for(${JSON.stringify(registryKey)})];
+    const names = store instanceof WeakMap && store.get(recordingCreateContext);
     ${
       condition === "require"
         ? `for (const file of Object.keys(require.cache))
@@ -518,6 +522,7 @@ export const censusProgram = (
       failed,
       contexts,
       emitters,
+      stored: names instanceof Map ? [...names.keys()].sort() : null,
     };`);
 
 /**

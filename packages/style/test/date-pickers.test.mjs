@@ -10,6 +10,14 @@
 // on the client and in pickers hydrated from server HTML. A visible trigger
 // still opens its calendar, and none of the naming props reaches it.
 //
+// `disabled={true}` and a `<fieldset disabled>` around a DateRangePicker
+// disable its shown triggers: the tree reports them disabled, under the names
+// an enabled picker's have; Tab skips them; a click, Enter or Space opens
+// nothing; and they take `default-outline`'s disabled look, with a
+// `txt-black-disabled` prefix. A picker in the first `<legend>` of a
+// `<fieldset disabled className="group">` stays enabled, its prefix
+// `txt-black-500` as on any enabled picker.
+//
 // The page is date-pickers.page.jsx: the React components themselves,
 // bundled with esbuild, on the stylesheet the Tailwind import compiles for
 // full.css's sources.
@@ -21,6 +29,7 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 
 import { compile, fullCssSources } from "./compile.mjs";
+import { colours } from "./field-looks.mjs";
 
 const pageSource = fileURLToPath(
   new URL("./date-pickers.page.jsx", import.meta.url),
@@ -93,8 +102,8 @@ async function withPage(width, use) {
 }
 
 // The buttons in the field `<mode>-<field>` that Chromium's accessibility
-// tree holds, as each one's number among the field's triggers, its name and
-// its description
+// tree holds, as each one's number among the field's triggers, its name, its
+// description and whether it's disabled
 async function treeButtons(page, mode, field) {
   const client = await page.context().newCDPSession(page);
   try {
@@ -124,6 +133,10 @@ async function treeButtons(page, mode, field) {
         trigger,
         name: node.name?.value,
         description: node.description?.value ?? "",
+        disabled:
+          node.properties?.some(
+            ({ name, value }) => name === "disabled" && value.value === true,
+          ) ?? false,
       });
     }
     return buttons;
@@ -140,8 +153,10 @@ const shown = {
   1280: { date: [1], range: [2, 3] },
 };
 
-// The fields on the page, each a picker in a `<div data-test>`: which
-// picker it is, and what its shown triggers are named and described by
+// The fields on the page, in the page's order, each a picker in a `<div
+// data-test>`: which picker it is, whether its triggers are disabled, and
+// what its shown triggers are named and described by. A disabled picker's
+// triggers are named as an enabled one's.
 const fields = {
   "date-labelled": {
     picker: "date",
@@ -180,17 +195,71 @@ const fields = {
       ["To: 30 Oct 2026", ""],
     ],
   },
+  "range-disabled": {
+    picker: "range",
+    disabled: true,
+    triggers: [
+      ["Travel dates From: 01 Oct 2026", "Up to 30 days"],
+      ["Travel dates To: 30 Oct 2026", "Up to 30 days"],
+    ],
+  },
+  "range-in-disabled-fieldset": {
+    picker: "range",
+    disabled: true,
+    triggers: [
+      ["Travel dates From: 01 Oct 2026", ""],
+      ["Travel dates To: 30 Oct 2026", ""],
+    ],
+  },
+  "range-in-legend": {
+    picker: "range",
+    triggers: [
+      ["Travel dates From: 01 Oct 2026", ""],
+      ["Travel dates To: 30 Oct 2026", ""],
+    ],
+  },
+};
+
+// The fields whose triggers are disabled
+const disabledFields = Object.keys(fields).filter(
+  (field) => fields[field].disabled,
+);
+
+// The number of dialogs and popovers open on `page`
+const openCount = (page) =>
+  page.evaluate(() => document.querySelectorAll('[role="dialog"]').length);
+
+// A trigger's look, as `default-outline` gives it at rest, enabled or
+// disabled, with the colour of its "From:" / "To:" prefix. `pointer` is the
+// cursor index.css gives every enabled button.
+const { light } = colours;
+const looks = {
+  enabled: {
+    colour: light["txt-black-700"],
+    background: light["bg-white"],
+    border: light["otl-gray-200"],
+    cursor: "pointer",
+    prefix: light["txt-black-500"],
+  },
+  disabled: {
+    colour: light["txt-black-disabled"],
+    background: light["bg-white-disabled"],
+    border: light.transparent,
+    cursor: "not-allowed",
+    prefix: light["txt-black-disabled"],
+  },
 };
 
 for (const width of widths) {
-  test(`at ${width}px, the tree holds only the shown triggers, each named by the label then what it shows, and described by the hint`, () =>
+  test(`at ${width}px, the tree holds only the shown triggers, each named by the label then what it shows, described by the hint, and disabled only if its picker is`, () =>
     withPage(width, async (page) => {
       const actual = {};
       const want = {};
       for (const mode of modes) {
-        for (const [field, { picker, triggers: names }] of Object.entries(
-          fields,
-        )) {
+        for (const [
+          field,
+          { picker, disabled = false, triggers: names },
+        ] of Object.entries(fields)) {
           actual[`${mode} ${field}`] = await treeButtons(page, mode, field);
           const triggers = shown[width][picker];
           want[`${mode} ${field}`] = names.map(
@@ -198,6 +267,7 @@ for (const width of widths) {
               trigger: triggers[index],
               name,
               description,
+              disabled,
             }),
           );
         }
@@ -209,7 +279,11 @@ for (const width of widths) {
     withPage(width, async (page) => {
       const actual = {};
       for (const mode of modes) {
-        for (const field of ["date-labelled", "range-labelled"]) {
+        for (const field of [
+          "date-labelled",
+          "range-labelled",
+          "range-in-legend",
+        ]) {
           const [trigger] = shown[width][fields[field].picker];
           await page
             .locator(`[data-test="${mode}-${field}"] button`)
@@ -250,8 +324,124 @@ for (const width of widths) {
       assert.deepEqual(actual, {
         "csr date-labelled": opened,
         "csr range-labelled": opened,
+        "csr range-in-legend": opened,
         "ssr date-labelled": opened,
         "ssr range-labelled": opened,
+        "ssr range-in-legend": opened,
       });
+    }));
+
+  test(`at ${width}px, Tab reaches every shown trigger but a disabled picker's`, () =>
+    withPage(width, async (page) => {
+      // Each element Tab focuses, from the top of the page until focus
+      // leaves it or comes round again, as "<mode>-<field> <trigger>"
+      const reached = [];
+      for (let presses = 0; presses < 100; presses++) {
+        await page.keyboard.press("Tab");
+        const focused = await page.evaluate(() => {
+          const element = document.activeElement;
+          if (!element || element === document.body) return null;
+          const field = element.closest("[data-test]");
+          if (!field) return element.outerHTML;
+          const trigger = [...field.querySelectorAll("button")].indexOf(
+            element,
+          );
+          return `${field.dataset.test} ${trigger}`;
+        });
+        if (focused === null || focused === reached[0]) break;
+        reached.push(focused);
+      }
+      assert.deepEqual(
+        reached,
+        modes.flatMap((mode) =>
+          Object.entries(fields).flatMap(([field, { picker, disabled }]) =>
+            disabled
+              ? []
+              : shown[width][picker].map(
+                  (trigger) => `${mode}-${field} ${trigger}`,
+                ),
+          ),
+        ),
+      );
+    }));
+
+  test(`at ${width}px, a disabled picker's shown triggers don't open on a click, Enter or Space`, () =>
+    withPage(width, async (page) => {
+      const triggers = modes.flatMap((mode) =>
+        disabledFields.flatMap((field) =>
+          shown[width][fields[field].picker].map((trigger) => ({
+            key: `${mode} ${field} ${trigger}`,
+            button: page
+              .locator(`[data-test="${mode}-${field}"] button`)
+              .nth(trigger),
+          })),
+        ),
+      );
+      const actual = {};
+      // Every click first: a Space on the page scrolls it, and a click
+      // during that scroll could land on another element
+      for (const { key, button } of triggers) {
+        // A plain click() waits for the trigger to be enabled
+        await button.click({ force: true });
+        actual[key] = { clicked: await openCount(page) };
+        if (actual[key].clicked) await page.keyboard.press("Escape");
+      }
+      // A disabled button can't take focus, so Enter and Space can't reach
+      // it
+      for (const { key, button } of triggers) {
+        actual[key].focused = await button.evaluate((element) => {
+          document.activeElement?.blur();
+          element.focus();
+          return element === document.activeElement;
+        });
+        await page.keyboard.press("Enter");
+        await page.keyboard.press("Space");
+        actual[key].keyed = await openCount(page);
+        if (actual[key].keyed) await page.keyboard.press("Escape");
+      }
+      assert.deepEqual(
+        actual,
+        Object.fromEntries(
+          triggers.map(({ key }) => [
+            key,
+            { clicked: 0, focused: false, keyed: 0 },
+          ]),
+        ),
+      );
+    }));
+
+  test(`at ${width}px, a disabled picker's shown triggers take default-outline's disabled look and dim their prefix, and an enabled picker's don't`, () =>
+    withPage(width, async (page) => {
+      const actual = {};
+      const want = {};
+      for (const mode of modes) {
+        for (const field of [
+          "range-labelled",
+          "range-disabled",
+          "range-in-disabled-fieldset",
+          "range-in-legend",
+        ]) {
+          for (const trigger of shown[width][fields[field].picker]) {
+            actual[`${mode} ${field} ${trigger}`] = await page
+              .locator(`[data-test="${mode}-${field}"] button`)
+              .nth(trigger)
+              .evaluate((button) => {
+                const style = getComputedStyle(button);
+                return {
+                  colour: style.color,
+                  background: style.backgroundColor,
+                  border: style.borderColor,
+                  cursor: style.cursor,
+                  prefix: getComputedStyle(
+                    button.querySelector('[id$="-prefix"]'),
+                  ).color,
+                };
+              });
+            want[`${mode} ${field} ${trigger}`] =
+              looks[fields[field].disabled ? "disabled" : "enabled"];
+          }
+        }
+      }
+      assert.deepEqual(actual, want);
     }));
 }

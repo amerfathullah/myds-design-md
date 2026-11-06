@@ -1,9 +1,11 @@
 // The page date-pickers.test.mjs renders in Chromium: DatePickers and
 // DateRangePickers named by a Label through `aria-labelledby`, described by a
-// hint, named by `aria-label`, and with no naming props. Each picker sits in
-// a `<div data-test>` of its own. The page renders them twice: in `#csr` on
-// the client, and in `#ssr` from server HTML that React hydrates. The test
-// bundles this file with esbuild.
+// hint, named by `aria-label`, and with no naming props, then DateRangePickers
+// disabled by `disabled`, disabled by a `<fieldset disabled>` around them, and
+// left enabled in the first `<legend>` of a `<fieldset disabled
+// className="group">`. Each picker sits in a `<div data-test>` of its own. The
+// page renders them twice: in `#csr` on the client, and in `#ssr` from server
+// HTML that React hydrates. The test bundles this file with esbuild.
 import { useEffect } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
@@ -79,6 +81,35 @@ function Fixtures({ mode }) {
       </Field>
       <Field mode={mode} name="range-unnamed">
         <DateRangePicker value={range} />
+      </Field>
+      <Field mode={mode} name="range-disabled">
+        <Label id={`${mode}-locked`} disabled>
+          Travel dates
+        </Label>
+        <p id={`${mode}-locked-hint`}>Up to 30 days</p>
+        <DateRangePicker
+          value={range}
+          disabled
+          aria-labelledby={`${mode}-locked`}
+          aria-describedby={`${mode}-locked-hint`}
+        />
+      </Field>
+      <Field mode={mode} name="range-in-disabled-fieldset">
+        <fieldset disabled>
+          <Label id={`${mode}-fieldset`} disabled>
+            Travel dates
+          </Label>
+          <DateRangePicker value={range} aria-labelledby={`${mode}-fieldset`} />
+        </fieldset>
+      </Field>
+      {/* A disabled fieldset leaves enabled the controls in its first legend */}
+      <Field mode={mode} name="range-in-legend">
+        <fieldset disabled className="group">
+          <legend>
+            <DateRangePicker value={range} aria-label="Travel dates" />
+          </legend>
+          <input aria-label="Other" />
+        </fieldset>
       </Field>
     </section>
   );

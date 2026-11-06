@@ -56,7 +56,7 @@ const meta = {
     },
     disabled: {
       description:
-        "A value or a function that matches a specific day. See: https://daypicker.dev/api/type-aliases/Matcher",
+        "`true` disables the whole picker, every trigger it renders. Any other Matcher, or an array of Matchers, disables only the days it matches. See: https://daypicker.dev/api/type-aliases/Matcher",
     },
     excludeDisabled: {
       table: {

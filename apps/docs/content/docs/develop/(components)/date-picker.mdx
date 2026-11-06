@@ -118,7 +118,7 @@ To use the date picker in the controlled state, set the `value` prop to the curr
 
 ### Disabled
 
-There are many ways to interact with DatePicker `disabled` state. Date picker can be disabled entirely by setting the `disabled` prop to `true`.
+There are many ways to interact with DatePicker `disabled` state. Date picker can be disabled entirely by setting the `disabled` prop to `true`. A disabled `<fieldset>` around the `DatePicker` disables it too. Pass `disabled` to its `Label` as well, so the label dims too.
 
 For a finer control on which dates to disable, you can pass a `Matcher | Matcher[]` that defines the rules for disabling dates.
 
@@ -305,7 +305,8 @@ Default value is English `en`. To switch to Bahasa Melayu, pass `ms`.
       default: "dd / mm / yyyy",
     },
     disabled: {
-      description: "Disabled state for date picker",
+      description:
+        "`true` disables the whole date picker, every button that opens its calendar. Any other Matcher, or an array of Matchers, disables only the days it matches.",
       type: "boolean | Matcher | Matcher[]",
       default: "false",
     },

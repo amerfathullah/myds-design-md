@@ -13,6 +13,12 @@ import { VariantProps } from "class-variance-authority";
 
 type DatePickerProps = {
   defaultValue?: Date;
+  /**
+   * `true` disables the whole picker: every trigger it renders, so none of
+   * them opens its calendar. Any other Matcher, or an array of Matchers,
+   * disables only the days it matches, in every calendar the picker renders.
+   * @see {@link https://daypicker.dev/api/type-aliases/Matcher}
+   */
   disabled?: Matcher | Matcher[];
   formatStr?: string;
   icon?: ReactElement;

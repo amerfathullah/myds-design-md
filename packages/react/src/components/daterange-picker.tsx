@@ -12,6 +12,12 @@ import { VariantProps } from "class-variance-authority";
 
 export type DateRangePickerProps = {
   defaultValue?: DateRange;
+  /**
+   * `true` disables the whole picker: every trigger it renders, so none of
+   * them opens its calendar. Any other Matcher, or an array of Matchers,
+   * disables only the days it matches, in every calendar the picker renders.
+   * @see {@link https://daypicker.dev/api/type-aliases/Matcher}
+   */
   disabled?: Matcher | Matcher[];
   excludeDisabled?: boolean;
   formatStr?: string;
@@ -64,6 +70,15 @@ export type DateRangePickerProps = {
 // The triggers DateRangePicker renders: a dialog's and a popover's for each
 // end of the range
 type Trigger = "dialog-from" | "dialog-to" | "popover-from" | "popover-to";
+
+// The classes of each trigger's "From:" / "To:" prefix. It dims with the
+// trigger it sits in, which `disabled={true}` or a disabled `<fieldset>`
+// disables. A button can't hold another, so `in-[button:disabled]:` matches
+// only that trigger. An unnamed `group-disabled:` would also match a
+// `<fieldset disabled className="group">` whose first `<legend>` holds an
+// enabled picker.
+const prefixClassName =
+  "text-txt-black-500 in-[button:disabled]:text-txt-black-disabled";
 
 /**
  * The DateRangePicker component allows users to select a range of dates from an interactive calendar.
@@ -127,10 +142,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              disabled={disabled === true}
               aria-labelledby={labelledBy("dialog-from")}
               aria-describedby={ariaDescribedBy}
             >
-              <span id={prefixId("dialog-from")} className="text-txt-black-500">
+              <span id={prefixId("dialog-from")} className={prefixClassName}>
                 {fromLabel ? fromLabel : isMS ? "Dari:" : "From:"}
               </span>
               <span id={dateId("dialog-from")}>
@@ -174,10 +190,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              disabled={disabled === true}
               aria-labelledby={labelledBy("dialog-to")}
               aria-describedby={ariaDescribedBy}
             >
-              <span id={prefixId("dialog-to")} className="text-txt-black-500">
+              <span id={prefixId("dialog-to")} className={prefixClassName}>
                 {toLabel ? toLabel : isMS ? "Hingga:" : "To:"}
               </span>
               <span id={dateId("dialog-to")}>
@@ -221,13 +238,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              disabled={disabled === true}
               aria-labelledby={labelledBy("popover-from")}
               aria-describedby={ariaDescribedBy}
             >
-              <span
-                id={prefixId("popover-from")}
-                className="text-txt-black-500"
-              >
+              <span id={prefixId("popover-from")} className={prefixClassName}>
                 {fromLabel ? fromLabel : isMS ? "Dari:" : "From:"}
               </span>
               <span id={dateId("popover-from")}>
@@ -269,10 +284,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
+              disabled={disabled === true}
               aria-labelledby={labelledBy("popover-to")}
               aria-describedby={ariaDescribedBy}
             >
-              <span id={prefixId("popover-to")} className="text-txt-black-500">
+              <span id={prefixId("popover-to")} className={prefixClassName}>
                 {toLabel ? toLabel : isMS ? "Hingga:" : "To:"}
               </span>
               <span id={dateId("popover-to")}>

@@ -9,8 +9,8 @@ const timefield_container_cva = cva(
     // The input's aria-invalid, which the invalid prop sets, picks the error
     // styling, so it matches what assistive technology announces. has-
     // outranks focus-within:, so a focused invalid field keeps its danger
-    // border and rings fr-danger. Unlike InputOTP's group-has-, it can't match
-    // a group ancestor the consumer adds
+    // border and rings fr-danger. It keys on this field's own input, so a
+    // group ancestor the consumer adds can't give it another field's look
     "has-[input[aria-invalid=true]]:border-otl-danger-300 has-[input[aria-invalid=true]]:ring-fr-danger",
     // The input's :disabled picks the disabled styling, so a disabled
     // fieldset, which disables the input without the disabled prop, gives

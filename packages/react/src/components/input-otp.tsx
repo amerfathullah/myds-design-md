@@ -30,7 +30,7 @@ const InputOTP = React.forwardRef<
   <PrimitiveInputOTP
     ref={ref}
     containerClassName={clx(
-      "group flex items-center gap-1.5",
+      "group/input-otp flex items-center gap-1.5",
       containerClassName,
     )}
     className={clx("disabled:cursor-not-allowed", className)}
@@ -45,15 +45,24 @@ InputOTP.displayName = "InputOTP";
 const slot_cva = cva(
   [
     "relative flex h-[68px] w-[50px] items-center justify-center rounded-md border bg-bg-white text-4xl font-medium text-txt-black-900 transition-all",
-    "border-otl-gray-200 group-has-[input[aria-invalid=true]]:border-otl-danger-300",
-    "group-has-[:disabled]:bg-bg-washed group-has-[:disabled]:text-txt-black-500",
+    // The slots take the error and disabled styling from InputOTP's own
+    // input, which input-otp marks data-input-otp: its aria-invalid, which
+    // the invalid prop sets, and its :disabled, which a disabled fieldset
+    // also sets. The group is named, so a group ancestor the consumer adds,
+    // or a library one such as AccordionItem, can't give the slots another
+    // field's look, and the data attribute keeps out a control among the
+    // children or inside a wrapper the consumer names group/input-otp
+    "border-otl-gray-200 group-has-[input[data-input-otp][aria-invalid=true]]/input-otp:border-otl-danger-300",
+    "group-has-[input[data-input-otp]:disabled]/input-otp:bg-bg-washed group-has-[input[data-input-otp]:disabled]/input-otp:text-txt-black-500",
   ],
   {
     variants: {
       active: {
         // The input is transparent, so under forced colours, which drop the
-        // ring, the slot draws the outline (`outline-hidden`)
-        true: "z-10 border-otl-primary-300 ring-3 ring-fr-primary outline-hidden group-has-[input[aria-invalid=true]]:ring-fr-danger",
+        // ring, the slot draws the outline (`outline-hidden`). An invalid
+        // active slot keeps its danger border, as the variant above
+        // outranks border-otl-primary-300, and rings fr-danger
+        true: "z-10 border-otl-primary-300 ring-3 ring-fr-primary outline-hidden group-has-[input[data-input-otp][aria-invalid=true]]/input-otp:ring-fr-danger",
         false: "",
       },
     },

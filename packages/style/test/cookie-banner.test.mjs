@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 
+import { registryDefine } from "../../react/registry-define.mjs";
 import { compile, fullCssSources } from "./compile.mjs";
 
 const pageSource = fileURLToPath(
@@ -46,7 +47,7 @@ before(async () => {
       jsx: "automatic",
       nodePaths: [reactModules],
       // React's development build, so the test sees its warnings
-      define: { "process.env.NODE_ENV": '"development"' },
+      define: { ...registryDefine, "process.env.NODE_ENV": '"development"' },
       logLevel: "silent",
     }),
     compile(`${fullCssSources()}\n@source "${pageSource}";`),

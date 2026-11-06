@@ -1,6 +1,5 @@
 import React, {
   ComponentProps,
-  createContext,
   forwardRef,
   ForwardRefExoticComponent,
   ReactNode,
@@ -13,6 +12,7 @@ import { CheckCircleIcon } from "../icons/check-circle";
 import { CrossIcon, InfoIcon, WarningCircleIcon, WarningIcon } from "../icons";
 import { Button, ButtonIcon } from "./button";
 import { Slot } from "@radix-ui/react-slot";
+import { sharedContext } from "../utils/registry";
 
 type CalloutVariant = "success" | "warning" | "info" | "danger";
 
@@ -57,7 +57,7 @@ interface CalloutProps
   closeLabel?: string;
 }
 
-const CalloutContext = createContext({
+const CalloutContext = sharedContext("CalloutContext", {
   show: true,
   handleDismiss: () => {},
 });

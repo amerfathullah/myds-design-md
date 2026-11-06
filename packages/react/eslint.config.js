@@ -11,6 +11,8 @@ module.exports = [
       "coverage/",
       "type-tests/",
       "tsup.config.ts",
+      "vitest.config.ts",
+      "registry-define.mjs",
       "eslint.config.js",
     ],
   },

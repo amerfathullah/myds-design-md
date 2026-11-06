@@ -17,13 +17,13 @@ import {
 } from "../icons";
 import {
   ComponentProps,
-  createContext,
   forwardRef,
   ForwardRefExoticComponent,
   FunctionComponent,
   useContext,
 } from "react";
 import { clx } from "../utils";
+import { sharedContext } from "../utils/registry";
 
 const AlertDialogTrigger = DialogTrigger;
 const AlertDialogTitle: typeof DialogTitle = DialogTitle;
@@ -42,9 +42,12 @@ interface AlertDialogContextProps {
   variant: "default" | "success" | "info" | "warning" | "danger";
 }
 
-const AlertDialogContext = createContext<AlertDialogContextProps>({
-  variant: "default",
-});
+const AlertDialogContext = sharedContext<AlertDialogContextProps>(
+  "AlertDialogContext",
+  {
+    variant: "default",
+  },
+);
 
 interface AlertDialogProps
   extends ComponentProps<typeof Dialog>, Partial<AlertDialogContextProps> {}

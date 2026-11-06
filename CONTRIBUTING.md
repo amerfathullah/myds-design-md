@@ -46,6 +46,20 @@ It writes `packages/react/src/hooks/use-probe.ts`, a typed hook that holds a val
 
 Both are formatted with the repository's prettier. If a file a generator would add exists already, or the name is exported already, it changes nothing, not even `package.json` or the barrel, and prints why. turbo gen can exit 0 even then, so read what it prints. Neither writes tests, docs pages, `DESIGN.md` entries or a changeset: add those yourself.
 
+## Contexts
+
+Make every React context with `sharedContext` from `packages/react/src/utils/registry.ts`, never with React's `createContext`, and give it a name of its own, the name of its `const`. The toast emitter is made the same way, with `sharedEmitter`. Each CommonJS entry carries its own copy of every module it imports, so a context made with `createContext` would exist once per entry, and a provider from one entry would never reach a component from another (#119). The registry keeps one of each context per copy of React, and every copy of the library of the same major version shares it. So within a major:
+
+- a context's name is frozen;
+- a field added to a context's value must be optional, and every reader must work without it;
+- a change an older copy can't handle needs a new name.
+
+`registry.guard.test.ts` fails on a context or an emitter made any other way, and keeps each name and default value in a snapshot. Change the snapshot only as a reviewed decision.
+
+The registry's key takes the package's name and version from `package.json`, which whatever compiles `src` puts in with `define`. tsup, Vitest and the style package's page tests take them from `packages/react/registry-define.mjs`. Anything else that bundles `src` itself must do the same, or the page throws `__MYDS_REACT_NAME__ is not defined` as it loads.
+
+A module evaluated again gets back the context it made first. So after you change a context's default value, restart `next dev` in the workspace-linked Next apps (`apps/docs`, `apps/standard`). Until you do, their server rendering keeps the old default, and the page reports hydration errors.
+
 ## Icons
 
 The icon components in `packages/react/src/icons`, which `@amerfathullah/myds-react/icon` exports, are generated from the SVGs in `packages/react/src/svg/icons`, the icon sources. So is the entry's barrel, `index.ts`. To add or change an icon:

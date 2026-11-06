@@ -1,5 +1,7 @@
 import { defineConfig } from "tsup";
 
+import { registryDefine } from "./registry-define.mjs";
+
 export default defineConfig((options) => ({
   ...options,
   entryPoints: [
@@ -14,4 +16,7 @@ export default defineConfig((options) => ({
   sourcemap: true,
   external: ["react"],
   minify: true,
+  // The package's name and version, which key the store that every bundled
+  // copy shares its contexts through (`src/utils/registry.ts`)
+  define: registryDefine,
 }));

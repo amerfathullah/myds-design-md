@@ -1,5 +1,4 @@
 import {
-  createContext,
   FunctionComponent,
   ReactNode,
   useCallback,
@@ -15,6 +14,7 @@ import {
   themeDefaults,
   type ThemeScriptOptions,
 } from "../utils/theme";
+import { sharedContext } from "../utils/registry";
 
 interface ThemeContextType {
   theme: string;
@@ -22,7 +22,7 @@ interface ThemeContextType {
   defaultTheme: string;
 }
 
-const ThemeContext = createContext<ThemeContextType>({
+const ThemeContext = sharedContext<ThemeContextType>("ThemeContext", {
   theme: "light",
   setTheme: () => {},
   defaultTheme: "light",

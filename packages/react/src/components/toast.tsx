@@ -9,6 +9,7 @@ import { WarningCircleIcon } from "../icons/warning-circle";
 import { WarningIcon } from "../icons/warning";
 import { CrossIcon } from "../icons/cross";
 import { useToast } from "../hooks";
+import { sharedContext } from "../utils/registry";
 
 /*========================================================================================================================*/
 
@@ -29,11 +30,11 @@ export type ToastEvent = {
 
 const ToastProvider = ToastPrimitives.Provider;
 
-const ToastContext = React.createContext<{
+const ToastContext = sharedContext<{
   variant: ToastEvent["variant"];
   isHover: boolean;
   duration: number;
-}>({
+}>("ToastContext", {
   variant: "message",
   isHover: false,
   duration: 5000,

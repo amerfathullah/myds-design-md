@@ -40,7 +40,6 @@ import {
   TableTooltip,
 } from "./table";
 import {
-  createContext,
   CSSProperties,
   FunctionComponent,
   ReactNode,
@@ -65,6 +64,7 @@ import {
 } from "../icons";
 import { Checkbox } from "./checkbox";
 import { cva } from "class-variance-authority";
+import { sharedContext } from "../utils/registry";
 /**
  * The `meta` of a DataTable column definition
  * @see https://tanstack.com/table/latest/docs/guide/table-and-column-meta
@@ -270,11 +270,14 @@ interface DataTableContextProps {
   nest?: DataTableProps<any>["nest"];
 }
 
-const DataTableContext = createContext<DataTableContextProps>({
-  table: null,
-  expandableColumns: {},
-  toggleColumnWidth: () => {},
-});
+const DataTableContext = sharedContext<DataTableContextProps>(
+  "DataTableContext",
+  {
+    table: null,
+    expandableColumns: {},
+    toggleColumnWidth: () => {},
+  },
+);
 
 interface DataTableProviderProps<TData extends Record<string, any>>
   extends DataTableProps<TData> {

@@ -1,7 +1,6 @@
 import {
   FunctionComponent,
   useState,
-  createContext,
   useContext,
   ReactNode,
   ComponentProps,
@@ -30,6 +29,7 @@ import { ChevronDownIcon, CrossIcon, HamburgerMenuIcon } from "../icons";
 import { cva } from "class-variance-authority";
 import { RemoveScroll } from "react-remove-scroll";
 import { Root, Slot } from "@radix-ui/react-slot";
+import { sharedContext } from "../utils/registry";
 
 type NavbarProps = ComponentProps<"header">;
 
@@ -38,7 +38,7 @@ interface NavbarContextProps {
   show: boolean;
   setShow: (value: boolean) => void;
 }
-const NavbarContext = createContext<NavbarContextProps>({
+const NavbarContext = sharedContext<NavbarContextProps>("NavbarContext", {
   id: "",
   show: false,
   setShow: () => {},
@@ -324,7 +324,10 @@ interface NavbarMenuDropdownProps {
   className?: string;
 }
 
-const NavbarMenuDropdownContext = createContext(false);
+const NavbarMenuDropdownContext = sharedContext(
+  "NavbarMenuDropdownContext",
+  false,
+);
 
 const NavbarMenuDropdown: FunctionComponent<NavbarMenuDropdownProps> = ({
   children,

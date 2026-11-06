@@ -16,6 +16,7 @@ import { Button, ButtonProps } from "./button";
 import { CrossIcon, SearchIcon } from "../icons";
 import { clx } from "../utils";
 import { cva } from "class-variance-authority";
+import { sharedContext } from "../utils/registry";
 
 type SearchBarSize = "small" | "medium" | "large";
 const DEFAULT_SIZE: SearchBarSize = "medium";
@@ -33,7 +34,7 @@ type Context = {
   setGivenResultsId: Dispatch<SetStateAction<string | undefined>>;
 };
 
-const SearchBarContext = React.createContext<Context>({
+const SearchBarContext = sharedContext<Context>("SearchBarContext", {
   size: DEFAULT_SIZE,
   setGivenResultsId: () => {},
 });

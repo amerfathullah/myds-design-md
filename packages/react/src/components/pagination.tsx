@@ -1,6 +1,5 @@
 import React, {
   ComponentProps,
-  createContext,
   forwardRef,
   ForwardRefExoticComponent,
   ReactNode,
@@ -13,6 +12,7 @@ import { ChevronLeftIcon } from "../icons/chevron-left";
 import { ChevronRightIcon } from "../icons/chevron-right";
 import { Slot } from "@radix-ui/react-slot";
 import { usePagination } from "../hooks/use-pagination";
+import { sharedContext } from "../utils/registry";
 
 // The English default names. The parts set them, and AutoPagination sets
 // them again where it passes a label prop through to a part.
@@ -38,11 +38,11 @@ export interface PaginatorProps {
   type: "simple" | "full" | "default";
 }
 
-const PaginationContext = createContext<
+const PaginationContext = sharedContext<
   PaginatorProps & {
     totalPages: number;
   }
->({
+>("PaginationContext", {
   page: 1,
   count: 0,
   limit: 6,

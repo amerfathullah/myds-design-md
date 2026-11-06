@@ -1,6 +1,5 @@
 import React, {
   ComponentProps,
-  createContext,
   forwardRef,
   ForwardRefExoticComponent,
   ReactNode,
@@ -10,6 +9,7 @@ import React, {
 import { clx } from "../utils";
 import { cva, VariantProps } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
+import { sharedContext } from "../utils/registry";
 
 /*========================================================================================================================*/
 
@@ -149,11 +149,14 @@ Button.displayName = "Button";
 
 /*========================================================================================================================*/
 
-const ButtonContext = createContext<VariantProps<typeof button_cva>>({
-  variant: "primary-fill",
-  size: "small",
-  iconOnly: false,
-});
+const ButtonContext = sharedContext<VariantProps<typeof button_cva>>(
+  "ButtonContext",
+  {
+    variant: "primary-fill",
+    size: "small",
+    iconOnly: false,
+  },
+);
 
 /*========================================================================================================================*/
 

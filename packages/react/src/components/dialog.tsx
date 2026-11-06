@@ -6,7 +6,6 @@ import {
   ReactElement,
   JSXElementConstructor,
   ReactNode,
-  createContext,
   useContext,
   LegacyRef,
 } from "react";
@@ -15,6 +14,7 @@ import { clx } from "../utils";
 import { Button } from "./button";
 import { cva } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
+import { sharedContext } from "../utils/registry";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -61,10 +61,13 @@ interface DialogBodyProps
   closeLabel?: string;
 }
 
-const DialogBodyContext = createContext<DialogBodyContextProps>({
-  dismissible: true,
-  onDismiss: () => {},
-});
+const DialogBodyContext = sharedContext<DialogBodyContextProps>(
+  "DialogBodyContext",
+  {
+    dismissible: true,
+    onDismiss: () => {},
+  },
+);
 
 const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef(
   (

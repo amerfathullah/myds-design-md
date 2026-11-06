@@ -5,6 +5,7 @@ import { cva } from "class-variance-authority";
 import { ChevronDownFillIcon } from "../icons/chevron-down-fill";
 import { CheckCircleFillIcon } from "../icons/check-circle-fill";
 import { Checkbox } from "./checkbox";
+import { sharedContext } from "../utils/registry";
 
 type SelectBase = Omit<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>,
@@ -38,16 +39,19 @@ type SelectInternalProps = {
   _value: string | string[];
 };
 
-const SelectContext = React.createContext<SelectProps & SelectInternalProps>({
-  _value: "",
-  _handleClose: () => {},
-  multiple: false,
-  value: "",
-  defaultValue: "",
-  onValueChange: () => {},
-  variant: "outline",
-  size: "small",
-});
+const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
+  "SelectContext",
+  {
+    _value: "",
+    _handleClose: () => {},
+    multiple: false,
+    value: "",
+    defaultValue: "",
+    onValueChange: () => {},
+    variant: "outline",
+    size: "small",
+  },
+);
 
 const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
   (props, ref) => {

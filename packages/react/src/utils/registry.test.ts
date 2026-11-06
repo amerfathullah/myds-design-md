@@ -285,4 +285,14 @@ describe("the library's own copy", () => {
     expect(second.sharedContext("ReloadedProbeContext", "second")).toBe(made);
     expect(read(made)).toBe("first");
   });
+  test("a module that makes a context, re-evaluated, gets the context it made first", async () => {
+    vi.resetModules();
+    const first =
+      await load<typeof import("../hooks/use-theme")>("../hooks/use-theme");
+    vi.resetModules();
+    const second =
+      await load<typeof import("../hooks/use-theme")>("../hooks/use-theme");
+    expect(second.useTheme).not.toBe(first.useTheme);
+    expect(second.ThemeContext).toBe(first.ThemeContext);
+  });
 });

@@ -1,6 +1,5 @@
 import {
   ComponentProps,
-  createContext,
   forwardRef,
   ForwardRefExoticComponent,
   FunctionComponent,
@@ -14,6 +13,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { clx } from "../utils";
 import { cva } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
+import { sharedContext } from "../utils/registry";
 
 /*========================================================================================================================*/
 
@@ -22,7 +22,7 @@ interface TabsProps extends ComponentProps<typeof TabsPrimitive.Root> {
   size?: "small" | "medium";
 }
 
-const TabsContext = createContext<TabsProps>({
+const TabsContext = sharedContext<TabsProps>("TabsContext", {
   variant: "line",
   size: "small",
 });

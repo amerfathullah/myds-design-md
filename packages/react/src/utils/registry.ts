@@ -2,30 +2,16 @@ import type { Emitter, EventType } from "mitt";
 import * as React from "react";
 import type { Context, createContext as CreateContext } from "react";
 
-// One of each context, and one toast emitter, for every bundled copy of the
-// library on one React (#119, #235). The CommonJS build inlines every module
-// into each entry that imports it, and an app can load some entries through
-// `import` and others through `require`. A context made at module scope would
-// then exist once per copy, and a provider from one entry would never reach a
-// consumer from another. So `sharedContext` makes every context and
-// `sharedEmitter` the emitter, and both keep what they make in one store that
-// every copy of the same major finds on `globalThis`:
-//
+// Makes each context and the toast emitter once per React copy for every
+// bundled copy of the library of one major: each CommonJS entry, the ESM
+// chunk, a second install (#119, #235). They're kept in
 //   globalThis[Symbol.for("<package name>@<major>/registry-v1")]:
 //     WeakMap<React's createContext, Map<name, context or emitter>>
-//
-// It's keyed by `createContext` because that's one object per React copy,
-// under `import`, `require` and bundler interop alike, and two copies of one
-// React version still differ. Separate React copies, and different majors,
-// share nothing.
-//
-// Every minor and patch of a major shares the store, and the copy that loads
-// first makes each object, default value and all. So within a major:
-// - the key, the store's layout and every name are frozen;
-// - a field added to a context's value must be optional, and each reader must
-//   fall back when it's missing;
-// - a change an older copy can't handle needs a new name.
-// `registry.guard.test.ts` keeps each name and default value under review.
+// keyed by createContext, one object per React copy however it's loaded. The
+// copy that loads first makes each one, default value and all. So within a
+// major, the key, this layout and every name are frozen; a field added to a
+// context's value must be optional, with a fallback wherever it's read; and a
+// change an older copy can't handle needs a new name.
 
 // The package's name and version, from its package.json, which tsup and
 // Vitest put in (`define`)

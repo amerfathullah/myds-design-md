@@ -1,13 +1,9 @@
 "use client";
 
-import React, {
-  ComponentProps,
-  createContext,
-  FunctionComponent,
-  useContext,
-} from "react";
+import React, { ComponentProps, FunctionComponent, useContext } from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { clx } from "../utils";
+import { sharedContext } from "../utils/registry";
 
 type RadioSize = "small" | "medium" | "large";
 const DEFAULT_SIZE = "medium";
@@ -21,18 +17,18 @@ export interface RadioProps
   size?: RadioSize;
 }
 
-const RadioContext = createContext<
+const RadioContext = sharedContext<
   Required<Pick<RadioProps, "size" | "disabled">>
->({
+>("RadioContext", {
   size: DEFAULT_SIZE,
   disabled: false,
 });
 
 // An item needs it's own context because labels and radio buttons need to be
 // aware if only the specific item was disabled.
-const RadioItemContext = createContext<
+const RadioItemContext = sharedContext<
   Required<Pick<ComponentProps<typeof RadioItem>, "disabled">>
->({ disabled: false });
+>("RadioItemContext", { disabled: false });
 
 /**
  * Uses RadixUI's RadioGroup.Root API.

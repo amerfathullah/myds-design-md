@@ -4,7 +4,6 @@ import {
   ComponentPropsWithRef,
   ForwardRefExoticComponent,
   ReactNode,
-  createContext,
   forwardRef,
   isValidElement,
   useContext,
@@ -13,12 +12,13 @@ import {
 import { cva, VariantProps } from "class-variance-authority";
 import { clx } from "../utils";
 import { Slot } from "@radix-ui/react-slot";
+import { sharedContext } from "../utils/registry";
 
 type InputContextProps = {
   size: "small" | "medium" | "large" | null;
 };
 
-const InputContext = createContext<InputContextProps>({
+const InputContext = sharedContext<InputContextProps>("InputContext", {
   size: "small",
 });
 

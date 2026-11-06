@@ -589,7 +589,161 @@ describe("the modules the build ships", () => {
   // A change here is a change to what every copy of the major shares
   // (`registry.ts`)
   test("keep each name and default value under review", () => {
-    expect(found.review).toMatchInlineSnapshot();
+    expect(found.review).toMatchInlineSnapshot(`
+      {
+        "AlertDialogContext": {
+          "default": {
+            "variant": "'default'",
+          },
+          "file": "components/alert-dialog.tsx",
+          "kind": "context",
+        },
+        "ButtonContext": {
+          "default": {
+            "iconOnly": "false",
+            "size": "'small'",
+            "variant": "'primary-fill'",
+          },
+          "file": "components/button.tsx",
+          "kind": "context",
+        },
+        "CalloutContext": {
+          "default": {
+            "handleDismiss": "() => {}",
+            "show": "true",
+          },
+          "file": "components/callout.tsx",
+          "kind": "context",
+        },
+        "CookieBannerContext": {
+          "default": "null",
+          "file": "components/cookie-banner.tsx",
+          "kind": "context",
+        },
+        "DataTableContext": {
+          "default": {
+            "expandableColumns": "{}",
+            "table": "null",
+            "toggleColumnWidth": "() => {}",
+          },
+          "file": "components/data-table.tsx",
+          "kind": "context",
+        },
+        "DialogBodyContext": {
+          "default": {
+            "dismissible": "true",
+            "onDismiss": "() => {}",
+          },
+          "file": "components/dialog.tsx",
+          "kind": "context",
+        },
+        "InputContext": {
+          "default": {
+            "size": "'small'",
+          },
+          "file": "components/input.tsx",
+          "kind": "context",
+        },
+        "NavbarContext": {
+          "default": {
+            "id": "''",
+            "setShow": "() => {}",
+            "show": "false",
+          },
+          "file": "components/navbar.tsx",
+          "kind": "context",
+        },
+        "NavbarMenuDropdownContext": {
+          "default": "false",
+          "file": "components/navbar.tsx",
+          "kind": "context",
+        },
+        "PaginationContext": {
+          "default": {
+            "count": "0",
+            "limit": "6",
+            "onPageChange": "(page) => {}",
+            "page": "1",
+            "totalPages": "0",
+            "type": "'default'",
+          },
+          "file": "components/pagination.tsx",
+          "kind": "context",
+        },
+        "RadioContext": {
+          "default": {
+            "disabled": "false",
+            "size": "'medium'",
+          },
+          "file": "components/radio.tsx",
+          "kind": "context",
+        },
+        "RadioItemContext": {
+          "default": {
+            "disabled": "false",
+          },
+          "file": "components/radio.tsx",
+          "kind": "context",
+        },
+        "SearchBarContext": {
+          "default": {
+            "setGivenResultsId": "() => {}",
+            "size": "'medium'",
+          },
+          "file": "components/search-bar.tsx",
+          "kind": "context",
+        },
+        "SelectContext": {
+          "default": {
+            "_handleClose": "() => {}",
+            "_value": "''",
+            "defaultValue": "''",
+            "multiple": "false",
+            "onValueChange": "() => {}",
+            "size": "'small'",
+            "value": "''",
+            "variant": "'outline'",
+          },
+          "file": "components/select.tsx",
+          "kind": "context",
+        },
+        "TabsContext": {
+          "default": {
+            "size": "'small'",
+            "variant": "'line'",
+          },
+          "file": "components/tabs.tsx",
+          "kind": "context",
+        },
+        "ThemeContext": {
+          "default": {
+            "defaultTheme": "'light'",
+            "setTheme": "() => {}",
+            "theme": "'light'",
+          },
+          "file": "hooks/use-theme.tsx",
+          "kind": "context",
+        },
+        "ToastContext": {
+          "default": {
+            "duration": "5000",
+            "isHover": "false",
+            "variant": "'message'",
+          },
+          "file": "components/toast.tsx",
+          "kind": "context",
+        },
+        "ToggleContext": {
+          "default": "undefined",
+          "file": "components/toggle.tsx",
+          "kind": "context",
+        },
+        "emitter": {
+          "file": "utils/events.ts",
+          "kind": "emitter",
+        },
+      }
+    `);
   });
 });
 

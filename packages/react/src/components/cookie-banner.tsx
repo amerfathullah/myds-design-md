@@ -1,7 +1,6 @@
 import {
   ComponentProps,
   ComponentPropsWithoutRef,
-  createContext,
   Dispatch,
   ElementType,
   forwardRef,
@@ -26,6 +25,7 @@ import { CrossIcon } from "../icons/cross";
 import { clx } from "../utils";
 import { composeEventHandlers } from "../utils/compose-event-handlers";
 import { Button } from "./button";
+import { sharedContext } from "../utils/registry";
 
 /*========================================================================================================================*/
 
@@ -43,7 +43,8 @@ interface CookieBannerContextValue {
   registerPart: (node: HTMLElement, part: Part) => () => void;
 }
 
-const CookieBannerContext = createContext<CookieBannerContextValue | null>(
+const CookieBannerContext = sharedContext<CookieBannerContextValue | null>(
+  "CookieBannerContext",
   null,
 );
 

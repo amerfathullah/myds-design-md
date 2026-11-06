@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useId } from "react";
+import React, { useContext, useId } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clx } from "../utils";
+import { sharedContext } from "../utils/registry";
 
 // The visual track. The native checkbox before it, marked `peer`, is the
 // switch, so the track follows its state: its focus (`peer-focus:`), which a
@@ -40,7 +41,10 @@ interface ToggleContextType extends VariantProps<typeof thumbVariants> {
   id: string;
 }
 
-const ToggleContext = createContext<ToggleContextType | undefined>(undefined);
+const ToggleContext = sharedContext<ToggleContextType | undefined>(
+  "ToggleContext",
+  undefined,
+);
 
 export interface ToggleProps extends VariantProps<typeof thumbVariants> {
   /**

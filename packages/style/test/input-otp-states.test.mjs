@@ -13,7 +13,9 @@
 // control beside the InputOTP inside an element marked `group`, or
 // `group/input-otp`, or the library's own `group`s, such as an open
 // AccordionItem; not one among the InputOTP's children; and not another
-// InputOTP.
+// InputOTP beside it or among its children. An InputOTP placed among the
+// children of another still takes the outer one's look, which this suite
+// doesn't check.
 //
 // The page is input-otp-states.page.jsx: the React components themselves,
 // bundled with esbuild, on the stylesheet the Tailwind import compiles for
@@ -97,12 +99,34 @@ const otps = {
     name: "with a disabled Button among its children",
   },
   "child-invalid-input": { name: "with an invalid Input among its children" },
+  "child-invalid-otp": {
+    name: "with an invalid InputOTP among its children",
+  },
+  "child-invalid-otp-inner": {
+    name: "invalid, among a valid InputOTP's children",
+    invalid: true,
+  },
+  "child-disabled-otp": {
+    name: "with a disabled InputOTP among its children",
+  },
+  "child-disabled-otp-inner": {
+    name: "disabled, among an enabled InputOTP's children",
+    disabled: true,
+  },
   "pair-invalid": {
     name: 'invalid, in a <div className="group"> with a disabled InputOTP',
     invalid: true,
   },
   "pair-disabled": {
     name: 'disabled, in a <div className="group"> with an invalid InputOTP',
+    disabled: true,
+  },
+  "named-pair-invalid": {
+    name: 'invalid, in a <div className="group/input-otp"> with a disabled InputOTP',
+    invalid: true,
+  },
+  "named-pair-disabled": {
+    name: 'disabled, in a <div className="group/input-otp"> with an invalid InputOTP',
     disabled: true,
   },
 };

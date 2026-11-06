@@ -102,10 +102,20 @@ function Page() {
         <Button disabled>Resend</Button>
       </Otp>
       <Otp id="child-invalid-input">{invalidInput}</Otp>
+      <Otp id="child-invalid-otp">
+        <Otp id="child-invalid-otp-inner" invalid />
+      </Otp>
+      <Otp id="child-disabled-otp">
+        <Otp id="child-disabled-otp-inner" disabled />
+      </Otp>
 
       <div className="group">
         <Otp id="pair-invalid" invalid />
         <Otp id="pair-disabled" disabled />
+      </div>
+      <div className="group/input-otp">
+        <Otp id="named-pair-invalid" invalid />
+        <Otp id="named-pair-disabled" disabled />
       </div>
     </main>
   );

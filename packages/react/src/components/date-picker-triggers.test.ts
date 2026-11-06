@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
-// The names of DatePicker's and DateRangePicker's triggers. Each picker
-// renders its triggers twice, Dialog triggers for below `lg:` and Popover
-// triggers from `lg:` up, so `aria-labelledby`, `aria-label` and
-// `aria-describedby` reach every trigger, and none of the calendars. A
-// trigger is named by the label, then by what it shows.
+// The names of DatePicker's and DateRangePicker's triggers, and what
+// `disabled` does to them. Each picker renders its triggers twice, Dialog
+// triggers for below `lg:` and Popover triggers from `lg:` up, so
+// `aria-labelledby`, `aria-label` and `aria-describedby` reach every trigger,
+// and none of the calendars. A trigger is named by the label, then by what it
+// shows. `disabled={true}` disables every trigger; any other `disabled`
+// leaves them enabled and disables only the days it matches.
 import { act, createElement, Fragment, type ReactElement } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
@@ -11,6 +13,7 @@ import {
   computeAccessibleDescription,
   computeAccessibleName,
 } from "dom-accessibility-api";
+import type { Matcher } from "react-day-picker";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { DatePicker } from "./date-picker";
@@ -427,6 +430,309 @@ describe("Both pickers", () => {
       "Tarikh perjalanan To: dd / mm / yyyy",
       "Tarikh perjalanan From: dd / mm / yyyy",
       "Tarikh perjalanan To: dd / mm / yyyy",
+    ]);
+  });
+});
+
+// What a trigger shows and what names and describes it, so an enabled and a
+// disabled picker's triggers can be compared: its classes and its
+// descendants', its text, its accessible name and description, and the text
+// of each element its `aria-labelledby` and `aria-describedby` reference. The
+// referenced ids differ between two pickers, so their text stands in for
+// them.
+const triggerLooks = (page: ParentNode) =>
+  triggersOf(page).map((button) => {
+    const referenced = (name: string) =>
+      button.hasAttribute(name)
+        ? button
+            .getAttribute(name)!
+            .split(/\s+/)
+            .map((id) => document.getElementById(id)?.textContent ?? null)
+        : null;
+    return {
+      classes: [button, ...button.querySelectorAll("*")].map((element) =>
+        element.getAttribute("class"),
+      ),
+      text: button.textContent,
+      name: computeAccessibleName(button),
+      description: computeAccessibleDescription(button),
+      labelledBy: referenced("aria-labelledby"),
+      describedBy: referenced("aria-describedby"),
+    };
+  });
+
+// Mounts `element`, returns `read` of its container, and unmounts it, so the
+// next picker mounted can reuse the Label's and hint's ids
+async function readMounted<T>(
+  element: ReactElement,
+  read: (page: HTMLElement) => T,
+) {
+  const page = await mount(element);
+  const result = read(page);
+  await unmounts.pop()!();
+  return result;
+}
+
+// Whether the trigger in `page` opened a dialog or popover
+const openCount = () => document.querySelectorAll('[role="dialog"]').length;
+
+// The days the open calendar shows, by their `data-day` ("2026-10-01"), and
+// those of them it disables
+function calendarDays() {
+  const [calendar, ...others] = document.querySelectorAll(
+    '[role="dialog"] [lang]',
+  );
+  expect(others).toEqual([]);
+  expect(calendar).toBeDefined();
+  const days = [...calendar!.querySelectorAll("[data-day]")];
+  return {
+    shown: days.map((day) => day.getAttribute("data-day")!),
+    disabled: days
+      .filter((day) => day.hasAttribute("data-disabled"))
+      .map((day) => day.getAttribute("data-day")!),
+  };
+}
+
+// The date a `data-day` names, at midnight local time, as the pickers' dates
+const dateOf = (isoDate: string) => {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year!, month! - 1, day);
+};
+
+const october13 = new Date(2026, 9, 13);
+const october15 = new Date(2026, 9, 15);
+
+// The `disabled` values other than `true`, as props, each with the days it
+// matches. Each leaves the triggers enabled and disables only those days.
+// `[true]` matches every day; #231 may make it disable the triggers too.
+const dayMatchers: [
+  string,
+  { disabled?: Matcher | Matcher[] },
+  (day: Date) => boolean,
+][] = [
+  [
+    "`{ before: date }`",
+    { disabled: { before: october15 } },
+    (day) => day < october15,
+  ],
+  [
+    "`{ dayOfWeek: [0, 6] }`",
+    { disabled: { dayOfWeek: [0, 6] } },
+    (day) => day.getDay() === 0 || day.getDay() === 6,
+  ],
+  [
+    "a function matcher",
+    { disabled: (day: Date) => day.getDate() === 13 },
+    (day) => day.getDate() === 13,
+  ],
+  [
+    "an array of matchers",
+    { disabled: [{ dayOfWeek: [0] }, october13] },
+    (day) => day.getDay() === 0 || day.getTime() === october13.getTime(),
+  ],
+  ["`[true]`", { disabled: [true] }, () => true],
+  ["`false`", { disabled: false }, () => false],
+  ["no `disabled`", {}, () => false],
+];
+
+// Each picker with a date in October 2026, so each calendar opens on that
+// month, and its triggers in the order it renders them, each with the days
+// its calendar disables whatever `disabled` is: DateRangePicker's From
+// calendars the days after `to`, and its To calendars those before `from`
+const pickers = {
+  DatePicker: {
+    render: (props: object) =>
+      createElement(DatePicker, { value: october30, ...props }),
+    triggers: [
+      ["dialog", () => false],
+      ["popover", () => false],
+    ] as [string, (day: Date) => boolean][],
+  },
+  DateRangePicker: {
+    render: (props: object) =>
+      createElement(DateRangePicker, { value: range, ...props }),
+    triggers: [
+      ["From dialog", (day) => day > october30],
+      ["To dialog", (day) => day < october1],
+      ["From popover", (day) => day > october30],
+      ["To popover", (day) => day < october1],
+    ] as [string, (day: Date) => boolean][],
+  },
+};
+
+// JSX's bare `disabled` passes `true`, as `disabled={true}` does
+describe("`disabled={true}`", () => {
+  test.each([
+    ["no value", {}],
+    ["`defaultValue`", { defaultValue: range }],
+    ["a controlled `value`", { value: range }],
+  ])(
+    "disables all four of DateRangePicker's triggers, which open nothing, with %s",
+    async (_, props) => {
+      const onValueChange = vi.fn();
+      const page = await mount(
+        createElement(DateRangePicker, {
+          ...props,
+          onValueChange,
+          disabled: true,
+        }),
+      );
+      const triggers = triggersOf(page);
+      expect(triggers.map((trigger) => trigger.disabled)).toEqual([
+        true,
+        true,
+        true,
+        true,
+      ]);
+      const opened = [];
+      for (const trigger of triggers) {
+        await act(async () => trigger.click());
+        opened.push(openCount());
+      }
+      expect(opened).toEqual([0, 0, 0, 0]);
+      expect(onValueChange).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each([
+    ["no value", {}],
+    ["a value", { value: october30 }],
+  ])(
+    "disables both of DatePicker's triggers, which open nothing, with %s",
+    async (_, props) => {
+      const onValueChange = vi.fn();
+      const page = await mount(
+        createElement(DatePicker, { ...props, onValueChange, disabled: true }),
+      );
+      const triggers = triggersOf(page);
+      expect(triggers.map((trigger) => trigger.disabled)).toEqual([true, true]);
+      const opened = [];
+      for (const trigger of triggers) {
+        await act(async () => trigger.click());
+        opened.push(openCount());
+      }
+      expect(opened).toEqual([0, 0]);
+      expect(onValueChange).not.toHaveBeenCalled();
+    },
+  );
+
+  // A Label and hint for `field` to name and describe the picker, or the
+  // naming props that need neither, with each prop that changes the text
+  test.each([
+    [
+      "DatePicker",
+      "`aria-labelledby` and `aria-describedby`",
+      true,
+      {
+        "aria-labelledby": "label",
+        "aria-describedby": "hint",
+      },
+    ],
+    [
+      "DatePicker",
+      '`aria-label` and `locale="ms"`',
+      false,
+      {
+        locale: "ms",
+        "aria-label": "Tarikh lahir",
+      },
+    ],
+    ["DatePicker", "no naming props", false, {}],
+    [
+      "DateRangePicker",
+      "`aria-labelledby` and `aria-describedby`",
+      true,
+      {
+        "aria-labelledby": "label",
+        "aria-describedby": "hint",
+      },
+    ],
+    [
+      "DateRangePicker",
+      '`aria-label` and `locale="ms"`',
+      false,
+      {
+        locale: "ms",
+        "aria-label": "Tarikh perjalanan",
+      },
+    ],
+    [
+      "DateRangePicker",
+      "`fromLabel` and `toLabel`",
+      true,
+      {
+        fromLabel: "Check-in:",
+        toLabel: "Check-out:",
+        "aria-labelledby": "label",
+      },
+    ],
+    ["DateRangePicker", "no naming props", false, {}],
+  ] as const)(
+    "keeps %s's trigger classes, text, names and descriptions, with %s",
+    async (picker, _, inField, props) => {
+      const render = (disabled: object) => {
+        const element = pickers[picker].render({ ...props, ...disabled });
+        return inField ? field("Dates", element) : element;
+      };
+      const enabled = await readMounted(render({}), triggerLooks);
+      const disabled = await readMounted(
+        render({ disabled: true }),
+        triggerLooks,
+      );
+      expect(disabled).toEqual(enabled);
+      expect(enabled.length).toBe(pickers[picker].triggers.length);
+    },
+  );
+});
+
+describe("Every other `disabled` value", () => {
+  test.each(
+    Object.entries(pickers).flatMap(([picker, { triggers }]) =>
+      triggers.flatMap(([trigger, bound], index) =>
+        dayMatchers.map(
+          ([value, props, matches]) =>
+            [picker, trigger, value, index, props, matches, bound] as const,
+        ),
+      ),
+    ),
+  )(
+    "leaves %s's %s trigger enabled with %s, and its calendar disables only the days that matches",
+    async (picker, _, __, index, props, matches, bound) => {
+      const page = await mount(
+        pickers[picker as keyof typeof pickers].render(props),
+      );
+      const trigger = triggersOf(page)[index]!;
+      expect(trigger.disabled).toBe(false);
+      await act(async () => trigger.click());
+      expect(openCount()).toBe(1);
+      const { shown, disabled } = calendarDays();
+      // October 2026, Sunday 27 September to Saturday 31 October
+      expect(shown.length).toBe(35);
+      expect(disabled).toEqual(
+        shown.filter((day) => matches(dateOf(day)) || bound(dateOf(day))),
+      );
+    },
+  );
+
+  test("`{ dayOfWeek: [0, 6] }` disables only the weekends and the days after `to` in DateRangePicker's From calendar", async () => {
+    const page = await mount(
+      createElement(DateRangePicker, {
+        value: range,
+        disabled: { dayOfWeek: [0, 6] },
+      }),
+    );
+    await act(async () => triggersOf(page)[0]!.click());
+    expect(calendarDays().disabled).toEqual([
+      "2026-09-27",
+      "2026-10-03",
+      "2026-10-04",
+      "2026-10-10",
+      "2026-10-11",
+      "2026-10-17",
+      "2026-10-18",
+      "2026-10-24",
+      "2026-10-25",
+      "2026-10-31",
     ]);
   });
 });

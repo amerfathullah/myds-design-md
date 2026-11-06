@@ -118,7 +118,7 @@ Untuk menggunakan pemilih tarikh dalam keadaan terkawal, tetapkan prop `value` k
 
 ### Dilumpuhkan
 
-Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Tarikh. Pemilih tarikh boleh dilumpuhkan sepenuhnya dengan menetapkan prop `disabled` kepada `true`.
+Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Tarikh. Pemilih tarikh boleh dilumpuhkan sepenuhnya dengan menetapkan prop `disabled` kepada `true`. `<fieldset>` yang dilumpuhkan di sekeliling `DatePicker` turut melumpuhkannya. Tetapkan juga `disabled` pada `Label` supaya label turut malap.
 
 Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh menghantar `Matcher | Matcher[]` yang mentakrifkan peraturan untuk melumpuhkan tarikh.
 
@@ -303,7 +303,8 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
       default: "dd / mm / yyyy",
     },
     disabled: {
-      description: "Keadaan dilumpuhkan untuk pemilih tarikh",
+      description:
+        "`true` melumpuhkan seluruh pemilih tarikh, setiap butang yang dipaparkannya. Matcher lain, atau array Matcher, hanya melumpuhkan hari yang sepadan dengannya.",
       type: "boolean | Matcher | Matcher[]",
       default: "false",
     },

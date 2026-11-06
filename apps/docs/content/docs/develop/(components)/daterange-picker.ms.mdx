@@ -126,7 +126,7 @@ Untuk menggunakan pemilih julat tarikh dalam keadaan terkawal, tetapkan prop `va
 
 ### Dilumpuhkan
 
-Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Julat Tarikh. Pemilih julat tarikh boleh dilumpuhkan sepenuhnya dengan menetapkan prop `disabled` kepada `true`.
+Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Julat Tarikh. Pemilih julat tarikh boleh dilumpuhkan sepenuhnya dengan menetapkan prop `disabled` kepada `true`. `<fieldset>` yang dilumpuhkan di sekeliling `DateRangePicker` turut melumpuhkannya. Tetapkan juga `disabled` pada `Label` supaya label turut malap.
 
 Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh menghantar `Matcher | Matcher[]` yang mentakrifkan peraturan untuk melumpuhkan tarikh.
 
@@ -324,7 +324,8 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
       default: "dd / mm / yyyy",
     },
     disabled: {
-      description: "Keadaan dilumpuhkan untuk pemilih julat tarikh",
+      description:
+        "`true` melumpuhkan seluruh pemilih julat tarikh, setiap butang yang dipaparkannya. Matcher lain, atau array Matcher, hanya melumpuhkan hari yang sepadan dengannya.",
       type: "boolean | Matcher | Matcher[]",
       default: "false",
     },

@@ -76,6 +76,13 @@ import {
   SearchBarSearchButton,
 } from "@amerfathullah/myds-react/search-bar";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@amerfathullah/myds-react/select";
+import {
   SummaryList,
   SummaryListHeader,
 } from "@amerfathullah/myds-react/summary-list";
@@ -279,6 +286,47 @@ export const AlertDialogs = () => (
     <AlertDialog variant={null}>{alertBody}</AlertDialog>
     {/* @ts-expect-error `variant` is one of the five names */}
     <AlertDialog variant="bogus">{alertBody}</AlertDialog>
+  </>
+);
+
+// Select's `size` and `variant` are optional and default to `small` and
+// `outline`. They still take `null`, and TypeScript rejects names they don't
+// list.
+const selectBody = (
+  <>
+    <SelectTrigger>
+      <SelectValue placeholder="Pilih buah" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="apple">Epal</SelectItem>
+    </SelectContent>
+  </>
+);
+
+export const Selects = () => (
+  <>
+    <Select>{selectBody}</Select>
+    <Select size="medium">{selectBody}</Select>
+    <Select variant="ghost">{selectBody}</Select>
+    <Select size="large" variant="outline">
+      {selectBody}
+    </Select>
+    <Select multiple>{selectBody}</Select>
+    <Select
+      multiple
+      defaultValue={["apple"]}
+      onValueChange={(value: string[]) => void value}
+    >
+      {selectBody}
+    </Select>
+    <Select onValueChange={(value: string) => void value}>{selectBody}</Select>
+    <Select size={null} variant={null}>
+      {selectBody}
+    </Select>
+    {/* @ts-expect-error `size` is small, medium or large */}
+    <Select size="xl">{selectBody}</Select>
+    {/* @ts-expect-error `variant` is outline or ghost */}
+    <Select variant="bogus">{selectBody}</Select>
   </>
 );
 

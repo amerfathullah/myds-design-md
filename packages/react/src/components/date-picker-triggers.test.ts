@@ -473,7 +473,7 @@ async function readMounted<T>(
   return result;
 }
 
-// Whether the trigger in `page` opened a dialog or popover
+// The number of dialogs and popovers open on the page
 const openCount = () => document.querySelectorAll('[role="dialog"]').length;
 
 // The days the open calendar shows, by their `data-day` ("2026-10-01"), and
@@ -668,19 +668,24 @@ describe("`disabled={true}`", () => {
     ],
     ["DateRangePicker", "no naming props", false, {}],
   ] as const)(
-    "keeps %s's trigger classes, text, names and descriptions, with %s",
+    "disables %s's triggers but keeps their classes, text, names and descriptions, with %s",
     async (picker, _, inField, props) => {
       const render = (disabled: object) => {
         const element = pickers[picker].render({ ...props, ...disabled });
         return inField ? field("Dates", element) : element;
       };
-      const enabled = await readMounted(render({}), triggerLooks);
-      const disabled = await readMounted(
-        render({ disabled: true }),
-        triggerLooks,
-      );
-      expect(disabled).toEqual(enabled);
-      expect(enabled.length).toBe(pickers[picker].triggers.length);
+      // Each trigger's native `disabled`, then what it shows and what names
+      // and describes it
+      const read = (page: HTMLElement) => ({
+        disabled: triggersOf(page).map((trigger) => trigger.disabled),
+        looks: triggerLooks(page),
+      });
+      const enabled = await readMounted(render({}), read);
+      const disabled = await readMounted(render({ disabled: true }), read);
+      const count = pickers[picker].triggers.length;
+      expect(enabled.disabled).toEqual(Array(count).fill(false));
+      expect(disabled.disabled).toEqual(Array(count).fill(true));
+      expect(disabled.looks).toEqual(enabled.looks);
     },
   );
 });

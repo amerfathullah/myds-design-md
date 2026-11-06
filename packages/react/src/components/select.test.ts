@@ -22,7 +22,7 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 type SelectProps = ComponentProps<typeof Select>;
-type Sizing = Pick<SelectProps, "size" | "variant">;
+type SizeAndVariant = Pick<SelectProps, "size" | "variant">;
 
 // A custom chevron, as an app passes one to SelectValue's `icon`
 const CustomIcon = (props: ComponentProps<"svg">) =>
@@ -32,7 +32,7 @@ const CustomIcon = (props: ComponentProps<"svg">) =>
 // labelled value in the trigger, and two items. A single select shows a check
 // icon on the selected item, and a `multiple` one a Checkbox and a counter.
 const select = (
-  props: Sizing & { multiple?: boolean },
+  props: SizeAndVariant & { multiple?: boolean },
   icon?: typeof CustomIcon,
 ) =>
   createElement(
@@ -131,66 +131,50 @@ afterEach(async () => {
   expect(document.body.innerHTML).toBe("");
 });
 
-describe("a single Select without `size`", () => {
+// A single select and a `multiple` one
+const kinds = [
+  ["a single", false],
+  ["a `multiple`", true],
+] as const;
+
+describe.each(kinds)("%s Select without `size`", (_, multiple) => {
   test("gives the chevron the small size class", async () => {
-    const { chevron } = await rendered(select({}));
+    const { chevron } = await rendered(select({ multiple }));
     expect(chevron).toContain("size-4");
   });
 
   test("gives a custom chevron the small size class", async () => {
-    const { chevron } = await rendered(select({}, CustomIcon));
+    const { chevron } = await rendered(select({ multiple }, CustomIcon));
     expect(chevron).toContain("size-4");
   });
 
-  test("sizes the selected item's check icon small", async () => {
+  test('renders every part as `size="small"` does', async () => {
+    expect(await rendered(select({ multiple }))).toEqual(
+      await rendered(select({ multiple, size: "small" })),
+    );
+    expect(await rendered(select({ multiple }, CustomIcon))).toEqual(
+      await rendered(select({ multiple, size: "small" }, CustomIcon)),
+    );
+  });
+});
+
+describe("the selected item in a Select without `size`", () => {
+  test("shows a check icon sized small in a single select", async () => {
     const { check } = await rendered(select({}));
     expect(check?.size).toBe("small");
     expect(check?.class).toContain("data-[size=small]:size-4");
   });
 
-  test('renders every part as `size="small"` does', async () => {
-    expect(await rendered(select({}))).toEqual(
-      await rendered(select({ size: "small" })),
-    );
-    expect(await rendered(select({}, CustomIcon))).toEqual(
-      await rendered(select({ size: "small" }, CustomIcon)),
-    );
-  });
-});
-
-describe("a `multiple` Select without `size`", () => {
-  test("gives the chevron the small size class", async () => {
-    const { chevron } = await rendered(select({ multiple: true }));
-    expect(chevron).toContain("size-4");
-  });
-
-  test("gives a custom chevron the small size class", async () => {
-    const { chevron } = await rendered(select({ multiple: true }, CustomIcon));
-    expect(chevron).toContain("size-4");
-  });
-
-  test("renders a Checkbox on its items, not the check icon", async () => {
+  test("shows a Checkbox, not the check icon, in a `multiple` select", async () => {
     await mount(select({ multiple: true }));
     expect(
       document.querySelectorAll('[role="option"] [role="checkbox"]'),
     ).toHaveLength(2);
     expect(checkIcon()).toBeNull();
   });
-
-  test('renders every part as `size="small"` does', async () => {
-    expect(await rendered(select({ multiple: true }))).toEqual(
-      await rendered(select({ multiple: true, size: "small" })),
-    );
-    expect(await rendered(select({ multiple: true }, CustomIcon))).toEqual(
-      await rendered(select({ multiple: true, size: "small" }, CustomIcon)),
-    );
-  });
 });
 
-describe.each([
-  ["a single", false],
-  ["a `multiple`", true],
-])("%s Select without `variant`", (_, multiple) => {
+describe.each(kinds)("%s Select without `variant`", (_, multiple) => {
   test("gives the trigger the outline classes", async () => {
     const { trigger } = await rendered(select({ multiple }));
     expect(trigger).toEqual(

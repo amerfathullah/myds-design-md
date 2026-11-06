@@ -11,8 +11,8 @@ type SelectBase = Omit<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>,
   "value" | "defaultValue" | "onValueChange"
 > & {
-  variant: "outline" | "ghost" | null;
-  size: "small" | "medium" | "large" | null;
+  variant?: "outline" | "ghost" | null;
+  size?: "small" | "medium" | "large" | null;
 };
 
 type SelectSingle = SelectBase & {
@@ -55,6 +55,8 @@ const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
 
 const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
   (props, ref) => {
+    // The defaults the docs give, so every part reads a value
+    const { size = "small", variant = "outline" } = props;
     const [_value, _setValue] = React.useState(
       isMultiple(props)
         ? props.value || props.defaultValue || []
@@ -101,7 +103,7 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
 
     return (
       <SelectContext.Provider
-        value={{ ...props, _value, _handleClose: _setOpen }}
+        value={{ ...props, size, variant, _value, _handleClose: _setOpen }}
       >
         <SelectPrimitive.Root
           ref={ref}

@@ -11,6 +11,7 @@ module.exports = [
       "coverage/",
       "type-tests/",
       "tsup.config.ts",
+      "vitest.config.ts",
       "eslint.config.js",
     ],
   },

@@ -57,28 +57,31 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
   (props, ref) => {
     // The defaults the docs give, so every part reads a value
     const { size = "small", variant = "outline" } = props;
-    const [_value, _setValue] = React.useState(
-      isMultiple(props)
-        ? props.value || props.defaultValue || []
-        : props.value || props.defaultValue || "",
+    // The selection of an uncontrolled select. A controlled one never reads
+    // or writes it.
+    const [_uncontrolledValue, _setUncontrolledValue] = React.useState(
+      isMultiple(props) ? props.defaultValue || [] : props.defaultValue || "",
     );
+    // `value` alone decides what a controlled select shows, checks and
+    // submits, `""` and `[]` included
+    const _value = props.value !== undefined ? props.value : _uncontrolledValue;
     const [_open, _setOpen] = React.useState<boolean | undefined>(
       props.open || false,
     );
 
     React.useEffect(() => {
-      if (props.multiple && !Array.isArray(_value)) _setValue([]);
-      if (!props.multiple && Array.isArray(_value)) _setValue("");
+      if (props.multiple && !Array.isArray(_uncontrolledValue))
+        _setUncontrolledValue([]);
+      if (!props.multiple && Array.isArray(_uncontrolledValue))
+        _setUncontrolledValue("");
     }, [props.multiple]);
-
-    React.useEffect(() => {
-      if (props.value) _setValue(props.value);
-    }, [props.value]);
 
     React.useEffect(() => {
       _setOpen(props.open);
     }, [props.open]);
 
+    // A pick tells the parent the next value, and only an uncontrolled select
+    // shows it without waiting for a new `value`
     const handleValueChange = (value: string | undefined | null) => {
       if (value === undefined || value === null) return;
 
@@ -87,10 +90,10 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
           ? [..._value, value]
           : (_value as string[]).filter((v) => v !== value);
 
-        _setValue(temp);
+        if (props.value === undefined) _setUncontrolledValue(temp);
         props.onValueChange?.(temp);
       } else {
-        _setValue(value);
+        if (props.value === undefined) _setUncontrolledValue(value);
         props.onValueChange?.(value);
       }
     };

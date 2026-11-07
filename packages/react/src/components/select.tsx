@@ -428,9 +428,7 @@ const SelectContent: React.ForwardRefExoticComponent<
   ({ className, children, position = "popper", ...props }, ref) => {
     const { size, multiple } = React.useContext(SelectContext);
     // A press outside the list calls `onPointerDownOutside`, then, unless it
-    // calls `preventDefault()`, Radix asks Select's root to close the list.
-    // Radix has no multi-select list, so a `multiple` select's list says it
-    // is one itself.
+    // calls `preventDefault()`, Radix asks Select's root to close the list
     return (
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content
@@ -438,6 +436,8 @@ const SelectContent: React.ForwardRefExoticComponent<
           className={select_content_cva({ position, size, className })}
           position={position}
           {...props}
+          // Radix has no multi-select list, so a `multiple` select's list
+          // says it is one itself
           {...(multiple && { "aria-multiselectable": true })}
         >
           <SelectPrimitive.Viewport
@@ -560,7 +560,9 @@ const SelectItem: React.ForwardRefExoticComponent<
         data-state={checked ? "checked" : "unchecked"}
       >
         {/* Only draws the item's state, which the option itself announces.
-            A press on it lands on the option, and focus stays there. */}
+            A press on it lands on the option, and focus stays there.
+            `aria-hidden` and `pointer-events-none` do what `inert` does, for
+            tools and browsers that don't know `inert`. */}
         <Checkbox
           ref={makeInert}
           checked={checked}

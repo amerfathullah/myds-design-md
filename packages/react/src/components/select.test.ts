@@ -120,12 +120,22 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-// No test logs an error or a warning, or leaves anything on the page
+// Radix's warning that Select's open state changes between controlled and
+// uncontrolled, which a Select whose `open` is left to it logs on mount and
+// when it opens (#132)
+const isOpenStateWarning = ([message]: unknown[]) =>
+  typeof message === "string" &&
+  /^Select is changing from (un)?controlled to (un)?controlled\./.test(message);
+
+// No test logs an error or a warning besides that one, or leaves anything on
+// the page
 afterEach(async () => {
   while (unmounts.length) await unmounts.pop()!();
   const logged = [
     ...vi.mocked(console.error).mock.calls,
-    ...vi.mocked(console.warn).mock.calls,
+    ...vi
+      .mocked(console.warn)
+      .mock.calls.filter((call) => !isOpenStateWarning(call)),
   ];
   vi.restoreAllMocks();
   expect(logged).toEqual([]);
@@ -426,5 +436,225 @@ describe.each(kinds)("in %s Select", (_, multiple) => {
       expect(attributes(wrapper)).toEqual({ class: "px-1" });
       expect(wrapper.children).toHaveLength(1);
     }
+  });
+});
+
+/*========================================================================================================================*/
+
+type ContentProps = ComponentProps<typeof SelectContent>;
+
+// A closed Select of two fruits, which leaves its `open` to Select, with
+// `content` on its SelectContent. A paragraph beside it is what a press
+// outside the list lands on.
+const closed = (
+  multiple: boolean,
+  { content, ...props }: Partial<SelectProps> & { content?: ContentProps } = {},
+) =>
+  createElement(
+    "div",
+    null,
+    createElement("p", null, "Outside"),
+    createElement(
+      Select,
+      { ...props, multiple } as SelectProps,
+      createElement(
+        SelectTrigger,
+        { "aria-label": "Fruit" },
+        createElement(SelectValue, { placeholder: "Select a fruit" }),
+      ),
+      createElement(
+        SelectContent,
+        content,
+        createElement(SelectItem, { value: "apple" }, "Apple"),
+        createElement(SelectItem, { value: "banana" }, "Banana"),
+      ),
+    ),
+  );
+
+const trigger = () => document.querySelector<HTMLElement>('[role="combobox"]')!;
+
+const listbox = () => document.querySelector('[role="listbox"]');
+
+// Waits for what Radix does on a timer: listening for presses outside the
+// list once it opens, and moving focus once it closes
+const settle = () =>
+  act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+
+// Opens the list by clicking the trigger
+async function openList() {
+  await act(async () => trigger().click());
+  await settle();
+  expect(listbox()).not.toBeNull();
+  expect(trigger().getAttribute("aria-expanded")).toBe("true");
+}
+
+// Presses the primary button of a mouse on the paragraph outside the list,
+// and returns the `pointerdown` it dispatches
+async function pressOutside() {
+  const outside = [...document.querySelectorAll("p")].find(
+    (p) => p.textContent === "Outside",
+  )!;
+  const pointerdown = new PointerEvent("pointerdown", {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    pointerType: "mouse",
+  });
+  await act(async () => void outside.dispatchEvent(pointerdown));
+  await settle();
+  return pointerdown;
+}
+
+// Presses Escape where focus is, in the open list
+async function pressEscape() {
+  await act(
+    async () =>
+      void document.activeElement!.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "Escape",
+          bubbles: true,
+          cancelable: true,
+        }),
+      ),
+  );
+  await settle();
+}
+
+// An `onPointerDownOutside` that lets the list close, and none at all
+const outsideHandlers = [
+  ["an `onPointerDownOutside` that doesn't call `preventDefault()`", () => {}],
+  ["no `onPointerDownOutside`", undefined],
+] as const;
+
+describe.each(kinds)(
+  "in %s Select with its list open, a press outside the list",
+  (_, multiple) => {
+    test("calls SelectContent's `onPointerDownOutside` once, with Radix's cancelable event for the `pointerdown`", async () => {
+      const events: Event[] = [];
+      await mount(
+        closed(multiple, {
+          content: { onPointerDownOutside: (event) => events.push(event) },
+        }),
+      );
+      await openList();
+
+      const pointerdown = await pressOutside();
+
+      expect(events).toHaveLength(1);
+      const event = events[0] as CustomEvent<{ originalEvent: PointerEvent }>;
+      expect(event).toBeInstanceOf(CustomEvent);
+      expect(event.cancelable).toBe(true);
+      expect(event.detail.originalEvent).toBe(pointerdown);
+    });
+
+    test("leaves the list open when `onPointerDownOutside` calls `preventDefault()`", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        closed(multiple, {
+          onOpenChange,
+          content: { onPointerDownOutside: (event) => event.preventDefault() },
+        }),
+      );
+      await openList();
+
+      await pressOutside();
+
+      expect(listbox()).not.toBeNull();
+      expect(trigger().getAttribute("aria-expanded")).toBe("true");
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    });
+
+    test.each(outsideHandlers)(
+      "closes the list with %s",
+      async (_, handler) => {
+        await mount(
+          closed(multiple, { content: { onPointerDownOutside: handler } }),
+        );
+        await openList();
+
+        await pressOutside();
+
+        expect(listbox()).toBeNull();
+        expect(trigger().getAttribute("aria-expanded")).toBe("false");
+      },
+    );
+
+    test("calls SelectContent's `onCloseAutoFocus` once, and focus returns to the trigger", async () => {
+      const onCloseAutoFocus = vi.fn();
+      await mount(closed(multiple, { content: { onCloseAutoFocus } }));
+      await openList();
+      expect(document.activeElement).not.toBe(trigger());
+
+      await pressOutside();
+
+      expect(onCloseAutoFocus).toHaveBeenCalledTimes(1);
+      expect(document.activeElement).toBe(trigger());
+    });
+  },
+);
+
+describe("in a single Select with its list open", () => {
+  test.each(outsideHandlers)(
+    "a press outside the list calls `onOpenChange` once, with `false`, with %s",
+    async (_, handler) => {
+      const onOpenChange = vi.fn();
+      await mount(
+        closed(false, {
+          onOpenChange,
+          content: { onPointerDownOutside: handler },
+        }),
+      );
+      await openList();
+      onOpenChange.mockClear();
+
+      await pressOutside();
+
+      expect(onOpenChange.mock.calls).toEqual([[false]]);
+    },
+  );
+
+  test("Escape calls SelectContent's `onEscapeKeyDown` once and closes the list", async () => {
+    const keys: string[] = [];
+    await mount(
+      closed(false, {
+        content: { onEscapeKeyDown: (event) => keys.push(event.key) },
+      }),
+    );
+    await openList();
+
+    await pressEscape();
+
+    expect(keys).toEqual(["Escape"]);
+    expect(listbox()).toBeNull();
+    expect(trigger().getAttribute("aria-expanded")).toBe("false");
+  });
+
+  test("Escape leaves the list open when `onEscapeKeyDown` calls `preventDefault()`", async () => {
+    const onOpenChange = vi.fn();
+    await mount(
+      closed(false, {
+        onOpenChange,
+        content: { onEscapeKeyDown: (event) => event.preventDefault() },
+      }),
+    );
+    await openList();
+
+    await pressEscape();
+
+    expect(listbox()).not.toBeNull();
+    expect(trigger().getAttribute("aria-expanded")).toBe("true");
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  test("Escape calls SelectContent's `onCloseAutoFocus` once, and focus returns to the trigger", async () => {
+    const onCloseAutoFocus = vi.fn();
+    await mount(closed(false, { content: { onCloseAutoFocus } }));
+    await openList();
+    expect(document.activeElement).not.toBe(trigger());
+
+    await pressEscape();
+
+    expect(onCloseAutoFocus).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(trigger());
   });
 });

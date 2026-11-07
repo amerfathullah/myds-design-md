@@ -90,7 +90,7 @@ In the `simple` and `full` types the labels are shown, so shorter text reads bet
 
 ### Advanced Usage
 
-For user that requires more advanced use cases, the pagination functionality can be assembled manually. The user can use the subcomponents: `Pagination`, `PaginationItem`, `PaginationContent`, `PaginationEllipsis`, `PaginationNext`, `PaginationPrevious` and `PaginationNumber`.
+For user that requires more advanced use cases, the pagination functionality can be assembled manually. The user can use the subcomponents: `Pagination`, `PaginationItem`, `PaginationContent`, `PaginationEllipsis`, `PaginationNext`, `PaginationPrevious`, `PaginationNumber` and `PaginationLabel`.
 
 ```ts copy title="Import"
 import {
@@ -99,6 +99,7 @@ import {
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
+  PaginationLabel,
   PaginationNext,
   PaginationNumber,
   PaginationPrevious,
@@ -434,13 +435,14 @@ With no children, it shows only a chevron and its accessible name is "previous p
 
 ### PaginationLabel
 
-A text component that displays pagination information.
+A text component that displays pagination information. By default it shows `Page {page} of {totalPages}`, such as "Page 2 of 20", only when the `Pagination`'s `type` is `full`. With `default` or `simple` it shows nothing. Pass `content` to show your own text in its place, whatever the `type`, for example `content="Halaman 2 daripada 20"`.
 
 <TypeTable
   type={{
     content: {
-      description: "The long description of the pagination information.",
-      type: "string",
+      description:
+        'Shown in place of the default text, whatever the `type`. Without it, the label shows "Page {page} of {totalPages}" when `type` is `full`, and nothing otherwise.',
+      type: "ReactNode",
     },
   }}
 />

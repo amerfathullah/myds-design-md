@@ -13,6 +13,7 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { ThemeProvider } from "../hooks/use-theme";
+import { Label } from "./label";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ import {
   SelectGroupTitle,
   SelectHeader,
   SelectItem,
+  SelectLabel,
   SelectSeparator,
   SelectTrigger,
   SelectValue,
@@ -1597,5 +1599,465 @@ describe('an open single Select with `defaultValue="banana"`', () => {
     expect(document.querySelector('[role="option"] [role="checkbox"]')).toBe(
       null,
     );
+  });
+});
+
+/*========================================================================================================================*/
+
+// How a Select is named (#134). A string `label` on SelectValue, drawn in the
+// trigger before the value, names the trigger and the open list: both point
+// their `aria-labelledby` at it, and it's hidden from assistive technology, so
+// the trigger's value leaves it out. A name the consumer gives the trigger,
+// with `aria-label`, `aria-labelledby` or a Label, wins, and then the trigger
+// and list render as before. happy-dom computes no accessible names, so these
+// check the attributes and the elements they point at.
+
+type TriggerProps = ComponentProps<typeof SelectTrigger>;
+type ValueProps = ComponentProps<typeof SelectValue>;
+
+type NamingOptions = Partial<SelectProps> & {
+  trigger?: TriggerProps;
+  content?: ContentProps;
+};
+
+// A Select of three fruits whose SelectValue has `label` and the placeholder
+// "Select", with `trigger` on its SelectTrigger and `content` on its
+// SelectContent
+const labelled = (
+  label: ValueProps["label"],
+  { trigger, content, ...props }: NamingOptions = {},
+) =>
+  createElement(
+    Select,
+    props as SelectProps,
+    createElement(
+      SelectTrigger,
+      trigger,
+      createElement(SelectValue, { label, placeholder: "Select" }),
+    ),
+    createElement(
+      SelectContent,
+      content,
+      FRUITS.map(([value, text]) =>
+        createElement(SelectItem, { key: value, value }, text),
+      ),
+    ),
+  );
+
+// The attributes that name `element`
+const naming = (element: Element) => ({
+  "aria-label": element.getAttribute("aria-label"),
+  "aria-labelledby": element.getAttribute("aria-labelledby"),
+});
+
+// The elements `element`'s `aria-labelledby` points at, `null` for an id
+// nothing on the page has
+const labelledBy = (element: Element) =>
+  (element.getAttribute("aria-labelledby") ?? "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((id) => document.getElementById(id));
+
+// The text of `node`'s content outside `aria-hidden` elements, which is what
+// assistive technology reads of a combobox's content: its value
+const textOutsideHidden = (node: Node): string =>
+  [...node.childNodes]
+    .map((child) =>
+      child.nodeType === Node.TEXT_NODE
+        ? (child.textContent ?? "")
+        : child instanceof Element &&
+            child.getAttribute("aria-hidden") === "true"
+          ? ""
+          : textOutsideHidden(child),
+    )
+    .join("");
+
+// The SelectLabel in the trigger: the element whose own text is "Fruit"
+const labelInTrigger = () => {
+  const found = [...trigger().querySelectorAll("*")].find(
+    (element) => element.textContent === "Fruit" && !element.children.length,
+  );
+  expect(found, "the trigger's label").toBeDefined();
+  return found!;
+};
+
+// The elements inside the trigger hidden from assistive technology, as their
+// tags: the chevron alone, unless the label names the trigger
+const hiddenInTrigger = () =>
+  [...trigger().querySelectorAll('[aria-hidden="true"]')].map(
+    (element) => element.tagName,
+  );
+
+// Checks that the trigger, and once it's open the list, are named by the
+// trigger's label "Fruit", and that the trigger's value reads `value`
+async function expectNamedByLabel(value: string) {
+  const labels = labelledBy(trigger());
+  expect(labels, "what the trigger's `aria-labelledby` names").toHaveLength(1);
+  const [label] = labels;
+  expect(label).not.toBeNull();
+  expect(trigger().contains(label!)).toBe(true);
+  expect(label!.textContent).toBe("Fruit");
+  expect(label!.getAttribute("aria-hidden")).toBe("true");
+  expect(trigger().hasAttribute("aria-label")).toBe(false);
+  expect(textOutsideHidden(trigger())).toBe(value);
+
+  await openList();
+  expect(labelledBy(listbox()!)).toEqual([label]);
+  expect(listbox()!.hasAttribute("aria-label")).toBe(false);
+}
+
+// Checks that the trigger and list render as before the fix: the trigger has
+// `ownNaming` alone, its label stays in its value, and the open list has no
+// `aria-labelledby`
+async function expectUnchanged(
+  ownNaming: ReturnType<typeof naming>,
+  value: string,
+) {
+  expect(naming(trigger())).toEqual(ownNaming);
+  expect(hiddenInTrigger()).toEqual(["svg"]);
+  expect(textOutsideHidden(trigger())).toBe(value);
+
+  await openList();
+  expect(listbox()!.hasAttribute("aria-labelledby")).toBe(false);
+}
+
+const UNNAMED = { "aria-label": null, "aria-labelledby": null };
+
+describe('a single Select with `label="Fruit"` and no name from the consumer', () => {
+  test('is named by its label, and reads "Select" as its value with nothing selected', async () => {
+    await mount(labelled("Fruit"));
+
+    await expectNamedByLabel("Select");
+  });
+
+  test('reads "Banana" as its value with Banana selected', async () => {
+    await mount(labelled("Fruit", { defaultValue: "banana" }));
+
+    await expectNamedByLabel("Banana");
+  });
+
+  test('reads "Banana" as its value after a pick of Banana, and stays named', async () => {
+    await mount(labelled("Fruit"));
+    await openList();
+    await pickByClick("Banana");
+    expect(shown()).toEqual(CLOSED);
+
+    await expectNamedByLabel("Banana");
+  });
+});
+
+describe('a `multiple` Select with `label="Fruit"` and no name from the consumer', () => {
+  test('is named by its label, and reads its counter "0" as its value with nothing picked', async () => {
+    await mount(labelled("Fruit", { multiple: true }));
+
+    await expectNamedByLabel("0");
+  });
+
+  test('reads its counter "2" as its value with two picked', async () => {
+    await mount(
+      labelled("Fruit", { multiple: true, defaultValue: ["apple", "banana"] }),
+    );
+
+    await expectNamedByLabel("2");
+  });
+});
+
+describe.each(kinds)(
+  '%s Select with `label="Fruit"` and a name on SelectContent',
+  (_, multiple) => {
+    test('gives the open list SelectContent\'s `aria-label="Fruits list"` and no `aria-labelledby`', async () => {
+      await mount(
+        labelled("Fruit", {
+          multiple,
+          content: { "aria-label": "Fruits list" },
+        }),
+      );
+      await openList();
+
+      expect(naming(listbox()!)).toEqual({
+        "aria-label": "Fruits list",
+        "aria-labelledby": null,
+      });
+    });
+
+    test("gives the open list SelectContent's own `aria-labelledby`", async () => {
+      await mount(
+        createElement(
+          "div",
+          null,
+          createElement("h2", { id: "fruits-heading" }, "Fruits"),
+          labelled("Fruit", {
+            multiple,
+            content: { "aria-labelledby": "fruits-heading" },
+          }),
+        ),
+      );
+      await openList();
+
+      expect(naming(listbox()!)).toEqual({
+        "aria-label": null,
+        "aria-labelledby": "fruits-heading",
+      });
+    });
+
+    test("still names the trigger by its label", async () => {
+      await mount(
+        labelled("Fruit", {
+          multiple,
+          content: { "aria-label": "Fruits list" },
+        }),
+      );
+
+      expect(labelledBy(trigger())).toEqual([labelInTrigger()]);
+    });
+  },
+);
+
+// The ways a consumer names the trigger, each with the naming attributes the
+// trigger then has: its own `aria-label` or `aria-labelledby`, or a Label
+// pointed at its `id`, before or after the Select, or wrapping it
+const consumerNames = [
+  [
+    "`aria-label` on SelectTrigger",
+    (select: NamingOptions) =>
+      labelled("Fruit", {
+        ...select,
+        trigger: { "aria-label": "Choose a fruit" },
+      }),
+    { "aria-label": "Choose a fruit", "aria-labelledby": null },
+  ],
+  [
+    "`aria-labelledby` on SelectTrigger, pointing at a heading",
+    (select: NamingOptions) =>
+      createElement(
+        "div",
+        null,
+        createElement("h2", { id: "fruit-heading" }, "Pick a fruit"),
+        labelled("Fruit", {
+          ...select,
+          trigger: { "aria-labelledby": "fruit-heading" },
+        }),
+      ),
+    { "aria-label": null, "aria-labelledby": "fruit-heading" },
+  ],
+  [
+    "a Label whose `htmlFor` matches SelectTrigger's `id`, before the Select",
+    (select: NamingOptions) =>
+      createElement(
+        "div",
+        null,
+        createElement(Label, { htmlFor: "fruit" }, "Your fruit"),
+        labelled("Fruit", { ...select, trigger: { id: "fruit" } }),
+      ),
+    UNNAMED,
+  ],
+  [
+    "a Label whose `htmlFor` matches SelectTrigger's `id`, after the Select",
+    (select: NamingOptions) =>
+      createElement(
+        "div",
+        null,
+        labelled("Fruit", { ...select, trigger: { id: "fruit" } }),
+        createElement(Label, { htmlFor: "fruit" }, "Your fruit"),
+      ),
+    UNNAMED,
+  ],
+  [
+    "a Label that wraps the Select",
+    (select: NamingOptions) =>
+      createElement(Label, null, "Your fruit", labelled("Fruit", select)),
+    UNNAMED,
+  ],
+] as const;
+
+describe.each(kinds)(
+  '%s Select with `label="Fruit"`, named by the consumer',
+  (_, multiple) => {
+    test.each(consumerNames)(
+      "with %s, keeps that name alone, and its label in its value",
+      async (_, render, ownNaming) => {
+        await mount(render({ multiple }));
+
+        expect(labelInTrigger().hasAttribute("aria-hidden")).toBe(false);
+        await expectUnchanged(ownNaming, multiple ? "Fruit0" : "FruitSelect");
+      },
+    );
+  },
+);
+
+describe("a Select named by a Label", () => {
+  // Checks the test's premise: happy-dom finds the trigger's Label as a
+  // browser does
+  test.each(consumerNames.slice(2))(
+    "has that Label among its trigger's `labels`, with %s",
+    async (_, render) => {
+      await mount(render({}));
+
+      expect(
+        [...(trigger() as HTMLButtonElement).labels].map(
+          (label) => label.textContent,
+        ),
+      ).toEqual([expect.stringContaining("Your fruit")]);
+    },
+  );
+});
+
+// A `label` that isn't a non-empty string: none, an empty one and an element
+const noStringLabels = [
+  ["no `label`", undefined, "Select"],
+  ['`label=""`', "", "Select"],
+  [
+    "an element `label`",
+    createElement(SelectLabel, null, "Fruit"),
+    "FruitSelect",
+  ],
+] as const;
+
+describe.each(kinds)("%s Select", (_, multiple) => {
+  test.each(noStringLabels)(
+    "with %s, renders its trigger and list as before",
+    async (_, label, value) => {
+      await mount(labelled(label, { multiple }));
+
+      await expectUnchanged(
+        UNNAMED,
+        multiple ? value.replace("Select", "0") : value,
+      );
+    },
+  );
+
+  test('re-rendered from `label="Fruit"` to no `label`, renders its trigger and list as before', async () => {
+    const { rerender } = await mount(labelled("Fruit", { multiple }));
+    expect(labelledBy(trigger())).toEqual([labelInTrigger()]);
+
+    await rerender(labelled(undefined, { multiple }));
+
+    await expectUnchanged(UNNAMED, multiple ? "0" : "Select");
+  });
+
+  test('re-rendered from no `label` to `label="Fruit"`, is named by its label', async () => {
+    const { rerender } = await mount(labelled(undefined, { multiple }));
+    expect(trigger().hasAttribute("aria-labelledby")).toBe(false);
+
+    await rerender(labelled("Fruit", { multiple }));
+
+    await expectNamedByLabel(multiple ? "0" : "Select");
+  });
+
+  test("re-rendered with `aria-label` on SelectTrigger, keeps that name alone", async () => {
+    const { rerender } = await mount(labelled("Fruit", { multiple }));
+    expect(labelledBy(trigger())).toEqual([labelInTrigger()]);
+
+    await rerender(
+      labelled("Fruit", {
+        multiple,
+        trigger: { "aria-label": "Choose a fruit" },
+      }),
+    );
+
+    expect(labelInTrigger().hasAttribute("aria-hidden")).toBe(false);
+    await expectUnchanged(
+      { "aria-label": "Choose a fruit", "aria-labelledby": null },
+      multiple ? "Fruit0" : "FruitSelect",
+    );
+  });
+});
+
+describe('two Selects with `label="Fruit"` on a page', () => {
+  test("each name their trigger by their own label", async () => {
+    await mount(
+      createElement("div", null, labelled("Fruit"), labelled("Fruit")),
+    );
+    const triggers = [...document.querySelectorAll('[role="combobox"]')];
+    expect(triggers).toHaveLength(2);
+
+    for (const each of triggers) {
+      const labels = labelledBy(each);
+      expect(labels).toHaveLength(1);
+      expect(labels[0] && each.contains(labels[0])).toBe(true);
+    }
+  });
+});
+
+describe.each(kinds)(
+  '%s Select with `label="Fruit"`, rendered on the server',
+  (_, multiple) => {
+    test("renders with `renderToString`", () => {
+      expect(() =>
+        renderToString(labelled("Fruit", { multiple })),
+      ).not.toThrow();
+    });
+
+    test("hydrates with no recoverable error, then is named by its label", async () => {
+      const tree = labelled("Fruit", {
+        multiple,
+        defaultValue: multiple ? ["apple", "banana"] : "banana",
+      } as NamingOptions);
+      const container = document.body.appendChild(
+        document.createElement("div"),
+      );
+      container.innerHTML = renderToString(tree);
+      const recoverable: unknown[] = [];
+      let root: ReturnType<typeof hydrateRoot> | undefined;
+      unmounts.push(async () => {
+        await act(async () => root?.unmount());
+        container.remove();
+      });
+
+      await act(async () => {
+        root = hydrateRoot(container, tree, {
+          onRecoverableError: (error) => void recoverable.push(error),
+        });
+      });
+      await settle();
+
+      expect(recoverable).toEqual([]);
+      await expectNamedByLabel(multiple ? "2" : "Banana");
+    });
+  },
+);
+
+// SelectTrigger keeps the button for its own check of the trigger's Labels,
+// and still hands it to the consumer's ref as Radix's trigger did
+describe("SelectTrigger's ref", () => {
+  test("gives an object ref the trigger", async () => {
+    const ref = createRef<HTMLButtonElement>();
+    await mount(labelled("Fruit", { trigger: { ref } }));
+
+    expect(ref.current).toBe(trigger());
+    await unmounts.pop()!();
+    expect(ref.current).toBeNull();
+  });
+
+  test("calls a callback ref with the trigger, then with `null` on unmount", async () => {
+    const calls: (HTMLButtonElement | null)[] = [];
+    await mount(
+      labelled("Fruit", { trigger: { ref: (node) => void calls.push(node) } }),
+    );
+    expect(calls).toEqual([trigger()]);
+
+    await unmounts.pop()!();
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toBeNull();
+  });
+
+  test("runs the cleanup a callback ref returns on unmount, in place of a call with `null`", async () => {
+    const calls: (HTMLButtonElement | null)[] = [];
+    const cleanup = vi.fn();
+    await mount(
+      labelled("Fruit", {
+        trigger: {
+          ref: (node) => {
+            calls.push(node);
+            return cleanup;
+          },
+        },
+      }),
+    );
+    expect(calls).toEqual([trigger()]);
+
+    await unmounts.pop()!();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(calls).toHaveLength(1);
   });
 });

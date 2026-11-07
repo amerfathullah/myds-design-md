@@ -64,7 +64,8 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     );
     // `value` alone decides what a controlled select shows, checks and
     // submits, `""` and `[]` included
-    const _value = props.value !== undefined ? props.value : _uncontrolledValue;
+    const isControlled = props.value !== undefined;
+    const _value = isControlled ? props.value! : _uncontrolledValue;
     const [_open, _setOpen] = React.useState<boolean | undefined>(
       props.open || false,
     );
@@ -90,10 +91,10 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
           ? [..._value, value]
           : (_value as string[]).filter((v) => v !== value);
 
-        if (props.value === undefined) _setUncontrolledValue(temp);
+        if (!isControlled) _setUncontrolledValue(temp);
         props.onValueChange?.(temp);
       } else {
-        if (props.value === undefined) _setUncontrolledValue(value);
+        if (!isControlled) _setUncontrolledValue(value);
         props.onValueChange?.(value);
       }
     };

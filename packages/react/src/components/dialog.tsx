@@ -39,8 +39,8 @@ const DialogClose: ForwardRefExoticComponent<
       ref={ref}
       {...props}
       asChild
-      // Your `onClick` runs first; calling `preventDefault()` in it, or in the
-      // child's own, keeps the dialog open and skips `onDismiss`, as on Radix's
+      // The consumer's `onClick` runs first. A `preventDefault()` in it, or in
+      // the child's own, skips `onDismiss`, as it skips closing in Radix's Close
       onClick={composeEventHandlers(onClick, () => onDismiss?.())}
     />
   );
@@ -113,8 +113,8 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef(
             className,
           )}
           {...props}
-          // Your `onInteractOutside` runs first. Unless it, or Radix, called
-          // `preventDefault()`, the dialog then stays open if it isn't
+          // The consumer's `onInteractOutside` runs first. Unless it, or Radix,
+          // called `preventDefault()`, the dialog then stays open if it isn't
           // dismissible, or calls `onDismiss` as Radix goes on to close it.
           onInteractOutside={composeEventHandlers(onInteractOutside, (event) =>
             dismissible ? onDismiss?.() : event.preventDefault(),

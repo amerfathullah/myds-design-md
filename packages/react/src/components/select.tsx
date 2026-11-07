@@ -34,8 +34,27 @@ const isMultiple = (props: SelectProps): props is SelectMultiple =>
 
 type SelectProps = SelectSingle | SelectMultiple;
 
+// How a string `label` on SelectValue names the select (#134). Its
+// SelectLabel names the trigger and the open list, which point their
+// `aria-labelledby` at it, unless the consumer names the trigger.
+type SelectNaming = {
+  // The id of the SelectLabel a string `label` renders
+  labelId: string;
+  // Whether that label names the trigger and the list: SelectValue renders
+  // it, and SelectTrigger has reported that nothing else names it
+  labelNames: boolean;
+  // SelectValue reports whether it renders a string label
+  setHasLabel: (hasLabel: boolean) => void;
+  // SelectTrigger reports, once mounted, whether the consumer names it
+  setTriggerNamed: (named: boolean) => void;
+};
+
 type SelectInternalProps = {
   _value: string | string[];
+  // Missing from the default value and from a root of an older copy of the
+  // library, which shares this context: then the label names nothing, as
+  // before
+  _naming?: SelectNaming;
 };
 
 // Selects an option of a `multiple` select's form control by default as well,
@@ -71,28 +90,6 @@ const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
     variant: "outline",
     size: "small",
   },
-);
-
-// How a string `label` on SelectValue names the select (#134). Its
-// SelectLabel names the trigger and the open list, which point their
-// `aria-labelledby` at it, unless the consumer names the trigger. `null`
-// outside a Select that provides it, where the label names nothing, as
-// before.
-type SelectNaming = {
-  // The id of the SelectLabel a string `label` renders
-  labelId: string;
-  // Whether that label names the trigger and the list: SelectValue renders
-  // it, and SelectTrigger has reported that nothing else names it
-  labelNames: boolean;
-  // SelectValue reports whether it renders a string label
-  setHasLabel: (hasLabel: boolean) => void;
-  // SelectTrigger reports, once mounted, whether the consumer names it
-  setTriggerNamed: (named: boolean) => void;
-};
-
-const SelectNamingContext = sharedContext<SelectNaming | null>(
-  "SelectNamingContext",
-  null,
 );
 
 // Layout effects don't run on the server, and React 18 warns there, so the
@@ -136,15 +133,12 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     const [triggerNamed, setTriggerNamed] = React.useState<boolean | null>(
       null,
     );
-    const naming = React.useMemo<SelectNaming>(
-      () => ({
-        labelId,
-        labelNames: hasLabel && triggerNamed === false,
-        setHasLabel,
-        setTriggerNamed,
-      }),
-      [labelId, hasLabel, triggerNamed],
-    );
+    const _naming: SelectNaming = {
+      labelId,
+      labelNames: hasLabel && triggerNamed === false,
+      setHasLabel,
+      setTriggerNamed,
+    };
 
     React.useEffect(() => {
       if (props.multiple && !Array.isArray(_uncontrolledValue))
@@ -210,48 +204,48 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     const selection = Array.isArray(_value) ? _value : [];
 
     return (
-      <SelectContext.Provider value={{ ...props, size, variant, _value }}>
-        <SelectNamingContext.Provider value={naming}>
-          <Root
-            ref={ref}
-            {...props}
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            /* @ts-expect-error */
-            value={_value}
-            onValueChange={handleValueChange}
-            open={_open}
-            onOpenChange={handleOpenChange}
-          >
-            {props.children}
-            {isMultiple(props) && (
-              // The form control of a `multiple` select, which a form submits
-              // and the browser can autofill: one selected option per value
-              <select
-                aria-hidden
-                tabIndex={-1}
-                multiple
-                name={props.name}
-                form={props.form}
-                required={props.required}
-                disabled={props.disabled}
-                autoComplete={props.autoComplete}
-                value={selection}
-                onChange={(event) =>
-                  handleValueChange(
-                    [...event.currentTarget.options]
-                      .filter((option) => option.selected)
-                      .map((option) => option.value),
-                  )
-                }
-                className="sr-only"
-              >
-                {[...new Set(selection)].map((value) => (
-                  <option key={value} value={value} ref={selectByDefault} />
-                ))}
-              </select>
-            )}
-          </Root>
-        </SelectNamingContext.Provider>
+      <SelectContext.Provider
+        value={{ ...props, size, variant, _value, _naming }}
+      >
+        <Root
+          ref={ref}
+          {...props}
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          /* @ts-expect-error */
+          value={_value}
+          onValueChange={handleValueChange}
+          open={_open}
+          onOpenChange={handleOpenChange}
+        >
+          {props.children}
+          {isMultiple(props) && (
+            // The form control of a `multiple` select, which a form submits
+            // and the browser can autofill: one selected option per value
+            <select
+              aria-hidden
+              tabIndex={-1}
+              multiple
+              name={props.name}
+              form={props.form}
+              required={props.required}
+              disabled={props.disabled}
+              autoComplete={props.autoComplete}
+              value={selection}
+              onChange={(event) =>
+                handleValueChange(
+                  [...event.currentTarget.options]
+                    .filter((option) => option.selected)
+                    .map((option) => option.value),
+                )
+              }
+              className="sr-only"
+            >
+              {[...new Set(selection)].map((value) => (
+                <option key={value} value={value} ref={selectByDefault} />
+              ))}
+            </select>
+          )}
+        </Root>
       </SelectContext.Provider>
     );
   },
@@ -283,7 +277,7 @@ interface SelectValueProps extends Omit<
 const SelectValue: React.ForwardRefExoticComponent<SelectValueProps> =
   React.forwardRef(({ label, icon, children, className, ...props }, ref) => {
     const rootProps = React.useContext(SelectContext);
-    const naming = React.useContext(SelectNamingContext);
+    const naming = rootProps._naming;
     const Icon = icon || ChevronDownFillIcon;
 
     // Only a non-empty string label can name the select. An empty one still
@@ -426,8 +420,7 @@ const select_trigger_cva = cva(
 const SelectTrigger: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Trigger>
 > = React.forwardRef(({ className, children, ...props }, ref) => {
-  const { variant, size } = React.useContext(SelectContext);
-  const naming = React.useContext(SelectNamingContext);
+  const { variant, size, _naming: naming } = React.useContext(SelectContext);
 
   // The consumer names the trigger with an `aria-label` or `aria-labelledby`
   // of its own, or with a Label pointed at its `id` or wrapping it, which
@@ -538,8 +531,7 @@ const SelectContent: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Content>
 > = React.forwardRef(
   ({ className, children, position = "popper", ...props }, ref) => {
-    const { size, multiple } = React.useContext(SelectContext);
-    const naming = React.useContext(SelectNamingContext);
+    const { size, multiple, _naming: naming } = React.useContext(SelectContext);
     // The label that names the trigger names the open list too, unless
     // SelectContent gets a name of its own
     const labelNames =

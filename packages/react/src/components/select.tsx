@@ -530,10 +530,14 @@ SelectFooter.displayName = "SelectFooter";
 
 /*========================================================================================================================*/
 
-const SelectXPad: React.FunctionComponent<React.ComponentProps<"div">> = ({
-  children,
-  className,
-}) => <div className={clx("px-1", className)}>{children}</div>;
+// Select's side padding around the header, the footer, a group title and an
+// item. It puts every prop and its ref on its `div`, which is the header's and
+// the footer's own `div`.
+const SelectXPad: React.ForwardRefExoticComponent<React.ComponentProps<"div">> =
+  React.forwardRef(({ className, ...props }, ref) => (
+    <div ref={ref} className={clx("px-1", className)} {...props} />
+  ));
+SelectXPad.displayName = "SelectXPad";
 
 export {
   Select,

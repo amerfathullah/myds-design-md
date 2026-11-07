@@ -2,6 +2,7 @@
 import {
   act,
   createElement,
+  createRef,
   type ComponentProps,
   type ReactElement,
 } from "react";
@@ -11,7 +12,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   Select,
   SelectContent,
+  SelectFooter,
+  SelectGroup,
+  SelectGroupTitle,
+  SelectHeader,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "./select";
@@ -235,5 +241,195 @@ describe("a Select with `null` for `size` and `variant`", () => {
     expect(trigger).not.toContain("text-body-sm");
     expect(trigger).not.toContain("bg-bg-white");
     expect(trigger).not.toContain("bg-transparent");
+  });
+});
+
+/*========================================================================================================================*/
+
+type PartProps = ComponentProps<typeof SelectHeader>;
+
+// The props a header and a footer get besides their text
+type Parts = { header?: PartProps; footer?: PartProps };
+
+// An open Select shaped like the docs' With Header and With Footer examples,
+// with a group title, a disabled item and a separator between its header and
+// footer
+const withHeaderAndFooter = (
+  multiple: boolean,
+  { header, footer }: Parts = {},
+) =>
+  createElement(
+    Select,
+    { multiple, open: true } as SelectProps,
+    createElement(
+      SelectTrigger,
+      { "aria-label": "Fruit" },
+      createElement(SelectValue, { placeholder: "Select a fruit" }),
+    ),
+    createElement(
+      SelectContent,
+      null,
+      createElement(SelectHeader, header, "Search"),
+      createElement(
+        SelectGroup,
+        null,
+        createElement(SelectGroupTitle, null, "Fruits"),
+        createElement(SelectItem, { value: "apple" }, "Apple"),
+        createElement(
+          SelectItem,
+          { value: "banana", disabled: true },
+          "Banana",
+        ),
+      ),
+      createElement(SelectSeparator),
+      createElement(SelectItem, { value: "cherry" }, "Cherry"),
+      createElement(SelectFooter, footer, "Reset"),
+    ),
+  );
+
+// The header and the footer: the text each holds and the classes each gives
+// its `div`
+const parts = [
+  {
+    part: "header",
+    text: "Search",
+    classes: "px-1 bg-bg-dialog sticky top-0 z-50 pb-1",
+  },
+  {
+    part: "footer",
+    text: "Reset",
+    classes:
+      "px-1 bg-bg-dialog border-otl-gray-200 sticky bottom-0 z-50 border-t py-1",
+  },
+] as const;
+
+// The open list's child that holds `text`, which is the `div` a header or
+// footer renders
+function partDiv(text: string) {
+  const viewport = document.querySelector("[data-radix-select-viewport]");
+  const found = [...(viewport?.children ?? [])].find(
+    (child) => child.textContent === text,
+  );
+  expect(found, `the part holding "${text}"`).toBeDefined();
+  return found as HTMLElement;
+}
+
+// An element's attributes, by name
+const attributes = (element: Element) =>
+  Object.fromEntries(
+    [...element.attributes].map(({ name, value }) => [name, value]),
+  );
+
+describe.each(kinds)("in %s Select", (_, multiple) => {
+  describe.each(parts)("the $part", ({ part, text, classes }) => {
+    test("puts every attribute it gets on its `div`, `className` after its own classes", async () => {
+      // Built here and spread in: TypeScript rejects a `data-*` key in an
+      // object literal passed straight to `createElement`
+      const props = {
+        id: `fruit-${part}`,
+        role: "group",
+        "aria-label": `Fruit ${part}`,
+        "aria-describedby": "fruit-hint",
+        "data-testid": `fruit-${part}`,
+        title: `The ${part}`,
+        tabIndex: -1,
+        style: { minHeight: "2rem" },
+        className: "w-full",
+      };
+      await mount(withHeaderAndFooter(multiple, { [part]: { ...props } }));
+
+      expect(attributes(partDiv(text))).toEqual({
+        class: `${classes} w-full`,
+        id: `fruit-${part}`,
+        role: "group",
+        "aria-label": `Fruit ${part}`,
+        "aria-describedby": "fruit-hint",
+        "data-testid": `fruit-${part}`,
+        title: `The ${part}`,
+        tabindex: "-1",
+        style: "min-height: 2rem;",
+      });
+      expect(document.getElementById(`fruit-${part}`)).toBe(partDiv(text));
+    });
+
+    test("runs its `onClick` and `onKeyDown` on its `div`", async () => {
+      const calls: [string, EventTarget | null][] = [];
+      const onClick: PartProps["onClick"] = (event) => {
+        calls.push(["click", event.currentTarget]);
+      };
+      const onKeyDown: PartProps["onKeyDown"] = (event) => {
+        calls.push([`keydown ${event.key}`, event.currentTarget]);
+      };
+      await mount(
+        withHeaderAndFooter(multiple, { [part]: { onClick, onKeyDown } }),
+      );
+      const div = partDiv(text);
+
+      await act(async () => {
+        div.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        div.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+        );
+      });
+
+      expect(calls.map(([call]) => call)).toEqual(["click", "keydown Enter"]);
+      expect(calls.every(([, target]) => target === div)).toBe(true);
+    });
+
+    test("gives an object ref its `div`", async () => {
+      const ref = createRef<HTMLDivElement>();
+      await mount(withHeaderAndFooter(multiple, { [part]: { ref } }));
+
+      expect(ref.current).toBe(partDiv(text));
+    });
+
+    test("calls a callback ref with its `div`, then with `null` on unmount", async () => {
+      const calls: (HTMLDivElement | null)[] = [];
+      const ref = (node: HTMLDivElement | null) => {
+        calls.push(node);
+      };
+      await mount(withHeaderAndFooter(multiple, { [part]: { ref } }));
+      const div = partDiv(text);
+
+      expect(calls).toHaveLength(1);
+      expect(calls[0]).toBe(div);
+
+      await unmounts.pop()!();
+      expect(calls).toHaveLength(2);
+      expect(calls[1]).toBeNull();
+    });
+  });
+
+  // Without props of their own, the header, footer, group title and items
+  // render the wrappers they always have
+  test("keeps its wrappers' markup without extra props", async () => {
+    await mount(withHeaderAndFooter(multiple));
+
+    for (const { text, classes } of parts) {
+      expect(partDiv(text).tagName).toBe("DIV");
+      expect(attributes(partDiv(text))).toEqual({ class: classes });
+      expect(partDiv(text).innerHTML).toBe(text);
+    }
+
+    // The group title is what names the group. The items' own attributes
+    // aren't checked here.
+    const group = document.querySelector('[role="group"]')!;
+    const title = document.getElementById(
+      group.getAttribute("aria-labelledby")!,
+    )!;
+    expect(title.textContent).toBe("Fruits");
+    const options = [...document.querySelectorAll('[role="option"]')];
+    expect(options.map((option) => option.textContent)).toEqual([
+      "Apple",
+      "Banana",
+      "Cherry",
+    ]);
+
+    for (const wrapped of [title, ...options]) {
+      const wrapper = wrapped.parentElement!;
+      expect(wrapper.tagName).toBe("DIV");
+      expect(attributes(wrapper)).toEqual({ class: "px-1" });
+      expect(wrapper.children).toHaveLength(1);
+    }
   });
 });

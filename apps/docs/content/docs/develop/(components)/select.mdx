@@ -96,7 +96,7 @@ export default () => (
       <SelectHeader />
       <SelectGroup>
         <SelectGroupTitle />
-        <SelectItem />
+        <SelectItem value="apple" />
       </SelectGroup>
       <SelectSeparator />
       <SelectFooter />
@@ -489,7 +489,7 @@ You can add a footer to the select by using the `SelectFooter` component. It all
     ```tsx
     <Select size="small" variant="outline">
       <SelectTrigger>
-        <SelectValue placeholder="With Header" />
+        <SelectValue placeholder="With Footer" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="apple">Apple</SelectItem>
@@ -517,7 +517,7 @@ Select also supports multiple selection. To enable multiple selection, set the `
     <div className="not-prose flex justify-center gap-3">
         <Select multiple size="small" variant="outline">
             <SelectTrigger>
-                <SelectValue label="Fruit" placeholder="Multiple" />
+                <SelectValue label="Fruit" />
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="apple">Apple</SelectItem>
@@ -567,7 +567,7 @@ You can customize the value display by using the `SelectValue` component. It all
           {(value) => (
             <div className="flex gap-1">
               {Array.isArray(value)
-                ? value.map((v) => <Pill>{v}</Pill>)
+                ? value.map((v, i) => <Pill key={i}>{v}</Pill>)
                 : value}
             </div>
           )}
@@ -609,18 +609,19 @@ You can customize the value display by using the `SelectValue` component. It all
       default: "outline",
     },
     defaultValue: {
-      description: "Initial state of the select (uncontrolled)",
+      description:
+        "Initial state of the select (uncontrolled). A `string`, or a `string[]` when `multiple` is set. Without `defaultValue` or `value`, nothing is selected.",
       type: "string | string[]",
-      default: "false",
     },
     value: {
-      description: "State of the select (controlled)",
+      description:
+        "State of the select (controlled). A `string`, or a `string[]` when `multiple` is set. Without `value` or `defaultValue`, nothing is selected.",
       type: "string | string[]",
-      default: "false",
     },
     onValueChange: {
-      description: "Change event listener (controlled)",
-      type: "(date: Date ) => void",
+      description:
+        "Runs whenever the user changes the selection, with or without `value`. In a single select, it runs when the user picks an item other than the selected one, and gets that item's `value`; picking the selected item again doesn't call it. With `multiple`, it is `(value: string[]) => void`: it runs on every pick, adding or removing, and gets every selected value after the change.",
+      type: "(value: string) => void",
     },
     disabled: {
       description: "Disabled state for select trigger",
@@ -635,16 +636,24 @@ You can customize the value display by using the `SelectValue` component. It all
 <TypeTable
   type={{
     label: {
-      description: "Label of the select value",
-      type: "string",
+      description:
+        "Label of the select value, shown in the trigger before the value. A string renders inside `SelectLabel`, in the select's label style. Anything else renders as given.",
+      type: "ReactNode",
     },
     children: {
       description: "(Optional) Custom value display",
       type: "(value: string | string[]) => ReactNode",
     },
     placeholder: {
-      description: "Placeholder content",
+      description:
+        "Placeholder content, shown while nothing is selected in a single select. A `multiple` select never shows it: it shows its counter, starting at 0, or what `children` renders.",
       type: "ReactNode",
+    },
+    icon: {
+      description:
+        "Replaces the trigger's chevron. Pass a component, not an element, for example `icon={SearchIcon}`. The component receives Select's icon classes (the `txt-black-900` colour and the size class) as `className`, and `aria-hidden`, which hides it from screen readers.",
+      type: "JSXElementConstructor<any>",
+      default: "ChevronDownFillIcon",
     },
   }}
 />
@@ -656,7 +665,7 @@ You can customize the value display by using the `SelectValue` component. It all
     value: {
       description: "Value of the select option. Returned when selected",
       type: "string",
-      default: "string",
+      required: true,
     },
     disabled: {
       description: "Whether the select option is disabled",

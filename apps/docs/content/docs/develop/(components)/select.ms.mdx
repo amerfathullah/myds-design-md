@@ -96,7 +96,7 @@ export default () => (
       <SelectHeader />
       <SelectGroup>
         <SelectGroupTitle />
-        <SelectItem />
+        <SelectItem value="apple" />
       </SelectGroup>
       <SelectSeparator />
       <SelectFooter />
@@ -489,7 +489,7 @@ Anda boleh menambah footer pada pilihan dengan menggunakan komponen `SelectFoote
     ```tsx
     <Select size="small" variant="outline">
       <SelectTrigger>
-        <SelectValue placeholder="Dengan Header" />
+        <SelectValue placeholder="Dengan Footer" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="apple">Epal</SelectItem>
@@ -517,7 +517,7 @@ Pilih juga menyokong pemilihan berbilang. Untuk membolehkan pemilihan berbilang,
     <div className="not-prose flex justify-center gap-3">
         <Select multiple size="small" variant="outline">
             <SelectTrigger>
-                <SelectValue label="Buah" placeholder="Pelbagai" />
+                <SelectValue label="Buah" />
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="apple">Epal</SelectItem>
@@ -567,7 +567,7 @@ Anda boleh menyesuaikan paparan nilai dengan menggunakan komponen `SelectValue`.
           {(value) => (
             <div className="flex gap-1">
               {Array.isArray(value)
-                ? value.map((v) => <Pill>{v}</Pill>)
+                ? value.map((v, i) => <Pill key={i}>{v}</Pill>)
                 : value}
             </div>
           )}
@@ -609,18 +609,19 @@ Anda boleh menyesuaikan paparan nilai dengan menggunakan komponen `SelectValue`.
       default: "outline",
     },
     defaultValue: {
-      description: "Keadaan awal pilihan (tidak terkawal)",
+      description:
+        "Keadaan awal pilihan (tidak terkawal). `string`, atau `string[]` apabila `multiple` ditetapkan. Tanpa `defaultValue` atau `value`, tiada apa-apa yang dipilih.",
       type: "string | string[]",
-      default: "false",
     },
     value: {
-      description: "Keadaan pilihan (terkawal)",
+      description:
+        "Keadaan pilihan (terkawal). `string`, atau `string[]` apabila `multiple` ditetapkan. Tanpa `value` atau `defaultValue`, tiada apa-apa yang dipilih.",
       type: "string | string[]",
-      default: "false",
     },
     onValueChange: {
-      description: "Pendengar acara perubahan (terkawal)",
-      type: "(string | string[]) => void",
+      description:
+        "Dijalankan setiap kali pengguna menukar pemilihan, dengan atau tanpa `value`. Dalam pilihan tunggal, ia dijalankan apabila pengguna memilih item selain item yang sedang dipilih, dan menerima `value` item itu; memilih semula item yang sedang dipilih tidak memanggilnya. Dengan `multiple`, ia ialah `(value: string[]) => void`: ia dijalankan setiap kali item dipilih, sama ada untuk menambah atau membuang, dan menerima semua nilai yang dipilih selepas perubahan itu.",
+      type: "(value: string) => void",
     },
     disabled: {
       description: "Keadaan dinonaktifkan untuk pencetus pilihan",
@@ -635,16 +636,24 @@ Anda boleh menyesuaikan paparan nilai dengan menggunakan komponen `SelectValue`.
 <TypeTable
   type={{
     label: {
-      description: "Label nilai pilihan",
-      type: "string",
+      description:
+        "Label nilai pilihan, dipaparkan dalam pencetus sebelum nilai. Rentetan dipaparkan di dalam `SelectLabel`, dalam gaya label pilihan. Nilai lain dipaparkan seperti yang diberikan.",
+      type: "ReactNode",
     },
     children: {
       description: "(Pilihan) Paparan nilai tersuai",
       type: "(value: string | string[]) => ReactNode",
     },
     placeholder: {
-      description: "Kandungan pemegang tempat",
+      description:
+        "Kandungan pemegang tempat, dipaparkan semasa tiada apa-apa yang dipilih dalam pilihan tunggal. Pilihan `multiple` tidak pernah memaparkannya: ia memaparkan pembilangnya, bermula dari 0, atau apa yang dipaparkan oleh `children`.",
       type: "ReactNode",
+    },
+    icon: {
+      description:
+        "Menggantikan ikon anak panah pada pencetus. Hantar komponen, bukan elemen, contohnya `icon={SearchIcon}`. Komponen itu menerima kelas ikon Select (warna `txt-black-900` dan kelas saiz) sebagai `className`, serta `aria-hidden`, yang menyembunyikannya daripada pembaca skrin.",
+      type: "JSXElementConstructor<any>",
+      default: "ChevronDownFillIcon",
     },
   }}
 />
@@ -656,7 +665,7 @@ Anda boleh menyesuaikan paparan nilai dengan menggunakan komponen `SelectValue`.
     value: {
       description: "Nilai pilihan. Dikembalikan apabila dipilih",
       type: "string",
-      default: "string",
+      required: true,
     },
     disabled: {
       description: "Sama ada pilihan dinonaktifkan",

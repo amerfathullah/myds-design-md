@@ -11,6 +11,7 @@ import {
 } from "react";
 import { CrossIcon } from "../icons/cross";
 import { clx } from "../utils";
+import { composeEventHandlers } from "../utils/compose-event-handlers";
 import { Button } from "./button";
 import { cva } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
@@ -30,7 +31,7 @@ const DialogTrigger: ForwardRefExoticComponent<
 
 const DialogClose: ForwardRefExoticComponent<
   ComponentProps<typeof DialogPrimitive.Close>
-> = forwardRef((props, ref) => {
+> = forwardRef(({ onClick, ...props }, ref) => {
   const { onDismiss } = useContext(DialogBodyContext);
 
   return (
@@ -38,7 +39,9 @@ const DialogClose: ForwardRefExoticComponent<
       ref={ref}
       {...props}
       asChild
-      onClick={onDismiss && onDismiss}
+      // Your `onClick` runs first; calling `preventDefault()` in it, or in the
+      // child's own, keeps the dialog open and skips `onDismiss`, as on Radix's
+      onClick={composeEventHandlers(onClick, () => onDismiss?.())}
     />
   );
 });
@@ -78,6 +81,7 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef(
       dismissible = true,
       onDismiss,
       closeLabel = "Close",
+      onInteractOutside,
       ...props
     },
     ref,
@@ -108,12 +112,13 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef(
             "duration-200",
             className,
           )}
-          onInteractOutside={
-            !dismissible
-              ? (e) => e.preventDefault()
-              : () => onDismiss && onDismiss()
-          }
           {...props}
+          // Your `onInteractOutside` runs first. Unless it, or Radix, called
+          // `preventDefault()`, the dialog then stays open if it isn't
+          // dismissible, or calls `onDismiss` as Radix goes on to close it.
+          onInteractOutside={composeEventHandlers(onInteractOutside, (event) =>
+            dismissible ? onDismiss?.() : event.preventDefault(),
+          )}
         >
           <DialogBodyContext.Provider value={{ dismissible, onDismiss }}>
             {children}

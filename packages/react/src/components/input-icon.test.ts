@@ -2,6 +2,7 @@
 import {
   act,
   createElement,
+  forwardRef,
   type ComponentProps,
   type ReactElement,
   type ReactNode,
@@ -145,5 +146,32 @@ describe.each(sizes)("Input with size %s", (size) => {
       (await rendered(size, createElement(AppIcon, { position: "right" })))
         .room,
     ).toEqual({ left: "false", right: "true" });
+  });
+
+  // styled-components and hoist-non-react-statics copy a component's own
+  // statics onto the wrapper they make. A wrapper of InputIcon is still not
+  // an InputIcon, even one that fixes its side, as `.attrs()` can
+  test("a wrapper with InputIcon's statics copied makes room only on the side it's given", async () => {
+    const RightIcon = forwardRef<HTMLDivElement, IconProps>((props, ref) =>
+      createElement(
+        InputIcon,
+        { ...props, position: props.position ?? "right", ref },
+        createElement("svg", { viewBox: "0 0 20 20" }),
+      ),
+    );
+    for (const key of Reflect.ownKeys(InputIcon))
+      if (!(key in RightIcon))
+        Object.defineProperty(
+          RightIcon,
+          key,
+          Object.getOwnPropertyDescriptor(InputIcon, key)!,
+        );
+    const fixed = await rendered(size, createElement(RightIcon));
+    expect(fixed.sides).toEqual([["right-3"]]);
+    expect(fixed.room).toEqual({ left: "false", right: "false" });
+    expect(
+      (await rendered(size, createElement(RightIcon, { position: "left" })))
+        .room,
+    ).toEqual({ left: "true", right: "false" });
   });
 });

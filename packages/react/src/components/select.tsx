@@ -45,6 +45,13 @@ const selectByDefault = (option: HTMLOptionElement | null) => {
   if (option) option.defaultSelected = true;
 };
 
+// Makes an element inert: nothing in it takes focus or a pointer, and
+// assistive technology skips it. Set on the element rather than as a prop,
+// which React 18 doesn't know and React 19 takes as a boolean.
+const makeInert = (element: HTMLElement | null) => {
+  element?.setAttribute("inert", "");
+};
+
 const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
   "SelectContext",
   {
@@ -419,7 +426,7 @@ const SelectContent: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Content>
 > = React.forwardRef(
   ({ className, children, position = "popper", ...props }, ref) => {
-    const { size } = React.useContext(SelectContext);
+    const { size, multiple } = React.useContext(SelectContext);
     // A press outside the list calls `onPointerDownOutside`, then, unless it
     // calls `preventDefault()`, Radix asks Select's root to close the list
     return (
@@ -429,6 +436,9 @@ const SelectContent: React.ForwardRefExoticComponent<
           className={select_content_cva({ position, size, className })}
           position={position}
           {...props}
+          // Radix has no multi-select list, so a `multiple` select's list
+          // says it is one itself
+          {...(multiple && { "aria-multiselectable": true })}
         >
           <SelectPrimitive.Viewport
             className={clx(
@@ -526,6 +536,9 @@ const SelectItem: React.ForwardRefExoticComponent<
       </SelectXPad>
     );
 
+  // Radix holds one value, so it never takes an item of a `multiple` select
+  // for selected. The item says so itself, to assistive technology too,
+  // whichever item has focus.
   const checked = rootProps._value.includes(props.value);
 
   return (
@@ -543,9 +556,20 @@ const SelectItem: React.ForwardRefExoticComponent<
         )}
         {...props}
         disabled={disabled}
+        aria-selected={checked}
         data-state={checked ? "checked" : "unchecked"}
       >
-        <Checkbox checked={checked} disabled={disabled} />
+        {/* Only draws the item's state, which the option itself announces.
+            A press on it lands on the option, and focus stays there.
+            `aria-hidden` and `pointer-events-none` do what `inert` does, for
+            tools and browsers that don't know `inert`. */}
+        <Checkbox
+          ref={makeInert}
+          checked={checked}
+          disabled={disabled}
+          aria-hidden
+          className="pointer-events-none"
+        />
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       </SelectPrimitive.Item>
     </SelectXPad>

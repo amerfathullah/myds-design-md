@@ -166,6 +166,16 @@ describe("a `multiple` Select logs nothing", () => {
     expect(errors()).toEqual([]);
   });
 
+  test("after a single select, inside or outside a form, becomes `multiple`", async () => {
+    const outside = await mount(fruits({ defaultValue: "apple" }));
+    const inside = await mount(inForm({ defaultValue: "apple" }));
+
+    await outside.rerender(fruits({ multiple: true }));
+    await inside.rerender(inForm({ multiple: true }));
+
+    expect(errors()).toEqual([]);
+  });
+
   test("hydrated from that HTML", async () => {
     const tree = inForm({ multiple: true, defaultValue: ["apple"] });
     const container = serverRender(tree);

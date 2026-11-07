@@ -1,5 +1,11 @@
 // @vitest-environment happy-dom
-import { act, createElement, type ReactElement } from "react";
+import {
+  act,
+  createElement,
+  useContext,
+  type ComponentProps,
+  type ReactElement,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { computeAccessibleName, isInaccessible } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -8,8 +14,10 @@ import {
   AutoPagination,
   Pagination,
   PaginationContent,
+  PaginationContext,
   PaginationEllipsis,
   PaginationItem,
+  PaginationLabel,
   PaginationNext,
   PaginationNumber,
   PaginationPrevious,
@@ -307,6 +315,12 @@ describe("AutoPagination", () => {
     });
   });
 
+  test('renders the same markup without `type` as with type="default"', async () => {
+    const omitted = (await mount(createElement(AutoPagination, pages)))
+      .innerHTML;
+    expect(omitted).toBe((await auto("default")).innerHTML);
+  });
+
   describe.each(["default", "simple", "full"] as const)(
     "the %s type",
     (type) => {
@@ -334,6 +348,125 @@ describe("AutoPagination", () => {
       });
     },
   );
+});
+
+// 200 items, 10 a page, on page 2 of 20
+const pageTwo = { count: 200, limit: 10, page: 2, onPageChange: () => {} };
+
+// A Pagination's `type`, or undefined for one whose author leaves it out
+type Type = AutoPaginationProps["type"];
+
+// `type` props for `type`, or none when it's undefined, as an author who
+// leaves `type` out passes none
+const typeProp = (type: Type) => (type === undefined ? {} : { type });
+
+describe("PaginationLabel", () => {
+  // The paragraph a PaginationLabel with `props` renders inside a Pagination
+  // of `type` on page 2 of 20
+  async function label(
+    type: Type,
+    props: ComponentProps<typeof PaginationLabel> = {},
+  ) {
+    const page = await mount(
+      createElement(
+        Pagination,
+        { ...pageTwo, ...typeProp(type) },
+        createElement(PaginationLabel, props),
+      ),
+    );
+    const [paragraph, ...others] = page.querySelectorAll("p");
+    expect(others).toEqual([]);
+    return paragraph!;
+  }
+
+  test('shows "Page 2 of 20" in a full Pagination', async () => {
+    expect((await label("full")).textContent).toBe("Page 2 of 20");
+  });
+
+  describe.each(["default", "simple", "full", undefined] as const)(
+    "with type %s",
+    (type) => {
+      test("shows `content` in place of its default", async () => {
+        const paragraph = await label(type, {
+          content: createElement("strong", null, "Halaman 2 daripada 20"),
+        });
+        expect(paragraph.innerHTML).toBe(
+          "<strong>Halaman 2 daripada 20</strong>",
+        );
+      });
+    },
+  );
+
+  describe.each(["default", "simple", undefined] as const)(
+    "with type %s",
+    (type) => {
+      test("renders an empty paragraph without `content`", async () => {
+        const paragraph = await label(type);
+        expect(paragraph.childNodes).toHaveLength(0);
+      });
+    },
+  );
+});
+
+describe("Pagination's `type`", () => {
+  // An author's own part that shows the `type` PaginationContext carries
+  const ShowType = () =>
+    createElement("output", {
+      "data-type": useContext(PaginationContext).type,
+    });
+
+  // The `type` an author's own part reads from PaginationContext inside a
+  // Pagination of `type`, or null when it reads none
+  async function contextType(type: Type) {
+    const page = await mount(
+      createElement(
+        Pagination,
+        { ...pageTwo, ...typeProp(type) },
+        createElement(ShowType),
+      ),
+    );
+    const [output, ...others] = page.querySelectorAll("output");
+    expect(others).toEqual([]);
+    return output!.getAttribute("data-type");
+  }
+
+  test('gives PaginationContext the type "default" when left out', async () => {
+    expect(await contextType(undefined)).toBe("default");
+  });
+
+  test("gives PaginationContext the type it's given", async () => {
+    expect(await contextType("full")).toBe("full");
+  });
+
+  test('renders the same markup without `type` as with type="default"', async () => {
+    // Every part, the author's own included
+    const parts = [
+      createElement(PaginationPrevious),
+      createElement(PaginationNumber, { number: 2 }),
+      createElement(PaginationEllipsis),
+      createElement(PaginationLabel),
+      createElement(ShowType),
+      createElement(PaginationNext),
+    ];
+    // The markup of a Pagination of `type` composed from the parts
+    const composed = async (type: Type) =>
+      (
+        await mount(
+          createElement(
+            Pagination,
+            { ...pageTwo, ...typeProp(type) },
+            createElement(
+              PaginationContent,
+              null,
+              ...parts.map((part) => createElement(PaginationItem, null, part)),
+            ),
+          ),
+        )
+      ).innerHTML;
+    const omitted = await composed(undefined);
+    expect(omitted).toContain('data-type="default"');
+    expect(omitted).toBe(await composed("default"));
+  });
 });
 
 describe("The pagination landmark", () => {

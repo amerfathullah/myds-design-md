@@ -64,7 +64,11 @@ import {
 } from "@amerfathullah/myds-react/navbar";
 import {
   AutoPagination,
+  Pagination,
+  PaginationContext,
+  PaginationLabel,
   PaginationPrevious,
+  type AutoPaginationProps,
 } from "@amerfathullah/myds-react/pagination";
 import { Pill } from "@amerfathullah/myds-react/pill";
 import {
@@ -104,6 +108,7 @@ import {
 } from "@tanstack/react-table";
 import {
   createRef,
+  useContext,
   useRef,
   type ComponentProps,
   type FunctionComponent,
@@ -485,6 +490,35 @@ export const PaginationLabels = () => (
     />
     {/* @ts-expect-error `pageLabel` is a function of the page number */}
     <AutoPagination {...paging} type="default" pageLabel="Halaman" />
+  </>
+);
+
+// Pagination's and AutoPagination's `type` is optional and defaults to
+// `default`. TypeScript still rejects a type they don't list, and
+// PaginationContext always carries one. PaginationLabel shows `content`, any
+// React node, in place of its default.
+const autoPaging: AutoPaginationProps = { ...paging, maxDisplay: 4 };
+
+const PaginationType = () => {
+  const type: "default" | "simple" | "full" =
+    useContext(PaginationContext).type;
+  return <span>{type}</span>;
+};
+
+export const PaginationTypes = () => (
+  <>
+    <Pagination {...paging}>
+      <PaginationLabel />
+      <PaginationLabel content="Halaman 5 daripada 10" />
+      <PaginationLabel content={<strong>Halaman 5</strong>} />
+      <PaginationType />
+    </Pagination>
+    <AutoPagination {...paging} />
+    <AutoPagination {...autoPaging} />
+    {/* @ts-expect-error `type` is default, simple or full */}
+    <Pagination {...paging} type="basic" />
+    {/* @ts-expect-error `type` is default, simple or full */}
+    <AutoPagination {...paging} type="basic" />
   </>
 );
 

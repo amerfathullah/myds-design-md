@@ -90,7 +90,7 @@ Dalam jenis `simple` dan `full`, label ini dipaparkan, jadi teks yang lebih pend
 
 ### Penggunaan Lanjutan
 
-Sebagai alternatif kepada komponen `AutoPagination`, fungsi paginasi masih dapat dilaksanakan dengan kombinasi subkomponen: `Pagination`, `PaginationItem`, `PaginationContent`, `PaginationEllipsis`, `PaginationNext`, `PaginationPrevious` dan `PaginationNumber`.
+Sebagai alternatif kepada komponen `AutoPagination`, fungsi paginasi masih dapat dilaksanakan dengan kombinasi subkomponen: `Pagination`, `PaginationItem`, `PaginationContent`, `PaginationEllipsis`, `PaginationNext`, `PaginationPrevious`, `PaginationNumber` dan `PaginationLabel`.
 
 ```ts copy title="Import"
 import {
@@ -99,6 +99,7 @@ import {
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
+  PaginationLabel,
   PaginationNext,
   PaginationNumber,
   PaginationPrevious,
@@ -398,12 +399,6 @@ Pembaca skrin menyebut elemen `nav` sebagai "pagination". Hantar `aria-label` un
       description: "Nombor halaman semasa.",
       type: "number",
     },
-    maxDisplay: {
-      description:
-        "Bilangan item untuk dipaparkan bagi tujuan nombor paginasi sebelum elipsis.",
-      type: "number",
-      default: 4,
-    },
     type: {
       description: "Variasi gaya paginasi komponen",
       type: "enum",
@@ -441,13 +436,14 @@ Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ia
 
 ### PaginationLabel
 
-Komponen teks yang memaparkan maklumat paginasi.
+Komponen teks yang memaparkan maklumat paginasi. Secara lalai, ia memaparkan `Page {page} of {totalPages}`, contohnya "Page 2 of 20", hanya apabila `type` `Pagination` ialah `full`. Dengan `default` atau `simple`, ia tidak memaparkan apa-apa. Hantar `content` untuk memaparkan teks anda sendiri di tempatnya, walau apa pun `type`, contohnya `content="Halaman 2 daripada 20"`.
 
 <TypeTable
   type={{
     content: {
-      description: "Penerangan panjang untuk tujuan maklumat paginasi.",
-      type: "string",
+      description:
+        'Dipaparkan di tempat teks lalai, walau apa pun `type`. Tanpanya, label memaparkan "Page {page} of {totalPages}" apabila `type` ialah `full`, dan tiada apa-apa dalam jenis lain.',
+      type: "ReactNode",
     },
   }}
 />

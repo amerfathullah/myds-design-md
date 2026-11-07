@@ -27,7 +27,7 @@ const ELLIPSIS_LABEL = "More pages";
  * @property {number} page - The current page number.
  * @property {number} limit - The number of items per page
  * @property {number} count - The total number of items
- * @property {"basic" | "basic-alternate" | "number"}  type - The variation of the pagination
+ * @property {"default" | "simple" | "full"} [type="default"] - The variation of the pagination: `default`, `simple` or `full`. Defaults to `default`.
  * @property {function} onPageChange - function which tracks the page
  */
 export interface PaginatorProps {
@@ -35,22 +35,32 @@ export interface PaginatorProps {
   limit: number;
   count: number;
   onPageChange: (page: number) => void;
-  type: "simple" | "full" | "default";
+  /**
+   * The variation of the pagination: `default`, `simple` or `full`
+   * @default "default"
+   */
+  type?: "default" | "simple" | "full";
 }
 
-const PaginationContext = sharedContext<
-  PaginatorProps & {
-    totalPages: number;
-  }
->("PaginationContext", {
-  page: 1,
-  count: 0,
-  limit: 6,
-  totalPages: 0,
-  type: "default",
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onPageChange: (page) => {},
-});
+// What PaginationContext carries: Pagination's props, with `type` always
+// set, and the number of pages
+type PaginationContextValue = Omit<PaginatorProps, "type"> & {
+  type: NonNullable<PaginatorProps["type"]>;
+  totalPages: number;
+};
+
+const PaginationContext = sharedContext<PaginationContextValue>(
+  "PaginationContext",
+  {
+    page: 1,
+    count: 0,
+    limit: 6,
+    totalPages: 0,
+    type: "default",
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onPageChange: (page) => {},
+  },
+);
 
 interface PaginationProps extends ComponentProps<"nav">, PaginatorProps {}
 
@@ -62,7 +72,16 @@ interface PaginationProps extends ComponentProps<"nav">, PaginatorProps {}
  */
 const Pagination: ForwardRefExoticComponent<PaginationProps> = forwardRef(
   (
-    { count, limit, page, children, className, type, onPageChange, ...props },
+    {
+      count,
+      limit,
+      page,
+      children,
+      className,
+      type = "default",
+      onPageChange,
+      ...props
+    },
     ref,
   ) => {
     const totalPages = Math.ceil(count / limit);
@@ -209,8 +228,10 @@ const PaginationNumber: ForwardRefExoticComponent<
 
 PaginationNumber.displayName = "PaginationNumber";
 
+// `content` replaces the <p>'s RDFa `content` attribute, a string, so that
+// it takes any React node
 const PaginationLabel: ForwardRefExoticComponent<
-  ComponentProps<"p"> & { content?: ReactNode }
+  Omit<ComponentProps<"p">, "content"> & { content?: ReactNode }
 > = forwardRef(({ className, content, ...props }, ref) => {
   const { page, totalPages, type } = useContext(PaginationContext);
   return (
@@ -383,6 +404,7 @@ export {
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
+  PaginationLabel,
   PaginationNext,
   PaginationNumber,
   PaginationPrevious,

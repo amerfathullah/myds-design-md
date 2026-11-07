@@ -30,6 +30,17 @@ const icon = (props: IconProps | null) =>
     createElement("svg", { viewBox: "0 0 20 20" }),
   );
 
+// An Input holding `children`
+const inputWith = (size: Size, ...children: ReactNode[]) =>
+  createElement(Input, { size, placeholder: "Cari" }, ...children);
+
+// The side class an element draws on: `left-3` or `right-3`
+const sideClasses = (element: Element) =>
+  element
+    .getAttribute("class")
+    ?.split(" ")
+    .filter((name) => name === "left-3" || name === "right-3");
+
 const unmounts: (() => Promise<void>)[] = [];
 
 // Mounts `element` in a container on the page, as an app would. `render`
@@ -49,21 +60,14 @@ async function mount(element: ReactElement) {
 // What an Input holding `children` renders: the side its <input> makes room
 // for, the side class each icon draws on, and the whole markup
 async function rendered(size: Size, ...children: ReactNode[]) {
-  const { container } = await mount(
-    createElement(Input, { size, placeholder: "Cari" }, ...children),
-  );
+  const { container } = await mount(inputWith(size, ...children));
   const input = container.querySelector("input");
   const result = {
     room: {
       left: input?.getAttribute("data-has-left-icon"),
       right: input?.getAttribute("data-has-right-icon"),
     },
-    sides: [...container.querySelectorAll("svg")].map((svg) =>
-      svg
-        .getAttribute("class")
-        ?.split(" ")
-        .filter((name) => name === "left-3" || name === "right-3"),
-    ),
+    sides: [...container.querySelectorAll("svg")].map(sideClasses),
     markup: container.innerHTML,
   };
   await unmounts.pop()!();
@@ -180,8 +184,6 @@ describe.each(sizes)("Input with size %s", (size) => {
   });
 });
 
-/*========================================================================================================================*/
-
 // Input makes room for an InputIcon however it's composed: passed directly,
 // in a Fragment, an array or a condition, or rendered by an app's own
 // component (#125). InputIcon marks the element it renders with the side it
@@ -191,7 +193,7 @@ describe.each(sizes)("Input with size %s", (size) => {
 // `data-has-right-icon` still report Input's direct children only (#123).
 
 type Side = "left" | "right";
-type Room = { left: string; right: string };
+type Reported = { left: string; right: string };
 
 // The classes that pad the <input> on a side when a later sibling in its box
 // carries InputIcon's mark for that side
@@ -200,34 +202,31 @@ const padding = [
   "has-[~[data-input-icon=right]]:pr-10",
 ];
 
-// The room the <input> reports for its direct children
-const room = (left: boolean, right: boolean): Room => ({
+// The sides the <input> reports an icon on, for its direct children only
+const reported = (left: boolean, right: boolean): Reported => ({
   left: String(left),
   right: String(right),
 });
 
 // What an Input's markup shows, as the server sends it or the page holds it:
-// the room its <input> reports, whether the <input> has the padding classes,
-// and each icon or marked element: the side it's marked with, the side class
-// it draws with, and whether it's a later sibling of the <input> in the box
-// that positions it
+// the sides its <input> reports icons on, whether the <input> has the padding
+// classes, and each icon or marked element: the side it's marked with, the
+// side class it draws on, and whether it's a later sibling of the <input> in
+// the box that positions it
 function read(root: ParentNode) {
   const input = root.querySelector("input");
   const box = input?.parentElement;
   const siblings = box ? [...box.children] : [];
   return {
-    room: {
+    reported: {
       left: input?.getAttribute("data-has-left-icon"),
       right: input?.getAttribute("data-has-right-icon"),
     },
-    padded: padding.every((name) => input?.classList.contains(name)),
+    paddingClasses: padding.every((name) => input?.classList.contains(name)),
     icons: [...root.querySelectorAll("svg, [data-input-icon]")].map(
       (element) => ({
         mark: element.getAttribute("data-input-icon"),
-        side: element
-          .getAttribute("class")
-          ?.split(" ")
-          .filter((name) => name === "left-3" || name === "right-3"),
+        side: sideClasses(element),
         after:
           element.parentElement === box &&
           siblings.indexOf(element) > siblings.indexOf(input!),
@@ -245,9 +244,7 @@ const drawn = (side: Side) => ({
 
 // The markup the server sends for an Input holding `children`
 const serverMarkup = (size: Size, ...children: ReactNode[]) =>
-  renderToStaticMarkup(
-    createElement(Input, { size, placeholder: "Cari" }, ...children),
-  );
+  renderToStaticMarkup(inputWith(size, ...children));
 
 // Server markup, parsed as the browser parses it
 function parse(html: string) {
@@ -256,8 +253,8 @@ function parse(html: string) {
   return template.content;
 }
 
-// Markup without the room the <input> reports for its direct children
-const withoutRoom = (html: string) =>
+// Markup without the sides the <input> reports icons on
+const withoutReported = (html: string) =>
   html.replace(/ data-has-(?:left|right)-icon="[^"]*"/g, "");
 
 const fragment = (...children: ReactNode[]) =>
@@ -274,26 +271,26 @@ const MaybeLeftIcon = ({ show }: { show: boolean }) =>
   show ? icon({ position: "left" }) : null;
 
 // Each composition: Input's children, the side of each icon they draw, in
-// order, and the room the <input> reports for its direct children
-const compositions: [string, ReactNode[], Side[], Room][] = [
+// order, and the sides the <input> reports icons on
+const compositions: [string, ReactNode[], Side[], Reported][] = [
   // Passed directly, or in an array
   [
     "a left InputIcon",
     [icon({ position: "left" })],
     ["left"],
-    room(true, false),
+    reported(true, false),
   ],
   [
     "a right InputIcon",
     [icon({ position: "right" })],
     ["right"],
-    room(false, true),
+    reported(false, true),
   ],
   [
     "a left and a right InputIcon",
     [icon({ position: "left" }), icon({ position: "right" })],
     ["left", "right"],
-    room(true, true),
+    reported(true, true),
   ],
   [
     "an array of a left and a right InputIcon",
@@ -304,7 +301,7 @@ const compositions: [string, ReactNode[], Side[], Room][] = [
       ],
     ],
     ["left", "right"],
-    room(true, true),
+    reported(true, true),
   ],
   [
     "a left and a right InputIcon from `.map`",
@@ -314,53 +311,61 @@ const compositions: [string, ReactNode[], Side[], Room][] = [
       ),
     ],
     ["left", "right"],
-    room(true, true),
+    reported(true, true),
   ],
   // Behind a condition, directly, in a Fragment or in an app's component
-  ...[true, false].flatMap((cond): [string, ReactNode[], Side[], Room][] => [
-    [
-      `\`${cond} && <InputIcon position="left">\``,
-      [cond && icon({ position: "left" })],
-      cond ? ["left"] : [],
-      room(cond, false),
+  ...[true, false].flatMap(
+    (cond): [string, ReactNode[], Side[], Reported][] => [
+      [
+        `\`${cond} && <InputIcon position="left">\``,
+        [cond && icon({ position: "left" })],
+        cond ? ["left"] : [],
+        reported(cond, false),
+      ],
+      [
+        `\`${cond} ? <InputIcon position="left"> : null\``,
+        [cond ? icon({ position: "left" }) : null],
+        cond ? ["left"] : [],
+        reported(cond, false),
+      ],
+      [
+        `a Fragment holding \`${cond} && <InputIcon position="left">\``,
+        [fragment(cond && icon({ position: "left" }))],
+        cond ? ["left"] : [],
+        reported(false, false),
+      ],
+      [
+        `a Fragment holding \`${cond} ? <InputIcon position="left"> : null\``,
+        [fragment(cond ? icon({ position: "left" }) : null)],
+        cond ? ["left"] : [],
+        reported(false, false),
+      ],
+      [
+        `an app's component rendering a left InputIcon when \`show\` is ${cond}`,
+        [createElement(MaybeLeftIcon, { show: cond })],
+        cond ? ["left"] : [],
+        reported(false, false),
+      ],
     ],
-    [
-      `\`${cond} ? <InputIcon position="left"> : null\``,
-      [cond ? icon({ position: "left" }) : null],
-      cond ? ["left"] : [],
-      room(cond, false),
-    ],
-    [
-      `a Fragment holding \`${cond} && <InputIcon position="left">\``,
-      [fragment(cond && icon({ position: "left" }))],
-      cond ? ["left"] : [],
-      room(false, false),
-    ],
-    [
-      `an app's component rendering a left InputIcon when \`show\` is ${cond}`,
-      [createElement(MaybeLeftIcon, { show: cond })],
-      cond ? ["left"] : [],
-      room(false, false),
-    ],
-  ]),
+  ),
   // In a Fragment, at any depth
   [
     "a Fragment holding a left InputIcon",
     [fragment(icon({ position: "left" }))],
     ["left"],
-    room(false, false),
+    reported(false, false),
   ],
   [
     "a Fragment holding a right InputIcon",
     [fragment(icon({ position: "right" }))],
     ["right"],
-    room(false, false),
+    reported(false, false),
   ],
   [
     "a Fragment holding a left and a right InputIcon",
     [fragment(icon({ position: "left" }), icon({ position: "right" }))],
     ["left", "right"],
-    room(false, false),
+    reported(false, false),
   ],
   [
     "nested Fragments holding a left and a right InputIcon",
@@ -371,83 +376,83 @@ const compositions: [string, ReactNode[], Side[], Room][] = [
       ),
     ],
     ["left", "right"],
-    room(false, false),
+    reported(false, false),
   ],
   [
     "a Fragment inside an array, holding a left InputIcon",
     [[createElement(Fragment, { key: "icons" }, icon({ position: "left" }))]],
     ["left"],
-    room(false, false),
+    reported(false, false),
   ],
   // Rendered by an app's own component
   [
     "an app's component rendering a left InputIcon",
     [createElement(LeftIcon)],
     ["left"],
-    room(false, false),
+    reported(false, false),
   ],
   [
     "an app's component rendering a right InputIcon",
     [createElement(RightIcon)],
     ["right"],
-    room(false, false),
+    reported(false, false),
   ],
   [
     "an app's components rendering a left and a right InputIcon",
     [createElement(LeftIcon), createElement(RightIcon)],
     ["left", "right"],
-    room(false, false),
+    reported(false, false),
   ],
-  // A direct child given `position` keeps the room it reports (#123)
+  // A direct child given `position` keeps the side it reports (#123)
   [
     'an app\'s component given `position="left"`, rendering a left InputIcon',
     [createElement(AppIcon, { position: "left" })],
     ["left"],
-    room(true, false),
+    reported(true, false),
   ],
   [
     'an app\'s component given `position="right"`, rendering a right InputIcon',
     [createElement(AppIcon, { position: "right" })],
     ["right"],
-    room(false, true),
+    reported(false, true),
   ],
   // An InputIcon without `position` draws on the left (#123)
   [
     "a Fragment holding an InputIcon without `position`",
     [fragment(icon(null))],
     ["left"],
-    room(false, false),
+    reported(false, false),
   ],
   [
     "an app's component rendering an InputIcon without `position`",
     [createElement(UnplacedIcon)],
     ["left"],
-    room(false, false),
+    reported(false, false),
   ],
   // A left and a right icon, each composed its own way
   [
     "a direct left InputIcon and an app's component rendering a right one",
     [icon({ position: "left" }), createElement(RightIcon)],
     ["left", "right"],
-    room(true, false),
+    reported(true, false),
   ],
   [
     "an app's component rendering a left InputIcon and a direct right one",
     [createElement(LeftIcon), icon({ position: "right" })],
     ["left", "right"],
-    room(false, true),
+    reported(false, true),
   ],
   [
     "a Fragment holding a left InputIcon and a direct right one",
     [fragment(icon({ position: "left" })), icon({ position: "right" })],
     ["left", "right"],
-    room(false, true),
+    reported(false, true),
   ],
   [
     "an app's component rendering an InputIcon without `position` and a Fragment holding a right one",
     [createElement(UnplacedIcon), fragment(icon({ position: "right" }))],
     ["left", "right"],
-    room(false, false),
+    reported(false, false),
   ],
 ];
 
@@ -457,14 +462,14 @@ describe.each(sizes)("Input with size %s, its InputIcons composed", (size) => {
     (_, children, sides, expected) => {
       const html = serverMarkup(size, ...children);
       expect(read(parse(html))).toEqual({
-        room: expected,
-        padded: true,
+        reported: expected,
+        paddingClasses: true,
         icons: sides.map(drawn),
       });
-      // The markup InputIcons passed directly give, apart from the room the
-      // <input> reports for its direct children
-      expect(withoutRoom(html)).toBe(
-        withoutRoom(
+      // The markup InputIcons passed directly give, apart from the sides the
+      // <input> reports icons on
+      expect(withoutReported(html)).toBe(
+        withoutReported(
           serverMarkup(size, ...sides.map((side) => icon({ position: side }))),
         ),
       );
@@ -474,24 +479,22 @@ describe.each(sizes)("Input with size %s, its InputIcons composed", (size) => {
   test.each(compositions)(
     "%s: the page holds the markup the server sends",
     async (_, children) => {
-      const { container } = await mount(
-        createElement(Input, { size, placeholder: "Cari" }, ...children),
-      );
+      const { container } = await mount(inputWith(size, ...children));
       expect(read(container)).toEqual(
         read(parse(serverMarkup(size, ...children))),
       );
     },
   );
 
-  // An Input with no icon has nothing marked, and reports no room
+  // An Input with no icon has nothing marked, and reports no icon
   test.each([
     ["no children", []],
     ["a direct <span> without `position`", [createElement("span", null, "kg")]],
   ] as [string, ReactNode[]][])("with %s, nothing is marked", (_, children) => {
     const html = serverMarkup(size, ...children);
     expect(read(parse(html))).toEqual({
-      room: room(false, false),
-      padded: true,
+      reported: reported(false, false),
+      paddingClasses: true,
       icons: [],
     });
   });
@@ -514,8 +517,7 @@ describe.each(sizes)("Input with size %s, its InputIcons composed", (size) => {
   ] as [string, (cond: boolean) => ReactNode[]][])(
     "%s shown, hidden and shown again on a mounted Input adds and removes its mark",
     async (_, children) => {
-      const input = (cond: boolean) =>
-        createElement(Input, { size, placeholder: "Cari" }, ...children(cond));
+      const input = (cond: boolean) => inputWith(size, ...children(cond));
       const { container, render } = await mount(input(true));
       const states = [read(container)];
       for (const cond of [false, true]) {

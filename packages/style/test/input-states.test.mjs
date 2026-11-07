@@ -22,12 +22,9 @@ import { compileFull } from "./compile.mjs";
 import { compileComponents, cvaClasses, jsxClasses } from "./components.mjs";
 import { cases, colours, stateAttributes } from "./field-looks.mjs";
 
-/**
- * The markup Input renders: its wrapper, a row holding the addons, and a box
- * holding the <input> and what follows it, its icons
- * @param {{ size: string, attributes: string, prepend?: string, after?: string, append?: string }} parts
- * the <input>'s attributes, each with a leading space, and the markup of each part
- */
+// The markup Input renders at `size`: its wrapper, a row holding `prepend`
+// and `append`, and a box holding the <input>, with `attributes` (each with a
+// leading space), and what follows it, its icons
 function renderInput({
   size,
   attributes,
@@ -42,13 +39,8 @@ function renderInput({
   return `<div class="${wrapper}"><div class="${row}">${prepend}<div class="${box}">${input}${after}</div>${append}</div></div>`;
 }
 
-/**
- * The element an InputIcon renders, an icon, drawn on `position` and, unless
- * `marked` is false, marked with that side
- * @param {string} size
- * @param {"left" | "right"} position
- * @param {{ marked?: boolean }} [options]
- */
+// The element an InputIcon renders at `size`, an icon, drawn on `position`
+// and, unless `marked` is false, marked with that side
 function renderIcon(size, position, { marked = true } = {}) {
   const classes = cvaClasses("input.tsx", "input_icon_cva", { position, size });
   const mark = marked ? ` data-input-icon="${position}"` : "";
@@ -267,7 +259,7 @@ test("each Input and TextArea state has its border and ring, in both themes", as
 const ownPadding = { small: "12px", medium: "12px", large: "14px" };
 const iconPadding = "40px";
 
-// What follows the <input> in its box, and the sides the field makes room on.
+// What follows the <input> in its box, and the sides the field is padded on.
 // The <input> reports no icon in `data-has-left-icon` or `data-has-right-icon`,
 // as for an InputIcon in a Fragment or an app's own component, so only the
 // side marks can pad it.
@@ -275,24 +267,24 @@ const iconCases = [
   {
     name: "a left icon",
     after: (size) => renderIcon(size, "left"),
-    room: ["left"],
+    padded: ["left"],
   },
   {
     name: "a right icon",
     after: (size) => renderIcon(size, "right"),
-    room: ["right"],
+    padded: ["right"],
   },
   {
     name: "a left and a right icon",
     after: (size) => `${renderIcon(size, "left")}${renderIcon(size, "right")}`,
-    room: ["left", "right"],
+    padded: ["left", "right"],
   },
-  { name: "no icon", after: () => "", room: [] },
-  { name: "a plain <span>", after: () => "<span>kg</span>", room: [] },
+  { name: "no icon", after: () => "", padded: [] },
+  { name: "a plain <span>", after: () => "<span>kg</span>", padded: [] },
   {
     name: "an icon without the side mark",
     after: (size) => renderIcon(size, "left", { marked: false }),
-    room: [],
+    padded: [],
   },
 ];
 
@@ -310,11 +302,11 @@ function readPadding(ids) {
 
 test("Input makes room beside each marked icon after its field, and keeps its own padding elsewhere, at each size", async () => {
   const samples = ["small", "medium", "large"].flatMap((size) =>
-    iconCases.map(({ name, after, room }, i) => ({
+    iconCases.map(({ name, after, padded }, i) => ({
       id: `padding-${size}-${i}`,
       key: `${size}, ${name}`,
       size,
-      room,
+      padded,
       html: renderInput({
         size,
         attributes: ` id="padding-${size}-${i}" data-has-prepend="false" data-has-append="false" data-has-left-icon="false" data-has-right-icon="false" placeholder="Cari"`,
@@ -338,14 +330,14 @@ test("Input makes room beside each marked icon after its field, and keeps its ow
           .map(({ html }) => html)
           .join("")}</body></html>`,
       );
-      const read = await page.evaluate(
+      const padding = await page.evaluate(
         readPadding,
         samples.map(({ id }) => id),
       );
-      for (const { id, key, size, room } of samples) {
+      for (const { id, key, size, padded } of samples) {
         const side = (name) =>
-          room.includes(name) ? iconPadding : ownPadding[size];
-        actual[`${entry}: ${key}`] = read[id];
+          padded.includes(name) ? iconPadding : ownPadding[size];
+        actual[`${entry}: ${key}`] = padding[id];
         expected[`${entry}: ${key}`] = {
           left: side("left"),
           right: side("right"),

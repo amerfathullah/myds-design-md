@@ -695,7 +695,6 @@ describe("the modules the build ships", () => {
         },
         "SelectContext": {
           "default": {
-            "_handleClose": "() => {}",
             "_value": "''",
             "defaultValue": "''",
             "multiple": "false",

@@ -151,20 +151,12 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-// A `multiple` select passes its list of values on to Radix's hidden native
-// `<select>`, which isn't `multiple`, so React warns (#130)
-const multipleValueWarning = /must be a scalar value if `multiple` is false/;
-
-// No test logs any other error, or leaves anything on the page. Warnings
-// aren't checked: Radix warns that Select's open state changes from
-// controlled to uncontrolled on every mount (#132).
+// No test logs an error, or leaves anything on the page. Warnings aren't
+// checked: Radix warns that Select's open state changes from controlled to
+// uncontrolled on every mount (#132).
 afterEach(async () => {
   while (unmounts.length) await unmounts.pop()!();
-  const errors = vi
-    .mocked(console.error)
-    .mock.calls.filter(
-      ([message]) => !multipleValueWarning.test(String(message)),
-    );
+  const errors = [...vi.mocked(console.error).mock.calls];
   vi.restoreAllMocks();
   expect(errors).toEqual([]);
   expect(document.body.innerHTML).toBe("");

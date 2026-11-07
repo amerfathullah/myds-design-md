@@ -105,6 +105,14 @@ export default () => (
 );
 ```
 
+### Naming a Select
+
+Every Select needs a name, which screen readers announce when its trigger has focus.
+
+- A string `label` on `SelectValue`, such as `label="Fruit"`, names the select. Screen readers announce "Fruit" as the trigger's name and the selection as its value, and the open list is named "Fruit" too.
+- Without one, give `SelectTrigger` an `id` and point a `Label`'s `htmlFor` at it, as the [time slots](/docs/develop/time-field#time-slots) example does, or pass `SelectTrigger` an `aria-label` in your page's language, such as `aria-label="Fruit"`.
+- A name you pass replaces the label's, so include the visible label's words in it. The label is then read as part of the value, and doesn't name the open list: pass `SelectContent` an `aria-label` for that.
+
 ## Examples
 
 ### Size
@@ -355,7 +363,7 @@ Grouped options can be created by using the `SelectGroup` and `SelectGroupTitle`
   <Tab value="Preview">
     <div className="not-prose flex justify-center">
       <Select size="small" variant="outline">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Food">
           <SelectValue placeholder="Grouped Option Select " />
         </SelectTrigger>
         <SelectContent>
@@ -381,7 +389,7 @@ Grouped options can be created by using the `SelectGroup` and `SelectGroupTitle`
   <Tab value="Code">
     ```tsx
     <Select size="small" variant="outline">
-      <SelectTrigger>
+      <SelectTrigger aria-label="Food">
         <SelectValue placeholder="Grouped Option Select " />
       </SelectTrigger>
       <SelectContent>
@@ -414,7 +422,7 @@ You can add a header to the select by using the `SelectHeader` component. It all
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <Select size="small" variant="outline">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Fruit">
           <SelectValue placeholder="With Header" />
         </SelectTrigger>
         <SelectContent>
@@ -437,7 +445,7 @@ You can add a header to the select by using the `SelectHeader` component. It all
   <Tab value="Code">
     ```tsx
     <Select size="small" variant="outline">
-      <SelectTrigger>
+      <SelectTrigger aria-label="Fruit">
         <SelectValue placeholder="With Header" />
       </SelectTrigger>
       <SelectContent>
@@ -467,7 +475,7 @@ You can add a footer to the select by using the `SelectFooter` component. It all
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
       <Select size="small" variant="outline">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Fruit">
           <SelectValue placeholder="With Footer" />
         </SelectTrigger>
         <SelectContent>
@@ -488,7 +496,7 @@ You can add a footer to the select by using the `SelectFooter` component. It all
   <Tab value="Code">
     ```tsx
     <Select size="small" variant="outline">
-      <SelectTrigger>
+      <SelectTrigger aria-label="Fruit">
         <SelectValue placeholder="With Footer" />
       </SelectTrigger>
       <SelectContent>
@@ -637,7 +645,7 @@ You can customize the value display by using the `SelectValue` component. It all
   type={{
     label: {
       description:
-        "Label of the select value, shown in the trigger before the value. A string renders inside `SelectLabel`, in the select's label style. Anything else renders as given.",
+        "Label of the select value, shown in the trigger before the value. A string renders inside `SelectLabel`, in the select's label style. A non-empty string also names the select, its trigger and its list, for assistive technology, as Naming a Select explains. Anything else renders as given and names nothing.",
       type: "ReactNode",
     },
     children: {

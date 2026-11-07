@@ -1353,6 +1353,19 @@ const focusedOption = () =>
     ? document.activeElement.textContent
     : null;
 
+// Presses each key where focus is, in turn, and checks that focus lands on
+// the option named beside it, and that every option keeps `marks`
+async function walkFocus(
+  steps: readonly (readonly [key: string, focus: string])[],
+  marks: string[][],
+) {
+  for (const [key, focus] of steps) {
+    await press(document.activeElement!, key);
+    expect(focusedOption()).toBe(focus);
+    expect(optionStates()).toEqual(marks);
+  }
+}
+
 // A parent that holds a `multiple` select's `value`, from `initial`, and
 // passes back what `onValueChange` reports
 function HoldingValue({ initial }: { initial: string[] }) {
@@ -1402,16 +1415,15 @@ describe('an open `multiple` Select with `defaultValue={["apple", "banana"]}`', 
     await openList();
     expect(focusedOption()).toBe("Apple");
 
-    for (const [key, focus] of [
-      ["ArrowDown", "Banana"],
-      ["ArrowDown", "Cherry"],
-      ["ArrowUp", "Banana"],
-      ["ArrowUp", "Apple"],
-    ] as const) {
-      await press(document.activeElement!, key);
-      expect(focusedOption()).toBe(focus);
-      expect(optionStates()).toEqual(onlySelected("Apple", "Banana"));
-    }
+    await walkFocus(
+      [
+        ["ArrowDown", "Banana"],
+        ["ArrowDown", "Cherry"],
+        ["ArrowUp", "Banana"],
+        ["ArrowUp", "Apple"],
+      ],
+      onlySelected("Apple", "Banana"),
+    );
   });
 });
 
@@ -1464,16 +1476,20 @@ const optionControls = () =>
     controlsInside(option),
   ]);
 
+// What `optionControls` gives for the three fruits when no option holds a
+// control of its own
+const NO_CONTROLS = FRUITS.map(([, label]) => [label, []]);
+
 describe("in an open `multiple` Select, nothing inside an option is focusable or a control of its own", () => {
   test("with a selected and an unselected option, before and after picks", async () => {
     await mount(fruits({ multiple: true, defaultValue: ["apple"] }));
     await openList();
-    expect(optionControls()).toEqual(FRUITS.map(([, label]) => [label, []]));
+    expect(optionControls()).toEqual(NO_CONTROLS);
 
     await pickByClick("Banana");
     await pickByKey("Enter")("Apple");
 
-    expect(optionControls()).toEqual(FRUITS.map(([, label]) => [label, []]));
+    expect(optionControls()).toEqual(NO_CONTROLS);
   });
 
   test("with a disabled option, in a group, beside a header and footer", async () => {
@@ -1522,21 +1538,15 @@ describe.each(["small", "medium", "large"] as const)(
   },
 );
 
-// The ways to open the list that a test of focus starts from
-const opens = [
-  ["a click on the trigger", openList],
-  ["Enter on the focused trigger", () => pressOnTrigger("Enter")],
-] as const;
-
 describe("a `multiple` Select's keyboard and pointer", () => {
-  test.each(opens)(
+  test.each(openRequests)(
     "focus the first item when %s opens the list, as before",
-    async (_, openBy) => {
+    async (_, request) => {
       await mount(
         fruits({ multiple: true, defaultValue: ["banana", "cherry"] }),
       );
 
-      await openBy();
+      await request();
 
       expect(focusedOption()).toBe("Apple");
     },
@@ -1546,16 +1556,15 @@ describe("a `multiple` Select's keyboard and pointer", () => {
     await mount(fruits({ multiple: true, defaultValue: ["banana"] }));
     await openList();
 
-    for (const [key, focus] of [
-      ["ArrowDown", "Banana"],
-      ["End", "Cherry"],
-      ["ArrowUp", "Banana"],
-      ["Home", "Apple"],
-    ] as const) {
-      await press(document.activeElement!, key);
-      expect(focusedOption()).toBe(focus);
-    }
-    expect(optionStates()).toEqual(onlySelected("Banana"));
+    await walkFocus(
+      [
+        ["ArrowDown", "Banana"],
+        ["End", "Cherry"],
+        ["ArrowUp", "Banana"],
+        ["Home", "Apple"],
+      ],
+      onlySelected("Banana"),
+    );
   });
 });
 

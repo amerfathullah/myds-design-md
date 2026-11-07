@@ -52,6 +52,14 @@ const makeInert = (element: HTMLElement | null) => {
   element?.setAttribute("inert", "");
 };
 
+// Sets `ref` to `node` as React sets a ref it's given, and returns what a
+// callback ref returns: under React 19, a cleanup to run in place of a later
+// call with `null`
+function setRef<T>(ref: React.Ref<T> | undefined, node: T | null): unknown {
+  if (typeof ref === "function") return ref(node);
+  if (ref) (ref as { current: T | null }).current = node;
+}
+
 const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
   "SelectContext",
   {
@@ -64,6 +72,34 @@ const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
     size: "small",
   },
 );
+
+// How a string `label` on SelectValue names the select (#134). Its
+// SelectLabel names the trigger and the open list, which point their
+// `aria-labelledby` at it, unless the consumer names the trigger. `null`
+// outside a Select that provides it, where the label names nothing, as
+// before.
+type SelectNaming = {
+  // The id of the SelectLabel a string `label` renders
+  labelId: string;
+  // Whether that label names the trigger and the list: SelectValue renders
+  // it, and SelectTrigger has reported that nothing else names it
+  labelNames: boolean;
+  // SelectValue reports whether it renders a string label
+  setHasLabel: (hasLabel: boolean) => void;
+  // SelectTrigger reports, once mounted, whether the consumer names it
+  setTriggerNamed: (named: boolean) => void;
+};
+
+const SelectNamingContext = sharedContext<SelectNaming | null>(
+  "SelectNamingContext",
+  null,
+);
+
+// Layout effects don't run on the server, and React 18 warns there, so the
+// server gets useEffect. In the browser, the naming each part reports is in
+// place before the page paints.
+const useBeforePaint =
+  typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
 
 const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
   (props, ref) => {
@@ -92,6 +128,23 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     // Set by a pick in a `multiple` select, until the request to close the
     // list that Radix's item sends straight after it
     const _picking = React.useRef(false);
+    // What SelectValue and SelectTrigger report for naming the select. The
+    // trigger's report is `null` until it's mounted, so the label names
+    // nothing in server HTML, or beside a trigger that never reports.
+    const labelId = React.useId();
+    const [hasLabel, setHasLabel] = React.useState(false);
+    const [triggerNamed, setTriggerNamed] = React.useState<boolean | null>(
+      null,
+    );
+    const naming = React.useMemo<SelectNaming>(
+      () => ({
+        labelId,
+        labelNames: hasLabel && triggerNamed === false,
+        setHasLabel,
+        setTriggerNamed,
+      }),
+      [labelId, hasLabel, triggerNamed],
+    );
 
     React.useEffect(() => {
       if (props.multiple && !Array.isArray(_uncontrolledValue))
@@ -158,45 +211,47 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
 
     return (
       <SelectContext.Provider value={{ ...props, size, variant, _value }}>
-        <Root
-          ref={ref}
-          {...props}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          /* @ts-expect-error */
-          value={_value}
-          onValueChange={handleValueChange}
-          open={_open}
-          onOpenChange={handleOpenChange}
-        >
-          {props.children}
-          {isMultiple(props) && (
-            // The form control of a `multiple` select, which a form submits
-            // and the browser can autofill: one selected option per value
-            <select
-              aria-hidden
-              tabIndex={-1}
-              multiple
-              name={props.name}
-              form={props.form}
-              required={props.required}
-              disabled={props.disabled}
-              autoComplete={props.autoComplete}
-              value={selection}
-              onChange={(event) =>
-                handleValueChange(
-                  [...event.currentTarget.options]
-                    .filter((option) => option.selected)
-                    .map((option) => option.value),
-                )
-              }
-              className="sr-only"
-            >
-              {[...new Set(selection)].map((value) => (
-                <option key={value} value={value} ref={selectByDefault} />
-              ))}
-            </select>
-          )}
-        </Root>
+        <SelectNamingContext.Provider value={naming}>
+          <Root
+            ref={ref}
+            {...props}
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            /* @ts-expect-error */
+            value={_value}
+            onValueChange={handleValueChange}
+            open={_open}
+            onOpenChange={handleOpenChange}
+          >
+            {props.children}
+            {isMultiple(props) && (
+              // The form control of a `multiple` select, which a form submits
+              // and the browser can autofill: one selected option per value
+              <select
+                aria-hidden
+                tabIndex={-1}
+                multiple
+                name={props.name}
+                form={props.form}
+                required={props.required}
+                disabled={props.disabled}
+                autoComplete={props.autoComplete}
+                value={selection}
+                onChange={(event) =>
+                  handleValueChange(
+                    [...event.currentTarget.options]
+                      .filter((option) => option.selected)
+                      .map((option) => option.value),
+                  )
+                }
+                className="sr-only"
+              >
+                {[...new Set(selection)].map((value) => (
+                  <option key={value} value={value} ref={selectByDefault} />
+                ))}
+              </select>
+            )}
+          </Root>
+        </SelectNamingContext.Provider>
       </SelectContext.Provider>
     );
   },
@@ -228,16 +283,42 @@ interface SelectValueProps extends Omit<
 const SelectValue: React.ForwardRefExoticComponent<SelectValueProps> =
   React.forwardRef(({ label, icon, children, className, ...props }, ref) => {
     const rootProps = React.useContext(SelectContext);
+    const naming = React.useContext(SelectNamingContext);
     const Icon = icon || ChevronDownFillIcon;
+
+    // Only a non-empty string label can name the select. An empty one still
+    // renders its SelectLabel, and an element renders as given, naming
+    // nothing.
+    const hasStringLabel = typeof label === "string" && label !== "";
+    const setHasLabel = naming?.setHasLabel;
+    useBeforePaint(() => {
+      if (!hasStringLabel || !setHasLabel) return;
+      setHasLabel(true);
+      return () => setHasLabel(false);
+    }, [hasStringLabel, setHasLabel]);
+
+    // While the label names the trigger, it's hidden from assistive
+    // technology, so the trigger's value is what follows it. The trigger's
+    // `aria-labelledby` still reads it.
+    const labelNode =
+      typeof label === "string" ? (
+        <SelectLabel
+          {...(hasStringLabel &&
+            naming && {
+              id: naming.labelId,
+              "aria-hidden": naming.labelNames || undefined,
+            })}
+        >
+          {label}
+        </SelectLabel>
+      ) : (
+        label
+      );
 
     if (!isMultiple(rootProps))
       return (
         <>
-          {typeof label === "string" ? (
-            <SelectLabel>{label}</SelectLabel>
-          ) : (
-            label
-          )}
+          {labelNode}
           <SelectPrimitive.Value
             ref={ref}
             {...props}
@@ -253,7 +334,7 @@ const SelectValue: React.ForwardRefExoticComponent<SelectValueProps> =
 
     return (
       <>
-        {typeof label === "string" ? <SelectLabel>{label}</SelectLabel> : label}
+        {labelNode}
         <SelectPrimitive.Value
           ref={ref}
           {...props}
@@ -346,15 +427,46 @@ const SelectTrigger: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Trigger>
 > = React.forwardRef(({ className, children, ...props }, ref) => {
   const { variant, size } = React.useContext(SelectContext);
+  const naming = React.useContext(SelectNamingContext);
+
+  // The consumer names the trigger with an `aria-label` or `aria-labelledby`
+  // of its own, or with a Label pointed at its `id` or wrapping it, which
+  // the button's `labels` hold once it's mounted. Then the label in it names
+  // nothing, and the trigger renders as before.
+  const namedByProps =
+    props["aria-label"] !== undefined || props["aria-labelledby"] !== undefined;
+  const button = React.useRef<HTMLButtonElement | null>(null);
+  // The button goes to the consumer's ref too. A cleanup it returns runs on
+  // unmount, in place of a call with `null`, as Radix's trigger runs it.
+  const buttonRef = React.useCallback(
+    (node: HTMLButtonElement | null) => {
+      button.current = node;
+      const cleanup = setRef(ref, node);
+      if (typeof cleanup === "function")
+        return () => {
+          button.current = null;
+          cleanup();
+        };
+    },
+    [ref],
+  );
+  const setTriggerNamed = naming?.setTriggerNamed;
+  // After every render, as a Label can come or go with any of them
+  useBeforePaint(() => {
+    setTriggerNamed?.(namedByProps || Boolean(button.current?.labels?.length));
+  });
+  // A name passed in this render wins at once, before the report above
+  const labelNames = naming?.labelNames && !namedByProps;
 
   return (
     <SelectPrimitive.Trigger
-      ref={ref}
+      ref={buttonRef}
       className={select_trigger_cva({
         variant,
         size,
         className,
       })}
+      {...(labelNames && { "aria-labelledby": naming.labelId })}
       {...props}
     >
       {children}
@@ -427,6 +539,13 @@ const SelectContent: React.ForwardRefExoticComponent<
 > = React.forwardRef(
   ({ className, children, position = "popper", ...props }, ref) => {
     const { size, multiple } = React.useContext(SelectContext);
+    const naming = React.useContext(SelectNamingContext);
+    // The label that names the trigger names the open list too, unless
+    // SelectContent gets a name of its own
+    const labelNames =
+      naming?.labelNames &&
+      props["aria-label"] === undefined &&
+      props["aria-labelledby"] === undefined;
     // A press outside the list calls `onPointerDownOutside`, then, unless it
     // calls `preventDefault()`, Radix asks Select's root to close the list
     return (
@@ -435,6 +554,7 @@ const SelectContent: React.ForwardRefExoticComponent<
           ref={ref}
           className={select_content_cva({ position, size, className })}
           position={position}
+          {...(labelNames && { "aria-labelledby": naming.labelId })}
           {...props}
           // Radix has no multi-select list, so a `multiple` select's list
           // says it is one itself

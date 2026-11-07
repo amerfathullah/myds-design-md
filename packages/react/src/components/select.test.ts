@@ -1746,6 +1746,35 @@ describe('a single Select with `label="Fruit"` and no name from the consumer', (
   });
 });
 
+// A wrapper that forwards a name prop it wasn't given passes `undefined`,
+// which names nothing, so the label still does
+describe.each(kinds)(
+  '%s Select with `label="Fruit"` and `aria-labelledby={undefined}`',
+  (_, multiple) => {
+    test("on SelectTrigger, is named by its label", async () => {
+      await mount(
+        labelled("Fruit", {
+          multiple,
+          trigger: { "aria-label": undefined, "aria-labelledby": undefined },
+        }),
+      );
+
+      await expectNamedByLabel(multiple ? "0" : "Select");
+    });
+
+    test("on SelectContent, names its open list by its label", async () => {
+      await mount(
+        labelled("Fruit", {
+          multiple,
+          content: { "aria-label": undefined, "aria-labelledby": undefined },
+        }),
+      );
+
+      await expectNamedByLabel(multiple ? "0" : "Select");
+    });
+  },
+);
+
 describe('a `multiple` Select with `label="Fruit"` and no name from the consumer', () => {
   test('is named by its label, and reads its counter "0" as its value with nothing picked', async () => {
     await mount(labelled("Fruit", { multiple: true }));

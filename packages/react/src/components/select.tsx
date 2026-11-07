@@ -419,53 +419,60 @@ const select_trigger_cva = cva(
 
 const SelectTrigger: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Trigger>
-> = React.forwardRef(({ className, children, ...props }, ref) => {
-  const { variant, size, _naming: naming } = React.useContext(SelectContext);
+> = React.forwardRef(
+  ({ className, children, "aria-labelledby": labelledBy, ...props }, ref) => {
+    const { variant, size, _naming: naming } = React.useContext(SelectContext);
 
-  // The consumer names the trigger with an `aria-label` or `aria-labelledby`
-  // of its own, or with a Label pointed at its `id` or wrapping it, which
-  // the button's `labels` hold once it's mounted. Then the label in it names
-  // nothing, and the trigger renders as before.
-  const namedByProps =
-    props["aria-label"] !== undefined || props["aria-labelledby"] !== undefined;
-  const button = React.useRef<HTMLButtonElement | null>(null);
-  // The button goes to the consumer's ref too. A cleanup it returns runs on
-  // unmount, in place of a call with `null`, as Radix's trigger runs it.
-  const buttonRef = React.useCallback(
-    (node: HTMLButtonElement | null) => {
-      button.current = node;
-      const cleanup = setRef(ref, node);
-      if (typeof cleanup === "function")
-        return () => {
-          button.current = null;
-          cleanup();
-        };
-    },
-    [ref],
-  );
-  const setTriggerNamed = naming?.setTriggerNamed;
-  // After every render, as a Label can come or go with any of them
-  useBeforePaint(() => {
-    setTriggerNamed?.(namedByProps || Boolean(button.current?.labels?.length));
-  });
-  // A name passed in this render wins at once, before the report above
-  const labelNames = naming?.labelNames && !namedByProps;
+    // The consumer names the trigger with an `aria-label` or `aria-labelledby`
+    // of its own, or with a Label pointed at its `id` or wrapping it, which
+    // the button's `labels` hold once it's mounted. Then the label in it names
+    // nothing, and the trigger renders as before.
+    const namedByProps =
+      props["aria-label"] !== undefined || labelledBy !== undefined;
+    const button = React.useRef<HTMLButtonElement | null>(null);
+    // The button goes to the consumer's ref too. A cleanup it returns runs on
+    // unmount, in place of a call with `null`, as Radix's trigger runs it.
+    const buttonRef = React.useCallback(
+      (node: HTMLButtonElement | null) => {
+        button.current = node;
+        const cleanup = setRef(ref, node);
+        if (typeof cleanup === "function")
+          return () => {
+            button.current = null;
+            cleanup();
+          };
+      },
+      [ref],
+    );
+    const setTriggerNamed = naming?.setTriggerNamed;
+    // After every render, as a Label can come or go with any of them
+    useBeforePaint(() => {
+      setTriggerNamed?.(
+        namedByProps || Boolean(button.current?.labels?.length),
+      );
+    });
+    // A name passed in this render wins at once, before the report above
+    const labelNames = naming?.labelNames && !namedByProps;
 
-  return (
-    <SelectPrimitive.Trigger
-      ref={buttonRef}
-      className={select_trigger_cva({
-        variant,
-        size,
-        className,
-      })}
-      {...(labelNames && { "aria-labelledby": naming.labelId })}
-      {...props}
-    >
-      {children}
-    </SelectPrimitive.Trigger>
-  );
-});
+    return (
+      <SelectPrimitive.Trigger
+        ref={buttonRef}
+        className={select_trigger_cva({
+          variant,
+          size,
+          className,
+        })}
+        {...props}
+        // The consumer's own, or the label's while it names the trigger. Kept
+        // out of the spread, so an `aria-labelledby={undefined}` there, as a
+        // wrapper forwards one it wasn't given, can't drop the label's.
+        aria-labelledby={labelNames ? naming.labelId : labelledBy}
+      >
+        {children}
+      </SelectPrimitive.Trigger>
+    );
+  },
+);
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
 /*========================================================================================================================*/
@@ -530,14 +537,23 @@ const select_content_cva = cva(
 const SelectContent: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Content>
 > = React.forwardRef(
-  ({ className, children, position = "popper", ...props }, ref) => {
+  (
+    {
+      className,
+      children,
+      position = "popper",
+      "aria-labelledby": labelledBy,
+      ...props
+    },
+    ref,
+  ) => {
     const { size, multiple, _naming: naming } = React.useContext(SelectContext);
     // The label that names the trigger names the open list too, unless
     // SelectContent gets a name of its own
     const labelNames =
       naming?.labelNames &&
       props["aria-label"] === undefined &&
-      props["aria-labelledby"] === undefined;
+      labelledBy === undefined;
     // A press outside the list calls `onPointerDownOutside`, then, unless it
     // calls `preventDefault()`, Radix asks Select's root to close the list
     return (
@@ -546,8 +562,9 @@ const SelectContent: React.ForwardRefExoticComponent<
           ref={ref}
           className={select_content_cva({ position, size, className })}
           position={position}
-          {...(labelNames && { "aria-labelledby": naming.labelId })}
           {...props}
+          // As on SelectTrigger, out of the spread
+          aria-labelledby={labelNames ? naming.labelId : labelledBy}
           // Radix has no multi-select list, so a `multiple` select's list
           // says it is one itself
           {...(multiple && { "aria-multiselectable": true })}

@@ -92,6 +92,26 @@ async function mount(element: ReactElement) {
   };
 }
 
+// Puts `tree`'s server HTML in a container on the page and hydrates it with
+// `tree`, as the browser does, and returns the errors React recovered from,
+// such as a hydration mismatch
+async function hydrate(tree: ReactElement) {
+  const container = document.body.appendChild(document.createElement("div"));
+  container.innerHTML = renderToString(tree);
+  const recoverable: unknown[] = [];
+  let root: ReturnType<typeof hydrateRoot> | undefined;
+  unmounts.push(async () => {
+    await act(async () => root?.unmount());
+    container.remove();
+  });
+  await act(async () => {
+    root = hydrateRoot(container, tree, {
+      onRecoverableError: (error) => void recoverable.push(error),
+    });
+  });
+  return recoverable;
+}
+
 // The page's markup, with the ids React and Radix generate, which differ
 // between mounts, replaced
 const page = () =>
@@ -1147,21 +1167,7 @@ describe.each(kinds)("%s Select with `defaultOpen`", (_, multiple) => {
   });
 
   test("hydrates its server HTML with the list shown and no recoverable error", async () => {
-    const tree = fruits({ multiple, defaultOpen: true });
-    const container = document.body.appendChild(document.createElement("div"));
-    container.innerHTML = renderToString(tree);
-    const recoverable: unknown[] = [];
-    let root: ReturnType<typeof hydrateRoot> | undefined;
-    unmounts.push(async () => {
-      await act(async () => root?.unmount());
-      container.remove();
-    });
-
-    await act(async () => {
-      root = hydrateRoot(container, tree, {
-        onRecoverableError: (error) => void recoverable.push(error),
-      });
-    });
+    const recoverable = await hydrate(fruits({ multiple, defaultOpen: true }));
     await settle();
 
     expect(recoverable).toEqual([]);
@@ -2018,26 +2024,12 @@ describe.each(kinds)(
     });
 
     test("hydrates with no recoverable error, then is named by its label", async () => {
-      const tree = labelled("Fruit", {
-        multiple,
-        defaultValue: multiple ? ["apple", "banana"] : "banana",
-      } as NamingOptions);
-      const container = document.body.appendChild(
-        document.createElement("div"),
+      const recoverable = await hydrate(
+        labelled("Fruit", {
+          multiple,
+          defaultValue: multiple ? ["apple", "banana"] : "banana",
+        } as NamingOptions),
       );
-      container.innerHTML = renderToString(tree);
-      const recoverable: unknown[] = [];
-      let root: ReturnType<typeof hydrateRoot> | undefined;
-      unmounts.push(async () => {
-        await act(async () => root?.unmount());
-        container.remove();
-      });
-
-      await act(async () => {
-        root = hydrateRoot(container, tree, {
-          onRecoverableError: (error) => void recoverable.push(error),
-        });
-      });
       await settle();
 
       expect(recoverable).toEqual([]);

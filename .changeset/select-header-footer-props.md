@@ -2,7 +2,7 @@
 "@amerfathullah/myds-react": patch
 ---
 
-SelectHeader and SelectFooter now pass every prop and their ref to their `div`, as their types say. Before, they kept only `className` and `children`, so anything else you gave them never reached the page, and nothing was logged.
+SelectHeader and SelectFooter now pass every prop and their ref to their `div`, as their types say. Before, they kept only `className` and `children`, so anything else you gave them never reached the page. React 19 logged nothing, and React 18 only warned that a function component can't be given a ref.
 
 - **Attributes land on the `div`.** `id`, `role`, `aria-*`, `data-*`, `title`, `tabIndex` and `style` now render on the header's or footer's `div`, so you can give the region a role, a name or a description, or point `aria-labelledby` or `aria-describedby` at it by `id`. `className` still merges after the part's own classes.
 - **Event handlers run.** `onClick`, `onKeyDown` and the other handlers now run when the `div` gets the event. Before, only SelectContent's handlers saw it, by bubbling.

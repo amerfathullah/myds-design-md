@@ -3,12 +3,16 @@ import {
   act,
   createElement,
   createRef,
+  StrictMode,
+  useState,
   type ComponentProps,
   type ReactElement,
 } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { ThemeProvider } from "../hooks/use-theme";
 import {
   Select,
   SelectContent,
@@ -21,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./select";
+import { ThemeSwitch } from "./theme-switch";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -67,8 +72,10 @@ const select = (
 
 const unmounts: (() => Promise<void>)[] = [];
 
-// Mounts `element` in a container on the page, as an app would. The open
-// content portals into `<body>`, outside the container.
+// Mounts `element` in a container on the page, as an app would, and returns
+// the container and a function that renders another element in its place, as
+// a parent's new props do. The open content portals into `<body>`, outside
+// the container.
 async function mount(element: ReactElement) {
   const container = document.body.appendChild(document.createElement("div"));
   const root = createRoot(container);
@@ -77,7 +84,10 @@ async function mount(element: ReactElement) {
     container.remove();
   });
   await act(async () => root.render(element));
-  return container;
+  return {
+    container,
+    rerender: (next: ReactElement) => act(async () => root.render(next)),
+  };
 }
 
 // The page's markup, with the ids React and Radix generate, which differ
@@ -98,7 +108,7 @@ const checkIcon = () =>
 // size, which are the trigger, its chevron and the selected item's check
 // icon, and the whole page's markup
 async function rendered(element: ReactElement) {
-  const container = await mount(element);
+  const { container } = await mount(element);
   const trigger = container.querySelector("button");
   const chevron = trigger?.querySelector("svg");
   const check = checkIcon();
@@ -120,22 +130,12 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-// Radix's warning that Select's open state changes between controlled and
-// uncontrolled, which a Select whose `open` is left to it logs on mount and
-// when it opens (#132)
-const isOpenStateWarning = ([message]: unknown[]) =>
-  typeof message === "string" &&
-  /^Select is changing from (un)?controlled to (un)?controlled\./.test(message);
-
-// No test logs an error or a warning besides that one, or leaves anything on
-// the page
+// No test logs an error or a warning, or leaves anything on the page
 afterEach(async () => {
   while (unmounts.length) await unmounts.pop()!();
   const logged = [
     ...vi.mocked(console.error).mock.calls,
-    ...vi
-      .mocked(console.warn)
-      .mock.calls.filter((call) => !isOpenStateWarning(call)),
+    ...vi.mocked(console.warn).mock.calls,
   ];
   vi.restoreAllMocks();
   expect(logged).toEqual([]);
@@ -656,5 +656,648 @@ describe("in a single Select with its list open", () => {
 
     expect(onCloseAutoFocus).toHaveBeenCalledTimes(1);
     expect(document.activeElement).toBe(trigger());
+  });
+});
+
+/*========================================================================================================================*/
+
+// Opening and closing the list. `open` controls it when it isn't
+// `undefined`; otherwise Select keeps the state, starting from `defaultOpen`.
+// Each request to open or close calls `onOpenChange`, except the close that
+// follows a pick in a `multiple` select, which stays open (#132).
+
+const FRUITS = [
+  ["apple", "Apple"],
+  ["banana", "Banana"],
+  ["cherry", "Cherry"],
+] as const;
+
+// A Select of three fruits with `props`, beside a paragraph that a press
+// outside the list lands on
+const fruits = (props: Partial<SelectProps> = {}) =>
+  createElement(
+    "div",
+    null,
+    createElement("p", null, "Outside"),
+    createElement(
+      Select,
+      props as SelectProps,
+      createElement(
+        SelectTrigger,
+        { "aria-label": "Fruit" },
+        createElement(SelectValue, { placeholder: "Select a fruit" }),
+      ),
+      createElement(
+        SelectContent,
+        null,
+        FRUITS.map(([value, label]) =>
+          createElement(SelectItem, { key: value, value }, label),
+        ),
+      ),
+    ),
+  );
+
+// A parent that holds `open`, from `false`, and passes back each state
+// `onOpenChange` asks for
+function Following({ onOpenChange, ...props }: Partial<SelectProps>) {
+  const [open, setOpen] = useState(false);
+  return fruits({
+    ...props,
+    open,
+    onOpenChange: (next: boolean) => {
+      onOpenChange?.(next);
+      setOpen(next);
+    },
+  } as Partial<SelectProps>);
+}
+
+// Whether the list shows: the trigger's `aria-expanded` and `data-state`, and
+// whether the listbox renders
+const shown = () => ({
+  expanded: trigger().getAttribute("aria-expanded"),
+  state: trigger().getAttribute("data-state"),
+  listbox: listbox() !== null,
+});
+
+const OPEN = { expanded: "true", state: "open", listbox: true };
+const CLOSED = { expanded: "false", state: "closed", listbox: false };
+
+// The open list's item labelled `label`
+function option(label: string) {
+  const found = [
+    ...document.querySelectorAll<HTMLElement>('[role="option"]'),
+  ].find((item) => item.textContent === label);
+  expect(found, `the item "${label}"`).toBeDefined();
+  return found!;
+}
+
+// Presses `key` on `target` as a keyboard does: a keydown that bubbles
+async function press(target: Element, key: string) {
+  await act(
+    async () =>
+      void target.dispatchEvent(
+        new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+      ),
+  );
+  await settle();
+}
+
+// Focuses the trigger, as a Tab to it does, and presses `key` on it
+async function pressOnTrigger(key: string) {
+  await act(async () => trigger().focus());
+  await press(trigger(), key);
+}
+
+// A mouse's pointer event of `type` with its primary button, at `x` and `y`
+// on the page. happy-dom has no layout, so it leaves an event's `pageX` and
+// `pageY`, which Radix reads, at 0.
+function mouse(type: string, x = 0, y = 0) {
+  const event = new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    pointerType: "mouse",
+    clientX: x,
+    clientY: y,
+  });
+  Object.defineProperties(event, { pageX: { value: x }, pageY: { value: y } });
+  return event;
+}
+
+// Presses the primary button of a mouse on `target`, without releasing it
+async function mouseDown(target: Element) {
+  await act(async () => void target.dispatchEvent(mouse("pointerdown")));
+  await settle();
+}
+
+// Fires `type` on the window, as the browser does when the window loses
+// focus or changes size
+async function windowEvent(type: "blur" | "resize") {
+  await act(async () => void window.dispatchEvent(new Event(type)));
+  await settle();
+}
+
+// The requests to open the closed list, each made on its trigger
+const openRequests = [
+  [
+    "a click on the trigger",
+    async () => {
+      await act(async () => trigger().click());
+      await settle();
+    },
+  ],
+  ["a mouse press on the trigger", () => mouseDown(trigger())],
+  ["Enter on the focused trigger", () => pressOnTrigger("Enter")],
+  ["Space on the focused trigger", () => pressOnTrigger(" ")],
+  ["ArrowDown on the focused trigger", () => pressOnTrigger("ArrowDown")],
+  ["ArrowUp on the focused trigger", () => pressOnTrigger("ArrowUp")],
+] as const;
+
+// The requests to close the open list that a single and a `multiple` select
+// share
+const closeRequests = [
+  ["Escape", pressEscape],
+  ["a press outside the list", pressOutside],
+  ["a window `blur`", () => windowEvent("blur")],
+  ["a window `resize`", () => windowEvent("resize")],
+] as const;
+
+// Picks the item labelled `label` in the open list with a click
+async function pickByClick(label: string) {
+  await act(async () => option(label).click());
+  await settle();
+}
+
+// Picks the item labelled `label` with a mouse, which moves onto it, away
+// from the trigger, first. Until the pointer moves from where the list was
+// opened, Radix takes a release for the end of the press that opened it, and
+// ignores it.
+async function pickByMouse(label: string) {
+  await act(async () => {
+    for (const type of ["pointermove", "pointerdown", "pointerup"])
+      option(label).dispatchEvent(mouse(type, 100, 100));
+  });
+  await settle();
+}
+
+// Picks the item labelled `label` by focusing it and pressing `key`
+const pickByKey = (key: string) => async (label: string) => {
+  await act(async () => option(label).focus());
+  await press(option(label), key);
+};
+
+// The ways a visitor picks an item in the open list
+const picks = [
+  ["a click", pickByClick],
+  ["a mouse press and release", pickByMouse],
+  ["Enter", pickByKey("Enter")],
+  ["Space", pickByKey(" ")],
+] as const;
+
+describe.each(kinds)(
+  "%s Select with `open={false}` and a parent that ignores `onOpenChange`",
+  (_, multiple) => {
+    test.each(openRequests)(
+      "%s calls `onOpenChange(true)` once and leaves the list closed",
+      async (_, request) => {
+        const onOpenChange = vi.fn();
+        await mount(fruits({ multiple, open: false, onOpenChange }));
+
+        await request();
+
+        expect(onOpenChange.mock.calls).toEqual([[true]]);
+        expect(shown()).toEqual(CLOSED);
+      },
+    );
+  },
+);
+
+describe.each(kinds)(
+  "%s Select with `open={true}` and a parent that ignores `onOpenChange`",
+  (_, multiple) => {
+    test("shows the list from mount", async () => {
+      await mount(fruits({ multiple, open: true }));
+      await settle();
+
+      expect(shown()).toEqual(OPEN);
+    });
+
+    test.each(closeRequests)(
+      "%s calls `onOpenChange(false)` once and leaves the list open",
+      async (_, request) => {
+        const onOpenChange = vi.fn();
+        await mount(fruits({ multiple, open: true, onOpenChange }));
+        await settle();
+
+        await request();
+
+        expect(onOpenChange.mock.calls).toEqual([[false]]);
+        expect(shown()).toEqual(OPEN);
+      },
+    );
+
+    test("never calls `onOpenChange(true)` while the list is open", async () => {
+      const onOpenChange = vi.fn();
+      await mount(fruits({ multiple, open: true, onOpenChange }));
+      await settle();
+
+      await act(async () => trigger().click());
+      await press(trigger(), "Enter");
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+  },
+);
+
+describe("a single Select with `open={true}` and a parent that ignores `onOpenChange`", () => {
+  test.each(picks)(
+    "a pick by %s calls `onValueChange`, then `onOpenChange(false)` once, and leaves the list open",
+    async (_, pick) => {
+      const calls: unknown[][] = [];
+      await mount(
+        fruits({
+          open: true,
+          onValueChange: (value: string) => calls.push(["value", value]),
+          onOpenChange: (open: boolean) => calls.push(["open", open]),
+        }),
+      );
+      await settle();
+
+      await pick("Banana");
+
+      expect(calls).toEqual([
+        ["value", "banana"],
+        ["open", false],
+      ]);
+      expect(shown()).toEqual(OPEN);
+    },
+  );
+});
+
+describe("a `multiple` Select with `open={true}` and a parent that ignores `onOpenChange`", () => {
+  test.each(picks)(
+    "a pick by %s calls `onValueChange` but not `onOpenChange`, and leaves the list open",
+    async (_, pick) => {
+      const onValueChange = vi.fn();
+      const onOpenChange = vi.fn();
+      await mount(
+        fruits({ multiple: true, open: true, onValueChange, onOpenChange }),
+      );
+      await settle();
+
+      await pick("Banana");
+
+      expect(onValueChange.mock.calls).toEqual([[["banana"]]]);
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(shown()).toEqual(OPEN);
+    },
+  );
+});
+
+describe.each(kinds)(
+  "%s Select whose parent passes back what `onOpenChange` asks for",
+  (_, multiple) => {
+    test.each(closeRequests)(
+      "opens from the trigger and closes on %s, calling `onOpenChange(true)` then `onOpenChange(false)`",
+      async (_, request) => {
+        const onOpenChange = vi.fn();
+        await mount(createElement(Following, { multiple, onOpenChange }));
+        expect(shown()).toEqual(CLOSED);
+
+        await openList();
+        expect(onOpenChange.mock.calls).toEqual([[true]]);
+
+        await request();
+        expect(onOpenChange.mock.calls).toEqual([[true], [false]]);
+        expect(shown()).toEqual(CLOSED);
+      },
+    );
+
+    test("closes on releasing, outside the list, a mouse press that started on the trigger and moved away", async () => {
+      const onOpenChange = vi.fn();
+      await mount(createElement(Following, { multiple, onOpenChange }));
+      await mouseDown(trigger());
+      expect(shown()).toEqual(OPEN);
+
+      const outside = document.querySelector("p")!;
+      await act(async () => {
+        outside.dispatchEvent(mouse("pointermove", 200, 200));
+        outside.dispatchEvent(mouse("pointerup", 200, 200));
+      });
+      await settle();
+
+      expect(onOpenChange.mock.calls).toEqual([[true], [false]]);
+      expect(shown()).toEqual(CLOSED);
+    });
+  },
+);
+
+describe("a single Select whose parent passes back what `onOpenChange` asks for", () => {
+  test.each(picks)(
+    "closes on a pick by %s, calling `onOpenChange(false)`",
+    async (_, pick) => {
+      const onOpenChange = vi.fn();
+      await mount(createElement(Following, { onOpenChange }));
+      await openList();
+
+      await pick("Banana");
+
+      expect(onOpenChange.mock.calls).toEqual([[true], [false]]);
+      expect(shown()).toEqual(CLOSED);
+    },
+  );
+});
+
+describe("a `multiple` Select whose parent passes back what `onOpenChange` asks for", () => {
+  test.each(picks)(
+    "stays open after a pick by %s, calling no `onOpenChange`, and a following Escape closes it with one `onOpenChange(false)`",
+    async (_, pick) => {
+      const onOpenChange = vi.fn();
+      const onValueChange = vi.fn();
+      await mount(
+        createElement(Following, {
+          multiple: true,
+          onOpenChange,
+          onValueChange,
+        }),
+      );
+      await openList();
+      onOpenChange.mockClear();
+
+      await pick("Banana");
+      expect(onValueChange.mock.calls).toEqual([[["banana"]]]);
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(shown()).toEqual(OPEN);
+
+      await pressEscape();
+      expect(onOpenChange.mock.calls).toEqual([[false]]);
+      expect(shown()).toEqual(CLOSED);
+    },
+  );
+
+  test("stays open after picks by click, Enter and Space in turn, then closes on Escape", async () => {
+    const onOpenChange = vi.fn();
+    const onValueChange = vi.fn();
+    await mount(
+      createElement(Following, { multiple: true, onOpenChange, onValueChange }),
+    );
+    await openList();
+    onOpenChange.mockClear();
+
+    await pickByClick("Apple");
+    await pickByKey("Enter")("Banana");
+    await pickByKey(" ")("Cherry");
+    expect(onValueChange.mock.calls).toEqual([
+      [["apple"]],
+      [["apple", "banana"]],
+      [["apple", "banana", "cherry"]],
+    ]);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(shown()).toEqual(OPEN);
+
+    await pressEscape();
+    expect(onOpenChange.mock.calls).toEqual([[false]]);
+    expect(shown()).toEqual(CLOSED);
+  });
+});
+
+describe.each(kinds)(
+  "%s Select without `open` or `defaultOpen`",
+  (_, multiple) => {
+    test("starts closed", async () => {
+      await mount(fruits({ multiple }));
+
+      expect(shown()).toEqual(CLOSED);
+    });
+
+    test.each(openRequests)(
+      "opens on %s, calling `onOpenChange(true)` once",
+      async (_, request) => {
+        const onOpenChange = vi.fn();
+        await mount(fruits({ multiple, onOpenChange }));
+
+        await request();
+
+        expect(onOpenChange.mock.calls).toEqual([[true]]);
+        expect(shown()).toEqual(OPEN);
+      },
+    );
+
+    test.each(closeRequests)(
+      "closes on %s, calling `onOpenChange(false)` once",
+      async (_, request) => {
+        const onOpenChange = vi.fn();
+        await mount(fruits({ multiple, onOpenChange }));
+        await openList();
+        onOpenChange.mockClear();
+
+        await request();
+
+        expect(onOpenChange.mock.calls).toEqual([[false]]);
+        expect(shown()).toEqual(CLOSED);
+      },
+    );
+  },
+);
+
+describe("a single Select without `open`", () => {
+  test.each(picks)(
+    "closes on a pick by %s, calling `onOpenChange(false)` once",
+    async (_, pick) => {
+      const onOpenChange = vi.fn();
+      await mount(fruits({ onOpenChange }));
+      await openList();
+      onOpenChange.mockClear();
+
+      await pick("Banana");
+
+      expect(onOpenChange.mock.calls).toEqual([[false]]);
+      expect(shown()).toEqual(CLOSED);
+    },
+  );
+});
+
+describe("a `multiple` Select without `open`", () => {
+  test.each(picks)(
+    "stays open after a pick by %s, calling no `onOpenChange`",
+    async (_, pick) => {
+      const onOpenChange = vi.fn();
+      await mount(fruits({ multiple: true, onOpenChange }));
+      await openList();
+      onOpenChange.mockClear();
+
+      await pick("Banana");
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(shown()).toEqual(OPEN);
+    },
+  );
+
+  // Typing on the closed trigger picks an item without a request to close.
+  // The pick's mark is cleared on its own, so it doesn't swallow the next
+  // close request.
+  test("closes on Escape after typing on the closed trigger picks an item", async () => {
+    const onOpenChange = vi.fn();
+    const onValueChange = vi.fn();
+    await mount(fruits({ multiple: true, onOpenChange, onValueChange }));
+
+    await pressOnTrigger("b");
+    expect(onValueChange.mock.calls).toEqual([[["banana"]]]);
+    expect(shown()).toEqual(CLOSED);
+
+    await pressOnTrigger("Enter");
+    expect(shown()).toEqual(OPEN);
+    await pressEscape();
+
+    expect(onOpenChange.mock.calls).toEqual([[true], [false]]);
+    expect(shown()).toEqual(CLOSED);
+  });
+});
+
+describe.each(kinds)("%s Select with `defaultOpen`", (_, multiple) => {
+  test("renders its trigger expanded in server HTML", () => {
+    const html = document.createElement("div");
+    html.innerHTML = renderToString(fruits({ multiple, defaultOpen: true }));
+    const combobox = html.querySelector('[role="combobox"]');
+
+    expect(combobox?.getAttribute("aria-expanded")).toBe("true");
+    expect(combobox?.getAttribute("data-state")).toBe("open");
+  });
+
+  test("hydrates its server HTML with the list shown and no recoverable error", async () => {
+    const tree = fruits({ multiple, defaultOpen: true });
+    const container = document.body.appendChild(document.createElement("div"));
+    container.innerHTML = renderToString(tree);
+    const recoverable: unknown[] = [];
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+    unmounts.push(async () => {
+      await act(async () => root?.unmount());
+      container.remove();
+    });
+
+    await act(async () => {
+      root = hydrateRoot(container, tree, {
+        onRecoverableError: (error) => void recoverable.push(error),
+      });
+    });
+    await settle();
+
+    expect(recoverable).toEqual([]);
+    expect(shown()).toEqual(OPEN);
+  });
+
+  test("shows the list from mount, and closes it on Escape, calling `onOpenChange(false)` once", async () => {
+    const onOpenChange = vi.fn();
+    await mount(fruits({ multiple, defaultOpen: true, onOpenChange }));
+    await settle();
+    expect(shown()).toEqual(OPEN);
+
+    await pressEscape();
+
+    expect(onOpenChange.mock.calls).toEqual([[false]]);
+    expect(shown()).toEqual(CLOSED);
+  });
+
+  test("ignores a later change to `defaultOpen`", async () => {
+    const { rerender } = await mount(fruits({ multiple, defaultOpen: true }));
+    await settle();
+
+    await rerender(fruits({ multiple, defaultOpen: false }));
+    await settle();
+
+    expect(shown()).toEqual(OPEN);
+  });
+
+  test("stays closed under `open={false}`", async () => {
+    await mount(fruits({ multiple, defaultOpen: true, open: false }));
+    await settle();
+
+    expect(shown()).toEqual(CLOSED);
+  });
+});
+
+describe("a `multiple` Select with `defaultOpen`", () => {
+  test.each(picks)(
+    "stays open after a first pick by %s, calling no `onOpenChange`",
+    async (_, pick) => {
+      const onOpenChange = vi.fn();
+      await mount(fruits({ multiple: true, defaultOpen: true, onOpenChange }));
+      await settle();
+
+      await pick("Banana");
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(shown()).toEqual(OPEN);
+    },
+  );
+});
+
+describe.each(kinds)("%s Select opened from the keyboard", (_, multiple) => {
+  test("returns focus to the trigger when Escape closes the list", async () => {
+    await mount(fruits({ multiple }));
+    await pressOnTrigger("Enter");
+    expect(shown()).toEqual(OPEN);
+    expect(document.activeElement?.getAttribute("role")).toBe("option");
+
+    await pressEscape();
+
+    expect(shown()).toEqual(CLOSED);
+    expect(document.activeElement).toBe(trigger());
+  });
+});
+
+describe("a `multiple` Select opened from the keyboard", () => {
+  test("returns focus to the trigger when Escape closes the list after a pick by Space", async () => {
+    await mount(fruits({ multiple: true }));
+    await pressOnTrigger("Enter");
+
+    await pickByKey(" ")("Banana");
+    expect(shown()).toEqual(OPEN);
+    await pressEscape();
+
+    expect(shown()).toEqual(CLOSED);
+    expect(document.activeElement).toBe(trigger());
+  });
+});
+
+// Radix's warning that Select's open state changes between controlled and
+// uncontrolled
+const isOpenStateWarning = ([message]: unknown[]) =>
+  typeof message === "string" && message.startsWith("Select is changing from");
+
+const openStateWarnings = () =>
+  vi.mocked(console.warn).mock.calls.filter(isOpenStateWarning);
+
+describe.each(kinds)(
+  '%s Select logs no "Select is changing from" warning',
+  (_, multiple) => {
+    test("without `open`, mounted, opened and closed", async () => {
+      await mount(fruits({ multiple }));
+      await openList();
+      await pressEscape();
+
+      expect(openStateWarnings()).toEqual([]);
+    });
+
+    test("with `defaultOpen`, mounted, closed and opened", async () => {
+      await mount(fruits({ multiple, defaultOpen: true }));
+      await settle();
+      await pressEscape();
+      await openList();
+
+      expect(openStateWarnings()).toEqual([]);
+    });
+
+    test("with `open` its parent follows, mounted, opened and closed", async () => {
+      await mount(createElement(Following, { multiple }));
+      await openList();
+      await pressEscape();
+
+      expect(openStateWarnings()).toEqual([]);
+    });
+
+    test("in `StrictMode`, mounted, opened and closed", async () => {
+      await mount(createElement(StrictMode, null, fruits({ multiple })));
+      await openList();
+      await pressEscape();
+
+      expect(openStateWarnings()).toEqual([]);
+    });
+  },
+);
+
+describe("ThemeSwitch as a select", () => {
+  test('logs no "Select is changing from" warning, mounted, opened and closed', async () => {
+    await mount(
+      createElement(
+        ThemeProvider,
+        null,
+        createElement(ThemeSwitch, { as: "select" }),
+      ),
+    );
+    await openList();
+    await pressEscape();
+
+    expect(openStateWarnings()).toEqual([]);
   });
 });

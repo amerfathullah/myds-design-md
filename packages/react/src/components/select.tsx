@@ -6,7 +6,6 @@ import { ChevronDownFillIcon } from "../icons/chevron-down-fill";
 import { CheckCircleFillIcon } from "../icons/check-circle-fill";
 import { Checkbox } from "./checkbox";
 import { sharedContext } from "../utils/registry";
-import { composeEventHandlers } from "../utils/compose-event-handlers";
 
 type SelectBase = Omit<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>,
@@ -36,7 +35,6 @@ const isMultiple = (props: SelectProps): props is SelectMultiple =>
 type SelectProps = SelectSingle | SelectMultiple;
 
 type SelectInternalProps = {
-  _handleClose: (open: boolean) => void;
   _value: string | string[];
 };
 
@@ -51,7 +49,6 @@ const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
   "SelectContext",
   {
     _value: "",
-    _handleClose: () => {},
     multiple: false,
     value: "",
     defaultValue: "",
@@ -72,11 +69,22 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     );
     // `value` alone decides what a controlled select shows, checks and
     // submits, `""` and `[]` included
-    const isControlled = props.value !== undefined;
-    const _value = isControlled ? props.value! : _uncontrolledValue;
-    const [_open, _setOpen] = React.useState<boolean | undefined>(
-      props.open || false,
+    const isValueControlled = props.value !== undefined;
+    const _value = isValueControlled ? props.value! : _uncontrolledValue;
+    // Whether the list of a select without `open` shows, from `defaultOpen`
+    // on the first render, server render included. A select with `open`
+    // never reads or writes it.
+    const [_uncontrolledOpen, _setUncontrolledOpen] = React.useState(
+      props.defaultOpen ?? false,
     );
+    // `open` alone decides whether a controlled select's list shows. Radix's
+    // root always gets this boolean, so it never switches between controlled
+    // and uncontrolled, which it warns about.
+    const isOpenControlled = props.open !== undefined;
+    const _open = isOpenControlled ? props.open! : _uncontrolledOpen;
+    // Set by a pick in a `multiple` select, until the request to close the
+    // list that Radix's item sends straight after it
+    const _picking = React.useRef(false);
 
     React.useEffect(() => {
       if (props.multiple && !Array.isArray(_uncontrolledValue))
@@ -84,10 +92,6 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
       if (!props.multiple && Array.isArray(_uncontrolledValue))
         _setUncontrolledValue("");
     }, [props.multiple]);
-
-    React.useEffect(() => {
-      _setOpen(props.open);
-    }, [props.open]);
 
     // A pick tells the parent the next value, and only an uncontrolled select
     // shows it without waiting for a new `value`. In a `multiple` select, a
@@ -98,23 +102,40 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
       if (value === undefined || value === null) return;
 
       if (isMultiple(props)) {
+        // Radix's item reports a pick here, then asks to close the list in
+        // the same event. The mark is cleared right after, so it skips that
+        // request alone, and not a later one, such as Escape.
+        if (!Array.isArray(value)) {
+          _picking.current = true;
+          queueMicrotask(() => {
+            _picking.current = false;
+          });
+        }
+
         const temp = Array.isArray(value)
           ? value
           : !_value.includes(value)
             ? [..._value, value]
             : (_value as string[]).filter((v) => v !== value);
 
-        if (!isControlled) _setUncontrolledValue(temp);
+        if (!isValueControlled) _setUncontrolledValue(temp);
         props.onValueChange?.(temp);
       } else if (!Array.isArray(value)) {
-        if (!isControlled) _setUncontrolledValue(value);
+        if (!isValueControlled) _setUncontrolledValue(value);
         props.onValueChange?.(value);
       }
     };
 
-    const handleClose = (open: boolean) => {
-      if (isMultiple(props) && !open) return;
-      _setOpen(open);
+    // Radix asks to open or close the list. Each request tells the parent,
+    // and only an uncontrolled select shows it without waiting for a new
+    // `open`. A `multiple` select stays open after a pick, so it skips the
+    // request to close that the pick sends.
+    const handleOpenChange = (open: boolean) => {
+      if (!open && _picking.current) {
+        _picking.current = false;
+        return;
+      }
+      if (!isOpenControlled) _setUncontrolledOpen(open);
       props.onOpenChange?.(open);
     };
 
@@ -129,9 +150,7 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     const selection = Array.isArray(_value) ? _value : [];
 
     return (
-      <SelectContext.Provider
-        value={{ ...props, size, variant, _value, _handleClose: _setOpen }}
-      >
+      <SelectContext.Provider value={{ ...props, size, variant, _value }}>
         <Root
           ref={ref}
           {...props}
@@ -140,7 +159,7 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
           value={_value}
           onValueChange={handleValueChange}
           open={_open}
-          onOpenChange={handleClose}
+          onOpenChange={handleOpenChange}
         >
           {props.children}
           {isMultiple(props) && (
@@ -399,17 +418,10 @@ const select_content_cva = cva(
 const SelectContent: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Content>
 > = React.forwardRef(
-  (
-    {
-      className,
-      children,
-      position = "popper",
-      onPointerDownOutside,
-      ...props
-    },
-    ref,
-  ) => {
-    const { _handleClose, size } = React.useContext(SelectContext);
+  ({ className, children, position = "popper", ...props }, ref) => {
+    const { size } = React.useContext(SelectContext);
+    // A press outside the list calls `onPointerDownOutside`, then, unless it
+    // calls `preventDefault()`, Radix asks Select's root to close the list
     return (
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content
@@ -417,12 +429,6 @@ const SelectContent: React.ForwardRefExoticComponent<
           className={select_content_cva({ position, size, className })}
           position={position}
           {...props}
-          // Select's root ignores Radix's requests to close a `multiple`
-          // select, so a press outside the list closes it here, unless the
-          // consumer's `onPointerDownOutside` calls `preventDefault()`
-          onPointerDownOutside={composeEventHandlers(onPointerDownOutside, () =>
-            _handleClose?.(false),
-          )}
         >
           <SelectPrimitive.Viewport
             className={clx(

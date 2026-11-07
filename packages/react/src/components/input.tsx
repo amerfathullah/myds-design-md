@@ -180,11 +180,15 @@ interface InputIconProps extends ComponentProps<"div"> {
 // The `require` and `import` builds each make their own InputIcon, as a
 // second install does, so Input can't tell an InputIcon by identity. Each
 // copy marks its own with this key instead, and `Symbol.for` gives every copy
-// the same key (#119, #235)
+// the same key (#119, #235). The mark names the InputIcon that carries it,
+// since styled-components and hoist-non-react-statics copy it onto a wrapper,
+// which isn't an InputIcon.
 const input_icon_mark = Symbol.for("@amerfathullah/myds-react/InputIcon");
 
 const isInputIcon = (type: unknown) =>
-  typeof type === "object" && type !== null && input_icon_mark in type;
+  typeof type === "object" &&
+  type !== null &&
+  (type as Record<symbol, unknown>)[input_icon_mark] === type;
 
 const InputIcon: ForwardRefExoticComponent<InputIconProps> = forwardRef(
   ({ className, position = "left", ...props }, ref) => {
@@ -201,7 +205,7 @@ const InputIcon: ForwardRefExoticComponent<InputIconProps> = forwardRef(
 );
 
 InputIcon.displayName = "InputIcon";
-Object.defineProperty(InputIcon, input_icon_mark, { value: true });
+Object.defineProperty(InputIcon, input_icon_mark, { value: InputIcon });
 
 /*========================================================================================================================*/
 

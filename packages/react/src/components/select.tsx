@@ -424,6 +424,8 @@ const SelectItem: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Item>
 > = React.forwardRef(({ className, children, disabled, ...props }, ref) => {
   const rootProps = React.useContext(SelectContext);
+  // `disabled` styles the item and, on Radix's item, disables it: its option
+  // takes `aria-disabled`, focus and typeahead skip it and nothing picks it
   if (!isMultiple(rootProps))
     return (
       <SelectXPad>
@@ -438,6 +440,7 @@ const SelectItem: React.ForwardRefExoticComponent<
             className,
           )}
           {...props}
+          disabled={disabled}
         >
           <span className="absolute right-4 flex h-3.5 w-3.5 items-center justify-center">
             <SelectPrimitive.ItemIndicator>
@@ -468,9 +471,10 @@ const SelectItem: React.ForwardRefExoticComponent<
           className,
         )}
         {...props}
+        disabled={disabled}
         data-state={checked ? "checked" : "unchecked"}
       >
-        <Checkbox checked={checked} />
+        <Checkbox checked={checked} disabled={disabled} />
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       </SelectPrimitive.Item>
     </SelectXPad>

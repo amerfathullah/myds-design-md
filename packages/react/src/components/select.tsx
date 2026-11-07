@@ -69,8 +69,8 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     );
     // `value` alone decides what a controlled select shows, checks and
     // submits, `""` and `[]` included
-    const isControlled = props.value !== undefined;
-    const _value = isControlled ? props.value! : _uncontrolledValue;
+    const isValueControlled = props.value !== undefined;
+    const _value = isValueControlled ? props.value! : _uncontrolledValue;
     // Whether the list of a select without `open` shows, from `defaultOpen`
     // on the first render, server render included. A select with `open`
     // never reads or writes it.
@@ -118,10 +118,10 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
             ? [..._value, value]
             : (_value as string[]).filter((v) => v !== value);
 
-        if (!isControlled) _setUncontrolledValue(temp);
+        if (!isValueControlled) _setUncontrolledValue(temp);
         props.onValueChange?.(temp);
       } else if (!Array.isArray(value)) {
-        if (!isControlled) _setUncontrolledValue(value);
+        if (!isValueControlled) _setUncontrolledValue(value);
         props.onValueChange?.(value);
       }
     };

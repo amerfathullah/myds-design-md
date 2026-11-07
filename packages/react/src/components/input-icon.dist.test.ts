@@ -17,7 +17,9 @@ const { name } = JSON.parse(
 ) as { name: string };
 
 const conditions = ["require", "import"] as const;
-const positions = [undefined, "left", "right"] as const;
+// How each case gives InputIcon its `position`: not at all, as
+// `position={undefined}`, or as a side
+const positions = ["omitted", "undefined", "left", "right"] as const;
 
 // Renders an Input holding one InputIcon, each loaded through each
 // condition, and prints the room the <input> makes on each side and the side
@@ -41,7 +43,9 @@ const program = `
             null,
             createElement(
               via[icon].InputIcon,
-              { position: position ?? undefined },
+              position === "omitted"
+                ? null
+                : { position: position === "undefined" ? undefined : position },
               createElement("svg"),
             ),
           ),
@@ -49,7 +53,7 @@ const program = `
         results.push({
           input,
           icon,
-          position: position ?? "omitted",
+          position,
           left: attribute(html, "data-has-left-icon"),
           right: attribute(html, "data-has-right-icon"),
           side: attribute(html.slice(html.indexOf("<svg")), "class")
@@ -94,7 +98,7 @@ test("an Input makes room for an InputIcon from either build, on the side it dra
         positions.map((position) => ({
           input,
           icon,
-          position: position ?? "omitted",
+          position,
           ...(position === "right"
             ? { left: "false", right: "true", side: "right-3" }
             : expected),

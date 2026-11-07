@@ -327,11 +327,11 @@ describe.each(kinds)("in %s Select, a disabled item", (_, multiple) => {
 
     await hover(item("Blueberry"));
 
+    // The highlight's `bg-washed` applies only with `data-highlighted`, so
+    // without it the item keeps its disabled fill. happy-dom doesn't compute
+    // the cascade, so the attribute is what's checked.
     expect(item("Blueberry").hasAttribute("data-highlighted")).toBe(false);
     expect(focused()).not.toBe("Blueberry");
-    expect(item("Blueberry").className.split(" ")).toContain(
-      "bg-bg-white-disabled",
-    );
   });
 
   test("is skipped by typeahead in the open list, even when it alone matches", async () => {

@@ -39,6 +39,13 @@ type SelectInternalProps = {
   _value: string | string[];
 };
 
+// Selects an option of a `multiple` select's form control by default as well,
+// so a form's reset keeps every option selected. The reset leaves restoring
+// the selection to Select, and the control then follows it.
+const selectByDefault = (option: HTMLOptionElement | null) => {
+  if (option) option.defaultSelected = true;
+};
+
 const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
   "SelectContext",
   {
@@ -82,18 +89,23 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     }, [props.open]);
 
     // A pick tells the parent the next value, and only an uncontrolled select
-    // shows it without waiting for a new `value`
-    const handleValueChange = (value: string | undefined | null) => {
+    // shows it without waiting for a new `value`. In a `multiple` select, a
+    // pick adds or removes its value. A whole array replaces the selection:
+    // Radix hands one over on a form's reset, and the form control on a
+    // change.
+    const handleValueChange = (value: string | string[] | undefined | null) => {
       if (value === undefined || value === null) return;
 
       if (isMultiple(props)) {
-        const temp = !_value.includes(value)
-          ? [..._value, value]
-          : (_value as string[]).filter((v) => v !== value);
+        const temp = Array.isArray(value)
+          ? value
+          : !_value.includes(value)
+            ? [..._value, value]
+            : (_value as string[]).filter((v) => v !== value);
 
         if (!isControlled) _setUncontrolledValue(temp);
         props.onValueChange?.(temp);
-      } else {
+      } else if (!Array.isArray(value)) {
         if (!isControlled) _setUncontrolledValue(value);
         props.onValueChange?.(value);
       }
@@ -105,11 +117,17 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
       props.onOpenChange?.(open);
     };
 
+    // Radix's root renders a hidden native `<select>` for a form, which takes
+    // a single value. A `multiple` select gets that root without it.
+    const Root = isMultiple(props)
+      ? SelectPrimitive.unstable_SelectProvider
+      : SelectPrimitive.Root;
+
     return (
       <SelectContext.Provider
         value={{ ...props, size, variant, _value, _handleClose: _setOpen }}
       >
-        <SelectPrimitive.Root
+        <Root
           ref={ref}
           {...props}
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -118,7 +136,36 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
           onValueChange={handleValueChange}
           open={_open}
           onOpenChange={handleClose}
-        />
+        >
+          {props.children}
+          {isMultiple(props) && (
+            // The form control of a `multiple` select, which a form submits
+            // and the browser can autofill: one selected option per value
+            <select
+              aria-hidden
+              tabIndex={-1}
+              multiple
+              name={props.name}
+              form={props.form}
+              required={props.required}
+              disabled={props.disabled}
+              autoComplete={props.autoComplete}
+              value={_value as string[]}
+              onChange={(event) =>
+                handleValueChange(
+                  [...event.currentTarget.options]
+                    .filter((option) => option.selected)
+                    .map((option) => option.value),
+                )
+              }
+              className="sr-only"
+            >
+              {[...new Set(_value)].map((value) => (
+                <option key={value} value={value} ref={selectByDefault} />
+              ))}
+            </select>
+          )}
+        </Root>
       </SelectContext.Provider>
     );
   },
@@ -139,11 +186,10 @@ const select_icon_cva = cva(["text-txt-black-900"], {
   },
 });
 
-interface SelectValueProps
-  extends Omit<
-    React.ComponentProps<typeof SelectPrimitive.Value>,
-    "children" | "asChild"
-  > {
+interface SelectValueProps extends Omit<
+  React.ComponentProps<typeof SelectPrimitive.Value>,
+  "children" | "asChild"
+> {
   label?: React.ReactNode;
   icon?: React.JSXElementConstructor<any>;
   children?: (value: string | string[]) => React.ReactNode | React.ReactNode;

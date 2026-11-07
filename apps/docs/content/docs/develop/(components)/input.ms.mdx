@@ -120,7 +120,7 @@ Untuk menggunakan input dalam keadaan terkawal, gunakan prop `value` dan `onChan
 
 ### Ikon Input
 
-Anda boleh menambah ikon pada medan input dengan menggunakan komponen `InputIcon`. Ikon boleh diletakkan di sebelah `kiri` atau `kanan` medan input. Kedua-dua ikon kiri dan kanan boleh digunakan bersama.
+Anda boleh menambah ikon pada medan input dengan menggunakan komponen `InputIcon`. Prop `position` meletakkan ikon di sebelah kiri (`left`) atau kanan (`right`) medan input. Kedudukan lalai adalah `left`, jadi ikon tanpa `position` diletakkan di sebelah kiri. Kedua-dua ikon kiri dan kanan boleh digunakan bersama.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex flex-col justify-center gap-2">
@@ -265,6 +265,7 @@ Anda boleh menambah tambahan pada medan input dengan menggunakan komponen `Input
     position: {
       description: "Kedudukan ikon input",
       type: "left | right",
+      default: "left",
     },
     children: {
       description: "Pasangkan komponen ikon. Mesti digunakan dalam Input",

@@ -120,7 +120,7 @@ To use the input in the controlled state, utilize the `value` and `onChange` pro
 
 ### Input Icon
 
-You can add an icon to the input field by using the `InputIcon` component. The icon can be positioned on the `left` or `right` side of the input field. Both left and right icons can be used together.
+You can add an icon to the input field by using the `InputIcon` component. Its `position` places the icon on the `left` or `right` side of the input field. The default position is `left`, so an icon without `position` goes on the left. Both left and right icons can be used together.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex flex-col justify-center gap-2">
@@ -265,6 +265,7 @@ You can add an addon to the input field by using the `InputAddon` component. The
     position: {
       description: "Position of the input icon",
       type: "left | right",
+      default: "left",
     },
     children: {
       description: "Pass an icon component. Must be used within Input",

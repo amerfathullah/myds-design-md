@@ -1,7 +1,6 @@
 import {
   Children,
   ComponentProps,
-  ComponentPropsWithRef,
   ForwardRefExoticComponent,
   ReactNode,
   forwardRef,
@@ -66,21 +65,17 @@ const Input: ForwardRefExoticComponent<InputProps> = forwardRef(
     { className, prepend, append, children, size = "small", invalid, ...props },
     ref,
   ) => {
+    // The side each direct child draws on: the `position` it's given, or
+    // InputIcon's default, left, for an InputIcon given none
     const has_icon = useMemo(() => {
-      if (!children) return { left: false, right: false };
-      const _children = Children.toArray(children);
-      return {
-        left: _children.some(
-          (child) =>
-            isValidElement<ComponentPropsWithRef<typeof InputIcon>>(child) &&
-            child.props.position === "left",
-        ),
-        right: _children.some(
-          (child) =>
-            isValidElement<ComponentPropsWithRef<typeof InputIcon>>(child) &&
-            child.props.position === "right",
-        ),
-      };
+      const sides = Children.toArray(children).map((child) => {
+        if (!isValidElement<{ position?: unknown }>(child)) return undefined;
+        const { position } = child.props;
+        return position === undefined && isInputIcon(child.type)
+          ? "left"
+          : position;
+      });
+      return { left: sides.includes("left"), right: sides.includes("right") };
     }, [children]);
 
     return (
@@ -175,8 +170,25 @@ const input_icon_cva = cva(["absolute top-0 bottom-0 my-auto"], {
 });
 
 interface InputIconProps extends ComponentProps<"div"> {
-  position: "left" | "right";
+  /**
+   * The side of the field the icon sits on
+   * @default "left"
+   */
+  position?: "left" | "right";
 }
+
+// The `require` and `import` builds each make their own InputIcon, as a
+// second install does, so Input can't tell an InputIcon by identity. Each
+// copy marks its own with this key instead, and `Symbol.for` gives every copy
+// the same key (#119, #235). The mark names the InputIcon that carries it,
+// since styled-components and hoist-non-react-statics copy it onto a wrapper,
+// which isn't an InputIcon.
+const input_icon_mark = Symbol.for("@amerfathullah/myds-react/InputIcon");
+
+const isInputIcon = (type: unknown) =>
+  typeof type === "object" &&
+  type !== null &&
+  (type as Record<symbol, unknown>)[input_icon_mark] === type;
 
 const InputIcon: ForwardRefExoticComponent<InputIconProps> = forwardRef(
   ({ className, position = "left", ...props }, ref) => {
@@ -193,6 +205,7 @@ const InputIcon: ForwardRefExoticComponent<InputIconProps> = forwardRef(
 );
 
 InputIcon.displayName = "InputIcon";
+Object.defineProperty(InputIcon, input_icon_mark, { value: InputIcon });
 
 /*========================================================================================================================*/
 

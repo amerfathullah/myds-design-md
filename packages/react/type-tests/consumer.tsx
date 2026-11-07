@@ -55,7 +55,7 @@ import {
   JataNegaraIcon,
   MalaysiaFlagIcon,
 } from "@amerfathullah/myds-react/icon";
-import { Input, InputAddon } from "@amerfathullah/myds-react/input";
+import { Input, InputAddon, InputIcon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
 import {
   Navbar,
@@ -259,6 +259,37 @@ export const Labels = ({ locked }: { locked?: boolean }) => (
     <Label disabled data-disabled={false}>
       Name
     </Label>
+  </>
+);
+
+// InputIcon's `position` is optional and defaults to `left`. TypeScript still
+// rejects a side it doesn't list.
+export const InputIcons = () => (
+  <>
+    <Input>
+      <InputIcon>
+        <ChevronDownIcon />
+      </InputIcon>
+    </Input>
+    <Input>
+      <InputIcon position={undefined}>
+        <ChevronDownIcon />
+      </InputIcon>
+    </Input>
+    <Input size="medium">
+      <InputIcon position="left">
+        <ChevronDownIcon />
+      </InputIcon>
+      <InputIcon position="right">
+        <ChevronDownIcon />
+      </InputIcon>
+    </Input>
+    <Input>
+      {/* @ts-expect-error `position` is left or right */}
+      <InputIcon position="top">
+        <ChevronDownIcon />
+      </InputIcon>
+    </Input>
   </>
 );
 

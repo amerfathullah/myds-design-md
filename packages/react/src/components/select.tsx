@@ -398,7 +398,16 @@ const select_content_cva = cva(
 const SelectContent: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Content>
 > = React.forwardRef(
-  ({ className, children, position = "popper", ...props }, ref) => {
+  (
+    {
+      className,
+      children,
+      position = "popper",
+      onPointerDownOutside,
+      ...props
+    },
+    ref,
+  ) => {
     const { _handleClose, size } = React.useContext(SelectContext);
     return (
       <SelectPrimitive.Portal>
@@ -407,7 +416,14 @@ const SelectContent: React.ForwardRefExoticComponent<
           className={select_content_cva({ position, size, className })}
           position={position}
           {...props}
-          onPointerDownOutside={() => _handleClose?.(false)}
+          // A press outside the list runs the consumer's handler first, then
+          // closes the list unless it called `preventDefault()`. Select's
+          // root ignores Radix's requests to close a `multiple` select, so
+          // this is what closes one.
+          onPointerDownOutside={(event) => {
+            onPointerDownOutside?.(event);
+            if (!event.defaultPrevented) _handleClose?.(false);
+          }}
         >
           <SelectPrimitive.Viewport
             className={clx(

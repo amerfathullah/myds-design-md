@@ -72,8 +72,10 @@ const select = (
 
 const unmounts: (() => Promise<void>)[] = [];
 
-// Mounts `element` in a container on the page, as an app would. The open
-// content portals into `<body>`, outside the container.
+// Mounts `element` in a container on the page, as an app would, and returns
+// the container and a function that renders another element in its place, as
+// a parent's new props do. The open content portals into `<body>`, outside
+// the container.
 async function mount(element: ReactElement) {
   const container = document.body.appendChild(document.createElement("div"));
   const root = createRoot(container);
@@ -82,7 +84,10 @@ async function mount(element: ReactElement) {
     container.remove();
   });
   await act(async () => root.render(element));
-  return container;
+  return {
+    container,
+    rerender: (next: ReactElement) => act(async () => root.render(next)),
+  };
 }
 
 // The page's markup, with the ids React and Radix generate, which differ
@@ -103,7 +108,7 @@ const checkIcon = () =>
 // size, which are the trigger, its chevron and the selected item's check
 // icon, and the whole page's markup
 async function rendered(element: ReactElement) {
-  const container = await mount(element);
+  const { container } = await mount(element);
   const trigger = container.querySelector("button");
   const chevron = trigger?.querySelector("svg");
   const check = checkIcon();
@@ -706,19 +711,6 @@ function Following({ onOpenChange, ...props }: Partial<SelectProps>) {
   } as Partial<SelectProps>);
 }
 
-// Mounts `element` as `mount` does, and returns a function that renders
-// another element in its place, as a parent's new props do
-async function mountRerenderable(element: ReactElement) {
-  const container = document.body.appendChild(document.createElement("div"));
-  const root = createRoot(container);
-  unmounts.push(async () => {
-    await act(async () => root.unmount());
-    container.remove();
-  });
-  await act(async () => root.render(element));
-  return (next: ReactElement) => act(async () => root.render(next));
-}
-
 // Whether the list shows: the trigger's `aria-expanded` and `data-state`, and
 // whether the listbox renders
 const shown = () => ({
@@ -810,42 +802,36 @@ const closeRequests = [
   ["a window `resize`", () => windowEvent("resize")],
 ] as const;
 
-// The ways a visitor picks the item labelled `label` in the open list
+// Picks the item labelled `label` in the open list with a click
+async function pickByClick(label: string) {
+  await act(async () => option(label).click());
+  await settle();
+}
+
+// Picks the item labelled `label` with a mouse, which moves onto it, away
+// from the trigger, first. Until the pointer moves from where the list was
+// opened, Radix takes a release for the end of the press that opened it, and
+// ignores it.
+async function pickByMouse(label: string) {
+  await act(async () => {
+    for (const type of ["pointermove", "pointerdown", "pointerup"])
+      option(label).dispatchEvent(mouse(type, 100, 100));
+  });
+  await settle();
+}
+
+// Picks the item labelled `label` by focusing it and pressing `key`
+const pickByKey = (key: string) => async (label: string) => {
+  await act(async () => option(label).focus());
+  await press(option(label), key);
+};
+
+// The ways a visitor picks an item in the open list
 const picks = [
-  [
-    "a click",
-    async (label: string) => {
-      await act(async () => option(label).click());
-      await settle();
-    },
-  ],
-  [
-    "a mouse press and release",
-    // The mouse moves onto the item, away from the trigger, first. Until the
-    // pointer moves from where the list was opened, Radix takes a release for
-    // the end of the press that opened it, and ignores it.
-    async (label: string) => {
-      await act(async () => {
-        for (const type of ["pointermove", "pointerdown", "pointerup"])
-          option(label).dispatchEvent(mouse(type, 100, 100));
-      });
-      await settle();
-    },
-  ],
-  [
-    "Enter",
-    async (label: string) => {
-      await act(async () => option(label).focus());
-      await press(option(label), "Enter");
-    },
-  ],
-  [
-    "Space",
-    async (label: string) => {
-      await act(async () => option(label).focus());
-      await press(option(label), " ");
-    },
-  ],
+  ["a click", pickByClick],
+  ["a mouse press and release", pickByMouse],
+  ["Enter", pickByKey("Enter")],
+  ["Space", pickByKey(" ")],
 ] as const;
 
 describe.each(kinds)(
@@ -1038,9 +1024,9 @@ describe("a `multiple` Select whose parent passes back what `onOpenChange` asks 
     await openList();
     onOpenChange.mockClear();
 
-    await picks[0][1]("Apple");
-    await picks[2][1]("Banana");
-    await picks[3][1]("Cherry");
+    await pickByClick("Apple");
+    await pickByKey("Enter")("Banana");
+    await pickByKey(" ")("Cherry");
     expect(onValueChange.mock.calls).toEqual([
       [["apple"]],
       [["apple", "banana"]],
@@ -1126,6 +1112,26 @@ describe("a `multiple` Select without `open`", () => {
       expect(shown()).toEqual(OPEN);
     },
   );
+
+  // Typing on the closed trigger picks an item without a request to close.
+  // The pick's mark is cleared on its own, so it doesn't swallow the next
+  // close request.
+  test("closes on Escape after typing on the closed trigger picks an item", async () => {
+    const onOpenChange = vi.fn();
+    const onValueChange = vi.fn();
+    await mount(fruits({ multiple: true, onOpenChange, onValueChange }));
+
+    await pressOnTrigger("b");
+    expect(onValueChange.mock.calls).toEqual([[["banana"]]]);
+    expect(shown()).toEqual(CLOSED);
+
+    await pressOnTrigger("Enter");
+    expect(shown()).toEqual(OPEN);
+    await pressEscape();
+
+    expect(onOpenChange.mock.calls).toEqual([[true], [false]]);
+    expect(shown()).toEqual(CLOSED);
+  });
 });
 
 describe.each(kinds)("%s Select with `defaultOpen`", (_, multiple) => {
@@ -1173,9 +1179,7 @@ describe.each(kinds)("%s Select with `defaultOpen`", (_, multiple) => {
   });
 
   test("ignores a later change to `defaultOpen`", async () => {
-    const rerender = await mountRerenderable(
-      fruits({ multiple, defaultOpen: true }),
-    );
+    const { rerender } = await mount(fruits({ multiple, defaultOpen: true }));
     await settle();
 
     await rerender(fruits({ multiple, defaultOpen: false }));
@@ -1227,7 +1231,7 @@ describe("a `multiple` Select opened from the keyboard", () => {
     await mount(fruits({ multiple: true }));
     await pressOnTrigger("Enter");
 
-    await picks[3][1]("Banana");
+    await pickByKey(" ")("Banana");
     expect(shown()).toEqual(OPEN);
     await pressEscape();
 

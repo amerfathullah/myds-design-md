@@ -1301,3 +1301,292 @@ describe("ThemeSwitch as a select", () => {
     expect(openStateWarnings()).toEqual([]);
   });
 });
+
+/*========================================================================================================================*/
+
+// How a `multiple` select tells assistive technology what's selected (#133).
+// Radix's Select holds a single value, so it never marks an option of a
+// `multiple` select selected, and has no multi-select list. Select marks them
+// itself: the list is multi-selectable, and each option's `aria-selected`
+// follows the selection, as its `data-state` does, whichever option has
+// focus. The Checkbox in each item is only drawn, so nothing inside an option
+// is focusable or exposed as a control of its own.
+
+describe("an open `multiple` Select's list", () => {
+  test('is `aria-multiselectable="true"`', async () => {
+    await mount(fruits({ multiple: true }));
+    await openList();
+
+    expect(listbox()?.getAttribute("aria-multiselectable")).toBe("true");
+  });
+});
+
+describe("an open single Select's list", () => {
+  test("has no `aria-multiselectable`", async () => {
+    await mount(fruits());
+    await openList();
+
+    expect(listbox()?.hasAttribute("aria-multiselectable")).toBe(false);
+  });
+});
+
+// Each option of the open list: its label, `aria-selected` and `data-state`
+const optionStates = () =>
+  [...document.querySelectorAll('[role="option"]')].map((option) => [
+    option.textContent,
+    option.getAttribute("aria-selected"),
+    option.getAttribute("data-state"),
+  ]);
+
+// What `optionStates` gives when the items labelled `labels`, and no others,
+// are selected: `aria-selected` agrees with `data-state` on every option
+const onlySelected = (...labels: string[]) =>
+  FRUITS.map(([, label]) =>
+    labels.includes(label)
+      ? [label, "true", "checked"]
+      : [label, "false", "unchecked"],
+  );
+
+// The label of the option that has focus, if one has
+const focusedOption = () =>
+  document.activeElement?.getAttribute("role") === "option"
+    ? document.activeElement.textContent
+    : null;
+
+// A parent that holds a `multiple` select's `value`, from `initial`, and
+// passes back what `onValueChange` reports
+function HoldingValue({ initial }: { initial: string[] }) {
+  const [value, setValue] = useState(initial);
+  return fruits({ multiple: true, value, onValueChange: setValue });
+}
+
+describe('an open `multiple` Select with `defaultValue={["apple", "banana"]}`', () => {
+  test("marks Apple and Banana selected, and Cherry not", async () => {
+    await mount(fruits({ multiple: true, defaultValue: ["apple", "banana"] }));
+    await openList();
+
+    expect(optionStates()).toEqual(onlySelected("Apple", "Banana"));
+  });
+
+  test.each(picks)(
+    "marks Cherry selected after a pick by %s, then Apple not after another",
+    async (_, pick) => {
+      const onValueChange = vi.fn();
+      await mount(
+        fruits({
+          multiple: true,
+          defaultValue: ["apple", "banana"],
+          onValueChange,
+        }),
+      );
+      await openList();
+
+      await pick("Cherry");
+      expect(onValueChange.mock.calls).toEqual([
+        [["apple", "banana", "cherry"]],
+      ]);
+      expect(optionStates()).toEqual(onlySelected("Apple", "Banana", "Cherry"));
+
+      await pick("Apple");
+      expect(onValueChange.mock.calls).toEqual([
+        [["apple", "banana", "cherry"]],
+        [["banana", "cherry"]],
+      ]);
+      expect(optionStates()).toEqual(onlySelected("Banana", "Cherry"));
+      expect(shown()).toEqual(OPEN);
+    },
+  );
+
+  test("keeps every option's mark as ArrowDown and ArrowUp move focus", async () => {
+    await mount(fruits({ multiple: true, defaultValue: ["apple", "banana"] }));
+    await openList();
+    expect(focusedOption()).toBe("Apple");
+
+    for (const [key, focus] of [
+      ["ArrowDown", "Banana"],
+      ["ArrowDown", "Cherry"],
+      ["ArrowUp", "Banana"],
+      ["ArrowUp", "Apple"],
+    ] as const) {
+      await press(document.activeElement!, key);
+      expect(focusedOption()).toBe(focus);
+      expect(optionStates()).toEqual(onlySelected("Apple", "Banana"));
+    }
+  });
+});
+
+describe("an open `multiple` Select with nothing selected", () => {
+  test("marks no option selected", async () => {
+    await mount(fruits({ multiple: true }));
+    await openList();
+
+    expect(optionStates()).toEqual(onlySelected());
+  });
+});
+
+describe('an open `multiple` Select with `value={["banana", "cherry"]}` its parent follows', () => {
+  test("marks Banana and Cherry selected, then only Cherry after a pick of Banana", async () => {
+    await mount(createElement(HoldingValue, { initial: ["banana", "cherry"] }));
+    await openList();
+    expect(optionStates()).toEqual(onlySelected("Banana", "Cherry"));
+
+    await pickByClick("Banana");
+
+    expect(optionStates()).toEqual(onlySelected("Cherry"));
+  });
+});
+
+// Whether `element`, or an ancestor of it inside `option`, matches `selector`
+const withinMatching = (element: Element, option: Element, selector: string) =>
+  element.closest(selector) !== null &&
+  option.contains(element.closest(selector));
+
+// The descendants of `option` that could take focus or be announced as a
+// control of their own, each as its tag and role: a button, input or link, or
+// anything with a `tabindex`, unless it's disabled or inert, and a checkbox,
+// unless it's hidden from assistive technology or inert
+const controlsInside = (option: Element) =>
+  [...option.querySelectorAll("*")]
+    .filter(
+      (element) =>
+        (element.matches("button, input, a[href], [tabindex]") &&
+          !element.matches(":disabled") &&
+          !withinMatching(element, option, "[inert]")) ||
+        (element.getAttribute("role") === "checkbox" &&
+          !withinMatching(element, option, '[inert], [aria-hidden="true"]')),
+    )
+    .map((element) => `${element.tagName} ${element.getAttribute("role")}`);
+
+// Each option of the open list, as its label and what `controlsInside` finds
+const optionControls = () =>
+  [...document.querySelectorAll('[role="option"]')].map((option) => [
+    option.textContent,
+    controlsInside(option),
+  ]);
+
+describe("in an open `multiple` Select, nothing inside an option is focusable or a control of its own", () => {
+  test("with a selected and an unselected option, before and after picks", async () => {
+    await mount(fruits({ multiple: true, defaultValue: ["apple"] }));
+    await openList();
+    expect(optionControls()).toEqual(FRUITS.map(([, label]) => [label, []]));
+
+    await pickByClick("Banana");
+    await pickByKey("Enter")("Apple");
+
+    expect(optionControls()).toEqual(FRUITS.map(([, label]) => [label, []]));
+  });
+
+  test("with a disabled option, in a group, beside a header and footer", async () => {
+    await mount(withHeaderAndFooter(true));
+    await settle();
+
+    expect(optionControls()).toEqual([
+      ["Apple", []],
+      ["Banana", []],
+      ["Cherry", []],
+    ]);
+  });
+});
+
+// The classes each item's Checkbox had before it was only drawn, then the
+// one it gains: a pointer passes through it to the option, so it no longer
+// shows its own hover colour, cursor or focus ring
+const ITEM_CHECKBOX_CLASSES =
+  "outline-hidden flex items-center justify-center border border-otl-gray-200 hover:border-otl-gray-300 shadow-button bg-bg-white data-[state=checked]:bg-primary-600 data-[state=checked]:border-none data-[state=checked]:hover:border-primary-700 data-[state=checked]:hover:bg-primary-700 data-[state=indeterminate]:bg-primary-600 data-[state=indeterminate]:border-none data-[state=indeterminate]:hover:border-primary-700 data-[state=indeterminate]:hover:bg-primary-700 focus-visible:ring-[3px] focus-visible:ring-fr-primary focus:ring-[3px] focus:ring-fr-primary disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-bg-washed data-[state=checked]:disabled:bg-primary-600 size-4 rounded-xs pointer-events-none";
+
+// The Checkbox in the open list's item labelled `label`
+const itemCheckbox = (label: string) =>
+  option(label).querySelector('[role="checkbox"]')!;
+
+describe.each(["small", "medium", "large"] as const)(
+  'in an open `multiple` Select with `size="%s"`',
+  (size) => {
+    test("each item's Checkbox keeps Checkbox's small look, checked and unchecked", async () => {
+      await mount(fruits({ multiple: true, size, defaultValue: ["apple"] }));
+      await openList();
+
+      for (const label of ["Apple", "Banana", "Cherry"])
+        expect(itemCheckbox(label).getAttribute("class")).toBe(
+          ITEM_CHECKBOX_CLASSES,
+        );
+      // A checked Checkbox shows its tick, and an unchecked one nothing
+      expect(itemCheckbox("Apple").getAttribute("data-state")).toBe("checked");
+      expect(itemCheckbox("Apple").querySelector(".checked-icon")).not.toBe(
+        null,
+      );
+      expect(itemCheckbox("Banana").getAttribute("data-state")).toBe(
+        "unchecked",
+      );
+      expect(itemCheckbox("Banana").children).toHaveLength(0);
+    });
+  },
+);
+
+// The ways to open the list that a test of focus starts from
+const opens = [
+  ["a click on the trigger", openList],
+  ["Enter on the focused trigger", () => pressOnTrigger("Enter")],
+] as const;
+
+describe("a `multiple` Select's keyboard and pointer", () => {
+  test.each(opens)(
+    "focus the first item when %s opens the list, as before",
+    async (_, openBy) => {
+      await mount(
+        fruits({ multiple: true, defaultValue: ["banana", "cherry"] }),
+      );
+
+      await openBy();
+
+      expect(focusedOption()).toBe("Apple");
+    },
+  );
+
+  test("move focus between options with ArrowDown, ArrowUp, Home and End", async () => {
+    await mount(fruits({ multiple: true, defaultValue: ["banana"] }));
+    await openList();
+
+    for (const [key, focus] of [
+      ["ArrowDown", "Banana"],
+      ["End", "Cherry"],
+      ["ArrowUp", "Banana"],
+      ["Home", "Apple"],
+    ] as const) {
+      await press(document.activeElement!, key);
+      expect(focusedOption()).toBe(focus);
+    }
+    expect(optionStates()).toEqual(onlySelected("Banana"));
+  });
+});
+
+describe('an open single Select with `defaultValue="banana"`', () => {
+  test("marks Banana selected while it has focus, and not once ArrowDown moves focus, as Radix does", async () => {
+    await mount(fruits({ defaultValue: "banana" }));
+    await openList();
+    expect(focusedOption()).toBe("Banana");
+    expect(optionStates()).toEqual([
+      ["Apple", "false", "unchecked"],
+      ["Banana", "true", "checked"],
+      ["Cherry", "false", "unchecked"],
+    ]);
+
+    await press(document.activeElement!, "ArrowDown");
+
+    expect(focusedOption()).toBe("Cherry");
+    expect(optionStates()).toEqual([
+      ["Apple", "false", "unchecked"],
+      ["Banana", "false", "checked"],
+      ["Cherry", "false", "unchecked"],
+    ]);
+  });
+
+  test("shows the check icon on Banana", async () => {
+    await mount(fruits({ defaultValue: "banana" }));
+    await openList();
+
+    expect(checkIcon()?.closest('[role="option"]')?.textContent).toBe("Banana");
+    expect(document.querySelector('[role="option"] [role="checkbox"]')).toBe(
+      null,
+    );
+  });
+});

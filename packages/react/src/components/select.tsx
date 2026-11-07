@@ -6,6 +6,7 @@ import { ChevronDownFillIcon } from "../icons/chevron-down-fill";
 import { CheckCircleFillIcon } from "../icons/check-circle-fill";
 import { Checkbox } from "./checkbox";
 import { sharedContext } from "../utils/registry";
+import { composeEventHandlers } from "../utils/compose-event-handlers";
 
 type SelectBase = Omit<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>,
@@ -398,7 +399,16 @@ const select_content_cva = cva(
 const SelectContent: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Content>
 > = React.forwardRef(
-  ({ className, children, position = "popper", ...props }, ref) => {
+  (
+    {
+      className,
+      children,
+      position = "popper",
+      onPointerDownOutside,
+      ...props
+    },
+    ref,
+  ) => {
     const { _handleClose, size } = React.useContext(SelectContext);
     return (
       <SelectPrimitive.Portal>
@@ -407,7 +417,12 @@ const SelectContent: React.ForwardRefExoticComponent<
           className={select_content_cva({ position, size, className })}
           position={position}
           {...props}
-          onPointerDownOutside={() => _handleClose?.(false)}
+          // Select's root ignores Radix's requests to close a `multiple`
+          // select, so a press outside the list closes it here, unless the
+          // consumer's `onPointerDownOutside` calls `preventDefault()`
+          onPointerDownOutside={composeEventHandlers(onPointerDownOutside, () =>
+            _handleClose?.(false),
+          )}
         >
           <SelectPrimitive.Viewport
             className={clx(

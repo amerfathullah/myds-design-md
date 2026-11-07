@@ -105,6 +105,14 @@ export default () => (
 );
 ```
 
+### Menamakan Select
+
+Setiap Select memerlukan nama, yang diumumkan oleh pembaca skrin apabila pencetusnya difokuskan.
+
+- `label` rentetan pada `SelectValue`, seperti `label="Buah"`, menamakan pilihan itu. Pembaca skrin mengumumkan "Buah" sebagai nama pencetus dan pemilihan sebagai nilainya, dan senarai yang dibuka juga dinamakan "Buah".
+- Tanpanya, berikan `id` kepada `SelectTrigger` dan halakan `htmlFor` sebuah `Label` kepadanya, seperti contoh [slot masa](/docs/develop/time-field#slot-masa), atau hantar `aria-label` dalam bahasa halaman anda kepada `SelectTrigger`, seperti `aria-label="Buah"`.
+- Nama yang anda hantar menggantikan nama daripada label, jadi sertakan perkataan label yang kelihatan di dalamnya. Label itu kemudian dibaca sebagai sebahagian daripada nilai, dan tidak menamakan senarai yang dibuka: hantar `aria-label` kepada `SelectContent` untuk itu.
+
 ## Contoh
 
 ### Saiz
@@ -355,7 +363,7 @@ Pilihan berkumpulan boleh dibuat dengan menggunakan komponen `SelectGroup` dan `
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center">
       <Select size="small" variant="outline">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Makanan">
           <SelectValue placeholder="Pilih Pilihan Berkumpulan" />
         </SelectTrigger>
         <SelectContent>
@@ -381,7 +389,7 @@ Pilihan berkumpulan boleh dibuat dengan menggunakan komponen `SelectGroup` dan `
   <Tab value="Kod">
     ```tsx
     <Select size="small" variant="outline">
-      <SelectTrigger>
+      <SelectTrigger aria-label="Makanan">
         <SelectValue placeholder="Pilih Pilihan Berkumpulan" />
       </SelectTrigger>
       <SelectContent>
@@ -414,7 +422,7 @@ Anda boleh menambah header pada pilihan dengan menggunakan komponen `SelectHeade
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
       <Select size="small" variant="outline">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Buah">
           <SelectValue placeholder="Dengan Header" />
         </SelectTrigger>
         <SelectContent>
@@ -437,7 +445,7 @@ Anda boleh menambah header pada pilihan dengan menggunakan komponen `SelectHeade
   <Tab value="Kod">
     ```tsx
     <Select size="small" variant="outline">
-      <SelectTrigger>
+      <SelectTrigger aria-label="Buah">
         <SelectValue placeholder="Dengan Header" />
       </SelectTrigger>
       <SelectContent>
@@ -467,7 +475,7 @@ Anda boleh menambah footer pada pilihan dengan menggunakan komponen `SelectFoote
   <Tab value="Pratonton">
     <div className="not-prose flex justify-center gap-3">
       <Select size="small" variant="outline">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Buah">
           <SelectValue placeholder="Dengan Footer" />
         </SelectTrigger>
         <SelectContent>
@@ -488,7 +496,7 @@ Anda boleh menambah footer pada pilihan dengan menggunakan komponen `SelectFoote
   <Tab value="Kod">
     ```tsx
     <Select size="small" variant="outline">
-      <SelectTrigger>
+      <SelectTrigger aria-label="Buah">
         <SelectValue placeholder="Dengan Footer" />
       </SelectTrigger>
       <SelectContent>
@@ -637,7 +645,7 @@ Anda boleh menyesuaikan paparan nilai dengan menggunakan komponen `SelectValue`.
   type={{
     label: {
       description:
-        "Label nilai pilihan, dipaparkan dalam pencetus sebelum nilai. Rentetan dipaparkan di dalam `SelectLabel`, dalam gaya label pilihan. Nilai lain dipaparkan seperti yang diberikan.",
+        "Label nilai pilihan, dipaparkan dalam pencetus sebelum nilai. Rentetan dipaparkan di dalam `SelectLabel`, dalam gaya label pilihan. Rentetan yang tidak kosong juga menamakan pilihan itu, pencetusnya dan senarainya, untuk teknologi bantuan, seperti yang diterangkan dalam Menamakan Select. Nilai lain dipaparkan seperti yang diberikan dan tidak menamakan apa-apa.",
       type: "ReactNode",
     },
     children: {

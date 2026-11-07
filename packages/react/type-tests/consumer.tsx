@@ -82,6 +82,8 @@ import {
 import {
   Select,
   SelectContent,
+  SelectFooter,
+  SelectHeader,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -112,6 +114,7 @@ import {
   useRef,
   type ComponentProps,
   type FunctionComponent,
+  type KeyboardEvent,
   type MouseEvent,
 } from "react";
 
@@ -365,6 +368,61 @@ export const Selects = () => (
     <Select variant="bogus">{selectBody}</Select>
   </>
 );
+
+// SelectHeader and SelectFooter take every prop a div takes and a div ref,
+// object or callback, and TypeScript rejects a prop a div doesn't take.
+export const SelectHeaderAndFooter = () => {
+  const header = useRef<HTMLDivElement>(null);
+  const footer = useRef<HTMLDivElement>(null);
+  return (
+    <Select>
+      <SelectTrigger>
+        <SelectValue placeholder="Pilih buah" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectHeader
+          ref={header}
+          id="fruit-search"
+          role="search"
+          aria-label="Cari buah"
+          aria-describedby="fruit-hint"
+          data-testid="select-header"
+          title="Cari"
+          tabIndex={-1}
+          style={{ paddingBlock: 4 }}
+          className="shadow-card"
+          onClick={(event: MouseEvent<HTMLDivElement>) => void event}
+          onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => void event}
+        >
+          <span id="fruit-hint">Taip nama buah</span>
+        </SelectHeader>
+        <SelectItem value="apple">Epal</SelectItem>
+        <SelectFooter
+          ref={footer}
+          id="fruit-actions"
+          role="group"
+          aria-label="Tindakan"
+          aria-describedby="fruit-hint"
+          data-testid="select-footer"
+          title="Tindakan"
+          tabIndex={-1}
+          style={{ paddingBlock: 4 }}
+          className="shadow-card"
+          onClick={(event: MouseEvent<HTMLDivElement>) => void event}
+          onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => void event}
+        >
+          Set semula
+        </SelectFooter>
+        <SelectHeader ref={(node: HTMLDivElement | null) => void node} />
+        <SelectFooter ref={(node: HTMLDivElement | null) => void node} />
+        {/* @ts-expect-error a div takes no `bogus` */}
+        <SelectHeader bogus />
+        {/* @ts-expect-error a div takes no `bogus` */}
+        <SelectFooter bogus />
+      </SelectContent>
+    </Select>
+  );
+};
 
 // SiteInfo renders a div and SiteLinkGroup a nav, which takes its own name.
 export const SiteFooter = () => {

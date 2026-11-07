@@ -103,7 +103,8 @@ async function mount(element: ReactElement) {
 
 const trigger = () => document.querySelector<HTMLElement>('[role="combobox"]')!;
 
-const options = () => [
+// The list's items, while it's open
+const items = () => [
   ...document.querySelectorAll<HTMLElement>('[role="option"]'),
 ];
 
@@ -116,29 +117,29 @@ async function open() {
 // Picks the item labelled `label`, opening the list first
 async function pick(label: string) {
   await open();
-  const option = options().find((o) => o.textContent === label);
-  await act(async () => option!.click());
+  const item = items().find((i) => i.textContent === label);
+  await act(async () => item!.click());
 }
 
 // The labels of the items marked checked, which opens the list
 async function checked() {
   await open();
-  return options()
-    .filter((o) => o.getAttribute("data-state") === "checked")
-    .map((o) => o.textContent);
+  return items()
+    .filter((i) => i.getAttribute("data-state") === "checked")
+    .map((i) => i.textContent);
 }
 
 // The labels of the items whose Checkbox is checked, in a `multiple` select,
 // which opens the list
 async function checkedBoxes() {
   await open();
-  return options()
+  return items()
     .filter(
-      (o) =>
-        o.querySelector('[role="checkbox"]')?.getAttribute("data-state") ===
+      (i) =>
+        i.querySelector('[role="checkbox"]')?.getAttribute("data-state") ===
         "checked",
     )
-    .map((o) => o.textContent);
+    .map((i) => i.textContent);
 }
 
 // What the select's form submits for it

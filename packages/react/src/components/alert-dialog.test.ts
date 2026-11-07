@@ -21,10 +21,14 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 type AlertDialogProps = Omit<ComponentProps<typeof AlertDialog>, "children">;
+type ContentProps = Omit<ComponentProps<typeof AlertDialogContent>, "children">;
 
 // An AlertDialog composed as the docs compose one, with a title, which Radix
-// requires, and a description
-const alertDialog = (props: AlertDialogProps = {}) =>
+// requires, and a description, and `content` on its AlertDialogContent
+const alertDialog = (
+  props: AlertDialogProps = {},
+  content: ContentProps | null = null,
+) =>
   createElement(
     AlertDialog,
     props,
@@ -35,7 +39,7 @@ const alertDialog = (props: AlertDialogProps = {}) =>
     ),
     createElement(
       AlertDialogContent,
-      null,
+      content,
       createElement(AlertDialogTitle, null, "Delete the file?"),
       createElement(AlertDialogDescription, null, "You can't undo this."),
       createElement(
@@ -72,6 +76,7 @@ async function mount(element: ReturnType<typeof alertDialog>) {
   });
   await act(async () => root.render(element));
   return {
+    container,
     trigger: container.querySelector("button"),
     open: () => act(async () => container.querySelector("button")!.click()),
   };
@@ -200,5 +205,67 @@ describe.each([
     expect(status?.nextElementSibling).toBe(
       dialog()!.querySelector("h2")?.parentElement,
     );
+  });
+});
+
+// Waits for what Radix does on a timer, such as listening for presses
+// outside the dialog once it opens
+const settle = () =>
+  act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+
+// Presses the primary mouse button on `outside`, dispatching the events a
+// browser does, and returns the `pointerdown`. Radix waits for the `click`
+// before it handles the press.
+async function pressOutside(outside: Element) {
+  const init = {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    pointerType: "mouse",
+  };
+  const pointerdown = new PointerEvent("pointerdown", init);
+  const events = [
+    pointerdown,
+    new MouseEvent("mousedown", init),
+    new PointerEvent("pointerup", init),
+    new MouseEvent("mouseup", init),
+    new MouseEvent("click", init),
+  ];
+  await act(async () => {
+    for (const event of events) outside.dispatchEvent(event);
+  });
+  return pointerdown;
+}
+
+describe('AlertDialogContent with `dismissible={false}`, in an AlertDialog with `variant="danger"`', () => {
+  test("stays open after a press outside with an `onInteractOutside` that does nothing, which it calls once with Radix's cancelable event for the `pointerdown`", async () => {
+    const onOpenChange = vi.fn();
+    const onDismiss = vi.fn();
+    const events: Event[] = [];
+    const { container, open } = await mount(
+      alertDialog(
+        { variant: "danger", onOpenChange },
+        {
+          dismissible: false,
+          onDismiss,
+          onInteractOutside: (event) => void events.push(event),
+        },
+      ),
+    );
+    await open();
+    await settle();
+    onOpenChange.mockClear();
+
+    // The trigger's container, beside the dialog's content in `<body>`
+    const pointerdown = await pressOutside(container);
+
+    expect(dialog()).not.toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onDismiss).not.toHaveBeenCalled();
+    expect(events).toHaveLength(1);
+    const event = events[0] as CustomEvent<{ originalEvent: PointerEvent }>;
+    expect(event).toBeInstanceOf(CustomEvent);
+    expect(event.cancelable).toBe(true);
+    expect(event.detail.originalEvent).toBe(pointerdown);
   });
 });

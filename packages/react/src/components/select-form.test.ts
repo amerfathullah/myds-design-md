@@ -124,12 +124,11 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-// No test logs an error, React's warnings included, or leaves anything on the
-// page. Warnings aren't checked: Radix warns that Select's open state changes
-// from controlled to uncontrolled on every mount (#132).
+// No test logs an error, React's warnings included, or a warning, or leaves
+// anything on the page
 afterEach(async () => {
   while (unmounts.length) await unmounts.pop()!();
-  const logged = [...errors()];
+  const logged = [...errors(), ...vi.mocked(console.warn).mock.calls];
   vi.restoreAllMocks();
   expect(logged).toEqual([]);
   expect(document.body.innerHTML).toBe("");

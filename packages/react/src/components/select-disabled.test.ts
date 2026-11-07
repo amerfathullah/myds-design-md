@@ -214,14 +214,15 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-// No test logs an error, or leaves anything on the page. Warnings aren't
-// checked: Radix warns that Select's open state changes from controlled to
-// uncontrolled on every mount (#132).
+// No test logs an error or a warning, or leaves anything on the page
 afterEach(async () => {
   while (unmounts.length) await unmounts.pop()!();
-  const errors = [...vi.mocked(console.error).mock.calls];
+  const logged = [
+    ...vi.mocked(console.error).mock.calls,
+    ...vi.mocked(console.warn).mock.calls,
+  ];
   vi.restoreAllMocks();
-  expect(errors).toEqual([]);
+  expect(logged).toEqual([]);
   expect(document.body.innerHTML).toBe("");
 });
 

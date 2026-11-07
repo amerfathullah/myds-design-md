@@ -1,7 +1,6 @@
 import {
   Children,
   ComponentProps,
-  ComponentPropsWithRef,
   ForwardRefExoticComponent,
   ReactNode,
   forwardRef,
@@ -66,21 +65,17 @@ const Input: ForwardRefExoticComponent<InputProps> = forwardRef(
     { className, prepend, append, children, size = "small", invalid, ...props },
     ref,
   ) => {
+    // The side each direct child draws on: the `position` it's given, or
+    // InputIcon's default, left, for an InputIcon given none
     const has_icon = useMemo(() => {
-      if (!children) return { left: false, right: false };
-      const _children = Children.toArray(children);
-      return {
-        left: _children.some(
-          (child) =>
-            isValidElement<ComponentPropsWithRef<typeof InputIcon>>(child) &&
-            child.props.position === "left",
-        ),
-        right: _children.some(
-          (child) =>
-            isValidElement<ComponentPropsWithRef<typeof InputIcon>>(child) &&
-            child.props.position === "right",
-        ),
-      };
+      const sides = Children.toArray(children).map((child) => {
+        if (!isValidElement<{ position?: unknown }>(child)) return undefined;
+        const { position } = child.props;
+        return position === undefined && child.type === InputIcon
+          ? "left"
+          : position;
+      });
+      return { left: sides.includes("left"), right: sides.includes("right") };
     }, [children]);
 
     return (
@@ -175,7 +170,8 @@ const input_icon_cva = cva(["absolute top-0 bottom-0 my-auto"], {
 });
 
 interface InputIconProps extends ComponentProps<"div"> {
-  position: "left" | "right";
+  /** The side of the field the icon sits on, `left` by default */
+  position?: "left" | "right";
 }
 
 const InputIcon: ForwardRefExoticComponent<InputIconProps> = forwardRef(

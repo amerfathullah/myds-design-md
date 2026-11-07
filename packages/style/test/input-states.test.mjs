@@ -8,13 +8,44 @@
 // what assistive technology announces. On Input only the editable field turns
 // red: the wrapper keeps its `otl-gray-200` border, and the addons and icons
 // keep their colours.
+//
+// Input also pads its field 40px on the side of each InputIcon after it, and
+// keeps its size's own padding elsewhere. The padding follows the side mark
+// InputIcon puts on the element it renders, so an InputIcon gets its room
+// however it's composed, even in server-rendered HTML.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { chromium } from "playwright";
 
+import { compileFull } from "./compile.mjs";
 import { compileComponents, cvaClasses, jsxClasses } from "./components.mjs";
 import { cases, colours, stateAttributes } from "./field-looks.mjs";
+
+// The markup Input renders at `size`: its wrapper, a row holding `prepend`
+// and `append`, and a box holding the <input>, with `attributes` (each with a
+// leading space), and what follows it, its icons
+function renderInput({
+  size,
+  attributes,
+  prepend = "",
+  after = "",
+  append = "",
+}) {
+  const file = "input.tsx";
+  const [wrapper, row, box, ...others] = jsxClasses(file);
+  assert.ok(wrapper && row && box && !others.length, `${file}'s markup`);
+  const input = `<input class="${cvaClasses(file, "input_cva", { size })}"${attributes}>`;
+  return `<div class="${wrapper}"><div class="${row}">${prepend}<div class="${box}">${input}${after}</div>${append}</div></div>`;
+}
+
+// The element an InputIcon renders at `size`, an icon, drawn on `position`
+// and, unless `marked` is false, marked with that side
+function renderIcon(size, position, { marked = true } = {}) {
+  const classes = cvaClasses("input.tsx", "input_icon_cva", { position, size });
+  const mark = marked ? ` data-input-icon="${position}"` : "";
+  return `<svg class="${classes}"${mark} viewBox="0 0 20 20"><path d="M2 10h16" stroke="currentColor"/></svg>`;
+}
 
 // Each look's border and 3px ring on the editable field. `resting` is the
 // field's own resting border.
@@ -39,28 +70,24 @@ const fields = [
       { name: "plain" },
       { name: "with addons and icons", decorated: true },
     ],
-    // The markup Input renders: its wrapper, a row holding the addons, and a
-    // box holding the <input> and its icons
+    // The markup Input renders, with or without the addons and icons
     render({ id, props, decorated }, size) {
-      const [wrapper, row, box, ...others] = jsxClasses(this.file);
-      assert.ok(
-        wrapper && row && box && !others.length,
-        `${this.file}'s markup`,
-      );
-      const classes = (cva, variants) => cvaClasses(this.file, cva, variants);
       const addon = (text) =>
         decorated
-          ? `<div class="${classes("input_addon_cva", { size })}">${text}</div>`
-          : "";
-      const icon = (position) =>
-        decorated
-          ? `<svg class="${classes("input_icon_cva", { position, size })}" viewBox="0 0 20 20"><path d="M2 10h16" stroke="currentColor"/></svg>`
+          ? `<div class="${cvaClasses(this.file, "input_addon_cva", { size })}">${text}</div>`
           : "";
       const data = ["prepend", "append", "left-icon", "right-icon"]
         .map((name) => ` data-has-${name}="${!!decorated}"`)
         .join("");
-      const input = `<input id="${id}" class="${classes("input_cva", { size })}"${data}${stateAttributes(props)}>`;
-      return `<div class="${wrapper}"><div class="${row}">${addon("RM")}<div class="${box}">${input}${icon("left")}${icon("right")}</div>${addon("Copy")}</div></div>`;
+      return renderInput({
+        size,
+        attributes: ` id="${id}"${data}${stateAttributes(props)}`,
+        prepend: addon("RM"),
+        after: decorated
+          ? `${renderIcon(size, "left")}${renderIcon(size, "right")}`
+          : "",
+        append: addon("Copy"),
+      });
     },
     // What every look keeps around the <input>: the wrapper's `otl-gray-200`
     // border and no shadow, each addon's divider against the field, and the
@@ -220,6 +247,102 @@ test("each Input and TextArea state has its border and ring, in both themes", as
             props.disabled ? look : `${look}, focused`,
           );
         }
+    }
+    assert.deepEqual(actual, expected);
+  } finally {
+    await browser.close();
+  }
+});
+
+// Each size's own padding on either side of the field, and the room it makes
+// beside an icon
+const ownPadding = { small: "12px", medium: "12px", large: "14px" };
+const iconPadding = "40px";
+
+// What follows the <input> in its box, and the sides the field is padded on.
+// The <input> reports no icon in `data-has-left-icon` or `data-has-right-icon`,
+// as for an InputIcon in a Fragment or an app's own component, so only the
+// side marks can pad it.
+const iconCases = [
+  {
+    name: "a left icon",
+    after: (size) => renderIcon(size, "left"),
+    padded: ["left"],
+  },
+  {
+    name: "a right icon",
+    after: (size) => renderIcon(size, "right"),
+    padded: ["right"],
+  },
+  {
+    name: "a left and a right icon",
+    after: (size) => `${renderIcon(size, "left")}${renderIcon(size, "right")}`,
+    padded: ["left", "right"],
+  },
+  { name: "no icon", after: () => "", padded: [] },
+  { name: "a plain <span>", after: () => "<span>kg</span>", padded: [] },
+  {
+    name: "an icon without the side mark",
+    after: (size) => renderIcon(size, "left", { marked: false }),
+    padded: [],
+  },
+];
+
+// Runs in the page: each field's left and right padding
+function readPadding(ids) {
+  return Object.fromEntries(
+    ids.map((id) => {
+      const { paddingLeft, paddingRight } = getComputedStyle(
+        document.getElementById(id),
+      );
+      return [id, { left: paddingLeft, right: paddingRight }];
+    }),
+  );
+}
+
+test("Input makes room beside each marked icon after its field, and keeps its own padding elsewhere, at each size", async () => {
+  const samples = ["small", "medium", "large"].flatMap((size) =>
+    iconCases.map(({ name, after, padded }, i) => ({
+      id: `padding-${size}-${i}`,
+      key: `${size}, ${name}`,
+      size,
+      padded,
+      html: renderInput({
+        size,
+        attributes: ` id="padding-${size}-${i}" data-has-prepend="false" data-has-append="false" data-has-left-icon="false" data-has-right-icon="false" placeholder="Cari"`,
+        after: after(size),
+      }),
+    })),
+  );
+  // The stylesheet a Tailwind consumer compiles for Input, and full.css
+  const stylesheets = {
+    "the Tailwind import": await compileComponents(["input.tsx"]),
+    "full.css": await compileFull(),
+  };
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    const actual = {};
+    const expected = {};
+    for (const [entry, css] of Object.entries(stylesheets)) {
+      await page.setContent(
+        `<!doctype html><html><head><style>${css}</style></head><body>${samples
+          .map(({ html }) => html)
+          .join("")}</body></html>`,
+      );
+      const padding = await page.evaluate(
+        readPadding,
+        samples.map(({ id }) => id),
+      );
+      for (const { id, key, size, padded } of samples) {
+        const side = (name) =>
+          padded.includes(name) ? iconPadding : ownPadding[size];
+        actual[`${entry}: ${key}`] = padding[id];
+        expected[`${entry}: ${key}`] = {
+          left: side("left"),
+          right: side("right"),
+        };
+      }
     }
     assert.deepEqual(actual, expected);
   } finally {

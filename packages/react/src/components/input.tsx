@@ -45,6 +45,11 @@ const input_cva = cva(
     "disabled:bg-bg-washed disabled:cursor-not-allowed disabled:text-txt-black-disabled",
     "data-[has-prepend=true]:rounded-l-none data-[has-append=true]:rounded-r-none",
     "data-[has-left-icon=true]:pl-10 data-[has-right-icon=true]:pr-10",
+    // An InputIcon marks the element it renders with the side it draws on, so
+    // the field makes room beside a later sibling with that mark, however the
+    // InputIcon is composed: in a Fragment, an array or a component of the
+    // app's own. It's in the server's markup, before the page hydrates
+    "has-[~[data-input-icon=left]]:pl-10 has-[~[data-input-icon=right]]:pr-10",
   ],
   {
     variants: {
@@ -66,7 +71,9 @@ const Input: ForwardRefExoticComponent<InputProps> = forwardRef(
     ref,
   ) => {
     // The side each direct child draws on: the `position` it's given, or
-    // InputIcon's default, left, for an InputIcon given none
+    // InputIcon's default, left, for an InputIcon given none. The data
+    // attributes report only these; the field's padding also follows the
+    // mark each InputIcon puts on the element it renders
     const has_icon = useMemo(() => {
       const sides = Children.toArray(children).map((child) => {
         if (!isValidElement<{ position?: unknown }>(child)) return undefined;
@@ -198,6 +205,8 @@ const InputIcon: ForwardRefExoticComponent<InputIconProps> = forwardRef(
       <Slot
         ref={ref}
         className={input_icon_cva({ position, size, className })}
+        // The side it draws on, which pads Input's field on that side
+        data-input-icon={position}
         {...props}
       />
     );

@@ -1,5 +1,11 @@
 // @vitest-environment happy-dom
-import { act, createElement, type ComponentProps, type ReactNode } from "react";
+import {
+  act,
+  createElement,
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -21,15 +27,25 @@ const icon = (props: IconProps | null) =>
     createElement("svg", { viewBox: "0 0 20 20" }),
   );
 
-// What an Input holding `children` renders: the side its <input> makes room
-// for, the side class each icon draws on, and the whole markup
-function rendered(size: Size, ...children: ReactNode[]) {
+const unmounts: (() => Promise<void>)[] = [];
+
+// Mounts `element` in a container on the page, as an app would
+async function mount(element: ReactElement) {
   const container = document.body.appendChild(document.createElement("div"));
   const root = createRoot(container);
-  act(() =>
-    root.render(
-      createElement(Input, { size, placeholder: "Cari" }, ...children),
-    ),
+  unmounts.push(async () => {
+    await act(async () => root.unmount());
+    container.remove();
+  });
+  await act(async () => root.render(element));
+  return container;
+}
+
+// What an Input holding `children` renders: the side its <input> makes room
+// for, the side class each icon draws on, and the whole markup
+async function rendered(size: Size, ...children: ReactNode[]) {
+  const container = await mount(
+    createElement(Input, { size, placeholder: "Cari" }, ...children),
   );
   const input = container.querySelector("input");
   const result = {
@@ -45,8 +61,7 @@ function rendered(size: Size, ...children: ReactNode[]) {
     ),
     markup: container.innerHTML,
   };
-  act(() => root.unmount());
-  container.remove();
+  await unmounts.pop()!();
   return result;
 }
 
@@ -55,7 +70,9 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-afterEach(() => {
+// No test logs an error, or leaves anything on the page
+afterEach(async () => {
+  while (unmounts.length) await unmounts.pop()!();
   const logged = [...vi.mocked(console.error).mock.calls];
   vi.restoreAllMocks();
   expect(logged).toEqual([]);
@@ -73,28 +90,28 @@ describe.each(sizes)("Input with size %s", (size) => {
     ["with `position={undefined}`", { position: undefined }],
   ] as const)(
     'an InputIcon %s renders as one with `position="left"`',
-    (_, props) => {
-      const left = rendered(size, icon({ position: "left" }));
+    async (_, props) => {
+      const left = await rendered(size, icon({ position: "left" }));
       expect(left.room).toEqual({ left: "true", right: "false" });
       expect(left.sides).toEqual([["left-3"]]);
-      expect(rendered(size, icon(props))).toEqual(left);
+      expect(await rendered(size, icon(props))).toEqual(left);
     },
   );
 
-  test('an InputIcon without `position` and one with `position="right"` render as a left and a right one', () => {
-    const both = rendered(
+  test('an InputIcon without `position` and one with `position="right"` render as a left and a right one', async () => {
+    const both = await rendered(
       size,
       icon({ position: "left" }),
       icon({ position: "right" }),
     );
     expect(both.room).toEqual({ left: "true", right: "true" });
     expect(both.sides).toEqual([["left-3"], ["right-3"]]);
-    expect(rendered(size, icon(null), icon({ position: "right" }))).toEqual(
-      both,
-    );
+    expect(
+      await rendered(size, icon(null), icon({ position: "right" })),
+    ).toEqual(both);
   });
 
-  // As the issue's table records them before the fix
+  // An explicit side still draws on that side, and Input makes room there
   test.each([
     ["left", [{ position: "left" }], { left: "true", right: "false" }],
     ["right", [{ position: "right" }], { left: "false", right: "true" }],
@@ -105,8 +122,8 @@ describe.each(sizes)("Input with size %s", (size) => {
     ],
   ] as const)(
     "%s InputIcons draw on their side and make room there",
-    (_, icons, room) => {
-      const result = rendered(size, ...icons.map(icon));
+    async (_, icons, room) => {
+      const result = await rendered(size, ...icons.map(icon));
       expect(result.room).toEqual(room);
       expect(result.sides).toEqual(
         icons.map(({ position }) => [`${position}-3`]),
@@ -116,17 +133,17 @@ describe.each(sizes)("Input with size %s", (size) => {
 
   // Only an InputIcon defaults to the left. Another direct child makes room
   // only on the side it's given, as an app's own icon component can be
-  test("a child that isn't an InputIcon makes room only on the side it's given", () => {
+  test("a child that isn't an InputIcon makes room only on the side it's given", async () => {
     const AppIcon = (props: IconProps) => icon(props);
-    expect(rendered(size, createElement("span", null, "kg")).room).toEqual({
-      left: "false",
-      right: "false",
-    });
     expect(
-      rendered(size, createElement(AppIcon, { position: "left" })).room,
+      (await rendered(size, createElement("span", null, "kg"))).room,
+    ).toEqual({ left: "false", right: "false" });
+    expect(
+      (await rendered(size, createElement(AppIcon, { position: "left" }))).room,
     ).toEqual({ left: "true", right: "false" });
     expect(
-      rendered(size, createElement(AppIcon, { position: "right" })).room,
+      (await rendered(size, createElement(AppIcon, { position: "right" })))
+        .room,
     ).toEqual({ left: "false", right: "true" });
   });
 });

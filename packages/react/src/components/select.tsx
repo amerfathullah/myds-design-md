@@ -122,6 +122,10 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
     const Root = isMultiple(props)
       ? SelectPrimitive.unstable_SelectProvider
       : SelectPrimitive.Root;
+    // What a `multiple` select's form control holds. In the render after
+    // `multiple` turns on, an uncontrolled select's state is still a single
+    // value, which the control takes as nothing selected.
+    const selection = Array.isArray(_value) ? _value : [];
 
     return (
       <SelectContext.Provider
@@ -150,7 +154,7 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
               required={props.required}
               disabled={props.disabled}
               autoComplete={props.autoComplete}
-              value={_value as string[]}
+              value={selection}
               onChange={(event) =>
                 handleValueChange(
                   [...event.currentTarget.options]
@@ -160,7 +164,7 @@ const Select: React.ForwardRefExoticComponent<SelectProps> = React.forwardRef(
               }
               className="sr-only"
             >
-              {[...new Set(_value)].map((value) => (
+              {[...new Set(selection)].map((value) => (
                 <option key={value} value={value} ref={selectByDefault} />
               ))}
             </select>

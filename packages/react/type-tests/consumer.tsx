@@ -507,23 +507,13 @@ const PaginationType = () => {
 
 export const PaginationTypes = () => (
   <>
-    <Pagination
-      page={5}
-      limit={10}
-      count={100}
-      onPageChange={(page: number) => void page}
-    >
+    <Pagination {...paging}>
       <PaginationLabel />
       <PaginationLabel content="Halaman 5 daripada 10" />
       <PaginationLabel content={<strong>Halaman 5</strong>} />
       <PaginationType />
     </Pagination>
-    <AutoPagination
-      page={5}
-      limit={10}
-      count={100}
-      onPageChange={(page: number) => void page}
-    />
+    <AutoPagination {...paging} />
     <AutoPagination {...autoPaging} />
     {/* @ts-expect-error `type` is default, simple or full */}
     <Pagination {...paging} type="basic" />

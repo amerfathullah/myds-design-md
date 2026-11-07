@@ -408,40 +408,37 @@ describe("PaginationLabel", () => {
   );
 });
 
-describe("A Pagination without `type`", () => {
-  // The `type` an author's own part reads from PaginationContext inside a
-  // Pagination of `type`
-  async function contextType(type: Type) {
-    const seen: unknown[] = [];
-    const ReadType = () => {
-      seen.push(useContext(PaginationContext).type);
-      return null;
-    };
-    await mount(
-      createElement(
-        Pagination,
-        { ...pageTwo, ...typeProp(type) },
-        createElement(ReadType),
-      ),
-    );
-    return seen;
-  }
-
-  test('gives PaginationContext the type "default"', async () => {
-    expect(await contextType(undefined)).toEqual(["default"]);
-  });
-
-  test("gives PaginationContext the type it's given", async () => {
-    expect(await contextType("full")).toEqual(["full"]);
-  });
-
+describe("Pagination's `type`", () => {
   // An author's own part that shows the `type` PaginationContext carries
   const ShowType = () =>
     createElement("output", {
       "data-type": useContext(PaginationContext).type,
     });
 
-  test('renders the same markup as type="default"', async () => {
+  // The `type` an author's own part reads from PaginationContext inside a
+  // Pagination of `type`, or null when it reads none
+  async function contextType(type: Type) {
+    const page = await mount(
+      createElement(
+        Pagination,
+        { ...pageTwo, ...typeProp(type) },
+        createElement(ShowType),
+      ),
+    );
+    const [output, ...others] = page.querySelectorAll("output");
+    expect(others).toEqual([]);
+    return output!.getAttribute("data-type");
+  }
+
+  test('gives PaginationContext the type "default" when left out', async () => {
+    expect(await contextType(undefined)).toBe("default");
+  });
+
+  test("gives PaginationContext the type it's given", async () => {
+    expect(await contextType("full")).toBe("full");
+  });
+
+  test('renders the same markup without `type` as with type="default"', async () => {
     // Every part, the author's own included
     const parts = [
       createElement(PaginationPrevious),

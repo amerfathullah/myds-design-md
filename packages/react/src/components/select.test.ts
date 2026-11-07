@@ -249,14 +249,14 @@ describe("a Select with `null` for `size` and `variant`", () => {
 type PartProps = ComponentProps<typeof SelectHeader>;
 
 // The props a header and a footer get besides their text
-type Parts = { header?: PartProps; footer?: PartProps };
+type HeaderAndFooterProps = { header?: PartProps; footer?: PartProps };
 
 // An open Select shaped like the docs' With Header and With Footer examples,
 // with a group title, a disabled item and a separator between its header and
 // footer
 const withHeaderAndFooter = (
   multiple: boolean,
-  { header, footer }: Parts = {},
+  { header, footer }: HeaderAndFooterProps = {},
 ) =>
   createElement(
     Select,
@@ -323,8 +323,8 @@ const attributes = (element: Element) =>
 describe.each(kinds)("in %s Select", (_, multiple) => {
   describe.each(parts)("the $part", ({ part, text, classes }) => {
     test("puts every attribute it gets on its `div`, `className` after its own classes", async () => {
-      // Built here and spread in: TypeScript rejects a `data-*` key in an
-      // object literal passed straight to `createElement`
+      // In a variable, as TypeScript rejects a `data-*` key in an object
+      // literal passed straight to `createElement` or under a fixed key
       const props = {
         id: `fruit-${part}`,
         role: "group",
@@ -336,7 +336,7 @@ describe.each(kinds)("in %s Select", (_, multiple) => {
         style: { minHeight: "2rem" },
         className: "w-full",
       };
-      await mount(withHeaderAndFooter(multiple, { [part]: { ...props } }));
+      await mount(withHeaderAndFooter(multiple, { [part]: props }));
 
       expect(attributes(partDiv(text))).toEqual({
         class: `${classes} w-full`,

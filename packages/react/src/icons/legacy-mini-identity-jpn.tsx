@@ -18,7 +18,7 @@ export const MiniIdentityJPNIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icons/miniidentity-jpn">
+      <g id="agency-icons/mini/identity-jpn">
         <path
           id="Subtract"
           fillRule="evenodd"

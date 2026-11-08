@@ -143,8 +143,8 @@
   /* --otl-warning-700-20: var(--_warning-700) / 0.2; */
 
   /* Ring - Primary */
-  --fr-primary: var(--_primary-700) / 0.4;
+  --fr-primary: var(--_primary-300);
 
   /* Ring - Danger */
-  --fr-danger: var(--_danger-700) / 0.4;
+  --fr-danger: var(--_danger-300);
 }

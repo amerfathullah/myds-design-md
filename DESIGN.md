@@ -159,8 +159,8 @@ colors:
   otl-warning-disabled: "#FEF08A66"
   otl-warning-200: "{colors.warning-200}"
   otl-warning-300: "{colors.danger-300}"
-  fr-primary: "#96B7FF66"
-  fr-danger: "#FCA5A566"
+  fr-primary: "{colors.primary-700}"
+  fr-danger: "{colors.danger-700}"
 
 typography:
   heading-xl:
@@ -1161,7 +1161,7 @@ The canvas is white and the text near-black. There is one primary colour, blue, 
 3. Poppins headings (`font-heading` with `text-heading-*`) over an Inter body (`font-body` with `text-body-*`). Weights stop at Semibold 600; no component uses `font-bold`.
 4. Danger, success and warning convey status only: callouts, tags, validation and toasts.
 5. Light and dark themes come from semantic tokens plus the `.dark` class.
-6. Keyboard focus shows as a visible `fr-primary` ring on the library's focusable controls; the few exceptions are under Focus in Components. An invalid input, textarea, date field, time field or Input OTP keeps its `otl-danger-300` border when focused, and its ring is `fr-danger`.
+6. Keyboard focus shows as a visible `fr-primary` ring on the library's focusable controls, 6.70:1 against the page in light and 8.87:1 in dark; the few exceptions are under Focus in Components. An invalid input, textarea, date field, time field or Input OTP keeps its `otl-danger-300` border when focused, and its ring is `fr-danger`, 6.47:1 against the page in light and 9.33:1 in dark.
 7. A fixed page frame: CookieBanner (while it's shown) → SkipLink → Masthead (Malaysia flag) → Navbar (agency logo) … Footer (agency logo).
 8. The 12-8-4 grid: 12 columns on desktop, 8 on tablet, 4 on mobile.
 
@@ -1229,8 +1229,10 @@ Five scales, plus `white` and `black`. `gray` is Tailwind 3's _zinc_ with its ow
 
 ### Focus ring (`fr-*`)
 
-- `fr-primary` (`primary-300` @ 40%) is the focus ring, danger variants included, on every control that shows one, except an invalid field.
-- `fr-danger` (`danger-300` @ 40%) is used only as the focus ring of an invalid input, textarea, date field, time field or Input OTP (on its active slot). At rest, an invalid field shows no ring, only its `otl-danger-300` border.
+- `fr-primary` is the focus ring, danger variants included, on every control that shows one, except an invalid field. It is opaque: `primary-700` #1D4ED8 in light and `primary-300` #96B7FF in dark, the primitives `bg-primary-700` uses.
+- `fr-danger` is used only as the focus ring of an invalid input, textarea, date field, time field or Input OTP (on its active slot). It is opaque: `danger-700` #B91C1C in light and `danger-300` #FCA5A5 in dark. At rest, an invalid field shows no ring, only its `otl-danger-300` border.
+- **Both contrast at least 3:1 with every surface a ring sits on,** as WCAG's SC 1.4.11 (Non-text Contrast) asks of a focus indicator. Against the page (`bg-white`), `fr-primary` is 6.70:1 in light and 8.87:1 in dark, and `fr-danger` 6.47:1 and 9.33:1. The lowest are on the Masthead trigger's `otl-gray-200` fill in light (5.28:1 for `fr-primary`, 5.10:1 for `fr-danger`) and the calendar's `bg-primary-100` range cells in dark (5.19:1 and 5.46:1).
+- **On a filled control, the ring sits close to the fill.** A `primary-fill` button's `primary-600` is 1.30:1 against the ring in light and 2.59:1 in dark. Button rings on `focus:`, so after a click it can be focused and hovered at once, and its hover fill, `primary-700`, is the light ring's own colour. The ring still contrasts with the surface around the control, which is what SC 1.4.11 asks of a ring drawn outside it.
 
 ### Dark theme
 
@@ -1334,8 +1336,8 @@ The dark theme redefines every semantic token. This table is generated from `lig
 | `otl-warning-disabled` | `warning-200` @ 40% (`#FEF08A66`) | `warning-800` @ 40% (`#854D0E66`) |
 | `otl-warning-200`      | `warning-200` #FEF08A             | `warning-800` #854D0E             |
 | `otl-warning-300`      | `danger-300` #FCA5A5              | `danger-700` #B91C1C              |
-| `fr-primary`           | `primary-300` @ 40% (`#96B7FF66`) | `primary-700` @ 40% (`#1D4ED866`) |
-| `fr-danger`            | `danger-300` @ 40% (`#FCA5A566`)  | `danger-700` @ 40% (`#B91C1C66`)  |
+| `fr-primary`           | `primary-700` #1D4ED8             | `primary-300` #96B7FF             |
+| `fr-danger`            | `danger-700` #B91C1C              | `danger-300` #FCA5A5              |
 
 ## Typography
 
@@ -1567,7 +1569,8 @@ Each entry opens with its kind. A **Divergence** is something the guideline and 
 
 ### Colour
 
-- **Gap:** the colour guideline is published as images only, so it can't be compared with the code value by value. All colour here comes from code.
+- **Gap:** the colour guideline gives its values only in images, with no text to check them against, so every colour here comes from code. The focus ring's images have been compared with the code value by value; see the next entry.
+- **Divergence:** the guideline draws the focus ring tokens at 40% alpha, and the library renders them opaque. The guideline's Focus Ring images show `fr-primary` as `primary-300 (40%)` and `fr-danger` as `danger-300 (40%)` in light, and `primary-700 (40%)` and `danger-700 (40%)` in dark, and both colour-token legends label their focus-ring example (`fr-primary`) `primary-300 (40%)`. On the page, the Focus Ring images' values give rings of 1.28:1 to 1.37:1, under the 3:1 that WCAG's SC 1.4.11 asks. The library's `fr-primary` is `primary-700` in light and `primary-300` in dark, and its `fr-danger` is `danger-700` and `danger-300`. Redrawing the images is [#263](https://github.com/amerfathullah/myds-design-md/issues/263).
 - **Gap:** the design guideline advertises a Theme Customizer for adjusting colours to an agency's branding. It is not built.
 - **Defect:** `otl-warning-300` resolves to `danger-300` (light) and `danger-700` (dark), while `otl-warning-200` uses the warning scale. It is reproduced as built.
 - **Divergence:** the guideline tells designers to style with semantic tokens so that everything re-themes, but some components use primitives, which stay the same colour in dark. These are button fills and their counters, checkbox, radio, the date-picker selected day, the date- and time-field focused segments, the tabs line indicator, the search-bar submit button, the select counter and check, the select group title (`gray-400`), data-table selection, the switch thumb (`white`), the white spinner, the dialog and Navbar mobile-menu overlays (`gray-700` @ 60%), and tag borders. The preset's base layer also colours a bare border and an unstyled placeholder with primitives (see Theming).

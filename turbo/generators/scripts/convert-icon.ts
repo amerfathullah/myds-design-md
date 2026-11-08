@@ -72,7 +72,7 @@ export function componentName(source: string): string {
  */
 export function convertIcon(name: string, svg: string): string {
   const { jsx, usesId } = svgToJsx(svg);
-  const ownIds = usesId
+  const idDeclaration = usesId
     ? `  // A prefix for the ids this SVG refers to, unique to this copy, so that
   // hiding another copy on the page can't change how this one draws
   const id = React.useId();
@@ -87,7 +87,7 @@ import { FunctionComponent, SVGProps } from "react";
  * @returns ${name}Icon
  */
 export const ${name}Icon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
-${ownIds}  return (
+${idDeclaration}  return (
     ${jsx}
   );
 };
@@ -163,13 +163,30 @@ function attributesOf(svg: string): { name: string; value: string }[] {
   );
 }
 
-/** The ids each of the attribute's references points at, with `#` dropped */
-function references(name: string, value: string): string[] {
-  if (linkAttributes.has(name))
-    return value.startsWith("#") ? [value.slice(1)] : [];
-  return [...value.matchAll(localUrl)].map(
-    ([, double, single, bare]) => double ?? single ?? bare ?? "",
-  );
+interface Reference {
+  /** The id it points at */
+  id: string;
+  /** Where the id starts in the attribute's value, just after its `#` */
+  at: number;
+}
+
+/**
+ * The attribute's references to ids in the same SVG: each `url(#a)` in its
+ * value, or the whole value of an `href` or `xlink:href` that's `#a`. The
+ * value is as the browser reads it, entities decoded.
+ */
+function references(name: string, value: string): Reference[] {
+  if (linkAttributes.has(name)) {
+    return value.startsWith("#") ? [{ id: value.slice(1), at: 1 }] : [];
+  }
+  return [...value.matchAll(localUrl)].map((match) => {
+    const [url, double, single, bare] = match;
+    return {
+      id: double ?? single ?? bare ?? "",
+      // The match's first `#` is the reference's
+      at: match.index + url.indexOf("#") + 1,
+    };
+  });
 }
 
 /**
@@ -184,7 +201,7 @@ function referencedIds(svg: string): Set<string> {
     // Compared and rewritten as the browser reads them, entities decoded
     const value = decodeEntities(written);
     if (name === "id") defined.add(value);
-    for (const target of references(name, value)) {
+    for (const { id: target } of references(name, value)) {
       if (name === "style") {
         throw new Error(
           `It refers to #${target} in a style attribute, where the generator can't give each copy of the icon its own id. Refer to it with an attribute instead, such as mask="url(#${target})".`,
@@ -234,29 +251,16 @@ function withOwnIds(
   ownIds: Set<string>,
 ): string | undefined {
   const value = decodeEntities(written);
-  if (name === "id") {
-    return ownIds.has(value) ? `\${id}${templateText(value)}` : undefined;
-  }
-  if (linkAttributes.has(name)) {
-    return value.startsWith("#") && ownIds.has(value.slice(1))
-      ? `#\${id}${templateText(value.slice(1))}`
-      : undefined;
-  }
-
-  let body = "";
-  let end = 0;
-  for (const match of value.matchAll(localUrl)) {
-    // Every reference is to one of the copy's own ids (`referencedIds`), and
-    // its `#` is the first in the match
-    const [url] = match;
-    const hash = url.indexOf("#") + 1;
-    body +=
-      templateText(value.slice(end, match.index) + url.slice(0, hash)) +
-      "${id}" +
-      templateText(url.slice(hash));
-    end = match.index + url.length;
-  }
-  return end ? body + templateText(value.slice(end)) : undefined;
+  // An id attribute is the id's definition, which starts the value
+  const ids = name === "id" ? [{ id: value, at: 0 }] : references(name, value);
+  const starts = ids.filter(({ id }) => ownIds.has(id)).map(({ at }) => at);
+  if (!starts.length) return undefined;
+  // The value's text, cut where each id starts, with `${id}` in each cut
+  return [0, ...starts]
+    .map((start, index, cuts) =>
+      templateText(value.slice(start, cuts[index + 1])),
+    )
+    .join("${id}");
 }
 
 /** Text as it reads inside a template literal */

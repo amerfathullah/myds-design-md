@@ -21,7 +21,31 @@ function sameValue(expected, actual) {
   return pe.every((c, i) => Math.abs(c - pa[i]) <= 1);
 }
 
-test("every token utility DESIGN.md documents resolves as it did in v1, in both themes", async () => {
+// Colour tokens that deliberately no longer resolve as they did in v1, each
+// with the issue that changed it and its colour in each theme, as `measure`
+// reads it. The v1 fixture stays as captured: it records what v1 resolved
+// to, and its capture script can only measure v1 again.
+const departures = {
+  // Opaque, at 3:1 or more against the page (WCAG SC 1.4.11)
+  "fr-primary": {
+    issue: "#157",
+    light: "rgba(29, 78, 216, 255)",
+    dark: "rgba(150, 183, 255, 255)",
+  },
+  "fr-danger": {
+    issue: "#157",
+    light: "rgba(185, 28, 28, 255)",
+    dark: "rgba(252, 165, 165, 255)",
+  },
+};
+
+// The departure a colour utility such as `bg-fr-primary` takes its colour from
+function departureOf(utility) {
+  const token = utility.match(/^(?:bg|text|border)-([\w-]+)$/)?.[1];
+  return Object.hasOwn(departures, token) ? departures[token] : undefined;
+}
+
+test("every token utility DESIGN.md documents resolves as it did in v1, or to its listed departure, in both themes", async () => {
   const v1 = JSON.parse(
     fs.readFileSync(new URL("fixtures/v1-tokens.json", import.meta.url)),
   );
@@ -30,18 +54,34 @@ test("every token utility DESIGN.md documents resolves as it did in v1, in both 
   const css = await compile(`@source inline("${classes.join(" ")}");`);
   const measured = await measure(css, utilities);
 
+  // Every departure is a token DESIGN.md documents, so the list can't go stale
+  const departed = utilities
+    .map(({ utility }) => utility)
+    .filter(departureOf)
+    .sort();
+  assert.deepEqual(
+    departed,
+    Object.keys(departures)
+      .flatMap((token) => ["bg", "text", "border"].map((u) => `${u}-${token}`))
+      .sort(),
+  );
+
   const differences = [];
   for (const { utility } of utilities) {
     assert.ok(
       v1[utility],
       `${utility} is missing from the v1 fixture; recapture it`,
     );
+    const departure = departureOf(utility);
     for (const theme of ["light", "dark"]) {
-      for (const [prop, expected] of Object.entries(v1[utility][theme])) {
+      for (const [prop, v1Value] of Object.entries(v1[utility][theme])) {
+        const [source, expected] = departure
+          ? [departure.issue, departure[theme]]
+          : ["v1", v1Value];
         const actual = measured[utility][theme][prop];
         if (!sameValue(expected, actual)) {
           differences.push(
-            `${utility} (${theme}) ${prop}: v1 ${expected}, now ${actual}`,
+            `${utility} (${theme}) ${prop}: ${source} ${expected}, now ${actual}`,
           );
         }
       }

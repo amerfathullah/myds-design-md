@@ -423,11 +423,16 @@ test("a mouse click shows no ring, except on SearchBar, InputOTP and Switch", as
 });
 
 // Runs in the page: a point on each side of each box `selector` draws its
-// ring around, mid-way along the side and clear of the corners. An outer
-// ring's points are just outside the border box, 1 to 2px out. An inset
-// ring's are just inside the padding box, 1 to 2px in, and on the left and
-// right sides 4px down, clear of the ring's top edge and of text that starts
-// at the left edge. A wrapped inline element has a box for each line.
+// ring around, mid-way along the side and clear of the corners. Each is the
+// pixel at the middle of the ring's 3px band, 1.5px out from the border box
+// for an outer ring, or in from the padding box for an inset one. Chromium
+// snaps a box at a fractional position to whole pixels, moving its edges by
+// up to half a pixel, so a pixel 1 to 2px from the box's own edge can be the
+// band's outermost row, which a round box's ring only partly covers. The
+// middle pixel is covered wherever the box snaps. An inset ring's points on
+// the left and right sides are 4px down, clear of the ring's top edge and of
+// text that starts at the left edge. A wrapped inline element has a box for
+// each line.
 function edgePoints({ selector, inset }) {
   const element = document.querySelector(selector);
   const style = getComputedStyle(element);
@@ -443,19 +448,15 @@ function edgePoints({ selector, inset }) {
   return boxes.map(({ left, top, right, bottom }) => {
     const x = Math.floor((left + right) / 2);
     const y = Math.floor((top + bottom) / 2);
-    return inset
-      ? {
-          top: { x, y: Math.ceil(top) + 1 },
-          bottom: { x, y: Math.floor(bottom) - 2 },
-          left: { x: Math.ceil(left) + 1, y: Math.ceil(top) + 4 },
-          right: { x: Math.floor(right) - 2, y: Math.ceil(top) + 4 },
-        }
-      : {
-          top: { x, y: Math.floor(top) - 2 },
-          bottom: { x, y: Math.ceil(bottom) + 1 },
-          left: { x: Math.floor(left) - 2, y },
-          right: { x: Math.ceil(right) + 1, y },
-        };
+    // Positive moves in from the box, negative out
+    const band = inset ? 1.5 : -1.5;
+    const side = inset ? Math.ceil(top) + 4 : y;
+    return {
+      top: { x, y: Math.floor(top + band) },
+      bottom: { x, y: Math.floor(bottom - band) },
+      left: { x: Math.floor(left + band), y: side },
+      right: { x: Math.floor(right - band), y: side },
+    };
   });
 }
 
@@ -489,9 +490,10 @@ async function sample(page, points) {
   );
 }
 
-// `colour`, an rgba() string, laid over the opaque pixel `under`
+// `colour`, an rgb() or rgba() string, laid over the opaque pixel `under`.
+// An rgb() colour has no alpha, so it covers the pixel.
 function over(colour, under) {
-  const [r, g, b, a] = colour.match(/[\d.]+/g).map(Number);
+  const [r, g, b, a = 1] = colour.match(/[\d.]+/g).map(Number);
   return [r, g, b].map((channel, i) =>
     Math.round(channel * a + under[i] * (1 - a)),
   );
@@ -519,8 +521,8 @@ test("each ring shows on all four sides, unclipped", async () => {
             const at = line * 4 + i;
             const key = `${control.name}${boxes.length > 1 ? `, line ${line + 1}` : ""}, ${side} (${theme})`;
             // Within 8 of the ring over the resting pixel, in each channel.
-            // The ring changes the pixel by 25 or more. The radio wrapper's
-            // `shadow-button`, which overlaps its ring, moves it by up to 6.
+            // The ring is opaque, so it covers the pixel, changing it by 199
+            // or more, and hides the radio wrapper's `shadow-button` below it.
             const want = over(ring, resting[at]);
             const got = focused[at].slice(0, 3);
             actual[key] = got.every((c, j) => Math.abs(c - want[j]) <= 8)

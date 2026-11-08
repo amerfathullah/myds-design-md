@@ -7,6 +7,9 @@ import { FunctionComponent, SVGProps } from "react";
  * @returns DOSMIcon
  */
 export const DOSMIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="32"
@@ -16,8 +19,8 @@ export const DOSMIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icon/dosm" clipPath="url(#clip0_14237_1212)">
-        <g id="agency-icons/mini/dosm" clipPath="url(#clip1_14237_1212)">
+      <g id="agency-icon/dosm" clipPath={`url(#${id}clip0_14237_1212)`}>
+        <g id="agency-icons/mini/dosm" clipPath={`url(#${id}clip1_14237_1212)`}>
           <g id="Group 45">
             <path
               id="Vector 118"
@@ -46,10 +49,10 @@ export const DOSMIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
         </g>
       </g>
       <defs>
-        <clipPath id="clip0_14237_1212">
+        <clipPath id={`${id}clip0_14237_1212`}>
           <rect width="32" height="32" fill="white" />
         </clipPath>
-        <clipPath id="clip1_14237_1212">
+        <clipPath id={`${id}clip1_14237_1212`}>
           <rect
             width="24"
             height="24"

@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const MiniHelpingHandsICUJPMIcon: FunctionComponent<
   SVGProps<SVGSVGElement>
 > = (props) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="24"
@@ -20,7 +23,7 @@ export const MiniHelpingHandsICUJPMIcon: FunctionComponent<
     >
       <g
         id="agency-icons/mini/helping-hands-icu-jpm"
-        clipPath="url(#clip0_14447_1236)"
+        clipPath={`url(#${id}clip0_14447_1236)`}
       >
         <g id="Group 42">
           <g id="Group 28">
@@ -68,7 +71,7 @@ export const MiniHelpingHandsICUJPMIcon: FunctionComponent<
         </g>
       </g>
       <defs>
-        <clipPath id="clip0_14447_1236">
+        <clipPath id={`${id}clip0_14447_1236`}>
           <rect width="24" height="24" fill="white" />
         </clipPath>
       </defs>

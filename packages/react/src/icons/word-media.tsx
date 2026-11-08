@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const WordMediaIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
 ) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="50"
@@ -38,7 +41,7 @@ export const WordMediaIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
           />
           <path
             d="M29.1667 12.5833V0L43.7501 14.5833H31.1667C30.0622 14.5833 29.1667 13.6879 29.1667 12.5833Z"
-            fill="url(#paint0_linear_2648_6591)"
+            fill={`url(#${id}paint0_linear_2648_6591)`}
             fillOpacity="0.3"
             style={{ mixBlendMode: "hard-light" }}
           />
@@ -53,7 +56,7 @@ export const WordMediaIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       </g>
       <defs>
         <linearGradient
-          id="paint0_linear_2648_6591"
+          id={`${id}paint0_linear_2648_6591`}
           x1="36.5"
           y1="7"
           x2="32.5"

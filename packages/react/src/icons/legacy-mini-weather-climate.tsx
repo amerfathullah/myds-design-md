@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const MiniWeatherClimateIcon: FunctionComponent<
   SVGProps<SVGSVGElement>
 > = (props) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="24"
@@ -21,7 +24,7 @@ export const MiniWeatherClimateIcon: FunctionComponent<
       <g id="agency-icons/mini/weather-climate">
         <g id="Group 41">
           <g id="Union">
-            <mask id="path-1-inside-1_14447_1232" fill="white">
+            <mask id={`${id}path-1-inside-1_14447_1232`} fill="white">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
@@ -37,7 +40,7 @@ export const MiniWeatherClimateIcon: FunctionComponent<
             <path
               d="M9.93286 15.75V16.75H11.0519L10.9266 15.638L9.93286 15.75ZM18.4023 13.9224L17.4555 14.2442L17.7401 15.0816L18.606 14.9014L18.4023 13.9224ZM10.9266 15.638C10.9132 15.5191 10.9062 15.398 10.9062 15.275H8.90625C8.90625 15.4731 8.91739 15.6689 8.93915 15.862L10.9266 15.638ZM10.9062 15.275C10.9062 13.4846 12.3918 12 14.2656 12V10C11.3242 10 8.90625 12.3434 8.90625 15.275H10.9062ZM14.2656 12C15.7605 12 17.0154 12.9492 17.4555 14.2442L19.3491 13.6006C18.635 11.4993 16.6219 10 14.2656 10V12ZM18.606 14.9014C18.7674 14.8679 18.9357 14.85 19.1094 14.85V12.85C18.7981 12.85 18.4933 12.8821 18.1986 12.9434L18.606 14.9014ZM19.1094 14.85C20.4482 14.85 21.5 15.9093 21.5 17.175H23.5C23.5 14.768 21.5157 12.85 19.1094 12.85V14.85ZM21.5 17.175C21.5 18.4407 20.4482 19.5 19.1094 19.5V21.5C21.5157 21.5 23.5 19.582 23.5 17.175H21.5ZM19.1094 19.5H9.42188V21.5H19.1094V19.5ZM9.42188 19.5C8.61808 19.5 8 18.8661 8 18.125H6C6 20.0073 7.55054 21.5 9.42188 21.5V19.5ZM8 18.125C8 17.3839 8.61808 16.75 9.42188 16.75V14.75C7.55054 14.75 6 16.2427 6 18.125H8ZM9.42188 16.75H9.93286V14.75H9.42188V16.75Z"
               fill="currentColor"
-              mask="url(#path-1-inside-1_14447_1232)"
+              mask={`url(#${id}path-1-inside-1_14447_1232)`}
             />
           </g>
           <path

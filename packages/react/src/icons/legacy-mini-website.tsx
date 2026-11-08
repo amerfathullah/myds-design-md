@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const MiniWebsiteIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
 ) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="24"
@@ -18,7 +21,10 @@ export const MiniWebsiteIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icons/mini/website" clipPath="url(#clip0_14447_1250)">
+      <g
+        id="agency-icons/mini/website"
+        clipPath={`url(#${id}clip0_14447_1250)`}
+      >
         <path
           id="Vector 64"
           d="M13.3746 5.82876L14.3176 2.9997"
@@ -68,7 +74,7 @@ export const MiniWebsiteIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
         />
       </g>
       <defs>
-        <clipPath id="clip0_14447_1250">
+        <clipPath id={`${id}clip0_14447_1250`}>
           <rect width="24" height="24" fill="white" />
         </clipPath>
       </defs>

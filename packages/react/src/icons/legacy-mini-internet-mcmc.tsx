@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const MiniInternetMCMCIcon: FunctionComponent<
   SVGProps<SVGSVGElement>
 > = (props) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="24"
@@ -30,7 +33,7 @@ export const MiniInternetMCMCIcon: FunctionComponent<
           />
           <g id="Mask group">
             <mask
-              id="mask0_14447_1242"
+              id={`${id}mask0_14447_1242`}
               style={{ maskType: "alpha" }}
               maskUnits="userSpaceOnUse"
               x="3"
@@ -40,7 +43,7 @@ export const MiniInternetMCMCIcon: FunctionComponent<
             >
               <circle id="Ellipse 12" cx="12" cy="12" r="9" fill="white" />
             </mask>
-            <g mask="url(#mask0_14447_1242)">
+            <g mask={`url(#${id}mask0_14447_1242)`}>
               <g id="Group 24">
                 <path
                   id="Vector 76"

@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const TelegramIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
 ) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="20"
@@ -18,7 +21,7 @@ export const TelegramIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="SocMed Icon/Telegram" clipPath="url(#clip0_393_1220)">
+      <g id="SocMed Icon/Telegram" clipPath={`url(#${id}clip0_393_1220)`}>
         <path
           id="Vector"
           fillRule="evenodd"
@@ -28,7 +31,7 @@ export const TelegramIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
         />
       </g>
       <defs>
-        <clipPath id="clip0_393_1220">
+        <clipPath id={`${id}clip0_393_1220`}>
           <rect width="20" height="20" fill="white" />
         </clipPath>
       </defs>

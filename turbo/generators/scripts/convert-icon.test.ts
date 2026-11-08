@@ -190,6 +190,14 @@ describe("svgToJsx", () => {
       ).toThrow(/<svg:STYLE>/);
     });
 
+    test("a <foreignObject>, whose HTML can name an id, as in <label for>", () => {
+      expect(() =>
+        svgToJsx(
+          `<svg><foreignObject width="10" height="10"><input id="n"/><label for="n">A</label></foreignObject></svg>`,
+        ),
+      ).toThrow(/<foreignObject>/);
+    });
+
     test("a <script> element, which can look an id up", () => {
       expect(() =>
         svgToJsx(
@@ -225,6 +233,11 @@ describe("svgToJsx", () => {
       ["in a style attribute", `style="mask: URL(#a)"`],
       ["spelt with a CSS escape", `fill="u\\72l(#a)"`],
       ["spelt with an entity", `fill="&#x55;rl(#a)"`],
+      // CSS reads a CRLF as one newline, which a hex escape then ends with
+      [
+        "spelt with a CSS escape ended by a CRLF",
+        `fill="\\75&#13;&#10;rl(#a)"`,
+      ],
     ])("a url() it can't read as a reference to its own id, %s", (_, ref) => {
       expect(() => svgToJsx(`<svg><mask id="a"/><path ${ref}/></svg>`)).toThrow(
         /url\(/i,
@@ -241,6 +254,22 @@ describe("svgToJsx", () => {
       expect(() => svgToJsx(`<svg><path id="a"/><use ${ref}/></svg>`)).toThrow(
         /href/,
       );
+    });
+
+    test.each([
+      ["in a style attribute", `style="background: -moz-element(#a)"`],
+      ["in any letter case, CSS-escaped", `fill="\\45lement(#a)"`],
+    ])("a CSS element(), which paints an element by its id, %s", (_, ref) => {
+      expect(() => svgToJsx(`<svg><g id="a"/><path ${ref}/></svg>`)).toThrow(
+        /element\(/i,
+      );
+    });
+
+    test("says what it found without quoting a long value in full", () => {
+      const image = `data:image/png;base64,${"A".repeat(10_000)}`;
+      expect(() =>
+        svgToJsx(`<svg><image xlink:href="${image}"/></svg>`),
+      ).toThrow(/^It has xlink:href="data:image\/png;base64,A+…", .{1,300}$/);
     });
 
     test.each(["aria-labelledby", "aria-describedby", "ARIA-OWNS"])(

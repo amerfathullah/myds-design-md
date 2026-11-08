@@ -18,8 +18,8 @@ export const MiniPhcorpIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icons/mini/phcorp">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M16.722 8.86111C16.722 11.5557 15.1686 13.8875 12.9086 15.0099L9.86098 17.0417V12.5556C11.9013 12.5556 13.5554 10.9015 13.5554 8.86111C13.5554 6.82073 11.9013 5.16667 9.86098 5.16667C7.82064 5.16667 6.16661 6.82073 6.16661 8.86111V18.8889L3 21V8.86111C3 5.07182 6.07177 2 9.86098 2C13.6502 2 16.722 5.07182 16.722 8.86111Z"
             fill="currentColor"

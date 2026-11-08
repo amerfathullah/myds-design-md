@@ -21,9 +21,9 @@ export const BallotSPRIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icon/ballot-spr" clipPath={`url(#${id}clip0_14237_1226)`}>
-        <g id="agency-icons/mini/ballot-spr">
-          <g id="Vector">
+      <g clipPath={`url(#${id}clip0_14237_1226)`}>
+        <g>
+          <g>
             <path
               fillRule="evenodd"
               clipRule="evenodd"

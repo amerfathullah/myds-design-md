@@ -16,8 +16,8 @@ export const FontIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="WYSIWYG Icon">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M2.40356 16.4305H0L4.37618 4H7.15606L11.5383 16.4305H9.13475L5.81468 6.54923H5.71756L2.40356 16.4305ZM2.48247 11.5567H9.03763V13.3654H2.48247V11.5567Z"
             fill="currentColor"

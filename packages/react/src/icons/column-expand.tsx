@@ -18,9 +18,8 @@ export const ColumnExpandIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/column-expand">
+      <g>
         <path
-          id="Vector 146"
           d="M6 6L2 10L6 14"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -28,7 +27,6 @@ export const ColumnExpandIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
           strokeLinejoin="round"
         />
         <path
-          id="Vector 147"
           d="M14 14L18 10L14 6"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -36,7 +34,6 @@ export const ColumnExpandIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
           strokeLinejoin="round"
         />
         <path
-          id="Vector 160"
           d="M2 10L8 10"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -44,7 +41,6 @@ export const ColumnExpandIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
           strokeLinejoin="round"
         />
         <path
-          id="Vector 161"
           d="M12 10H18"
           stroke="currentColor"
           strokeWidth="1.5"

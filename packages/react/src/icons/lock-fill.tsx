@@ -18,8 +18,8 @@ export const LockFillIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/lock-opaque">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             fillRule="evenodd"
             clipRule="evenodd"

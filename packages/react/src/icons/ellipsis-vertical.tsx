@@ -18,8 +18,8 @@ export const EllipsisVerticalIcon: FunctionComponent<
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/options-vertical">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M10 9C10.5523 9 11 9.44772 11 10C11 10.5523 10.5523 11 10 11C9.44772 11 9 10.5523 9 10C9 9.44772 9.44772 9 10 9Z"
             fill="currentColor"

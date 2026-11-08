@@ -40,7 +40,8 @@ describe("svgToJsx", () => {
     ["stroke-linejoin", "strokeLinejoin"],
     ["stroke-miterlimit", "strokeMiterlimit"],
     ["stroke-width", "strokeWidth"],
-    ["xlink:href", "xlinkHref"],
+    // xlink:href as xlinkHref is under the references below: a link that
+    // isn't `#a` is refused
     ["xml:space", "xmlSpace"],
   ])("names %s as %s", (attribute, prop) => {
     expect(svgToJsx(`<svg><path ${attribute}="1"/></svg>`).jsx).toBe(
@@ -48,15 +49,50 @@ describe("svgToJsx", () => {
     );
   });
 
-  test("leaves the values of an SVG that refers to none of its ids alone, dashes and all", () => {
-    const { jsx, usesId } = svgToJsx(
-      `<svg><g id="Icon/cross" clip-path="url(other.svg#clip-path-1)"><path d="M-1 -2L3-4"/></g></svg>`,
-    );
+  // Figma's layer names, such as `Vector`, would repeat with every copy on a
+  // page, and an app's own id could resolve to one of them (#153)
+  describe("drops each id the SVG doesn't refer to", () => {
+    test("every id of an SVG that refers to none, leaving its other values alone, dashes and all", () => {
+      const { jsx, usesId } = svgToJsx(
+        `<svg><g id="Icon/cross" stroke-dasharray="1 -2"><path id="Vector 146" d="M-1 -2L3-4"/></g></svg>`,
+      );
 
-    expect(jsx).toBe(
-      `<svg {...props}><g id="Icon/cross" clipPath="url(other.svg#clip-path-1)"><path d="M-1 -2L3-4"/></g></svg>`,
-    );
-    expect(usesId).toBe(false);
+      expect(jsx).toBe(
+        `<svg {...props}><g strokeDasharray="1 -2"><path d="M-1 -2L3-4"/></g></svg>`,
+      );
+      expect(usesId).toBe(false);
+    });
+
+    test("an id nothing refers to, beside one that's referred to and prefixed", () => {
+      const { jsx, usesId } = svgToJsx(
+        `<svg><g id="Icon/cross" clip-path="url(#clip0)"><path id="Vector"/></g><clipPath id="clip0"/></svg>`,
+      );
+
+      expect(jsx).toBe(
+        "<svg {...props}><g clipPath={`url(#${id}clip0)`}><path/></g><clipPath id={`${id}clip0`}/></svg>",
+      );
+      expect(usesId).toBe(true);
+    });
+
+    test("with the whitespace before it, wherever it sits in the tag, leaving the tag's other whitespace as it was", () => {
+      expect(
+        svgToJsx(
+          `<svg id="root"><g id='a'><path id="b" d="M1"/><path d="M2" id="c"/><path d="M3" id="d" fill="none" /><path\n  id="e"\n  d="M4"\n/></g></svg>`,
+        ).jsx,
+      ).toBe(
+        `<svg {...props}><g><path d="M1"/><path d="M2"/><path d="M3" fill="none" /><path\n  d="M4"\n/></g></svg>`,
+      );
+    });
+
+    test("whose value only an entity-decoded reference matches, keeping it", () => {
+      expect(
+        svgToJsx(
+          `<svg><mask id="a&amp;b"/><path id="a&amp;c" mask="url(#a&amp;b)"/></svg>`,
+        ).jsx,
+      ).toBe(
+        "<svg {...props}><mask id={`${id}a&b`}/><path mask={`url(#${id}a&b)`}/></svg>",
+      );
+    });
   });
 
   // So two copies of an icon on a page never share an id, and a copy that's
@@ -103,13 +139,11 @@ describe("svgToJsx", () => {
       );
     });
 
-    test("leaving an id nothing refers to as it is, beside one that's referred to", () => {
+    test("in a link with any namespace prefix, rather than drop the id it names", () => {
       expect(
-        svgToJsx(
-          `<svg><g id="Icon/cross" clip-path="url(#clip0)"><path id="Vector"/></g><clipPath id="clip0"/></svg>`,
-        ).jsx,
+        svgToJsx(`<svg><path id="shape"/><use xl:href="#shape"/></svg>`).jsx,
       ).toBe(
-        '<svg {...props}><g id="Icon/cross" clipPath={`url(#${id}clip0)`}><path id="Vector"/></g><clipPath id={`${id}clip0`}/></svg>',
+        "<svg {...props}><path id={`${id}shape`}/><use xlHref={`#${id}shape`}/></svg>",
       );
     });
 
@@ -141,6 +175,96 @@ describe("svgToJsx", () => {
     });
   });
 
+  // It drops every id it doesn't see referred to, so a reference it can't
+  // read would lose its id, and the icon would draw wrong with nothing to say
+  // so (#153)
+  describe("refuses an SVG that might refer to an id in a way it doesn't recognise", () => {
+    test("a <style> element, whose rules can select an id", () => {
+      expect(() =>
+        svgToJsx(
+          `<svg><style>#a { fill: red }</style><path id="a" d="M1"/></svg>`,
+        ),
+      ).toThrow(/<style>/);
+      expect(() =>
+        svgToJsx(`<svg><svg:STYLE>#a{}</svg:STYLE><path id="a"/></svg>`),
+      ).toThrow(/<svg:STYLE>/);
+    });
+
+    test("a <script> element, which can look an id up", () => {
+      expect(() =>
+        svgToJsx(
+          `<svg><path id="a"/><script>document.getElementById("a")</script></svg>`,
+        ),
+      ).toThrow(/<script>/);
+    });
+
+    test.each([
+      "animate",
+      "set",
+      "animateMotion",
+      "animateTransform",
+      "mpath",
+      "animateColor",
+      "discard",
+    ])(
+      "an animation element, <%s>, which can name an id in its timing or target",
+      (element) => {
+        expect(() =>
+          svgToJsx(
+            `<svg><path id="a" d="M1"/><${element} begin="a.end"/></svg>`,
+          ),
+        ).toThrow(new RegExp(`<${element}>`));
+      },
+    );
+
+    test.each([
+      ["in upper case", `fill="URL(#a)"`],
+      ["in mixed case", `clip-path="Url(#a)"`],
+      ["to another document", `mask="url(other.svg#a)"`],
+      ["to a data URL", `fill="url(data:image/svg+xml,a)"`],
+      ["in a style attribute", `style="mask: URL(#a)"`],
+      ["spelt with a CSS escape", `fill="u\\72l(#a)"`],
+      ["spelt with an entity", `fill="&#x55;rl(#a)"`],
+    ])("a url() it can't read as a reference to its own id, %s", (_, ref) => {
+      expect(() => svgToJsx(`<svg><mask id="a"/><path ${ref}/></svg>`)).toThrow(
+        /url\(/i,
+      );
+    });
+
+    test.each([
+      ["with a space before the #", `href=" #a"`],
+      ["to another document", `href="other.svg#a"`],
+      ["with no id after the #", `xlink:href="#"`],
+      ["that's empty", `href=""`],
+      ["with another namespace prefix", `xl:href="a"`],
+    ])("an href %s", (_, ref) => {
+      expect(() => svgToJsx(`<svg><path id="a"/><use ${ref}/></svg>`)).toThrow(
+        /href/,
+      );
+    });
+
+    test.each(["aria-labelledby", "aria-describedby", "ARIA-OWNS"])(
+      "an ARIA attribute that names ids, %s",
+      (name) => {
+        expect(() =>
+          svgToJsx(`<svg ${name}="t"><title id="t">Close</title></svg>`),
+        ).toThrow(new RegExp(name));
+      },
+    );
+
+    test.each([
+      ["spaces around =", `<path id = "a" d="M1"/>`],
+      ["an unquoted value", `<path id=a d="M1"/>`],
+      ["an attribute with no value", `<path hidden id="a"/>`],
+      ["no space between attributes", `<path d="M1"id="a"/>`],
+    ])(
+      "an opening tag whose attributes it can't read in full: %s",
+      (_, tag) => {
+        expect(() => svgToJsx(`<svg>${tag}</svg>`)).toThrow(/<path/);
+      },
+    );
+  });
+
   test("leaves aria- and data- attributes dash-case, as React wants them", () => {
     expect(
       svgToJsx(`<svg aria-hidden="true"><path data-part="a"/></svg>`).jsx,
@@ -159,10 +283,10 @@ describe("svgToJsx", () => {
     ).toBe(`<svg {...props}><g style={{ mixBlendMode: "hard-light" }}/></svg>`);
     expect(
       svgToJsx(
-        `<svg><mask style="mask-type: alpha; -webkit-mask-clip: url(&quot;mask.svg#a&quot;);--depth:2;"/></svg>`,
+        `<svg><mask style="mask-type: alpha; -webkit-mask-clip: border-box; font-family: &quot;A; B&quot;;--depth:2;"/></svg>`,
       ).jsx,
     ).toBe(
-      `<svg {...props}><mask style={{ maskType: "alpha", WebkitMaskClip: "url(\\"mask.svg#a\\")", "--depth": "2" }}/></svg>`,
+      `<svg {...props}><mask style={{ maskType: "alpha", WebkitMaskClip: "border-box", fontFamily: "\\"A; B\\"", "--depth": "2" }}/></svg>`,
     );
   });
 

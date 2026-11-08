@@ -16,8 +16,8 @@ export const ListIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/list">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M2.5 3.5C2.5 2.94772 2.94772 2.5 3.5 2.5H16.5C17.0523 2.5 17.5 2.94772 17.5 3.5V4.5C17.5 5.05228 17.0523 5.5 16.5 5.5H3.5C2.94772 5.5 2.5 5.05228 2.5 4.5V3.5Z"
             stroke="currentColor"

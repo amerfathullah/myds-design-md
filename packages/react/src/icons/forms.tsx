@@ -18,8 +18,8 @@ export const FormsIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/forms">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M3 3.75C3 3.05964 3.55964 2.5 4.25 2.5H15.75C16.4404 2.5 17 3.05964 17 3.75C17 4.44036 16.4404 5 15.75 5H4.25C3.55964 5 3 4.44036 3 3.75Z"
             stroke="currentColor"

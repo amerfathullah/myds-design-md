@@ -18,9 +18,8 @@ export const AlignRightIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="WYSIWYG Icon">
+      <g>
         <path
-          id="Vector"
           d="M3 12H17M11 16H17M11 8H17M3 4H17"
           stroke="currentColor"
           strokeWidth="1.5"

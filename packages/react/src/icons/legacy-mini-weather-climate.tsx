@@ -21,9 +21,9 @@ export const MiniWeatherClimateIcon: FunctionComponent<
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icons/mini/weather-climate">
-        <g id="Group 41">
-          <g id="Union">
+      <g>
+        <g>
+          <g>
             <mask id={`${id}path-1-inside-1_14447_1232`} fill="white">
               <path
                 fillRule="evenodd"
@@ -44,42 +44,36 @@ export const MiniWeatherClimateIcon: FunctionComponent<
             />
           </g>
           <path
-            id="Vector 65"
             d="M2 11H3"
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
           <path
-            id="Vector 66"
             d="M4 5.5L4.5 6"
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
           <path
-            id="Vector 72"
             d="M10 3L10 4"
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
           <path
-            id="Vector 67"
             d="M15.5 5.5L15 6"
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
           <path
-            id="Vector 92"
             d="M5 16L4.26511 16.6763"
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
           <path
-            id="Subtract"
             fillRule="evenodd"
             clipRule="evenodd"
             d="M14.7779 9.52181C14.609 9.50737 14.4381 9.5 14.2656 9.5C11.3671 9.5 8.92331 11.588 8.47849 14.3635C7.95495 14.4917 7.47065 14.7241 7.0513 15.0384C5.80772 14.1288 5 12.6587 5 11C5 8.23858 7.23858 6 10 6C12.2468 6 14.1475 7.482 14.7779 9.52181Z"

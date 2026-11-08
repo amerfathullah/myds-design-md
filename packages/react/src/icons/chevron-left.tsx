@@ -18,9 +18,8 @@ export const ChevronLeftIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/chevron-left">
+      <g>
         <path
-          id="Vector 146"
           d="M11 5L6 10L11 15"
           stroke="currentColor"
           strokeWidth="1.5"

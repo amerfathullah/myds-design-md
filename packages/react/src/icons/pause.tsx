@@ -18,8 +18,8 @@ export const PauseIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/pause">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M5 16C4.44772 16 4 15.5523 4 15V5C4 4.44772 4.44772 4 5 4H6.5C7.05228 4 7.5 4.44772 7.5 5V15C7.5 15.5523 7.05228 16 6.5 16H5Z"
             stroke="currentColor"

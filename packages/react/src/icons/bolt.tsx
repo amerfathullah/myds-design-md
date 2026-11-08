@@ -16,9 +16,8 @@ export const BoltIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/bolt">
+      <g>
         <path
-          id="Vector"
           d="M3 12.2308L11.9091 2L10 8.76923H17L8.09091 18L10 12.2308H3Z"
           stroke="currentColor"
           strokeWidth="1.5"

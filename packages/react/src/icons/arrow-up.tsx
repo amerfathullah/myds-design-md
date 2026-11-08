@@ -18,9 +18,8 @@ export const ArrowUpIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/arrow-up">
+      <g>
         <path
-          id="Vector"
           d="M15.25 8.25L10 2.75M10 2.75L4.75 8.25M10 2.75V17.25"
           stroke="currentColor"
           strokeWidth="1.5"

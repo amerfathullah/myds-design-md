@@ -4,29 +4,25 @@
 // `url(#…)` and `href="#…"` references names an element inside it. A browser
 // resolves such a reference to the first element in the page with that id, so
 // copies that shared ids would draw with the first copy's, and hiding that copy
-// would blank or distort the others (#151). This checks every icon that
-// `@amerfathullah/myds-react/icon` exports, rendered on the page and on the
-// server, by its ids and references, not its pixels. It sits outside the icon
-// directory, which the icon generator rewrites.
-import {
-  act,
-  createElement,
-  Fragment,
-  type FunctionComponent,
-  type SVGProps,
-} from "react";
+// would blank or distort the others (#151). Nor does a copy carry an id that
+// nothing in it refers to, such as a Figma layer name like `Vector`, which
+// every copy would repeat, and which an app's own id could clash with (#153).
+// This checks every icon that `@amerfathullah/myds-react/icon` exports,
+// rendered on the page and on the server, by its ids and references, not its
+// pixels. It sits outside the icon directory, which the icon generator
+// rewrites.
+import { act, createElement, Fragment } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import * as icons from "../icons";
+import type { Icon } from "./icon-test-markup";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-
-type Icon = FunctionComponent<SVGProps<SVGSVGElement>>;
 
 // The deprecated Jata Negara keeps its source's fixed ids until the next major
 // deletes it (ADR-0007, #140)
@@ -58,6 +54,14 @@ function strayReferences(copy: Element): string[] {
   return references(copy).filter(
     (id) => !copy.contains(document.getElementById(id)),
   );
+}
+
+/** The ids in the copy, the copy's own too, that nothing in it refers to */
+function unreferencedIds(copy: Element): string[] {
+  const referred = new Set(references(copy));
+  return [copy, ...copy.querySelectorAll("[id]")]
+    .map((element) => element.id)
+    .filter((id) => id && !referred.has(id));
 }
 
 /** The ids both copies refer to */
@@ -112,6 +116,12 @@ describe.each(checked)("two copies of %s", (_, icon) => {
     const copies = await renderOnPage(icon);
 
     for (const copy of copies) expect(strayReferences(copy)).toEqual([]);
+  });
+
+  test("each carry only ids they refer to, rendered on the page", async () => {
+    const copies = await renderOnPage(icon);
+
+    for (const copy of copies) expect(unreferencedIds(copy)).toEqual([]);
   });
 
   test("refer to no id in common, rendered on the server, and hydrate with no mismatch", async () => {

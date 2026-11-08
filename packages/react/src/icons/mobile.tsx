@@ -18,8 +18,8 @@ export const MobileIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/mobile">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M10.5 14.5C10.5 14.7761 10.2761 15 10 15C9.72386 15 9.5 14.7761 9.5 14.5C9.5 14.2239 9.72386 14 10 14C10.2761 14 10.5 14.2239 10.5 14.5Z"
             fill="currentColor"

@@ -18,9 +18,8 @@ export const ArrowIncomingIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/arrow-incoming">
+      <g>
         <path
-          id="Vector"
           d="M15 5L5 15M5 15V6.66667M5 15H13.3333"
           stroke="currentColor"
           strokeWidth="1.5"

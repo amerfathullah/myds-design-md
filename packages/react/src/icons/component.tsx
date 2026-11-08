@@ -18,8 +18,8 @@ export const ComponentIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/component">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M10 2L13.2063 5.2063L10 8.41259L6.79371 5.2063L10 2Z"
             stroke="currentColor"

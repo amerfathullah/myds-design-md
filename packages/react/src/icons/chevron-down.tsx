@@ -18,9 +18,8 @@ export const ChevronDownIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/chevron-down">
+      <g>
         <path
-          id="Vector 146"
           d="M5 8L10 13L15 8"
           stroke="currentColor"
           strokeWidth="1.5"

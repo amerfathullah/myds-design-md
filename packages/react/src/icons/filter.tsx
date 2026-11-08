@@ -18,9 +18,8 @@ export const FilterIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/filter">
+      <g>
         <path
-          id="Vector"
           d="M3 6H17M5 10H15M7 14H13"
           stroke="currentColor"
           strokeWidth="1.5"

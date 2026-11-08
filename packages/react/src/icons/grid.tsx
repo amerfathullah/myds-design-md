@@ -16,8 +16,8 @@ export const GridIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/grid">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M2.5 3.7375C2.5 3.05405 3.05406 2.5 3.73752 2.5H7.26248C7.94594 2.5 8.5 3.05405 8.5 3.7375V7.2625C8.5 7.94595 7.94594 8.5 7.26248 8.5H3.73752C3.05406 8.5 2.5 7.94595 2.5 7.2625V3.7375Z"
             stroke="currentColor"

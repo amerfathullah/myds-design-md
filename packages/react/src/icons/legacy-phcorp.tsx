@@ -21,9 +21,9 @@ export const PhcorpIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icon/phcorp" clipPath={`url(#${id}clip0_14237_1230)`}>
-        <g id="agency-icons/mini/phcorp">
-          <g id="Vector">
+      <g clipPath={`url(#${id}clip0_14237_1230)`}>
+        <g>
+          <g>
             <path
               d="M20.722 12.8611C20.722 15.5557 19.1686 17.8875 16.9086 19.0099L13.861 21.0417V16.5556C15.9013 16.5556 17.5554 14.9015 17.5554 12.8611C17.5554 10.8207 15.9013 9.16667 13.861 9.16667C11.8206 9.16667 10.1666 10.8207 10.1666 12.8611V22.8889L7 25V12.8611C7 9.07182 10.0718 6 13.861 6C17.6502 6 20.722 9.07182 20.722 12.8611Z"
               fill="currentColor"

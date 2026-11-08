@@ -16,9 +16,8 @@ export const PlusIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/plus">
+      <g>
         <path
-          id="Vector"
           d="M10 4V16M16 10H4"
           stroke="currentColor"
           strokeWidth="1.5"

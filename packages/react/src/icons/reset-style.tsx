@@ -18,8 +18,8 @@ export const ResetStyleIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="WYSIWYG Icon">
-        <g id="Vector">
+      <g>
+        <g>
           <path
             d="M5.46973 5.46967L7.9394 3L9.00006 4.06066L6.53039 6.53033L8.96967 9.03033L7.9394 10.0607L5.46973 7.59099L3.00006 10.0607L1.9394 9L4.40907 6.53033L1.9394 4.06066L3.00006 3L5.46973 5.46967Z"
             fill="currentColor"

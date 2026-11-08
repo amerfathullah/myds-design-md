@@ -21,10 +21,10 @@ export const WeatherMETIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icon/weather-met" clipPath={`url(#${id}clip0_14237_1222)`}>
-        <g id="agency-icons/mini/weather-climate">
-          <g id="Group 41">
-            <g id="Union">
+      <g clipPath={`url(#${id}clip0_14237_1222)`}>
+        <g>
+          <g>
+            <g>
               <mask id={`${id}path-1-inside-1_14237_1222`} fill="white">
                 <path
                   fillRule="evenodd"
@@ -45,42 +45,36 @@ export const WeatherMETIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
               />
             </g>
             <path
-              id="Vector 65"
               d="M6 15H7"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
-              id="Vector 66"
               d="M8 9.5L8.5 10"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
-              id="Vector 72"
               d="M14 7L14 8"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
-              id="Vector 67"
               d="M19.5 9.5L19 10"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
-              id="Vector 92"
               d="M9 20L8.26511 20.6763"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
-              id="Subtract"
               fillRule="evenodd"
               clipRule="evenodd"
               d="M18.7779 13.5218C18.609 13.5074 18.4381 13.5 18.2656 13.5C15.3671 13.5 12.9233 15.588 12.4785 18.3635C11.955 18.4917 11.4707 18.7241 11.0513 19.0384C9.80772 18.1288 9 16.6587 9 15C9 12.2386 11.2386 10 14 10C16.2468 10 18.1475 11.482 18.7779 13.5218Z"

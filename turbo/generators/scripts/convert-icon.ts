@@ -96,14 +96,53 @@ ${idDeclaration}  return (
 
 // An opening tag, whose attribute values may hold a `>`
 const openingTag = /<([A-Za-z][\w:.-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
-const attribute = /([^\s=/]+)=(?:"([^"]*)"|'([^']*)')/g;
+// An attribute, with the whitespace before it, and its value quoted. Both
+// patterns below are built from it, so a tag `readableAttributes` accepts is
+// one whose every attribute `attribute` reads.
+const attributeSource = String.raw`(\s+)([^\s=/"'<>]+)=(?:"([^"]*)"|'([^']*)')`;
+const attribute = new RegExp(attributeSource, "g");
+// What follows an opening tag's name when `attribute` reads every attribute
+// in it: those attributes, then the `/` of an empty element, if it has one
+const readableAttributes = new RegExp(
+  String.raw`^(?:${attributeSource})*\s*(?:\/\s*)?$`,
+);
 
 // A `url()` that points into the same document, `url(#a)`, quoted or not:
 // the id is group 1, 2 or 3
 const localUrl = /url\(\s*(?:"#([^"]*)"|'#([^']*)'|#([^\s"')]*))\s*\)/g;
 
-// The attributes whose value is a link, where `#a` points at the id `a`
-const linkAttributes = new Set(["href", "xlink:href"]);
+// An attribute whose value is a link, where `#a` points at the id `a`:
+// `href`, `xlink:href`, or `href` under any other namespace prefix
+const linkAttribute = /^(?:[^:]+:)?href$/i;
+
+// The elements it refuses, which can refer to an id in ways it doesn't read: a
+// stylesheet's selectors and `url()`s, a script's lookups, an animation's
+// target and timing, such as `begin="a.end"`, and the HTML in a
+// `<foreignObject>`, which names ids bare, as in `<label for="a">`
+const refusedElements = new Set([
+  "style",
+  "script",
+  "foreignobject",
+  "animate",
+  "animatecolor",
+  "animatemotion",
+  "animatetransform",
+  "discard",
+  "mpath",
+  "set",
+]);
+
+// ARIA's attributes that refer to ids by name, with no `#`
+const ariaIdAttributes = new Set([
+  "aria-activedescendant",
+  "aria-controls",
+  "aria-describedby",
+  "aria-details",
+  "aria-errormessage",
+  "aria-flowto",
+  "aria-labelledby",
+  "aria-owns",
+]);
 
 export interface Jsx {
   jsx: string;
@@ -123,12 +162,21 @@ export interface Jsx {
  * - an id the SVG refers to, with `url(#a)` in any attribute or with
  *   `href="#a"` or `xlink:href="#a"`, is prefixed with `id`, where it's
  *   defined and wherever it's referred to. Each copy of the icon then refers
- *   only to its own clip paths, masks and gradients. Ids nothing refers to
- *   stay as they are.
+ *   only to its own clip paths, masks and gradients.
  *
- * It throws if the SVG refers to an id from somewhere it can't prefix, such as
- * a `style` attribute, or to an id the SVG doesn't define, rather than leave a
- * fixed id that every copy on a page would share.
+ * Every other `id` attribute is dropped, with the whitespace before it. Those
+ * are the source's layer names, such as `Vector` or `Icon/cross`, which would
+ * repeat with every copy on a page, and which an app's own id could resolve
+ * to instead. An element left with no attributes stays.
+ *
+ * It throws, rather than leave a fixed id that every copy on a page would
+ * share, if the SVG refers to an id from somewhere it can't prefix, such as a
+ * `style` attribute, or to an id the SVG doesn't define. It also throws,
+ * rather than drop an id the SVG needs, for the other ways it knows an SVG can
+ * refer to an id: a `<style>`, `<script>`, animation or `<foreignObject>`
+ * element, a `url(` that isn't `url(#a)`, a CSS `element()`, a link that
+ * isn't `#a`, an ARIA attribute that names ids, and an opening tag whose
+ * attributes it can't read in full.
  */
 export function svgToJsx(svg: string): Jsx {
   const source = svg.trim();
@@ -138,13 +186,15 @@ export function svgToJsx(svg: string): Jsx {
     const selfClosing = rest.trimEnd().endsWith("/");
     const attributes = rest
       .replace(/\/\s*$/, "")
-      .replace(attribute, (_, name: string, double?: string, single?: string) =>
-        jsxAttribute(
-          name,
-          double ?? single ?? "",
-          double === undefined,
-          ownIds,
-        ),
+      .replace(
+        attribute,
+        (_, space: string, name: string, double?: string, single?: string) => {
+          const value = double ?? single ?? "";
+          if (name === "id" && !ownIds.has(decodeEntities(value))) return "";
+          return (
+            space + jsxAttribute(name, value, double === undefined, ownIds)
+          );
+        },
       );
     const props = tag === "svg" && root ? " {...props}" : "";
     root = false;
@@ -153,14 +203,35 @@ export function svgToJsx(svg: string): Jsx {
   return { jsx, usesId: ownIds.size > 0 };
 }
 
-/** Each attribute of each opening tag in the SVG, its value as written */
-function attributesOf(svg: string): { name: string; value: string }[] {
-  return [...svg.matchAll(openingTag)].flatMap(([, , rest]) =>
-    [...rest!.matchAll(attribute)].map(([, name, double, single]) => ({
+interface Tag {
+  /** Its name as written, with any namespace prefix */
+  name: string;
+  /** Its attributes, each value as written */
+  attributes: { name: string; value: string }[];
+}
+
+/**
+ * Each opening tag in the SVG. Throws for one with an attribute it can't read,
+ * such as one with spaces around its `=` or an unquoted value, rather than
+ * miss a reference in it.
+ */
+function tagsOf(svg: string): Tag[] {
+  return [...svg.matchAll(openingTag)].map(([written, name, rest]) => {
+    if (!readableAttributes.test(rest!)) {
+      throw new Error(
+        `Can't read every attribute of ${excerpt(written)}. Write each as name="value", after a space.`,
+      );
+    }
+    return {
       name: name!,
-      value: double ?? single ?? "",
-    })),
-  );
+      attributes: [...rest!.matchAll(attribute)].map(
+        ([, , name, double, single]) => ({
+          name: name!,
+          value: double ?? single ?? "",
+        }),
+      ),
+    };
+  });
 }
 
 interface Reference {
@@ -176,7 +247,7 @@ interface Reference {
  * value is as the browser reads it, entities decoded.
  */
 function references(name: string, value: string): Reference[] {
-  if (linkAttributes.has(name)) {
+  if (linkAttribute.test(name)) {
     return value.startsWith("#") ? [{ id: value.slice(1), at: 1 }] : [];
   }
   return [...value.matchAll(localUrl)].map((match) => {
@@ -190,17 +261,90 @@ function references(name: string, value: string): Reference[] {
 }
 
 /**
+ * Why the attribute might refer to an id in a way `references` doesn't read,
+ * or undefined if it can't: its value is as the browser reads it, entities
+ * decoded.
+ */
+function unrecognisedReferenceError(
+  name: string,
+  value: string,
+): string | undefined {
+  if (linkAttribute.test(name)) {
+    return /^#./s.test(value)
+      ? undefined
+      : "a link that isn't # directly followed by an id";
+  }
+  if (ariaIdAttributes.has(name.toLowerCase())) {
+    return "which refers to ids by name";
+  }
+  // As a CSS parser reads the value, escapes included
+  const css = cssUnescaped(value);
+  if (/element\(/i.test(css)) {
+    return "with a CSS element(), which paints an element by its id";
+  }
+  // Each `url(`, in any letter case, must start a `url(#a)` that `references`
+  // reads. A `url()` to another document can still name this one, by its
+  // address.
+  if ((css.match(/url\(/gi)?.length ?? 0) !== references(name, value).length) {
+    return "with a url() that the generator can't read as url(#a), in lower case, naming one of the SVG's own ids";
+  }
+  return undefined;
+}
+
+/**
+ * CSS text with its backslash escapes read, as a CSS parser reads them: after
+ * it reads each CRLF, CR and form feed as a newline, which can end a hex
+ * escape
+ */
+function cssUnescaped(text: string): string {
+  return text
+    .replace(/\r\n?|\f/g, "\n")
+    .replace(
+      /\\(?:([\da-f]{1,6})\s?|([^\n\da-f]))/gi,
+      (_, hex?: string, char?: string) =>
+        hex
+          ? String.fromCodePoint(Math.min(parseInt(hex, 16), 0x10ffff))
+          : char!,
+    );
+}
+
+/** Markup as an error message quotes it: cut short if it's long */
+function excerpt(text: string, length = 60): string {
+  return text.length > length ? `${text.slice(0, length)}…` : text;
+}
+
+/**
  * The ids the SVG refers to, every one of which it defines. Throws for a
  * reference in a `style` attribute, which the rewrite can't reach, and for a
  * reference to an id the SVG doesn't define.
+ *
+ * Every id it doesn't return is dropped, so it also throws for the other ways
+ * it knows an SVG can refer to an id (`refusedElements`,
+ * `unrecognisedReferenceError`), rather than let the icon lose an id it needs
+ * with nothing to say so.
  */
 function referencedIds(svg: string): Set<string> {
   const defined = new Set<string>();
   const referenced = new Set<string>();
-  for (const { name, value: written } of attributesOf(svg)) {
+  const attributes = tagsOf(svg).flatMap(({ name, attributes }) => {
+    const element = name.slice(name.lastIndexOf(":") + 1).toLowerCase();
+    if (refusedElements.has(element)) {
+      throw new Error(
+        `It has a <${name}> element, which can refer to an id in a way the generator doesn't read. The generator drops every id it doesn't see referred to, so it can't tell which ids to keep.`,
+      );
+    }
+    return attributes;
+  });
+  for (const { name, value: written } of attributes) {
     // Compared and rewritten as the browser reads them, entities decoded
     const value = decodeEntities(written);
     if (name === "id") defined.add(value);
+    const problem = unrecognisedReferenceError(name, value);
+    if (problem) {
+      throw new Error(
+        `It has ${name}="${excerpt(written)}", ${problem}. The generator drops every id it doesn't see referred to, so it can't tell whether that would break this.`,
+      );
+    }
     for (const { id: target } of references(name, value)) {
       if (name === "style") {
         throw new Error(

@@ -18,9 +18,8 @@ export const CheckIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Icon/check">
+      <g>
         <path
-          id="Vector"
           d="M4 11.4608L6.71103 14.5373C7.36204 15.276 8.53625 15.1978 9.08347 14.3792L16 4.0322"
           stroke="currentColor"
           strokeWidth="10%"

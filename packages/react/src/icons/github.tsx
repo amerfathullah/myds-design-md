@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const GithubIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
 ) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="20"
@@ -18,7 +21,7 @@ export const GithubIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="SocMed Icon/GitHub" clipPath="url(#clip0_393_1215)">
+      <g id="SocMed Icon/GitHub" clipPath={`url(#${id}clip0_393_1215)`}>
         <path
           id="Vector"
           fillRule="evenodd"
@@ -28,7 +31,7 @@ export const GithubIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
         />
       </g>
       <defs>
-        <clipPath id="clip0_393_1215">
+        <clipPath id={`${id}clip0_393_1215`}>
           <rect width="20" height="20" fill="white" />
         </clipPath>
       </defs>

@@ -64,8 +64,20 @@ export function componentName(source: string): string {
   );
 }
 
-/** A component that renders the SVG, named `${name}Icon` */
+/**
+ * A component that renders the SVG, named `${name}Icon`. If the SVG refers to
+ * its own ids, the component gets the `id` that prefixes them from
+ * `React.useId()`, so each copy on a page has its own; otherwise it calls no
+ * hook.
+ */
 export function convertIcon(name: string, svg: string): string {
+  const { jsx, usesId } = svgToJsx(svg);
+  const idDeclaration = usesId
+    ? `  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
+`
+    : "";
   return `import React from "react";
 import { FunctionComponent, SVGProps } from "react";
 
@@ -75,8 +87,8 @@ import { FunctionComponent, SVGProps } from "react";
  * @returns ${name}Icon
  */
 export const ${name}Icon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
-  return (
-    ${svgToJsx(svg)}
+${idDeclaration}  return (
+    ${jsx}
   );
 };
 `;
@@ -86,29 +98,138 @@ export const ${name}Icon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) =
 const openingTag = /<([A-Za-z][\w:.-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
 const attribute = /([^\s=/]+)=(?:"([^"]*)"|'([^']*)')/g;
 
+// A `url()` that points into the same document, `url(#a)`, quoted or not:
+// the id is group 1, 2 or 3
+const localUrl = /url\(\s*(?:"#([^"]*)"|'#([^']*)'|#([^\s"')]*))\s*\)/g;
+
+// The attributes whose value is a link, where `#a` points at the id `a`
+const linkAttributes = new Set(["href", "xlink:href"]);
+
+export interface Jsx {
+  jsx: string;
+  /**
+   * Whether the JSX reads `id`, the prefix for this copy's own ids, which the
+   * component must declare
+   */
+  usesId: boolean;
+}
+
 /**
  * The SVG as JSX that React accepts: attribute names in React's camelCase, a
  * `style` object, and the caller's props spread onto the root `<svg>`.
- * Attribute values stay as they are, except the icon colour, `#18181B`, which
- * becomes `currentColor`.
+ * Attribute values stay as they are, with two exceptions:
+ *
+ * - the icon colour, `#18181B`, becomes `currentColor`;
+ * - an id the SVG refers to, with `url(#a)` in any attribute or with
+ *   `href="#a"` or `xlink:href="#a"`, is prefixed with `id`, where it's
+ *   defined and wherever it's referred to. Each copy of the icon then refers
+ *   only to its own clip paths, masks and gradients. Ids nothing refers to
+ *   stay as they are.
+ *
+ * It throws if the SVG refers to an id from somewhere it can't prefix, such as
+ * a `style` attribute, or to an id the SVG doesn't define, rather than leave a
+ * fixed id that every copy on a page would share.
  */
-export function svgToJsx(svg: string): string {
+export function svgToJsx(svg: string): Jsx {
+  const source = svg.trim();
+  const ownIds = referencedIds(source);
   let root = true;
-  return svg.trim().replace(openingTag, (_, tag: string, rest: string) => {
+  const jsx = source.replace(openingTag, (_, tag: string, rest: string) => {
     const selfClosing = rest.trimEnd().endsWith("/");
     const attributes = rest
       .replace(/\/\s*$/, "")
       .replace(attribute, (_, name: string, double?: string, single?: string) =>
-        jsxAttribute(name, double ?? single ?? "", double === undefined),
+        jsxAttribute(
+          name,
+          double ?? single ?? "",
+          double === undefined,
+          ownIds,
+        ),
       );
     const props = tag === "svg" && root ? " {...props}" : "";
     root = false;
     return `<${tag}${attributes}${props}${selfClosing ? "/" : ""}>`;
   });
+  return { jsx, usesId: ownIds.size > 0 };
 }
 
-function jsxAttribute(name: string, value: string, singleQuoted: boolean) {
+/** Each attribute of each opening tag in the SVG, its value as written */
+function attributesOf(svg: string): { name: string; value: string }[] {
+  return [...svg.matchAll(openingTag)].flatMap(([, , rest]) =>
+    [...rest!.matchAll(attribute)].map(([, name, double, single]) => ({
+      name: name!,
+      value: double ?? single ?? "",
+    })),
+  );
+}
+
+interface Reference {
+  /** The id it points at */
+  id: string;
+  /** Where the id starts in the attribute's value, just after its `#` */
+  at: number;
+}
+
+/**
+ * The attribute's references to ids in the same SVG: each `url(#a)` in its
+ * value, or the whole value of an `href` or `xlink:href` that's `#a`. The
+ * value is as the browser reads it, entities decoded.
+ */
+function references(name: string, value: string): Reference[] {
+  if (linkAttributes.has(name)) {
+    return value.startsWith("#") ? [{ id: value.slice(1), at: 1 }] : [];
+  }
+  return [...value.matchAll(localUrl)].map((match) => {
+    const [url, double, single, bare] = match;
+    return {
+      id: double ?? single ?? bare ?? "",
+      // The match's first `#` is the reference's
+      at: match.index + url.indexOf("#") + 1,
+    };
+  });
+}
+
+/**
+ * The ids the SVG refers to, every one of which it defines. Throws for a
+ * reference in a `style` attribute, which the rewrite can't reach, and for a
+ * reference to an id the SVG doesn't define.
+ */
+function referencedIds(svg: string): Set<string> {
+  const defined = new Set<string>();
+  const referenced = new Set<string>();
+  for (const { name, value: written } of attributesOf(svg)) {
+    // Compared and rewritten as the browser reads them, entities decoded
+    const value = decodeEntities(written);
+    if (name === "id") defined.add(value);
+    for (const { id: target } of references(name, value)) {
+      if (name === "style") {
+        throw new Error(
+          `It refers to #${target} in a style attribute, where the generator can't give each copy of the icon its own id. Refer to it with an attribute instead, such as mask="url(#${target})".`,
+        );
+      }
+      referenced.add(target);
+    }
+  }
+  for (const target of referenced) {
+    if (!defined.has(target)) {
+      throw new Error(
+        `It refers to #${target}, but no element in it has that id`,
+      );
+    }
+  }
+  return referenced;
+}
+
+function jsxAttribute(
+  name: string,
+  value: string,
+  singleQuoted: boolean,
+  ownIds: Set<string>,
+) {
   if (name === "style") return `style={${styleObject(value)}}`;
+
+  const prefixed = ownIds.size ? withOwnIds(name, value, ownIds) : undefined;
+  if (prefixed !== undefined) return `${propName(name)}={\`${prefixed}\`}`;
 
   const quote = singleQuoted ? "'" : '"';
   const jsxValue =
@@ -116,6 +237,35 @@ function jsxAttribute(name: string, value: string, singleQuoted: boolean) {
       ? "currentColor"
       : value;
   return `${propName(name)}=${quote}${jsxValue}${quote}`;
+}
+
+/**
+ * The body of a template literal that gives the attribute's value with each of
+ * the copy's own ids prefixed with `${id}`, or undefined if the value holds
+ * none of them. A JSX string decodes entities and a template literal doesn't,
+ * so the value is decoded first.
+ */
+function withOwnIds(
+  name: string,
+  written: string,
+  ownIds: Set<string>,
+): string | undefined {
+  const value = decodeEntities(written);
+  // An id attribute is the id's definition, which starts the value
+  const ids = name === "id" ? [{ id: value, at: 0 }] : references(name, value);
+  const starts = ids.filter(({ id }) => ownIds.has(id)).map(({ at }) => at);
+  if (!starts.length) return undefined;
+  // The value's text, cut where each id starts, with `${id}` in each cut
+  return [0, ...starts]
+    .map((start, index, cuts) =>
+      templateText(value.slice(start, cuts[index + 1])),
+    )
+    .join("${id}");
+}
+
+/** Text as it reads inside a template literal */
+function templateText(text: string): string {
+  return text.replace(/\\|`|\$(?=\{)/g, (char) => `\\${char}`);
 }
 
 function propName(name: string): string {

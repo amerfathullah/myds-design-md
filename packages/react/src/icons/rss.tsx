@@ -7,6 +7,9 @@ import { FunctionComponent, SVGProps } from "react";
  * @returns RSSIcon
  */
 export const RSSIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="20"
@@ -16,7 +19,7 @@ export const RSSIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="Type=RSS" clipPath="url(#clip0_12121_1213)">
+      <g id="Type=RSS" clipPath={`url(#${id}clip0_12121_1213)`}>
         <path
           id="Subtract"
           fillRule="evenodd"
@@ -26,7 +29,7 @@ export const RSSIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
         />
       </g>
       <defs>
-        <clipPath id="clip0_12121_1213">
+        <clipPath id={`${id}clip0_12121_1213`}>
           <rect width="20" height="20" fill="white" />
         </clipPath>
       </defs>

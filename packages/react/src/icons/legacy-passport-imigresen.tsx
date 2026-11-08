@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const PassportImigresenIcon: FunctionComponent<
   SVGProps<SVGSVGElement>
 > = (props) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="32"
@@ -18,7 +21,10 @@ export const PassportImigresenIcon: FunctionComponent<
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icon/passport-imigresen" clipPath="url(#clip0_14237_1231)">
+      <g
+        id="agency-icon/passport-imigresen"
+        clipPath={`url(#${id}clip0_14237_1231)`}
+      >
         <g id="agency-icons/mini/passport-imigresen">
           <g id="Group 38">
             <path
@@ -39,7 +45,7 @@ export const PassportImigresenIcon: FunctionComponent<
         </g>
       </g>
       <defs>
-        <clipPath id="clip0_14237_1231">
+        <clipPath id={`${id}clip0_14237_1231`}>
           <rect width="32" height="32" fill="white" />
         </clipPath>
       </defs>

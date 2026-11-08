@@ -9,6 +9,9 @@ import { FunctionComponent, SVGProps } from "react";
 export const UNHCRIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
 ) => {
+  // A prefix for the ids this SVG refers to, unique to this copy, so that
+  // hiding another copy on the page can't change how this one draws
+  const id = React.useId();
   return (
     <svg
       width="32"
@@ -18,7 +21,7 @@ export const UNHCRIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g id="agency-icon/unhcr" clipPath="url(#clip0_14237_1220)">
+      <g id="agency-icon/unhcr" clipPath={`url(#${id}clip0_14237_1220)`}>
         <g id="agency-icons/mini/unhcr">
           <g id="Group 52">
             <g id="Group 51">
@@ -42,7 +45,7 @@ export const UNHCRIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
         </g>
       </g>
       <defs>
-        <clipPath id="clip0_14237_1220">
+        <clipPath id={`${id}clip0_14237_1220`}>
           <rect width="32" height="32" fill="white" />
         </clipPath>
       </defs>

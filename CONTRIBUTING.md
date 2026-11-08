@@ -68,6 +68,7 @@ The icon components in `packages/react/src/icons`, which `@amerfathullah/myds-re
    - Name the file in lower-case dash-case. `arrow-back.svg` becomes `arrow-back.tsx`, which exports `ArrowBackIcon`.
    - Words on the generator's upper-case list (`turbo/generators/scripts/convert-icon.ts`), mostly agency acronyms, stay upper-case. A `legacy-` prefix stays in the file name but leaves the component's: `legacy-police-pdrm.svg` exports `PolicePDRMIcon`.
    - A fill or stroke of `#18181B` becomes `currentColor`, so that part takes the text colour. Every other colour stays fixed.
+   - An id the SVG refers to, with `url(#…)` in an attribute such as `clip-path`, `mask` or `fill`, or with `href="#…"`, gets a prefix from `React.useId()`, so each copy of the icon on a page has its own clip paths, masks and gradients. Ids nothing refers to stay as they are. The generator refuses a reference it can't prefix, such as one in a `style` attribute, and a reference to an id the SVG doesn't define.
 2. From anywhere in the repository, run:
 
    ```sh

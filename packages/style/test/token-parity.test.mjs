@@ -39,11 +39,16 @@ const departures = {
   },
 };
 
-// The departure a colour utility such as `bg-fr-primary` takes its colour from
-function departureOf(utility) {
-  const token = utility.match(/^(?:bg|text|border)-([\w-]+)$/)?.[1];
-  return Object.hasOwn(departures, token) ? departures[token] : undefined;
-}
+// Each departure's colour utilities, as tokenUtilities() writes them, such
+// as `bg-fr-primary`, with the departure it takes its colour from
+const departed = new Map(
+  Object.entries(departures).flatMap(([token, departure]) =>
+    ["bg", "text", "border"].map((utility) => [
+      `${utility}-${token}`,
+      departure,
+    ]),
+  ),
+);
 
 test("every token utility DESIGN.md documents resolves as it did in v1, or to its listed departure, in both themes", async () => {
   const v1 = JSON.parse(
@@ -55,15 +60,10 @@ test("every token utility DESIGN.md documents resolves as it did in v1, or to it
   const measured = await measure(css, utilities);
 
   // Every departure is a token DESIGN.md documents, so the list can't go stale
-  const departed = utilities
-    .map(({ utility }) => utility)
-    .filter(departureOf)
-    .sort();
+  const documented = new Set(utilities.map(({ utility }) => utility));
   assert.deepEqual(
-    departed,
-    Object.keys(departures)
-      .flatMap((token) => ["bg", "text", "border"].map((u) => `${u}-${token}`))
-      .sort(),
+    [...departed.keys()].filter((utility) => !documented.has(utility)),
+    [],
   );
 
   const differences = [];
@@ -72,7 +72,7 @@ test("every token utility DESIGN.md documents resolves as it did in v1, or to it
       v1[utility],
       `${utility} is missing from the v1 fixture; recapture it`,
     );
-    const departure = departureOf(utility);
+    const departure = departed.get(utility);
     for (const theme of ["light", "dark"]) {
       for (const [prop, v1Value] of Object.entries(v1[utility][theme])) {
         const [source, expected] = departure

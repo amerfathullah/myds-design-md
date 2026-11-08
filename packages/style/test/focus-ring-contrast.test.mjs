@@ -14,34 +14,34 @@ import { compile } from "./compile.mjs";
 
 const tokens = ["fr-primary", "fr-danger"];
 
-// Each surface a focus ring sits on, as the utility that fills it
-const surfaces = {
+// The token of each surface a focus ring sits on, which `bg-<token>` fills
+const surfaces = [
   // The page, cards, fields and the Footer
-  "bg-white": "bg-bg-white",
-  "bg-white-hover": "bg-bg-white-hover",
-  "bg-gray-50": "bg-bg-gray-50",
+  "bg-white",
+  "bg-white-hover",
+  "bg-gray-50",
   // The Masthead, enclosed tabs, disabled fields, a selected pill tab
-  "bg-washed": "bg-bg-washed",
-  "bg-washed-active": "bg-bg-washed-active",
+  "bg-washed",
+  "bg-washed-active",
   // Menus, popovers, select content, dialogs and toasts
-  "bg-dialog": "bg-bg-dialog",
-  "bg-dialog-active": "bg-bg-dialog-active",
+  "bg-dialog",
+  "bg-dialog-active",
   // The calendar's range cells
-  "bg-primary-100": "bg-bg-primary-100",
+  "bg-primary-100",
   // Callouts
-  "bg-primary-50": "bg-bg-primary-50",
-  "bg-danger-50": "bg-bg-danger-50",
-  "bg-success-50": "bg-bg-success-50",
-  "bg-warning-50": "bg-bg-warning-50",
+  "bg-primary-50",
+  "bg-danger-50",
+  "bg-success-50",
+  "bg-warning-50",
   // The Masthead trigger's fill below `sm:`, under its inset ring
-  "otl-gray-200": "bg-otl-gray-200",
-};
+  "otl-gray-200",
+];
 
 // Each pair's cell: a 40px square of the surface with a 16px box in the
 // middle, which draws the ring 3px out, from 9 to 12px in. All at whole
 // pixels, so no sampled pixel is only partly covered.
 const cell = 40;
-const pairs = Object.keys(surfaces).flatMap((surface, row) =>
+const pairs = surfaces.flatMap((surface, row) =>
   tokens.map((token, column) => ({
     surface,
     token,
@@ -57,16 +57,15 @@ let browser;
 let html;
 before(async () => {
   const classes = [
-    "bg-bg-white",
     "ring-3",
-    ...Object.values(surfaces),
+    ...surfaces.map((surface) => `bg-${surface}`),
     ...tokens.map((token) => `ring-${token}`),
   ];
   const css = await compile(`@source inline("${classes.join(" ")}");`);
   const cells = pairs
     .map(
       ({ surface, token, x, y }) =>
-        `<div data-surface="${surface}" class="${surfaces[surface]}" style="position:absolute;left:${x}px;top:${y}px;width:${cell}px;height:${cell}px"><div data-ring="${token}" class="ring-3 ring-${token}" style="position:absolute;left:12px;top:12px;width:16px;height:16px"></div></div>`,
+        `<div data-surface="${surface}" class="bg-${surface}" style="position:absolute;left:${x}px;top:${y}px;width:${cell}px;height:${cell}px"><div data-ring="${token}" class="ring-3 ring-${token}" style="position:absolute;left:12px;top:12px;width:16px;height:16px"></div></div>`,
     )
     .join("");
   html = `<!doctype html><html><head><style>${css}</style></head><body class="bg-bg-white" style="margin:0">${cells}</body></html>`;
@@ -89,10 +88,10 @@ function contrast(a, b) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Runs in the page: whether each surface's utility fills it and each ring
-// utility draws a ring, so a utility the preset doesn't generate fails
-// rather than measuring the page behind it
-function drawn() {
+// Runs in the page: the surfaces their utility leaves unfilled and the ring
+// tokens whose utility draws no ring, so a utility the preset doesn't
+// generate fails rather than measuring the page behind it
+function undrawn() {
   return {
     surfaces: [...document.querySelectorAll("[data-surface]")]
       .filter((e) => getComputedStyle(e).backgroundColor === "rgba(0, 0, 0, 0)")
@@ -133,7 +132,10 @@ test("fr-primary and fr-danger contrast at least 3:1 with every surface a focus 
       (dark) => document.documentElement.classList.toggle("dark", dark),
       theme === "dark",
     );
-    assert.deepEqual(await page.evaluate(drawn), { surfaces: [], rings: [] });
+    assert.deepEqual(await page.evaluate(undrawn), {
+      surfaces: [],
+      rings: [],
+    });
     const painted = await pixels(
       page,
       pairs.flatMap((pair) => [ringPixel(pair), surfacePixel(pair)]),

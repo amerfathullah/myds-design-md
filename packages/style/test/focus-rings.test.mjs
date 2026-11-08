@@ -448,14 +448,15 @@ function edgePoints({ selector, inset }) {
   return boxes.map(({ left, top, right, bottom }) => {
     const x = Math.floor((left + right) / 2);
     const y = Math.floor((top + bottom) / 2);
-    // Positive moves in from the box, negative out
-    const band = inset ? 1.5 : -1.5;
-    const side = inset ? Math.ceil(top) + 4 : y;
+    // From the box's edge to the middle of the 3px band: in for an inset
+    // ring, out for an outer one
+    const toMiddle = inset ? 1.5 : -1.5;
+    const sideY = inset ? Math.ceil(top) + 4 : y;
     return {
-      top: { x, y: Math.floor(top + band) },
-      bottom: { x, y: Math.floor(bottom - band) },
-      left: { x: Math.floor(left + band), y: side },
-      right: { x: Math.floor(right - band), y: side },
+      top: { x, y: Math.floor(top + toMiddle) },
+      bottom: { x, y: Math.floor(bottom - toMiddle) },
+      left: { x: Math.floor(left + toMiddle), y: sideY },
+      right: { x: Math.floor(right - toMiddle), y: sideY },
     };
   });
 }
@@ -522,7 +523,8 @@ test("each ring shows on all four sides, unclipped", async () => {
             const key = `${control.name}${boxes.length > 1 ? `, line ${line + 1}` : ""}, ${side} (${theme})`;
             // Within 8 of the ring over the resting pixel, in each channel.
             // The ring is opaque, so it covers the pixel, changing it by 199
-            // or more, and hides the radio wrapper's `shadow-button` below it.
+            // or more in at least one channel, and hides the radio wrapper's
+            // `shadow-button` below it.
             const want = over(ring, resting[at]);
             const got = focused[at].slice(0, 3);
             actual[key] = got.every((c, j) => Math.abs(c - want[j]) <= 8)

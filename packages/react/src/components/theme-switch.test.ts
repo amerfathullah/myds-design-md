@@ -3,7 +3,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { ThemeProvider } from "../hooks/use-theme";
+import { MoonIcon, SunIcon } from "../icons";
+import { renderedBody, withoutIds } from "../svg/icon-test-markup";
 import { ThemeSwitch } from "./theme-switch";
+
+// The theme icons, by the name each test expects
+const themeIcons = { sun: SunIcon, moon: MoonIcon };
 
 type ProviderProps = Omit<ComponentProps<typeof ThemeProvider>, "children">;
 
@@ -21,7 +26,11 @@ function shown(as: "toggle" | "select", props: ProviderProps) {
       as === "toggle"
         ? html.match(/^<button\s[^>]*\saria-label="([^"]*)"/)?.[1]
         : html.match(/<span>([^<]*)<\/span>/)?.[1],
-    icon: html.match(/\sid="Icon\/(sun|moon)"/)?.[1],
+    // The one theme icon whose drawing the HTML holds
+    icon: Object.entries(themeIcons)
+      .filter(([, icon]) => withoutIds(html).includes(renderedBody(icon)))
+      .map(([name]) => name)
+      .join(),
   };
 }
 

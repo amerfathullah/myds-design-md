@@ -10,6 +10,8 @@ import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { useToast } from "../hooks";
+import { CrossIcon } from "../icons";
+import { isIcon } from "../svg/icon-test-markup";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -211,7 +213,7 @@ describe("AutoToast", () => {
     async (variant, index) => {
       const root = (await autoToast({}))[index]!;
       const statusIcons = [...root.querySelectorAll("svg")].filter(
-        (svg) => !svg.querySelector('[id="Icon/cross"]'),
+        (svg) => !isIcon(svg, CrossIcon),
       );
       expect(statusIcons).toHaveLength(variant === "message" ? 0 : 1);
       const countdown = root.querySelector(".animate-expire");

@@ -5,6 +5,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
+  CheckCircleIcon,
+  CrossIcon,
+  InfoIcon,
+  WarningCircleIcon,
+  WarningDiamondIcon,
+} from "../icons";
+import { isIcon } from "../svg/icon-test-markup";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogClose,
@@ -84,10 +92,16 @@ async function mount(element: ReturnType<typeof alertDialog>) {
 
 const dialog = () => document.querySelector('[role="dialog"]');
 
+// The open dialog's close crosses: each icon in it that draws CrossIcon
+const crosses = () =>
+  [...dialog()!.querySelectorAll("svg")].filter((svg) =>
+    isIcon(svg, CrossIcon),
+  );
+
 // The open dialog's status icon: every icon in it but the close button's cross
 const statusIcons = () =>
   [...dialog()!.querySelectorAll("svg")].filter(
-    (svg) => !svg.querySelector('[id="Icon/cross"]'),
+    (svg) => !isIcon(svg, CrossIcon),
   );
 
 // The page's markup, with the ids Radix generates, which differ between
@@ -135,7 +149,7 @@ describe("AlertDialog without a `variant`", () => {
     await open();
     expect(dialog()?.querySelector("h2")?.textContent).toBe("Delete the file?");
     expect(statusIcons()).toEqual([]);
-    expect(dialog()!.querySelectorAll('[id="Icon/cross"]')).toHaveLength(1);
+    expect(crosses()).toHaveLength(1);
   });
 
   test('renders as `variant="default"` does, closed and open', async () => {
@@ -187,17 +201,17 @@ test.each([
 // Each status variant still leads with its icon, in its colour, 16px above
 // its title and description
 describe.each([
-  ["info", "info", "text-txt-primary stroke-txt-primary"],
-  ["success", "check-circle", "text-txt-success stroke-txt-success"],
-  ["warning", "warning-circle", "text-txt-warning stroke-txt-warning"],
-  ["danger", "warning-diamond", "text-txt-danger stroke-txt-danger"],
+  ["info", InfoIcon, "text-txt-primary stroke-txt-primary"],
+  ["success", CheckCircleIcon, "text-txt-success stroke-txt-success"],
+  ["warning", WarningCircleIcon, "text-txt-warning stroke-txt-warning"],
+  ["danger", WarningDiamondIcon, "text-txt-danger stroke-txt-danger"],
 ] as const)('AlertDialog with `variant="%s"`', (variant, icon, colour) => {
-  test(`leads with the ${icon} icon in its colour`, async () => {
+  test(`leads with ${icon.name} in its colour`, async () => {
     const { open } = await mount(alertDialog({ variant }));
     await open();
     const [status, ...others] = statusIcons();
     expect(others).toEqual([]);
-    expect(status?.querySelector("g")?.id).toBe(`Icon/${icon}`);
+    expect(isIcon(status!, icon)).toBe(true);
     expect(status?.getAttribute("class")).toBe(
       `block stroke-[1.5px] size-10.5 shrink-0 ${colour} mb-4`,
     );

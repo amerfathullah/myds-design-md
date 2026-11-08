@@ -3,6 +3,8 @@ import { act, createElement, type ComponentProps } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { CrossIcon } from "../icons";
+import { isIcon } from "../svg/icon-test-markup";
 import { Button } from "./button";
 import {
   Dialog,
@@ -100,7 +102,9 @@ const buttonNamed = (name: string) =>
 
 // DialogBody's built-in close button: the one with the cross
 const cross = () =>
-  dialog()!.querySelector('[id="Icon/cross"]')!.closest("button")!;
+  [...dialog()!.querySelectorAll("svg")]
+    .find((svg) => isIcon(svg, CrossIcon))!
+    .closest("button")!;
 
 // Presses a mouse button on the paragraph outside the dialog, dispatching
 // the events a browser does, and returns the `pointerdown`. Radix waits for

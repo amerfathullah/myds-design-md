@@ -10,17 +10,19 @@
 import { createElement, type FunctionComponent, type SVGProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-type Icon = FunctionComponent<SVGProps<SVGSVGElement>>;
+/** An icon component, as `@amerfathullah/myds-react/icon` exports each one */
+export type Icon = FunctionComponent<SVGProps<SVGSVGElement>>;
 
 /**
- * The markup with every id blanked, where it's defined and where `url(#…)` or
- * `href="#…"` refers to it. An icon with a clip path, mask or gradient gives
- * each copy its own ids from `useId()`, so two copies differ only there.
+ * The markup with every id blanked, where it's defined and where `url(#…)`,
+ * quoted or not, or `href="#…"` refers to it. An icon with a clip path, mask
+ * or gradient gives each copy its own ids from `useId()`, so two copies differ
+ * only there.
  */
-export function withoutIds(markup: string): string {
+function withoutIds(markup: string): string {
   return markup
     .replace(/(\sid=")[^"]*"/g, '$1"')
-    .replace(/url\(#[^)]*\)/g, "url(#)")
+    .replace(/url\(\s*(["']?)#[^)]*?\1\s*\)/g, "url(#)")
     .replace(/(\s(?:xlink:)?href="#)[^"]*"/g, '$1"');
 }
 
@@ -29,7 +31,7 @@ export function withoutIds(markup: string): string {
  * the whole icon, its ids blanked. The root's own attributes, such as the
  * `className` a component gives the icon, are left out.
  */
-export function iconBody(svgMarkup: string): string {
+function iconBody(svgMarkup: string): string {
   // The root's opening tag, read past quoted values, since a class such as
   // `[&>path]:hidden` can hold a `>`
   const root = /^\s*<svg(?:[^>"']|"[^"]*"|'[^']*')*>/.exec(svgMarkup);
@@ -40,11 +42,19 @@ export function iconBody(svgMarkup: string): string {
 }
 
 /** What `icon` draws, rendered on its own */
-export function renderedBody(icon: Icon): string {
+function renderedBody(icon: Icon): string {
   return iconBody(renderToStaticMarkup(createElement(icon)));
 }
 
 /** Whether `svg`, on the page, is a copy of `icon` */
 export function isIcon(svg: Element, icon: Icon): boolean {
   return iconBody(svg.outerHTML) === renderedBody(icon);
+}
+
+/**
+ * Whether the markup, such as a component's server HTML, holds a copy of
+ * `icon`
+ */
+export function containsIcon(markup: string, icon: Icon): boolean {
+  return withoutIds(markup).includes(renderedBody(icon));
 }

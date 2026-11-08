@@ -11,25 +11,18 @@
 // rendered on the page and on the server, by its ids and references, not its
 // pixels. It sits outside the icon directory, which the icon generator
 // rewrites.
-import {
-  act,
-  createElement,
-  Fragment,
-  type FunctionComponent,
-  type SVGProps,
-} from "react";
+import { act, createElement, Fragment } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import * as icons from "../icons";
+import type { Icon } from "./icon-test-markup";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-
-type Icon = FunctionComponent<SVGProps<SVGSVGElement>>;
 
 // The deprecated Jata Negara keeps its source's fixed ids until the next major
 // deletes it (ADR-0007, #140)

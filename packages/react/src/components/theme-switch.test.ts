@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { ThemeProvider } from "../hooks/use-theme";
 import { MoonIcon, SunIcon } from "../icons";
-import { renderedBody, withoutIds } from "../svg/icon-test-markup";
+import { containsIcon } from "../svg/icon-test-markup";
 import { ThemeSwitch } from "./theme-switch";
 
 // The theme icons, by the name each test expects
@@ -28,7 +28,7 @@ function shown(as: "toggle" | "select", props: ProviderProps) {
         : html.match(/<span>([^<]*)<\/span>/)?.[1],
     // The one theme icon whose drawing the HTML holds
     icon: Object.entries(themeIcons)
-      .filter(([, icon]) => withoutIds(html).includes(renderedBody(icon)))
+      .filter(([, icon]) => containsIcon(html, icon))
       .map(([name]) => name)
       .join(),
   };

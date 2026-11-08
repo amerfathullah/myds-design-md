@@ -22,7 +22,7 @@ export const IdentityJPNIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       {...props}
     >
       <g id="agency-icon/identity-jpn" clipPath={`url(#${id}clip0_14237_1213)`}>
-        <g id="agency-icons/miniidentity-jpn">
+        <g id="agency-icons/mini/identity-jpn">
           <path
             id="Subtract"
             fillRule="evenodd"

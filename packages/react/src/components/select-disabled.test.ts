@@ -319,9 +319,10 @@ describe.each(kinds)("in %s Select, a disabled item", (_, multiple) => {
 
     await hover(item("Blueberry"));
 
-    // The highlight's `bg-washed` applies only with `data-highlighted`, so
-    // without it the item keeps its disabled fill. happy-dom doesn't compute
-    // the cascade, so the attribute is what's checked.
+    // The highlight's `bg-washed-active` fill and `txt-black-900` text apply
+    // only with `data-highlighted`, so without it the item keeps its disabled
+    // fill and text. happy-dom doesn't compute the cascade, so the attribute
+    // is what's checked.
     expect(item("Blueberry").hasAttribute("data-highlighted")).toBe(false);
     expect(focused()).not.toBe("Blueberry");
   });
@@ -495,12 +496,13 @@ describe("in a single Select inside a `<form>`", () => {
   });
 });
 
-// The classes SelectItem gave a disabled item before it forwarded `disabled`
+// The classes SelectItem gave a disabled item before it forwarded `disabled`,
+// with the highlight every item has had since #158
 const DISABLED_ITEM_CLASSES = {
   single:
-    "flex items-center w-full select-none py-1.5 gap-2 font-medium outline-hidden rounded-xs data-[highlighted]:bg-bg-washed text-body-xs pl-2.5 pr-[38px] bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
+    "flex items-center w-full select-none py-1.5 gap-2 font-medium outline-hidden rounded-xs data-[highlighted]:bg-bg-washed-active data-[highlighted]:text-txt-black-900 text-body-xs pl-2.5 pr-[38px] bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
   multiple:
-    "flex items-center w-full select-none py-1.5 gap-2 font-medium outline-hidden rounded-xs data-[highlighted]:bg-bg-washed text-body-xs px-2.5 bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
+    "flex items-center w-full select-none py-1.5 gap-2 font-medium outline-hidden rounded-xs data-[highlighted]:bg-bg-washed-active data-[highlighted]:text-txt-black-900 text-body-xs px-2.5 bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
 };
 
 describe.each(kinds)("in %s Select", (_, multiple) => {

@@ -1312,6 +1312,112 @@ describe("ThemeSwitch as a select", () => {
 
 /*========================================================================================================================*/
 
+// How the open list marks the highlighted option (#158): the one the arrow
+// keys or a mouse pointer move to, which holds focus. It takes a focused
+// default DropdownItem's look, a `bg-washed-active` fill with `txt-black-900`
+// text, in place of the `bg-washed` fill alone, which in dark is the panel's
+// own colour. happy-dom doesn't compute the cascade, so the classes are
+// what's checked; the style package's select-item-states test renders them.
+
+// The classes that mark the highlighted option, and the fill they replace
+const HIGHLIGHT = [
+  "data-[highlighted]:bg-bg-washed-active",
+  "data-[highlighted]:text-txt-black-900",
+];
+const OLD_HIGHLIGHT = "data-[highlighted]:bg-bg-washed";
+
+// Moves a mouse pointer onto `target`
+async function hover(target: Element) {
+  await act(async () => void target.dispatchEvent(mouse("pointermove")));
+  await settle();
+}
+
+// The ways a visitor highlights the second option in the open list, which
+// they opened from the keyboard
+const highlights = [
+  [
+    "ArrowDown",
+    async () => {
+      await press(document.activeElement!, "Home");
+      await press(document.activeElement!, "ArrowDown");
+    },
+  ],
+  [
+    "a mouse pointer",
+    () => hover(document.querySelectorAll('[role="option"]')[1]!),
+  ],
+] as const;
+
+// Whether the option labelled `label` is highlighted, has focus and is
+// selected, and the highlight classes it carries. The classes are compared
+// whole, as `bg-bg-washed` is a prefix of `bg-bg-washed-active`.
+function highlightOf(label: string) {
+  const item = option(label);
+  const classes = item.className.split(" ");
+  return {
+    highlighted: item.hasAttribute("data-highlighted"),
+    focused: document.activeElement === item,
+    selected: item.getAttribute("aria-selected") === "true",
+    classes: HIGHLIGHT.filter((c) => classes.includes(c)),
+    "old fill": classes.includes(OLD_HIGHLIGHT),
+  };
+}
+
+// What `highlightOf` gives the highlighted option, selected or not
+const marked = (selected: boolean) => ({
+  highlighted: true,
+  focused: true,
+  selected,
+  classes: HIGHLIGHT,
+  "old fill": false,
+});
+
+describe.each(kinds)("in %s Select's open list", (_, multiple) => {
+  describe.each(highlights)("the option %s highlights", (_, highlight) => {
+    test("looks like a focused DropdownItem", async () => {
+      await mount(fruits({ multiple }));
+      await pressOnTrigger("Enter");
+      await highlight();
+
+      expect(highlightOf("Banana")).toEqual(marked(false));
+    });
+
+    test("looks like a focused DropdownItem when it's selected", async () => {
+      await mount(
+        fruits({
+          multiple,
+          defaultValue: multiple ? ["banana"] : "banana",
+        } as Partial<SelectProps>),
+      );
+      await pressOnTrigger("Enter");
+      await highlight();
+
+      expect(highlightOf("Banana")).toEqual(marked(true));
+    });
+  });
+});
+
+describe.each(highlights)(
+  "in ThemeSwitch's open select, the option %s highlights",
+  (_, highlight) => {
+    test("looks like a focused DropdownItem", async () => {
+      await mount(
+        createElement(
+          ThemeProvider,
+          null,
+          createElement(ThemeSwitch, { as: "select" }),
+        ),
+      );
+      await pressOnTrigger("Enter");
+      await highlight();
+
+      expect(highlightOf("Dark")).toEqual(marked(false));
+    });
+  },
+);
+
+/*========================================================================================================================*/
+
 // How a `multiple` select tells assistive technology what's selected (#133).
 // Radix's Select holds a single value, so it never marks an option of a
 // `multiple` select selected, and has no multi-select list. Select marks them

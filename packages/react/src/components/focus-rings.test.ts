@@ -140,8 +140,8 @@ describe("the component sources", () => {
   // one draws that outline at rest too, and on an element that never takes
   // focus it draws a stray box (#159). Tailwind 4's `outline-none` draws
   // nothing under forced colours, so it's never bare either. The one bare
-  // class allowed is the active InputOTP slot's, in its `active` variant,
-  // which applies only while the input has focus.
+  // class allowed is the active InputOTP slot's, in its active state,
+  // which holds only while the input has focus.
   test("tie every outline-hidden and outline-none to focus", () => {
     expect(
       classesMatching(/(?:^|:)!?outline-(?:hidden|none)!?$/).filter(

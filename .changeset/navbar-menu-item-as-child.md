@@ -14,7 +14,7 @@ The same item now renders `<a href="#x" class="transition-colors box-decoration-
 
 **If you set a colour on the element:** it now carries `text-inherit`, as it already does under `<Link asChild>`. A colour class on it, such as `text-gray-700` or an arbitrary colour, may now lose to `text-inherit`, since Link doesn't merge classes and the stylesheet's order decides. Put the colour on a `<span>` inside the element instead. The element also carries `transition-colors`, as the other items do, including under reduced motion.
 
-**If you put MYDS `<Link asChild>` between the item and your router link,** as a workaround, remove it. The item now does what it did. Left in, it underlines the link: Link underlines by default, and the item no longer passes it `underline="none"`. To keep it, pass it `underline="none"` yourself.
+**If you put MYDS `<Link asChild>` between the item and your router link,** as a workaround, remove it. The item now does what the workaround did. Left in, it underlines the link: Link underlines by default, and the item no longer passes it `underline="none"`. To keep it, pass it `underline="none"` yourself.
 
 The props types don't change, and an item without `asChild` renders as before.
 

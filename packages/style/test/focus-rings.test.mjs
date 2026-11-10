@@ -755,6 +755,12 @@ test("outside forced colours, Button, Input, Checkbox, TabsTrigger, SelectTrigge
           await page.mouse.down();
           await page.mouse.up();
           await page.click("[role=option]:focus");
+          // Radix hands focus back to the trigger on a timer once the list
+          // closes, which the next read can beat
+          await page.waitForFunction(
+            (s) => document.activeElement?.matches(s),
+            control.focus,
+          );
         } else if (!control.mouse) await page.mouse.down();
         const mouse = await read();
         await page.mouse.move(away.x, away.y);

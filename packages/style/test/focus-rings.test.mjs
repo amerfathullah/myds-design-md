@@ -449,15 +449,11 @@ function readFocus({ focus, ring }) {
         !layer.startsWith("rgba(0, 0, 0, 0)"),
     );
   const focused = document.querySelector(focus);
-  const { outlineStyle, outlineWidth, clipPath } = getComputedStyle(focused);
+  const { outlineStyle, outlineWidth } = getComputedStyle(focused);
   return {
     focused: document.activeElement === focused,
-    // An outline 0px wide draws nothing, like InputOTP's own on its input,
-    // and nor does one `sr-only` clips away, like the Switch's checkbox's
-    outline:
-      parseFloat(outlineWidth) === 0 || clipPath === "inset(50%)"
-        ? "none"
-        : outlineStyle,
+    // An outline 0px wide draws nothing, like InputOTP's own on its input
+    outline: parseFloat(outlineWidth) === 0 ? "none" : outlineStyle,
     ring: layers,
   };
 }

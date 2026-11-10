@@ -133,4 +133,46 @@ describe("the component sources", () => {
       ),
     ).toEqual([]);
   });
+
+  // `outline-hidden` hides the browser's outline, and under forced colours,
+  // which drop every ring, draws a 2px outline instead. So it goes only on an
+  // element that can take focus, behind the variant its ring is on: a bare
+  // one draws that outline at rest too, and on an element that never takes
+  // focus it draws a stray box (#159). Tailwind 4's `outline-none` draws
+  // nothing under forced colours, so it's never bare either. The one bare
+  // class allowed is the active InputOTP slot's, in its `active` variant,
+  // which applies only while the input has focus.
+  test("tie every outline-hidden and outline-none to focus", () => {
+    expect(
+      classesMatching(/(?:^|:)!?outline-(?:hidden|none)!?$/).filter(
+        (entry) =>
+          !variantsOf(entry.slice(entry.indexOf(": ") + 2)).some(isFocus),
+      ),
+    ).toEqual(["input-otp.tsx: outline-hidden"]);
+  });
 });
+
+// A class's variants: the parts before its last `:` outside brackets, so
+// `has-[>h3>button:focus-visible]:outline-hidden` has one
+function variantsOf(name: string) {
+  const variants = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < name.length; i++) {
+    if ("[(".includes(name[i]!)) depth++;
+    else if ("])".includes(name[i]!)) depth--;
+    else if (name[i] === ":" && depth === 0) {
+      variants.push(name.slice(start, i));
+      start = i + 1;
+    }
+  }
+  return variants;
+}
+
+// Whether a variant applies only while an element has focus: the element's
+// own (`focus:`, `focus-visible:`), a peer's whose outline it draws
+// (`peer-focus:`, `peer-focus-visible:`), or a descendant's that a `has-[…]`
+// selector matches with `:focus` or `:focus-visible`
+const isFocus = (variant: string) =>
+  /^(?:peer-)?focus(?:-visible)?$/.test(variant) ||
+  /^has-\[.*:focus(?:-visible)?(?![\w-]).*\]$/.test(variant);

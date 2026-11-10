@@ -204,7 +204,9 @@ Use the `variant` prop to change the breadcrumb style!
 
 ### Ellipsis Crumb
 
-Crumbs that are too long will be truncated with an ellipsis. The maximum width limit is `200px`. User may hover over the crumb to see the full text.
+Crumbs that are too long will be truncated with an ellipsis. The maximum width limit is `200px`. User may hover over a plain-text crumb to see the full text.
+
+A crumb whose children aren't plain text, such as an icon, a `<span>`, a translation component or `asChild` around a router link, doesn't show its full text on hover: give it its full text in `title`. Name an icon-only crumb with `aria-label`, not `title`, for example `aria-label="Laman utama"`.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">

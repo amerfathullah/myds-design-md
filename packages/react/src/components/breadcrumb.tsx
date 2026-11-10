@@ -57,9 +57,8 @@ const BreadcrumbLink: ForwardRefExoticComponent<
       )}
       {...props}
       title={
-        props.title || typeof props.children === "string"
-          ? (props.children as string)
-          : undefined
+        props.title ??
+        (typeof props.children === "string" ? props.children : undefined)
       }
     />
   );
@@ -79,9 +78,8 @@ const BreadcrumbPage: ForwardRefExoticComponent<ComponentProps<"span">> =
         className,
       )}
       title={
-        props.title || typeof props.children === "string"
-          ? (props.children as string)
-          : undefined
+        props.title ??
+        (typeof props.children === "string" ? props.children : undefined)
       }
     />
   ));

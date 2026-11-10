@@ -11,25 +11,19 @@ type CrumbProps = { title?: string | null };
 
 // A crumb's markup, rendered with `props` and `children` as JSX would pass
 // them: one child as itself, several as an array, none as `undefined`
-type Render = (props: CrumbProps, children: ReactNode[]) => string;
-
-const renderLink: Render = (props, children) =>
-  renderToStaticMarkup(
+function render(
+  crumb: typeof BreadcrumbLink | typeof BreadcrumbPage,
+  props: CrumbProps,
+  children: ReactNode[],
+) {
+  return renderToStaticMarkup(
     createElement(
-      BreadcrumbLink,
+      crumb as typeof BreadcrumbLink,
       props as ComponentProps<typeof BreadcrumbLink>,
       ...children,
     ),
   );
-
-const renderPage: Render = (props, children) =>
-  renderToStaticMarkup(
-    createElement(
-      BreadcrumbPage,
-      props as ComponentProps<typeof BreadcrumbPage>,
-      ...children,
-    ),
-  );
+}
 
 // The `title` on the element a crumb renders: `undefined` if it has none,
 // and `""` if it has an empty one
@@ -76,51 +70,51 @@ afterEach(() => {
 });
 
 describe.each([
-  ["BreadcrumbLink", renderLink],
-  ["BreadcrumbPage", renderPage],
-] as const)("%s", (_, render) => {
+  ["BreadcrumbLink", BreadcrumbLink],
+  ["BreadcrumbPage", BreadcrumbPage],
+] as const)("%s", (_, crumb) => {
   test.each(allChildren)(
     "a `title` you pass renders as given, with %s",
     (_, children) => {
-      expect(titleOf(render({ title }, children))).toBe(title);
+      expect(titleOf(render(crumb, { title }, children))).toBe(title);
     },
   );
 
   test.each(noTitles)(
     "with the `title` %s, plain-text children render their text as the `title`",
     (_, props) => {
-      expect(titleOf(render(props, textChildren))).toBe("Home");
+      expect(titleOf(render(crumb, props, textChildren))).toBe("Home");
     },
   );
 
   describe.each(noTitles)("with the `title` %s", (_, props) => {
     test.each(otherChildren)("%s render no `title`", (_, children) => {
-      expect(titleOf(render(props, children))).toBeUndefined();
+      expect(titleOf(render(crumb, props, children))).toBeUndefined();
     });
   });
 
   test.each(allChildren)(
     "an empty `title` renders empty, with %s",
     (_, children) => {
-      expect(titleOf(render({ title: "" }, children))).toBe("");
+      expect(titleOf(render(crumb, { title: "" }, children))).toBe("");
     },
   );
 
-  test("no `title` reads `[object Object]`", () => {
+  test("no case renders `[object Object]`", () => {
     for (const props of [
       { title },
       { title: "" },
       ...noTitles.map(([, p]) => p),
     ])
       for (const [, children] of allChildren)
-        expect(render(props, children)).not.toContain("[object Object]");
+        expect(render(crumb, props, children)).not.toContain("[object Object]");
   });
 });
 
 // Under `asChild`, BreadcrumbLink renders its child, an <a>, through Slot,
 // which applies the child's props last
 describe("BreadcrumbLink asChild", () => {
-  function render(props: CrumbProps, child: CrumbProps = {}) {
+  function renderAsChild(props: CrumbProps, child: CrumbProps = {}) {
     return renderToStaticMarkup(
       createElement(
         BreadcrumbLink,
@@ -135,25 +129,25 @@ describe("BreadcrumbLink asChild", () => {
   }
 
   test("renders its child, an <a>", () => {
-    expect(render({})).toMatch(/^<a\s/);
+    expect(renderAsChild({})).toMatch(/^<a\s/);
   });
 
   test("renders the `title` passed to BreadcrumbLink", () => {
-    expect(titleOf(render({ title }))).toBe(title);
+    expect(titleOf(renderAsChild({ title }))).toBe(title);
   });
 
   test("a `title` on the child wins over one on BreadcrumbLink", () => {
-    expect(titleOf(render({ title }, { title: "Home page" }))).toBe(
+    expect(titleOf(renderAsChild({ title }, { title: "Home page" }))).toBe(
       "Home page",
     );
   });
 
   test.each(noTitles)("with the `title` %s, renders no `title`", (_, props) => {
-    expect(titleOf(render(props))).toBeUndefined();
+    expect(titleOf(renderAsChild(props))).toBeUndefined();
   });
 
-  test("no `title` reads `[object Object]`", () => {
+  test("no case renders `[object Object]`", () => {
     for (const props of [{ title }, ...noTitles.map(([, p]) => p)])
-      expect(render(props)).not.toContain("[object Object]");
+      expect(renderAsChild(props)).not.toContain("[object Object]");
   });
 });

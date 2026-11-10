@@ -1,9 +1,11 @@
 // The page focus-rings.test.mjs renders in Chromium: every control whose
-// focus ring the test checks, rendered by the React components themselves,
-// so the page has the classes they really render and the tab stops Radix
-// adds. The test bundles this file with esbuild. `data-test` names what the
-// test focuses; a NavbarMenuItem passes no props to its link, so those are
-// named by their `href`.
+// focus ring or outline the test checks, rendered by the React components
+// themselves, so the page has the classes they really render and the tab
+// stops Radix adds. Most are in the main column. Beside it are two Buttons,
+// an Input, a Checkbox, a Dropdown, a Popover and a Select, whose lists and
+// panel open there too, and a CookieBanner. The test bundles this file with
+// esbuild. `data-test` names what the test focuses; a NavbarMenuItem passes
+// no props to its link, so those are named by their `href`.
 import { createRoot } from "react-dom/client";
 
 import {
@@ -19,8 +21,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "../../react/src/components/breadcrumb";
+import { Button } from "../../react/src/components/button";
+import { Checkbox } from "../../react/src/components/checkbox";
+import {
+  CookieBanner,
+  CookieBannerDescription,
+  CookieBannerTitle,
+} from "../../react/src/components/cookie-banner";
 import { DataTable } from "../../react/src/components/data-table";
+import {
+  Dropdown,
+  DropdownContent,
+  DropdownItem,
+  DropdownTrigger,
+} from "../../react/src/components/dropdown";
 import { SiteLink, SiteLinkGroup } from "../../react/src/components/footer";
+import { Input } from "../../react/src/components/input";
 import { InputOTP, InputOTPSlot } from "../../react/src/components/input-otp";
 import { Label } from "../../react/src/components/label";
 import { Link } from "../../react/src/components/link";
@@ -32,6 +48,11 @@ import {
   NavbarMenuItem,
 } from "../../react/src/components/navbar";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../react/src/components/popover";
+import {
   Radio,
   RadioButton,
   RadioItem,
@@ -42,6 +63,13 @@ import {
   SearchBarInput,
   SearchBarInputContainer,
 } from "../../react/src/components/search-bar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../react/src/components/select";
 import {
   Table,
   TableBody,
@@ -199,7 +227,9 @@ function Page() {
         <div style={gap}>
           <Tabs defaultValue="one">
             <TabsList>
-              <TabsTrigger value="one">One</TabsTrigger>
+              <TabsTrigger value="one" data-test="tabs-trigger">
+                One
+              </TabsTrigger>
               <TabsTrigger value="two">Two</TabsTrigger>
             </TabsList>
             <TabsContent value="one" data-test="tabs-panel" style={gap}>
@@ -290,6 +320,83 @@ function Page() {
           />
         </div>
       </main>
+
+      {/* Beside the main column, below the Navbar and above the pointer's
+          resting place: controls that ring on `focus:`, then a Dropdown, a
+          Popover and a Select, whose lists and panel open below them. The
+          Select's trigger comes last, as picking an option resizes it. */}
+      <div style={{ position: "absolute", top: 96, left: 800, width: 560 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <Button variant="primary-fill" data-test="button-primary">
+            Primary
+          </Button>
+          <Button variant="default-outline" data-test="button-outline">
+            Outline
+          </Button>
+          <Checkbox aria-label="Agree" data-test="checkbox" />
+        </div>
+        <div style={{ ...gap, width: 240 }}>
+          <Input aria-label="Name" placeholder="Name" data-test="input" />
+        </div>
+        <div style={{ display: "flex", gap: 24 }}>
+          <Dropdown>
+            <DropdownTrigger asChild>
+              <Button variant="default-outline" data-test="dropdown-trigger">
+                Actions
+              </Button>
+            </DropdownTrigger>
+            <DropdownContent>
+              <DropdownItem>Edit</DropdownItem>
+              <DropdownItem data-test="dropdown-item">Copy</DropdownItem>
+              <DropdownItem>Delete</DropdownItem>
+            </DropdownContent>
+          </Dropdown>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="default-outline" data-test="popover-trigger">
+                Details
+              </Button>
+            </PopoverTrigger>
+            {/* Nothing in it takes focus, so Radix focuses the panel */}
+            <PopoverContent data-test="popover">
+              Text, with nothing to tab to
+            </PopoverContent>
+          </Popover>
+          <Select>
+            <SelectTrigger aria-label="Fruit" data-test="select-trigger">
+              <SelectValue placeholder="Fruit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="apple">Apple</SelectItem>
+              <SelectItem value="banana" data-test="select-item">
+                Banana
+              </SelectItem>
+              <SelectItem value="cherry">Cherry</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Fixed below those, clear of every other control. While it's shown,
+          the banner pads the page's bottom by its height, which would make
+          the page taller than the viewport, so that focus could scroll it.
+          Nothing here sits under the banner, so the padding is undone. */}
+      <style>
+        {
+          "html{scroll-padding-bottom:0!important}body{padding-bottom:0!important}"
+        }
+      </style>
+      <CookieBanner
+        defaultOpen
+        closeLabel="Close cookie banner"
+        className="top-[440px] bottom-auto"
+        data-test="cookie-banner"
+      >
+        <CookieBannerTitle>Cookies</CookieBannerTitle>
+        <CookieBannerDescription>
+          This website uses cookies to improve user experience.
+        </CookieBannerDescription>
+      </CookieBanner>
 
       <ToastProvider>
         <ToastRoot variant="info" duration={Infinity} data-test="toast">

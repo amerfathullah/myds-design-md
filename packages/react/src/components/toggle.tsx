@@ -153,15 +153,15 @@ const ToggleThumb: React.FC<ToggleThumbProps> = ({
 
   // The checkbox is the switch: the one element that takes focus, named by a
   // `<Label htmlFor>` or the aria props. A click on the track reaches it
-  // through the label around them. `sr-only` clips the focused checkbox's own
-  // outline; the track rings instead.
+  // through the label around them. The focused checkbox draws no outline of
+  // its own; the track rings instead.
   return (
     <label className="relative inline-block">
       <input
         id={context.id}
         type="checkbox"
         role="switch"
-        className="peer sr-only"
+        className="peer sr-only focus:outline-hidden"
         checked={context.checked}
         onChange={context.onChange}
         onKeyDown={handleKeyDown}

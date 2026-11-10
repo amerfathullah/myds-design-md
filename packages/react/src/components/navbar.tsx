@@ -28,7 +28,7 @@ import { Link } from "./link";
 import { ChevronDownIcon, CrossIcon, HamburgerMenuIcon } from "../icons";
 import { cva } from "class-variance-authority";
 import { RemoveScroll } from "react-remove-scroll";
-import { Root, Slot } from "@radix-ui/react-slot";
+import { Root } from "@radix-ui/react-slot";
 import { sharedContext } from "../utils/registry";
 
 type NavbarProps = ComponentProps<"header">;
@@ -292,26 +292,21 @@ const NavbarMenuItem: FunctionComponent<NavbarMenuItemProps> = ({
   ...props
 }) => {
   const is_from_dropdown = useContext(NavbarMenuDropdownContext);
-  const Comp = asChild ? Slot : Link;
   return (
     <NavigationMenuItem
       className={clx(navbar_menu_item_cva({ is_from_dropdown }), className)}
       {...props}
     >
-      <Comp
+      {/* With `asChild`, Link slots the child, which gets Link's classes and
+          `target`, and Link keeps `underline` */}
+      <Link
+        asChild={asChild}
         href={href}
         underline="none"
-        className={clx(
-          "w-full",
-          navbar_menu_link_cva({ is_from_dropdown }),
-          // The child doesn't get Link's classes, so it takes Link's focus
-          // ring here
-          asChild &&
-            "focus-visible:ring-fr-primary box-decoration-clone focus-visible:ring-3 focus-visible:outline-hidden",
-        )}
+        className={clx("w-full", navbar_menu_link_cva({ is_from_dropdown }))}
       >
         {children}
-      </Comp>
+      </Link>
     </NavigationMenuItem>
   );
 };

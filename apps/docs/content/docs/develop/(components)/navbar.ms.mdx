@@ -429,6 +429,12 @@ Pada skrin yang lebih sempit daripada 1280px, `NavbarAction` turut memaparkan bu
       description: "Gaya tambahan untuk item navigasi.",
       type: "string",
     },
+    asChild: {
+      description:
+        'Memaparkan elemen anda, seperti `Link` Next.js, sebagai ganti `<a>`. Ia mengambil `href` item melainkan ia mempunyai `href` sendiri, mendapat kelas dan cincin fokus (focus ring) Link, dan mendapat `target="_self"` melainkan ia menetapkan `target` sendiri.',
+      type: "boolean",
+      default: "false",
+    },
   }}
 />
 

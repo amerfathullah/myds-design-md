@@ -129,22 +129,30 @@ async function pressTo(page, key, selector) {
 // Opens a container: focuses its trigger, presses Enter, and waits for
 // `shown`. Tab can't always reach the trigger, as an open PopoverContent or
 // mobile menu keeps Tab inside it.
-async function open(page, trigger, shown) {
+async function openContainer(page, trigger, shown) {
   await page.focus(trigger);
   await page.keyboard.press("Enter");
   await page.waitForSelector(shown);
 }
 
 const openMasthead = (page) =>
-  open(page, "[data-test=masthead-trigger]", containers.Masthead);
+  openContainer(page, "[data-test=masthead-trigger]", containers.Masthead);
 const openMenu = (page) =>
-  open(page, "[data-test=menu-toggle]", containers["mobile menu"]);
+  openContainer(page, "[data-test=menu-toggle]", containers["mobile menu"]);
 // Radix moves focus to the Button in the PopoverContent, and to the Select's
 // first option
 const openPopover = (page) =>
-  open(page, "[data-test=popover-trigger]", "[data-test=popover-button]:focus");
+  openContainer(
+    page,
+    "[data-test=popover-trigger]",
+    "[data-test=popover-button]:focus",
+  );
 const openSelect = (page) =>
-  open(page, "[data-test=select-trigger]", "[data-test=option-apple]:focus");
+  openContainer(
+    page,
+    "[data-test=select-trigger]",
+    "[data-test=option-apple]:focus",
+  );
 const blur = (page) => page.evaluate(() => document.activeElement?.blur());
 
 /**

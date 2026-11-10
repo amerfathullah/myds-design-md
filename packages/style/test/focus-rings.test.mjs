@@ -211,8 +211,8 @@ const controls = [
 ];
 
 // The triggers of the page's Dropdown, Popover and Select, whose lists and
-// panel open in layers above the page
-const triggers = {
+// panel open in layers above the page. `dropdownTrigger` is the Navbar's.
+const layerTriggers = {
   dropdown: "[data-test=dropdown-trigger]",
   popover: "[data-test=popover-trigger]",
   select: "[data-test=select-trigger]",
@@ -243,23 +243,23 @@ const outlineControls = [
     name: "DropdownItem",
     focus: "[data-test=dropdown-item]",
     reach: "list",
-    trigger: triggers.dropdown,
+    trigger: layerTriggers.dropdown,
     mouse: "hover",
   },
   {
     name: "PopoverContent",
     focus: "[data-test=popover]",
     reach: "popover",
-    trigger: triggers.popover,
+    trigger: layerTriggers.popover,
   },
-  { name: "SelectTrigger", focus: triggers.select, mouse: "pick" },
+  { name: "SelectTrigger", focus: layerTriggers.select, mouse: "pick" },
   {
     // A middle option: the list's viewport clips the outline's top edge on
     // the first option and its bottom edge on the last
     name: "SelectItem",
     focus: "[data-test=select-item]",
     reach: "list",
-    trigger: triggers.select,
+    trigger: layerTriggers.select,
     mouse: "hover",
   },
   {
@@ -358,7 +358,7 @@ async function openByKeyboard(page, trigger) {
 // Escape closes only the topmost layer, so it leaves the toast below, which
 // a stray Escape would close.
 async function closeLayer(page) {
-  for (const trigger of Object.values(triggers))
+  for (const trigger of Object.values(layerTriggers))
     if ((await page.getAttribute(trigger, "aria-expanded")) === "true") {
       await page.keyboard.press("Escape");
       await page.waitForSelector(`${trigger}[aria-expanded=false]`);

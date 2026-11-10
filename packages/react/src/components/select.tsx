@@ -608,7 +608,7 @@ SelectGroupTitle.displayName = SelectPrimitive.Label.displayName;
 const select_item_cva = cva(
   [
     "flex items-center w-full cursor-default select-none py-1.5 gap-2 font-medium outline-hidden text-txt-black-700 rounded-xs",
-    "data-[highlighted]:bg-bg-washed",
+    "data-[highlighted]:bg-bg-washed-active data-[highlighted]:text-txt-black-900",
   ],
   {
     variants: {

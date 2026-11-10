@@ -1,5 +1,67 @@
 # @govtechmy/myds-standard
 
+## 1.0.5
+
+### Patch Changes
+
+- 7b427c3: The docs and standard sites and Storybook now take the scroll, focus and underline rules from `@amerfathullah/myds-style`. Storybook drops its own copies of them, the box-sizing pair included, so stories render as an app on the Tailwind import does. The docs and standard sites set `html { scroll-padding-top: 0 }`, so a Fumadocs heading still lands 112px from the top (its `scroll-m-28`) rather than 177px. They also drop their own unconditional smooth scrolling, so they scroll smoothly only when the user hasn't asked for reduced motion.
+- Updated dependencies [248a593]
+- Updated dependencies [337ddbe]
+- Updated dependencies [8b4f54a]
+- Updated dependencies [9859bd4]
+- Updated dependencies [c7723da]
+- Updated dependencies [e62a54d]
+- Updated dependencies [abad11c]
+- Updated dependencies [9472d1b]
+- Updated dependencies [8e41f09]
+- Updated dependencies [9cc1a9f]
+- Updated dependencies [59fd000]
+- Updated dependencies [02b360f]
+- Updated dependencies [bd661d3]
+- Updated dependencies [f60b247]
+- Updated dependencies [7dfcd6d]
+- Updated dependencies [75f291e]
+- Updated dependencies [2e872fb]
+- Updated dependencies [a0d594f]
+- Updated dependencies [0e682dc]
+- Updated dependencies [0f2e20c]
+- Updated dependencies [46d3d9e]
+- Updated dependencies [3d924cc]
+- Updated dependencies [8a69b5f]
+- Updated dependencies [a4c05a6]
+- Updated dependencies [737eea1]
+- Updated dependencies [6d0d3b0]
+- Updated dependencies [73321a8]
+- Updated dependencies [499cf29]
+- Updated dependencies [1afef8a]
+- Updated dependencies [a47cd61]
+- Updated dependencies [099bc3a]
+- Updated dependencies [193d8b1]
+- Updated dependencies [be02fd4]
+- Updated dependencies [7baa1a2]
+- Updated dependencies [c87bdef]
+- Updated dependencies [ee9b229]
+- Updated dependencies [75be647]
+- Updated dependencies [f73a96d]
+- Updated dependencies [dce477b]
+- Updated dependencies [b38270e]
+- Updated dependencies [5bfa2bc]
+- Updated dependencies [62127ab]
+- Updated dependencies [803fcb0]
+- Updated dependencies [ba4baf7]
+- Updated dependencies [f2a8536]
+- Updated dependencies [548ec9d]
+- Updated dependencies [016c018]
+- Updated dependencies [40cf7ef]
+- Updated dependencies [7b808b2]
+- Updated dependencies [c9fe45b]
+- Updated dependencies [3b1c9d5]
+- Updated dependencies [6e2ff6c]
+- Updated dependencies [ed151c9]
+- Updated dependencies [0868970]
+  - @amerfathullah/myds-react@2.1.0
+  - @amerfathullah/myds-style@2.1.0
+
 ## 1.0.4
 
 ### Patch Changes

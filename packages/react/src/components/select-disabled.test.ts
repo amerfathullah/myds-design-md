@@ -500,9 +500,9 @@ describe("in a single Select inside a `<form>`", () => {
 // with the highlight every item has had since #158
 const DISABLED_ITEM_CLASSES = {
   single:
-    "flex items-center w-full select-none py-1.5 gap-2 font-medium outline-hidden rounded-xs data-[highlighted]:bg-bg-washed-active data-[highlighted]:text-txt-black-900 text-body-xs pl-2.5 pr-[38px] bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
+    "flex items-center w-full select-none py-1.5 gap-2 font-medium focus:outline-hidden rounded-xs data-[highlighted]:bg-bg-washed-active data-[highlighted]:text-txt-black-900 text-body-xs pl-2.5 pr-[38px] bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
   multiple:
-    "flex items-center w-full select-none py-1.5 gap-2 font-medium outline-hidden rounded-xs data-[highlighted]:bg-bg-washed-active data-[highlighted]:text-txt-black-900 text-body-xs px-2.5 bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
+    "flex items-center w-full select-none py-1.5 gap-2 font-medium focus:outline-hidden rounded-xs data-[highlighted]:bg-bg-washed-active data-[highlighted]:text-txt-black-900 text-body-xs px-2.5 bg-bg-white-disabled text-txt-black-disabled border-transparent cursor-not-allowed hover:bg-none",
 };
 
 describe.each(kinds)("in %s Select", (_, multiple) => {

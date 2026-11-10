@@ -81,7 +81,7 @@ TabsList.displayName = TabsPrimitive.List.displayName;
 
 const tabs_trigger_cva = cva(
   [
-    "relative flex gap-1 items-center text-txt-black-500 hover:text-txt-black-900 data-[state=active]:text-txt-black-900 outline-hidden border border-transparent",
+    "relative flex gap-1 items-center text-txt-black-500 hover:text-txt-black-900 data-[state=active]:text-txt-black-900 focus:outline-hidden border border-transparent",
     "focus:ring-2 focus:ring-fr-primary space",
   ],
   {

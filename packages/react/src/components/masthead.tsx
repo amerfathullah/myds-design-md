@@ -53,7 +53,7 @@ const Masthead: FunctionComponent<ComponentProps<"div">> = ({
         data-nosnippet
         {...props}
       >
-        <div className="mx-auto grid w-full max-w-screen-xl outline-hidden transition-[grid-template-rows] duration-500 print:hidden">
+        <div className="mx-auto grid w-full max-w-screen-xl transition-[grid-template-rows] duration-500 print:hidden">
           {children}
         </div>
       </div>
@@ -69,7 +69,7 @@ const MastheadHeader: FunctionComponent<ComponentProps<"div">> = ({
 }) => {
   return (
     <div
-      className="px-4.5 flex items-center gap-2 overflow-x-hidden py-2 outline-hidden sm:py-1 md:px-6"
+      className="px-4.5 flex items-center gap-2 overflow-x-hidden py-2 sm:py-1 md:px-6"
       {...props}
     >
       <MalaysiaFlag className="inline-block aspect-auto w-fit shrink-0" />

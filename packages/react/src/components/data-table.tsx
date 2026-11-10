@@ -224,13 +224,13 @@ const pin_cva = cva(["bg-bg-white"], {
       pin_direction: ["left"],
       pin_last: true,
       className:
-        "before:right-0 before:border-none before:outline-hidden before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_3px_0_8px_-8px]",
+        "before:right-0 before:border-none before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_3px_0_8px_-8px]",
     },
     {
       pin_direction: ["right"],
       pin_last: true,
       className:
-        "before:left-0 before:border-none before:outline-hidden before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_-3px_0_8px_-8px]",
+        "before:left-0 before:border-none before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_-3px_0_8px_-8px]",
     },
   ],
 });

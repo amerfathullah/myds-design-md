@@ -12,9 +12,17 @@
 // DataTable, and the Switch's track for its visually hidden checkbox, which
 // one Tab from the control before it reaches. TableCell's ring and the toast
 // viewport's are inset. The pixels around each ring show it on all four
-// sides. Under forced colours, where box-shadows don't render, an outline
-// shows focus instead. A TooltipTrigger with `asChild` leaves its child's own
-// ring alone.
+// sides. A TooltipTrigger with `asChild` leaves its child's own ring alone.
+//
+// Under forced colours, where box-shadows don't render, an outline shows
+// focus instead: each control draws none at rest and one on keyboard focus,
+// so focus shows as a change (#159). That covers controls the ring checks
+// leave out as well: Button, Input, Checkbox, TabsTrigger, SelectTrigger and
+// the CookieBanner's close cross, which ring on `focus:`, so a click rings
+// them too, and SelectItem and DropdownItem in an open list and
+// PopoverContent with nothing tabbable in it, which draw no ring.
+// Outside forced colours, those draw no outline at rest, on keyboard focus or
+// on mouse focus: no browser `auto` outline either.
 //
 // The page is focus-rings.page.jsx: the React components themselves, bundled
 // with esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -202,6 +210,64 @@ const controls = [
   ]),
 ];
 
+// The triggers of the page's Dropdown, Popover and Select, whose lists and
+// panel open in layers above the page. `dropdownTrigger` is the Navbar's.
+const layerTriggers = {
+  dropdown: "[data-test=dropdown-trigger]",
+  popover: "[data-test=popover-trigger]",
+  select: "[data-test=select-trigger]",
+};
+
+/**
+ * The controls only the outline tests check, in the page's order, as
+ * `controls` describes them. Most ring on `focus:`, so a mouse click rings
+ * them too, and the list items and PopoverContent draw no ring. Besides:
+ * - `reach`: `list` opens the list `trigger` opens from the keyboard, unless
+ *   it's open, then presses ArrowDown, which moves focus on from the item the
+ *   list opens on to this one; `popover` closes the Popover if it's open,
+ *   then opens it from `trigger` with the keyboard, which focuses its panel
+ * - `trigger`: the button that opens the list or Popover the control is in
+ * - `mouse`: how the mouse focuses it: by default a press on it, released
+ *   away from it, so it clicks nothing; `hover` moves the pointer onto it, as
+ *   Radix focuses the list item under the pointer; `pick` presses it to open
+ *   its list, then clicks the option that has focus there, which closes the
+ *   list and returns focus to the trigger
+ */
+const outlineControls = [
+  { name: "TabsTrigger", focus: "[data-test=tabs-trigger]" },
+  { name: "Button, primary-fill", focus: "[data-test=button-primary]" },
+  { name: "Button, default-outline", focus: "[data-test=button-outline]" },
+  { name: "Checkbox", focus: "[data-test=checkbox]" },
+  { name: "Input", focus: "[data-test=input]" },
+  {
+    name: "DropdownItem",
+    focus: "[data-test=dropdown-item]",
+    reach: "list",
+    trigger: layerTriggers.dropdown,
+    mouse: "hover",
+  },
+  {
+    name: "PopoverContent",
+    focus: "[data-test=popover]",
+    reach: "popover",
+    trigger: layerTriggers.popover,
+  },
+  { name: "SelectTrigger", focus: layerTriggers.select, mouse: "pick" },
+  {
+    // A middle option: the list's viewport clips the outline's top edge on
+    // the first option and its bottom edge on the last
+    name: "SelectItem",
+    focus: "[data-test=select-item]",
+    reach: "list",
+    trigger: layerTriggers.select,
+    mouse: "hover",
+  },
+  {
+    name: "CookieBanner's close cross",
+    focus: "[data-test=cookie-banner] > button",
+  },
+];
+
 let browser;
 let decoder;
 let html;
@@ -248,7 +314,10 @@ async function withPage(theme, use, { forcedColors = "none" } = {}) {
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.setContent(html);
+    // Until the toast shows, and the CookieBanner, which mounts after an
+    // effect, is open
     await page.waitForSelector("[data-test=toast]");
+    await page.waitForSelector("[data-test=cookie-banner][data-state=open]");
     await page.evaluate(
       (dark) => document.documentElement.classList.toggle("dark", dark),
       theme === "dark",
@@ -274,13 +343,49 @@ async function tabTo(page, selector) {
   throw new Error(`Tab never reaches ${selector}`);
 }
 
-// Gives a control keyboard focus, as its `reach` and `from` say
-async function focusByKeyboard(page, { focus, reach = "tab", from }) {
+// Tabs to `trigger` and presses Enter, which opens its list or Popover, then
+// waits for focus to move into what it opened
+async function openByKeyboard(page, trigger) {
+  await tabTo(page, trigger);
+  await page.keyboard.press("Enter");
+  await page.waitForFunction((trigger) => {
+    const id = document.querySelector(trigger).getAttribute("aria-controls");
+    return !!document.getElementById(id)?.contains(document.activeElement);
+  }, trigger);
+}
+
+// Closes the open Dropdown list, Popover or Select list, if any, with Escape.
+// Escape closes only the topmost layer, so it leaves the toast below, which
+// a stray Escape would close.
+async function closeLayer(page) {
+  for (const trigger of Object.values(layerTriggers))
+    if ((await page.getAttribute(trigger, "aria-expanded")) === "true") {
+      await page.keyboard.press("Escape");
+      await page.waitForSelector(`${trigger}[aria-expanded=false]`);
+    }
+}
+
+// Gives a control keyboard focus, as its `reach`, `from` and `trigger` say
+async function focusByKeyboard(page, { focus, reach = "tab", from, trigger }) {
   if (reach === "menu") {
     await tabTo(page, dropdownTrigger);
     if ((await page.getAttribute(dropdownTrigger, "aria-expanded")) !== "true")
       await page.keyboard.press("Enter");
     await tabTo(page, focus);
+  } else if (reach === "list") {
+    if ((await page.getAttribute(trigger, "aria-expanded")) !== "true")
+      await openByKeyboard(page, trigger);
+    // The item follows the one the list opens on. Radix moves focus on a
+    // timer after the key, so a second press before it lands would move on
+    // past the item.
+    await page.keyboard.press("ArrowDown");
+    await page.waitForFunction(
+      (s) => document.activeElement?.matches(s),
+      focus,
+    );
+  } else if (reach === "popover") {
+    await closeLayer(page);
+    await openByKeyboard(page, trigger);
   } else if (reach === "F8") {
     await page.keyboard.press("F8");
   } else if (reach === "script") {
@@ -292,8 +397,10 @@ async function focusByKeyboard(page, { focus, reach = "tab", from }) {
   } else await tabTo(page, focus);
 }
 
-// Moves focus off the page's controls, and closes the NavbarMenuDropdown
+// Moves focus off the page's controls, and closes the NavbarMenuDropdown and
+// any open list or Popover
 async function reset(page) {
+  await closeLayer(page);
   if ((await page.getAttribute(dropdownTrigger, "aria-expanded")) === "true") {
     await page.focus(dropdownTrigger);
     await page.keyboard.press("Enter");
@@ -305,15 +412,29 @@ async function reset(page) {
 
 // Puts a control at rest: nothing focused and the pointer away, with the
 // NavbarMenuDropdown open for the items inside it, which exist only while
-// it's open
-async function rest(page, { reach } = {}) {
+// it's open. A Dropdown or Select item rests in its list, opened by
+// keyboard, while the item the list opens on has focus. PopoverContent
+// rests open, with nothing focused.
+async function rest(page, { reach, trigger } = {}) {
   await reset(page);
   if (reach === "menu") {
     await tabTo(page, dropdownTrigger);
     await page.keyboard.press("Enter");
     await page.evaluate(() => document.activeElement?.blur());
+  } else if (reach === "list") {
+    await openByKeyboard(page, trigger);
+  } else if (reach === "popover") {
+    await openByKeyboard(page, trigger);
+    await page.evaluate(() => document.activeElement?.blur());
   }
 }
+
+// The middle of `selector`'s first box, in the page
+const middleOf = (page, selector) =>
+  page.$eval(selector, (element) => {
+    const { x, y, width, height } = element.getClientRects()[0];
+    return { x: x + width / 2, y: y + height / 2 };
+  });
 
 // Runs in the page: whether `focus` has focus, its outline style, and the
 // ring layers in `ring`'s box-shadow: spread-only layers that aren't
@@ -572,9 +693,11 @@ test("under forced colours, each control draws no outline at rest and a visible 
     await withPage(
       theme,
       async (page) => {
-        for (const control of controls) {
+        for (const control of [...controls, ...outlineControls]) {
           const selector = control.outline ?? control.focus;
           await rest(page, control);
+          // No outline at rest, so focus adds one. An outline drawn at rest
+          // changes colour on focus, so the pixels below change either way.
           const atRest = await page.evaluate(readOutline, selector);
           await focusByKeyboard(page, control);
           const { outline, band } = await page.evaluate(readOutline, selector);
@@ -602,6 +725,54 @@ test("under forced colours, each control draws no outline at rest and a visible 
       },
       { forcedColors: "active" },
     );
+  assertEntries(actual, expected);
+});
+
+test("outside forced colours, Button, Input, Checkbox, TabsTrigger, SelectTrigger, SelectItem, DropdownItem, PopoverContent and the CookieBanner's close cross draw no outline at rest, on keyboard focus or on mouse focus, in both themes", async () => {
+  const actual = {};
+  const expected = {};
+  for (const theme of themes)
+    await withPage(theme, async (page) => {
+      for (const control of outlineControls) {
+        // Whether the control has focus, and the outline it draws
+        const read = async () => {
+          const { focused, outline } = await page.evaluate(readFocus, {
+            focus: control.focus,
+            ring: control.focus,
+          });
+          return { focused, outline };
+        };
+        await rest(page, control);
+        const atRest = await read();
+        await focusByKeyboard(page, control);
+        const keyboard = await read();
+        // Then by mouse, as its `mouse` says. A press is released away from
+        // the control, so it clicks nothing.
+        await rest(page, control);
+        const at = await middleOf(page, control.focus);
+        await page.mouse.move(at.x, at.y);
+        if (control.mouse === "pick") {
+          await page.mouse.down();
+          await page.mouse.up();
+          await page.click("[role=option]:focus");
+          // Radix hands focus back to the trigger on a timer once the list
+          // closes, which the next read can beat
+          await page.waitForFunction(
+            (s) => document.activeElement?.matches(s),
+            control.focus,
+          );
+        } else if (!control.mouse) await page.mouse.down();
+        const mouse = await read();
+        await page.mouse.move(away.x, away.y);
+        if (!control.mouse) await page.mouse.up();
+        actual[`${control.name} (${theme})`] = { atRest, keyboard, mouse };
+        expected[`${control.name} (${theme})`] = {
+          atRest: { focused: false, outline: "none" },
+          keyboard: { focused: true, outline: "none" },
+          mouse: { focused: true, outline: "none" },
+        };
+      }
+    });
   assertEntries(actual, expected);
 });
 

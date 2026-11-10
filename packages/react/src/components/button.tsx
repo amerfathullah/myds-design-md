@@ -24,7 +24,7 @@ import { sharedContext } from "../utils/registry";
 const button_cva = cva(
   [
     "group flex select-none items-center gap-1.5 rounded-md w-fit",
-    "font-body font-medium outline-hidden transition disabled:cursor-not-allowed",
+    "font-body font-medium focus:outline-hidden transition disabled:cursor-not-allowed",
     "text-center active:translate-y-[0.5px]",
     "focus:ring-3 focus:ring-fr-primary",
   ],

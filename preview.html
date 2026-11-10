@@ -374,8 +374,8 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .toast{display:none;width:100%;padding:12px;border:1px solid var(--bg-washed-active);border-radius:8px;background:var(--bg-dialog-active);box-shadow:var(--shadow-card);color:var(--txt-black-700);font-size:14px;line-height:20px;font-weight:600}
 .toast.show{display:flex}
 
-/* Forced colours: outline-hidden keeps a 2px transparent outline, which the system colour paints */
-@media (forced-colors:active){.btn,.input input,.select select,.checkbox,.tab,.menuitem,.textarea:focus,.radio:focus,.switch:focus,.masthead-trigger:focus,.datefield input:focus,.accordion summary:focus-visible,.accordion-item:has(>summary:focus-visible),.navbar-logo:focus-visible,.navbar-item:focus-visible,.site-link:focus-visible{outline:2px solid transparent;outline-offset:2px}.swatch:focus-visible,.token:focus-visible{outline:2px solid transparent;outline-offset:-2px}}
+/* Forced colours: outline-hidden keeps a 2px transparent outline, which the system colour paints, only in the focus state each ring is on, so nothing is outlined at rest */
+@media (forced-colors:active){.btn:focus,.input input:focus,.select select:focus,.checkbox:focus,.tab:focus,.menuitem:focus,.textarea:focus,.radio:focus,.switch:focus,.masthead-trigger:focus,.datefield input:focus,.accordion summary:focus-visible,.accordion-item:has(>summary:focus-visible),.navbar-logo:focus-visible,.navbar-item:focus-visible,.site-link:focus-visible{outline:2px solid transparent;outline-offset:2px}.swatch:focus-visible,.token:focus-visible{outline:2px solid transparent;outline-offset:-2px}}
 </style>
 </head>
 <body>

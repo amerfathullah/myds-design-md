@@ -280,7 +280,7 @@ interface CookieBannerProps extends ComponentPropsWithoutRef<"section"> {
 
 const cookie_content_cva = cva([
   "bg-bg-white p-4.5 shadow-card border-otl-gray-200 fixed bottom-0 right-0 z-30 max-w-[500px]",
-  "space-y-1 rounded-lg border transition-all outline-hidden",
+  "space-y-1 rounded-lg border transition-all focus:outline-hidden",
   "max-h-dvh overflow-y-auto sm:max-h-[calc(100dvh-1rem)]",
   "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-full data-[state=open]:fade-in data-[state=open]:duration-400",
   "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-full data-[state=closed]:fade-out data-[state=closed]:duration-200",
@@ -480,7 +480,7 @@ const CookieBanner: ForwardRefExoticComponent<
           >
             <button
               type="button"
-              className="ring-fr-primary absolute top-0 right-0 mt-4 mr-4 rounded-md p-1.5 outline-hidden transition-all focus:ring-3"
+              className="ring-fr-primary absolute top-0 right-0 mt-4 mr-4 rounded-md p-1.5 transition-all focus:ring-3 focus:outline-hidden"
               aria-label={closeLabel}
               onClick={close}
             >

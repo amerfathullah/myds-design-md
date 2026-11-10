@@ -6,7 +6,9 @@
 // page never leaves a focused control entirely covered, even after Customise
 // makes it taller. In landscape on a phone it fits the viewport and scrolls
 // inside. Closing it doesn't scroll the page, and it slides out before it
-// leaves the document.
+// leaves the document. Its section takes focus when the keyboard opens it.
+// Under forced colours the section draws an outline only while it holds
+// focus (#159), and in normal colours it draws none, not even the browser's.
 //
 // The page is cookie-banner.page.jsx: the React components themselves,
 // bundled with esbuild, on the stylesheet the Tailwind import compiles for
@@ -33,6 +35,11 @@ const reactModules = fileURLToPath(
 const phone = { width: 375, height: 667 };
 const landscape = { width: 667, height: 375 };
 const desktop = { width: 1024, height: 768 };
+
+// Where the page is served, so it opens as a visitor's browser opens it.
+// `setContent` writes the page during a user gesture, which the banner takes
+// for a visitor action, so it takes focus as it opens on the page's load.
+const pageUrl = "http://cookie-banner.test/";
 
 let browser;
 let css;
@@ -64,12 +71,18 @@ const still =
 
 // Opens the page at `viewport` and runs `use` on it, once React has rendered
 // it and the banner is open. With `animate`, the banner's animations run.
+// `forcedColors` is Playwright's option, "active" for forced colours.
 // Nothing logs an error or a warning.
-async function withPage(viewport, use, { animate = false } = {}) {
+async function withPage(
+  viewport,
+  use,
+  { animate = false, forcedColors = "none" } = {},
+) {
   // Reduced motion, so the page's smooth scrolling doesn't delay a scroll
   const context = await browser.newContext({
     viewport,
     reducedMotion: "reduce",
+    forcedColors,
   });
   try {
     const page = await context.newPage();
@@ -79,9 +92,13 @@ async function withPage(viewport, use, { animate = false } = {}) {
       if (["error", "warning"].includes(message.type()))
         errors.push(message.text());
     });
-    await page.setContent(
-      `<!doctype html><html><head><style>${css}</style>${animate ? "" : `<style>${still}</style>`}</head><body class="bg-bg-white"><div id="root"></div><script>${script}</script></body></html>`,
+    await page.route(pageUrl, (route) =>
+      route.fulfill({
+        contentType: "text/html; charset=utf-8",
+        body: `<!doctype html><html><head><style>${css}</style>${animate ? "" : `<style>${still}</style>`}</head><body class="bg-bg-white"><div id="root"></div><script>${script}</script></body></html>`,
+      }),
     );
+    await page.goto(pageUrl);
     await page.waitForFunction(
       () =>
         window.ready.length === 1 &&
@@ -272,3 +289,57 @@ test("a close control leaves the banner in the document with `data-state=\"close
     },
     { animate: true },
   ));
+
+// Runs in the page: whether the banner's section has focus, and the outline
+// it draws, as "<style> <width>", or "none" when it draws none: when its
+// computed outline-style is `none` or its outline-width 0
+function readSection() {
+  const section = document.querySelector("section");
+  const { outlineStyle, outlineWidth } = getComputedStyle(section);
+  return {
+    focused: document.activeElement === section,
+    outline:
+      outlineStyle === "none" || parseFloat(outlineWidth) === 0
+        ? "none"
+        : `${outlineStyle} ${outlineWidth}`,
+  };
+}
+
+// The banner's section as it opens on the page's load, which doesn't move
+// focus; as it opens again from the keyboard, Enter on the page's Cookie
+// settings button after Enter on Accept all closed it, which moves focus to
+// it; and after Tab moves focus on to its close cross
+async function readSectionStates(page) {
+  const states = { "opened on load": await page.evaluate(readSection) };
+  await page.getByRole("button", { name: "Accept all" }).press("Enter");
+  await page.waitForFunction(() => !document.querySelector("section"));
+  await page.focus("#settings");
+  await page.keyboard.press("Enter");
+  await page.waitForSelector("section[data-state=open]");
+  states["opened by keyboard"] = await page.evaluate(readSection);
+  await page.keyboard.press("Tab");
+  states["after Tab"] = await page.evaluate(readSection);
+  return states;
+}
+
+test("under forced colours, the banner's section draws no outline while focus is elsewhere, and a 2px one while it holds focus after the keyboard opened the banner", () =>
+  withPage(
+    desktop,
+    async (page) => {
+      assert.deepEqual(await readSectionStates(page), {
+        "opened on load": { focused: false, outline: "none" },
+        "opened by keyboard": { focused: true, outline: "solid 2px" },
+        "after Tab": { focused: false, outline: "none" },
+      });
+    },
+    { forcedColors: "active" },
+  ));
+
+test("in normal colours, the banner's section draws no outline, even while it holds focus after the keyboard opened the banner", () =>
+  withPage(desktop, async (page) => {
+    assert.deepEqual(await readSectionStates(page), {
+      "opened on load": { focused: false, outline: "none" },
+      "opened by keyboard": { focused: true, outline: "none" },
+      "after Tab": { focused: false, outline: "none" },
+    });
+  }));

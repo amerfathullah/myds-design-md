@@ -33,7 +33,7 @@ interface InputProps
 
 const input_cva = cva(
   [
-    "bg-bg-white border border-transparent outline-hidden box-border rounded-md",
+    "bg-bg-white border border-transparent focus:outline-hidden box-border rounded-md",
     "placeholder:text-txt-black-500 text-txt-black-700 transition-colors w-full",
     "focus:ring-3 focus:ring-fr-primary focus:border-otl-primary-300",
     // The input's aria-invalid, which the invalid prop sets, picks the error
@@ -88,7 +88,7 @@ const Input: ForwardRefExoticComponent<InputProps> = forwardRef(
     return (
       <div
         className={clx(
-          "border-otl-gray-200 relative rounded-md border outline-hidden",
+          "border-otl-gray-200 relative rounded-md border",
           className,
         )}
       >
@@ -122,7 +122,7 @@ Input.displayName = "Input";
 const input_addon_cva = cva(
   [
     "flex items-center",
-    "border border-transparent outline-hidden box-border ",
+    "border border-transparent box-border",
     "[&:not(:last-child)]:border-r-otl-gray-200 [&:not(:first-child)]:border-l-otl-gray-200",
   ],
   {

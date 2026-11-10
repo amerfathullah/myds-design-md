@@ -46,7 +46,10 @@ const options = {
   highlighted: 'data-state="unchecked" data-highlighted=""',
   "selected and highlighted": 'data-state="checked" data-highlighted=""',
 };
-const highlighted = ["highlighted", "selected and highlighted"];
+const highlighted = Object.keys(options).filter((state) => state !== "resting");
+
+// The id of a list's panel or option, with no spaces
+const id = (kind, part) => `${kind}-${part.replaceAll(" ", "_")}`;
 
 // The open list Select renders at the small size: its panel, holding each of
 // the options, with ids from `kind`
@@ -56,12 +59,12 @@ function list(kind, multiple) {
     multiple,
     disabled: false,
   });
-  return `<div id="${kind}-panel" class="${cvaClasses(select, "select_content_cva", { size: "small" })}">${Object.entries(
+  return `<div id="${id(kind, "panel")}" class="${cvaClasses(select, "select_content_cva", { size: "small" })}">${Object.entries(
     options,
   )
     .map(
       ([state, attributes]) =>
-        `<div id="${kind}-${state}" role="option" ${attributes} class="${item}">Option</div>`,
+        `<div id="${id(kind, state)}" role="option" ${attributes} class="${item}">Option</div>`,
     )
     .join("")}</div>`;
 }
@@ -110,8 +113,8 @@ test("a highlighted SelectItem looks like a focused DropdownItem, set apart from
         );
         const colours = await page.evaluate(readColours);
         for (const [kind] of kinds) {
-          const panel = colours[`${kind}-panel`];
-          const resting = colours[`${kind}-resting`];
+          const panel = colours[id(kind, "panel")];
+          const resting = colours[id(kind, "resting")];
           const key = (state) => `${entry}: ${kind}, ${state} (${theme})`;
 
           actual[key("resting")] = resting;
@@ -120,7 +123,7 @@ test("a highlighted SelectItem looks like a focused DropdownItem, set apart from
             colour: colours["txt-black-700"].colour,
           };
           for (const state of highlighted) {
-            const { background, colour } = colours[`${kind}-${state}`];
+            const { background, colour } = colours[id(kind, state)];
             actual[key(state)] = {
               background,
               colour,

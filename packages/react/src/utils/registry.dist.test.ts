@@ -2,13 +2,12 @@
 // a provider from one entry reaches a consumer from another: under the
 // `require` condition (#119), under `import`, and with the provider loaded
 // through one and its consumer through the other (#235), the Navbar parts
-// included (#162). Node child
-// processes load the package by its own name from the package root, in
-// happy-dom where a case needs a DOM. It also checks what sharing them must
-// leave as it is: the "use client" directives, the sourcemaps, every entry
-// loading when globalThis or the registry's key can't be used, and what
-// loads under React's react-server build. It needs `pnpm build` first, and
-// fails, rather than skips, without it.
+// included (#162). Node child processes load the package by its own name
+// from the package root, in happy-dom where a case needs a DOM. It also
+// checks what sharing them must leave as it is: the "use client" directives,
+// the sourcemaps, every entry loading when globalThis or the registry's key
+// can't be used, and what loads under React's react-server build. It needs
+// `pnpm build` first, and fails, rather than skips, without it.
 /// <reference types="node" />
 import { execFile } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";

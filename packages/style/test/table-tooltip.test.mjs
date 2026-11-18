@@ -105,19 +105,19 @@ before(async () => {
     ),
   ]);
   // Transitions and animations off, so each state reads as it ends
-  for (const [variant, script] of Object.entries({ current, main }))
-    html[variant] =
+  for (const [build, script] of Object.entries({ current, main }))
+    html[build] =
       `<!doctype html><html><head><style>${css}</style><style>*,::before,::after{transition:none!important;animation:none!important}</style></head><body class="bg-bg-white"><div id="root"></div><script>${script}</script></body></html>`;
   browser = await chromium.launch();
 });
 after(() => browser?.close());
 
-// Opens the page `width` px wide, in `theme`, as it is or with main's
-// TableTooltip (`variant`), and runs `use` on it once React has rendered
-// it, with the pointer away from the tables. Each trigger gets its table's
+// Opens the page `width` px wide, in `theme`, built as it is ("current") or
+// with main's TableTooltip ("main"), and runs `use` on it once React has
+// rendered it, with the pointer away from the tables. Each trigger gets its table's
 // `data-test` as `data-trigger`, the button before it as `data-neighbour`,
 // and its header's text as `data-text`. Nothing logs an error.
-async function withPage({ variant = "current", width, theme }, use) {
+async function withPage({ build = "current", width, theme }, use) {
   const context = await browser.newContext({ viewport: { width, height } });
   try {
     const page = await context.newPage();
@@ -127,7 +127,7 @@ async function withPage({ variant = "current", width, theme }, use) {
       if (["error", "warning"].includes(message.type()))
         errors.push(message.text());
     });
-    await page.setContent(html[variant]);
+    await page.setContent(html[build]);
     await page.waitForFunction(() => window.ready.length === 1);
     if (theme === "dark")
       await page.evaluate(() => document.documentElement.classList.add("dark"));
@@ -152,22 +152,26 @@ async function withPage({ variant = "current", width, theme }, use) {
   }
 }
 
-// Runs `use` on a page at each width and in each theme, and returns its
-// results keyed by "<width>px, <theme>"
+// Runs `use` on a page at each width and in each theme, with that
+// `{ width, theme }`, and returns its results keyed by "<width>px, <theme>"
 async function eachView(options, use) {
   const results = {};
   for (const width of widths)
     for (const theme of themes)
       results[`${width}px, ${theme}`] = await withPage(
         { ...options, width, theme },
-        use,
+        (page) => use(page, { width, theme }),
       );
   return results;
 }
 
+// `expected` under each view `results` has
+const inEveryView = (results, expected) =>
+  Object.fromEntries(Object.keys(results).map((view) => [view, expected]));
+
 // Each number in `actual` more than 0.01px from its place in `expected`, or
 // a place one has and the other doesn't, as "path: actual ≠ expected"
-function drift(actual, expected, at = "") {
+function mismatches(actual, expected, at = "") {
   if (typeof actual === "number" && typeof expected === "number")
     return Math.abs(actual - expected) <= 0.01
       ? []
@@ -181,7 +185,7 @@ function drift(actual, expected, at = "") {
     return [...new Set([...Object.keys(actual), ...Object.keys(expected)])]
       .sort()
       .flatMap((key) =>
-        drift(actual[key], expected[key], at ? `${at}.${key}` : key),
+        mismatches(actual[key], expected[key], at ? `${at}.${key}` : key),
       );
   return actual === expected
     ? []
@@ -230,14 +234,14 @@ function readLayout() {
 }
 
 test("the icon, the trigger's own box, the header row and the columns sit where main's do, at rest and once sorted and widened", async () => {
-  const measure = (variant) =>
-    eachView({ variant }, async (page) => {
+  const measure = (build) =>
+    eachView({ build }, async (page) => {
       const rest = await page.evaluate(readLayout);
       await sortAndWiden(page);
       return { rest, "sorted and widened": await page.evaluate(readLayout) };
     });
   const [current, main] = [await measure("current"), await measure("main")];
-  assert.deepEqual(drift(current, main), []);
+  assert.deepEqual(mismatches(current, main), []);
 });
 
 // Runs in the page: each point checked, as a description, that hit-testing
@@ -290,12 +294,7 @@ test("each trigger's hit area covers a 24×24 box centred on its icon and stops 
   });
   assert.deepEqual(
     misses,
-    Object.fromEntries(
-      Object.keys(misses).map((view) => [
-        view,
-        { rest: [], "sorted and widened": [] },
-      ]),
-    ),
+    inEveryView(misses, { rest: [], "sorted and widened": [] }),
   );
 });
 
@@ -347,8 +346,8 @@ test("hovering the hit area beside the icon opens the tooltip where main's opene
   const reach = hitBox.size / 2 - hitBox.inset;
   // Each trigger's tooltip, opened from a point `offset` px left of its icon's
   // centre
-  const open = (variant, offset) =>
-    eachView({ variant }, async (page) => {
+  const open = (build, offset) =>
+    eachView({ build }, async (page) => {
       const tooltips = {};
       for (const test of Object.keys(triggers)) {
         const { x, y } = await iconCentre(page, test);
@@ -360,7 +359,7 @@ test("hovering the hit area beside the icon opens the tooltip where main's opene
   // Outside the icon, whose half is 8px wide, and inside the hit area
   const current = await open("current", reach);
   const main = await open("main", 0);
-  assert.deepEqual(drift(current, main), []);
+  assert.deepEqual(mismatches(current, main), []);
 });
 
 // Runs in the page: whether the focused element is a trigger, whether it
@@ -407,49 +406,53 @@ async function shots(page, selectors) {
 }
 
 test("a keyboard-focused trigger's fr-primary ring paints nothing inside the button before it or its header's text", async () => {
-  const actual = {};
-  const expected = {};
-  for (const width of widths)
-    for (const theme of themes)
-      await withPage({ width, theme }, async (page) => {
-        // Focus opens the tooltip, above the trigger. Hidden, it can't
-        // paint into the boxes compared.
-        await page.addStyleTag({
-          content:
-            "[data-radix-popper-content-wrapper]{visibility:hidden!important}",
-        });
-        for (const [test, { neighbour }] of Object.entries(triggers)) {
-          const boxes = [
-            ...(neighbour ? [`[data-neighbour=${test}]`] : []),
-            `[data-text=${test}]`,
-          ];
-          const unfocused = await shots(page, boxes);
-          await page.focus("[data-test=before]");
-          for (let presses = 0; presses < 40; presses++) {
-            await page.keyboard.press("Tab");
-            if ((await page.evaluate(readFocus)).trigger === test) break;
-          }
-          const focus = await page.evaluate(readFocus);
-          const focused = await shots(page, boxes);
-          const key = `${test}, ${width}px, ${theme}`;
-          actual[key] = {
-            focus,
-            unchanged: focused.map((image, index) =>
-              image.equals(unfocused[index]),
-            ),
-          };
-          expected[key] = {
-            focus: {
-              trigger: test,
-              visible: true,
-              ring: [`${colours[theme]["fr-primary"]} 0px 0px 0px 3px`],
-            },
-            unchanged: boxes.map(() => true),
-          };
-          await page.evaluate(() => document.activeElement.blur());
-        }
-      });
-  assert.deepEqual(actual, expected);
+  // The ring's colour depends on the theme, so each view returns what it
+  // read and what it expects
+  const views = await eachView({}, async (page, { theme }) => {
+    // Focus opens the tooltip, above the trigger. Hidden, it can't paint
+    // into the boxes compared.
+    await page.addStyleTag({
+      content:
+        "[data-radix-popper-content-wrapper]{visibility:hidden!important}",
+    });
+    const actual = {};
+    const expected = {};
+    for (const [test, { neighbour }] of Object.entries(triggers)) {
+      const boxes = [
+        ...(neighbour ? [`[data-neighbour=${test}]`] : []),
+        `[data-text=${test}]`,
+      ];
+      const unfocused = await shots(page, boxes);
+      await page.focus("[data-test=before]");
+      for (let presses = 0; presses < 40; presses++) {
+        await page.keyboard.press("Tab");
+        if ((await page.evaluate(readFocus)).trigger === test) break;
+      }
+      const focus = await page.evaluate(readFocus);
+      const focused = await shots(page, boxes);
+      actual[test] = {
+        focus,
+        unchanged: focused.map((image, index) =>
+          image.equals(unfocused[index]),
+        ),
+      };
+      expected[test] = {
+        focus: {
+          trigger: test,
+          visible: true,
+          ring: [`${colours[theme]["fr-primary"]} 0px 0px 0px 3px`],
+        },
+        unchanged: boxes.map(() => true),
+      };
+      await page.evaluate(() => document.activeElement.blur());
+    }
+    return { actual, expected };
+  });
+  const each = (part) =>
+    Object.fromEntries(
+      Object.entries(views).map(([view, result]) => [view, result[part]]),
+    );
+  assert.deepEqual(each("actual"), each("expected"));
 });
 
 // Runs in the page: the cursor over each trigger and over its hit area, its
@@ -478,10 +481,7 @@ test("the pointer shows the help cursor over each trigger's whole hit area", asy
       { trigger: "help", area: "help", rendered: true },
     ]),
   );
-  assert.deepEqual(
-    cursors,
-    Object.fromEntries(Object.keys(cursors).map((view) => [view, help])),
-  );
+  assert.deepEqual(cursors, inEveryView(cursors, help));
 });
 
 // Runs in the page: scrolls the pinned DataTable until its Age column's
@@ -525,15 +525,10 @@ test("a pinned DataTable column scrolled over a trigger covers its whole hit are
   );
   assert.deepEqual(
     pinned,
-    Object.fromEntries(
-      Object.keys(pinned).map((view) => [
-        view,
-        {
-          scrolled: true,
-          under: true,
-          hits: Array(9).fill("pinned header"),
-        },
-      ]),
-    ),
+    inEveryView(pinned, {
+      scrolled: true,
+      under: true,
+      hits: Array(9).fill("pinned header"),
+    }),
   );
 });

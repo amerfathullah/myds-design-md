@@ -9,7 +9,6 @@ import {
   useId,
 } from "react";
 import { clx } from "../utils";
-import { Slot } from "@radix-ui/react-slot";
 import { Link } from "./link";
 
 type FooterSectionProps = ComponentProps<"div">;
@@ -163,29 +162,14 @@ interface SiteLinkProps extends ComponentProps<typeof Link> {
   href?: string;
 }
 
+// With `asChild`, Link slots the child, which gets Link's classes and
+// `target`, and Link keeps `newTab`, `primary` and `underline`
 const SiteLink: ForwardRefExoticComponent<SiteLinkProps> = forwardRef(
-  ({ children, className, asChild = false, href, ...props }, ref) => {
-    // The child doesn't get Link's classes, so it takes Link's focus ring here
-    if (asChild) {
-      return (
-        <Slot
-          className={clx(
-            "hover:text-txt-black-900 focus-visible:ring-fr-primary box-decoration-clone focus-visible:ring-3 focus-visible:outline-hidden",
-            className,
-          )}
-          ref={ref}
-          {...props}
-        >
-          {children}
-        </Slot>
-      );
-    }
-
+  ({ children, className, ...props }, ref) => {
     return (
       <Link
         className={clx("hover:text-txt-black-900", className)}
         ref={ref}
-        href={href}
         underline="hover"
         {...props}
       >

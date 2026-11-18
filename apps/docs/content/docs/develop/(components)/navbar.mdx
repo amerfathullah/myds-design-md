@@ -267,7 +267,9 @@ Screen readers announce the menu's `<nav>` landmark as "Main". Pass an `aria-lab
 
 ### Navbar Action
 
-On screens narrower than 1280px, `NavbarAction` also shows a button that opens and closes the mobile menu. Screen readers announce it as "Open navigation menu", or "Close navigation menu" while the menu is open. An `aria-label` on `NavbarAction` replaces both names, for example `aria-label="Menu navigasi"`. The button then no longer tells screen readers whether the menu is open.
+On screens narrower than 1280px, `NavbarAction` also shows a button that opens and closes the mobile menu. Screen readers announce it as "Menu", and say whether the menu is open. An `aria-label` on `NavbarAction` renames it, for example `aria-label="Navigasi"`, and screen readers still say whether the menu is open.
+
+Enter or Space on the button opens the menu and moves focus to its first item. Tab and Shift+Tab move through the menu's items and the button. Escape closes the menu and returns focus to the button, as do the button itself and a press on the overlay behind the menu. A press elsewhere on the page closes the menu and leaves focus where you pressed.
 
 <Tabs items={["Preview", "Code"]}>
 
@@ -468,9 +470,9 @@ On screens narrower than 1280px, `NavbarAction` also shows a button that opens a
     },
     "aria-label": {
       description:
-        "Accessible name of the button that opens and closes the mobile menu. It replaces both default names, so the button no longer says whether the menu is open.",
+        "Accessible name of the button that opens and closes the mobile menu. Screen readers still say whether the menu is open.",
       type: "string",
-      default: '"Open navigation menu" / "Close navigation menu"',
+      default: "Menu",
     },
   }}
 />

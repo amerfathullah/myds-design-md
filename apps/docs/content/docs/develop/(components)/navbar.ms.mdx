@@ -267,7 +267,9 @@ Pembaca skrin menyebut landmark `<nav>` menu ini sebagai "Main". Hantar `aria-la
 
 ### Tindakan Bar Navigasi
 
-Pada skrin yang lebih sempit daripada 1280px, `NavbarAction` turut memaparkan butang yang membuka dan menutup menu mudah alih. Pembaca skrin menyebutnya sebagai "Open navigation menu", atau "Close navigation menu" semasa menu dibuka. `aria-label` pada `NavbarAction` menggantikan kedua-dua nama ini, contohnya `aria-label="Menu navigasi"`. Butang itu kemudiannya tidak lagi memberitahu pembaca skrin sama ada menu dibuka.
+Pada skrin yang lebih sempit daripada 1280px, `NavbarAction` turut memaparkan butang yang membuka dan menutup menu mudah alih. Pembaca skrin menyebutnya sebagai "Menu", dan memberitahu sama ada menu dibuka. `aria-label` pada `NavbarAction` menamakannya semula, contohnya `aria-label="Navigasi"`, dan pembaca skrin masih memberitahu sama ada menu dibuka.
+
+Kekunci Enter atau Space pada butang itu membuka menu dan mengalihkan fokus ke item pertamanya. Tab dan Shift+Tab bergerak melalui item menu dan butang itu. Kekunci Escape menutup menu dan mengembalikan fokus ke butang itu, begitu juga butang itu sendiri dan menekan lapisan di belakang menu. Menekan di tempat lain pada halaman menutup menu dan membiarkan fokus di tempat yang ditekan.
 
 <Tabs items={["Pratonton", "Kod"]}>
 
@@ -470,9 +472,9 @@ Pada skrin yang lebih sempit daripada 1280px, `NavbarAction` turut memaparkan bu
     },
     "aria-label": {
       description:
-        "Nama boleh capai butang yang membuka dan menutup menu mudah alih. Ia menggantikan kedua-dua nama lalai, jadi butang itu tidak lagi memberitahu sama ada menu dibuka.",
+        "Nama boleh capai butang yang membuka dan menutup menu mudah alih. Pembaca skrin masih memberitahu sama ada menu dibuka.",
       type: "string",
-      default: '"Open navigation menu" / "Close navigation menu"',
+      default: "Menu",
     },
   }}
 />

@@ -6,6 +6,7 @@ import {
   type ReactElement,
 } from "react";
 import { createRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -770,12 +771,135 @@ describe("NavbarAction's menu toggle", () => {
       ),
     );
 
-  test('is named "Open navigation menu" by default', async () => {
-    expect(await toggle()).toBe("Open navigation menu");
+  test('is named "Menu" by default', async () => {
+    expect(await toggle()).toBe("Menu");
   });
 
   test("lets an `aria-label` rename it", async () => {
     expect(await toggle("Menu navigasi")).toBe("Menu navigasi");
+  });
+});
+
+// The toggle as it opens and closes the mobile menu (#162). Its name stays
+// the same, and `aria-expanded` and `aria-controls` give the menu's state.
+describe("NavbarAction's menu toggle, opening and closing the menu", () => {
+  // A Navbar with a one-item menu and its toggle, or with only its toggle
+  // when `menu` is false. `action` goes to NavbarAction. Returns the toggle.
+  async function toggle(
+    action: ComponentProps<typeof NavbarAction> = {},
+    { menu = true } = {},
+  ) {
+    const page = await mount(
+      createElement(
+        Navbar,
+        null,
+        menu &&
+          createElement(NavbarMenu, {
+            children: createElement(NavbarMenuItem, {
+              href: "#perkhidmatan",
+              children: "Perkhidmatan",
+            }),
+          }),
+        createElement(NavbarAction, action),
+      ),
+    );
+    const [button, ...others] = page.querySelectorAll("button");
+    expect(others).toEqual([]);
+    return button!;
+  }
+
+  const press = (button: HTMLButtonElement) => act(async () => button.click());
+
+  // The toggle's name, `aria-expanded` and `aria-controls`
+  const state = (button: HTMLButtonElement) => ({
+    name: computeAccessibleName(button),
+    expanded: button.getAttribute("aria-expanded"),
+    controls: button.getAttribute("aria-controls"),
+  });
+
+  test('is named "Menu", and says the menu is closed, then open, then closed', async () => {
+    const button = await toggle();
+    const named = () => [
+      computeAccessibleName(button),
+      button.getAttribute("aria-expanded"),
+    ];
+    const closed = named();
+    await press(button);
+    const open = named();
+    await press(button);
+    expect([closed, open, named()]).toEqual([
+      ["Menu", "false"],
+      ["Menu", "true"],
+      ["Menu", "false"],
+    ]);
+  });
+
+  test("controls the menu's panel only while it's open", async () => {
+    const button = await toggle();
+    expect(button.hasAttribute("aria-controls")).toBe(false);
+    await press(button);
+    const panel = document.getElementById(
+      button.getAttribute("aria-controls")!,
+    );
+    expect(panel?.querySelector('a[href="#perkhidmatan"]')).not.toBeNull();
+    // The panel is the menu, not part of the header around the toggle
+    expect(panel?.contains(button)).toBe(false);
+    await press(button);
+    expect(button.hasAttribute("aria-controls")).toBe(false);
+  });
+
+  test("with no NavbarMenu, says it's open but controls nothing", async () => {
+    const button = await toggle({}, { menu: false });
+    await press(button);
+    expect(state(button)).toEqual({
+      name: "Menu",
+      expanded: "true",
+      controls: null,
+    });
+  });
+
+  test("lets an `aria-label` rename it, open or closed", async () => {
+    const button = await toggle(ariaLabel("Navigasi"));
+    const closed = computeAccessibleName(button);
+    await press(button);
+    expect([closed, computeAccessibleName(button)]).toEqual([
+      "Navigasi",
+      "Navigasi",
+    ]);
+    expect(withAttribute("aria-label", "Navigasi")).toEqual([button]);
+  });
+
+  test("calls `onClick` with no arguments on each press, opening and closing", async () => {
+    const onClick = vi.fn();
+    const button = await toggle({ onClick });
+    await press(button);
+    await press(button);
+    expect(onClick.mock.calls).toEqual([[], []]);
+  });
+
+  test('outside a Navbar, mounts as a toggle named "Menu" that opens nothing', async () => {
+    const onClick = vi.fn();
+    const page = await mount(createElement(NavbarAction, { onClick }));
+    const button = page.querySelector("button")!;
+    await press(button);
+    expect(state(button)).toEqual({
+      name: "Menu",
+      expanded: "false",
+      controls: null,
+    });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  test('outside a Navbar, renders on the server as a closed toggle named "Menu"', () => {
+    const html = renderToString(createElement(NavbarAction));
+    const page = document.body.appendChild(document.createElement("div"));
+    unmounts.push(async () => page.remove());
+    page.innerHTML = html;
+    expect(state(page.querySelector("button")!)).toEqual({
+      name: "Menu",
+      expanded: "false",
+      controls: null,
+    });
   });
 });
 

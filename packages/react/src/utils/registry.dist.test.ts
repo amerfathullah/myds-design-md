@@ -1,7 +1,8 @@
 // The built package makes each React context and the toast emitter once, so
 // a provider from one entry reaches a consumer from another: under the
 // `require` condition (#119), under `import`, and with the provider loaded
-// through one and its consumer through the other (#235). Node child
+// through one and its consumer through the other (#235), the Navbar parts
+// included (#162). Node child
 // processes load the package by its own name from the package root, in
 // happy-dom where a case needs a DOM. It also checks what sharing them must
 // leave as it is: the "use client" directives, the sourcemaps, every entry
@@ -133,6 +134,13 @@ interface Cases {
     >;
   }>;
 }
+// A Navbar toggle's name, `aria-expanded`, and the text of what its
+// `aria-controls` names
+interface ToggleState {
+  name: string | null;
+  expanded: string | null;
+  controls: string | null;
+}
 interface Mixed {
   oneReact: boolean;
   files: Record<Condition, Record<string, string>>;
@@ -142,6 +150,7 @@ interface Mixed {
       themeProvider: Case<string>;
       themeContext: Case<string>;
       toast: Case<string[]>;
+      navbarMenu: Case<{ before: ToggleState; after: ToggleState }>;
     }
   >;
 }
@@ -341,6 +350,18 @@ describe(
         const results = (await mixedRun()).directions[`${from} to ${to}`];
         const { title, description } = toastText(`${from} to ${to}`);
         expect(resultOf(results.toast)).toEqual([title + description]);
+      },
+    );
+
+    // The Navbar parts share their state only through NavbarContext (#162)
+    test.each(directions)(
+      "Navbar from `%s` opens its mobile menu from NavbarAction's toggle, with NavbarMenu and NavbarAction from `%s`",
+      async (from, to) => {
+        const results = (await mixedRun()).directions[`${from} to ${to}`];
+        expect(resultOf(results.navbarMenu)).toEqual({
+          before: { name: "Menu", expanded: "false", controls: null },
+          after: { name: "Menu", expanded: "true", controls: "Home" },
+        });
       },
     );
   },

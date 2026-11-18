@@ -41,6 +41,7 @@ export const caseEntries = {
   pagination: "pagination",
   cookieBanner: "cookie-banner",
   skiplink: "skiplink",
+  navbar: "navbar",
 } as const;
 
 /** A toast's title and description, which AutoToast shows as its text */
@@ -326,6 +327,32 @@ const cases = `
         }]),
       ),
     };
+  };
+
+  // The toggle of a Navbar from \`p\`, with NavbarMenu, NavbarMenuItem and
+  // NavbarAction from \`c\`: its name, its \`aria-expanded\`, and the text of
+  // what its \`aria-controls\` names, before and after a press opens the
+  // mobile menu
+  const navbarMenu = async (p, c) => {
+    const { NavbarMenu, NavbarMenuItem, NavbarAction } = c.navbar;
+    const view = await mount(
+      h(p.navbar.Navbar, null,
+        h(NavbarMenu, null, h(NavbarMenuItem, { href: "#home" }, "Home")),
+        h(NavbarAction)),
+    );
+    const toggle = view.container.querySelector("button");
+    const state = () => ({
+      name: toggle?.getAttribute("aria-label") ?? null,
+      expanded: toggle?.getAttribute("aria-expanded") ?? null,
+      controls:
+        document.getElementById(toggle?.getAttribute("aria-controls") ?? "")
+          ?.textContent ?? null,
+    });
+    const before = state();
+    await click(toggle);
+    const after = state();
+    await view.unmount();
+    return { before, after };
   };`;
 
 /**
@@ -369,8 +396,8 @@ export const directions = [
 
 /**
  * One process that loads every case's entry through both conditions, and
- * runs ThemeProvider, ThemeContext.Provider and toast() with the provider
- * from one condition and the consumer from the other
+ * runs ThemeProvider, ThemeContext.Provider, toast() and Navbar with the
+ * provider from one condition and the consumer from the other
  */
 export const mixedProgram = (pkgName: string, subpaths: string[]) =>
   header("import") +
@@ -399,6 +426,7 @@ export const mixedProgram = (pkgName: string, subpaths: string[]) =>
         themeProvider: await attempt(() => themeProviderServer(p, c)),
         themeContext: await attempt(() => themeContextServer(p, c)),
         toast: await attempt(() => toastShown(p, c, text)),
+        navbarMenu: await attempt(() => navbarMenu(p, c)),
       };
     }
     await win.happyDOM.close();

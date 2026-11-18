@@ -1,6 +1,13 @@
 import { QuestionCircleIcon } from "../icons";
 import { clx } from "../utils";
-import { forwardRef, ForwardRefExoticComponent, ComponentProps } from "react";
+import {
+  forwardRef,
+  ForwardRefExoticComponent,
+  ComponentProps,
+  ComponentPropsWithoutRef,
+  ReactNode,
+  RefAttributes,
+} from "react";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
@@ -107,23 +114,77 @@ const TableCaption: ForwardRefExoticComponent<ComponentProps<"caption">> =
   ));
 TableCaption.displayName = "TableCaption";
 
-interface TableTooltipProps extends ComponentProps<typeof Tooltip> {
+/** The props TableTooltip passes to the tooltip root */
+type TableTooltipRootProps = Pick<
+  ComponentProps<typeof Tooltip>,
+  | "open"
+  | "defaultOpen"
+  | "onOpenChange"
+  | "delayDuration"
+  | "disableHoverableContent"
+>;
+
+/**
+ * The tooltip root's props, the tooltip's content as `children`, and the
+ * trigger button's other props. The trigger renders its own icon, so it
+ * takes no `children` or `asChild`.
+ */
+interface TableTooltipProps
+  extends
+    Omit<
+      ComponentPropsWithoutRef<typeof TooltipTrigger>,
+      "children" | "asChild"
+    >,
+    TableTooltipRootProps {
+  /** The tooltip's content */
+  children?: ReactNode;
   /**
    * Accessible name of the trigger, a question-mark icon. Screen readers
-   * announce it; it isn't shown. Set it in your site's language. The other
-   * props go to the tooltip root.
+   * announce it; it isn't shown. Set it in your site's language. An
+   * `undefined` name gets the default too.
    * @default "Tooltip"
    */
   "aria-label"?: string;
 }
 
-const TableTooltip: ForwardRefExoticComponent<TableTooltipProps> = forwardRef(
-  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  ({ children, "aria-label": ariaLabel = "Tooltip", ...props }, ref) => {
+const TableTooltip: ForwardRefExoticComponent<
+  TableTooltipProps & RefAttributes<HTMLButtonElement>
+> = forwardRef<HTMLButtonElement, TableTooltipProps>(
+  (
+    {
+      children,
+      open,
+      defaultOpen,
+      onOpenChange,
+      delayDuration,
+      disableHoverableContent,
+      "aria-label": ariaLabel = "Tooltip",
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     return (
-      <Tooltip {...props}>
-        <TooltipTrigger aria-label={ariaLabel}>
-          <QuestionCircleIcon className="text-txt-black-500 size-4 cursor-help" />
+      <Tooltip
+        open={open}
+        defaultOpen={defaultOpen}
+        onOpenChange={onOpenChange}
+        delayDuration={delayDuration}
+        disableHoverableContent={disableHoverableContent}
+      >
+        <TooltipTrigger
+          ref={ref}
+          aria-label={ariaLabel}
+          className={clx(
+            // A 24×24 hit area around the 16px icon, drawn by a pseudo-element
+            // so the trigger's own box, which the focus ring draws around,
+            // and the layout stay as they were
+            "relative cursor-help after:absolute after:-inset-1",
+            className,
+          )}
+          {...props}
+        >
+          <QuestionCircleIcon className="text-txt-black-500 size-4" />
         </TooltipTrigger>
         <TooltipContent side="top" align="center">
           {children}

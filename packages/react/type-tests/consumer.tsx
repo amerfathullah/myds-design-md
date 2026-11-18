@@ -666,6 +666,48 @@ export const DataTableLabels = () => (
   </>
 );
 
+// TableTooltip passes the tooltip root's props to the root, and its other
+// props and its ref to the trigger button. The trigger renders its own icon,
+// so it takes no `asChild`.
+export const TableTooltipTrigger = () => {
+  const trigger = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <TableTooltip
+        ref={trigger}
+        id="umur-info"
+        className="ml-2"
+        type="button"
+        style={{ marginInlineStart: 4 }}
+        data-column="umur"
+        aria-describedby="umur-hint"
+        onClick={(event: MouseEvent<HTMLButtonElement>) => void event}
+        open
+        defaultOpen={false}
+        onOpenChange={(open: boolean) => void open}
+        delayDuration={0}
+        disableHoverableContent
+      >
+        Umur dalam tahun
+      </TableTooltip>
+      <TableTooltip
+        ref={(node: HTMLButtonElement | null) => void node}
+        aria-label={undefined}
+      >
+        Umur dalam tahun
+      </TableTooltip>
+      {/* @ts-expect-error its ref is the trigger button */}
+      <TableTooltip ref={createRef<HTMLDivElement>()}>
+        Umur dalam tahun
+      </TableTooltip>
+      {/* @ts-expect-error the trigger renders its own icon */}
+      <TableTooltip asChild>Umur dalam tahun</TableTooltip>
+      {/* @ts-expect-error a button takes no `bogus` */}
+      <TableTooltip bogus>Umur dalam tahun</TableTooltip>
+    </>
+  );
+};
+
 // The date pickers' calendar takes its names from `locale`, apart from the
 // month view's year buttons, which take theirs from `previousYearLabel` and
 // `nextYearLabel`

@@ -2,6 +2,7 @@
 import {
   act,
   createElement,
+  createRef,
   type ComponentProps,
   type FormEvent,
   type ReactElement,
@@ -686,11 +687,49 @@ describe("TableTooltip", () => {
     expect(namesOf(page, "button")).toEqual(["Maklumat"]);
   });
 
+  test("gives a `ref` its trigger button", async () => {
+    const ref = createRef<HTMLButtonElement>();
+    const page = await tableTooltip({ ref });
+    expect(ref.current).toBe(page.querySelector("button"));
+  });
+
+  test("puts a `className`, an `id` and `data-*` attributes on its trigger button", async () => {
+    const page = await tableTooltip({
+      className: "ml-2",
+      id: "umur-info",
+      "data-column": "umur",
+    } as ComponentProps<typeof TableTooltip>);
+    const button = page.querySelector("button")!;
+    expect({
+      id: button.id,
+      column: button.dataset.column,
+      // The library's own classes stay, with the author's after them
+      ring: button.classList.contains("focus-visible:ring-fr-primary"),
+      last: [...button.classList].at(-1),
+    }).toEqual({ id: "umur-info", column: "umur", ring: true, last: "ml-2" });
+  });
+
   // The root renders no element, so check what `open` does
-  test("passes its other props to the tooltip root", async () => {
+  test("passes `open` to the tooltip root", async () => {
     await tableTooltip({ open: true, "aria-label": "Maklumat" });
     expect(document.querySelector('[role="tooltip"]')?.textContent).toBe(
       "Umur dalam tahun",
     );
+  });
+
+  test("passes `onOpenChange` to the tooltip root, and stays closed while `open` is false", async () => {
+    const onOpenChange = vi.fn();
+    const page = await tableTooltip({ open: false, onOpenChange });
+    // Focus opens a tooltip
+    await act(async () => page.querySelector("button")!.focus());
+    expect({
+      calls: onOpenChange.mock.calls,
+      shown: document.querySelector('[role="tooltip"]'),
+    }).toEqual({ calls: [[true]], shown: null });
+  });
+
+  test('names its trigger "Tooltip" when `aria-label` is `undefined`, as DataTable passes it', async () => {
+    const page = await tableTooltip({ "aria-label": undefined });
+    expect(namesOf(page, "button")).toEqual(["Tooltip"]);
   });
 });

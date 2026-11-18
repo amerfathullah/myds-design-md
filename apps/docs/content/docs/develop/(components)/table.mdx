@@ -631,24 +631,71 @@ Use the `TableEmpty` component to show the empty state.
 
 ### TableTooltip
 
-`TableTooltip` puts a question-mark icon in a header cell and shows its `children` as a tooltip. Screen readers announce the icon as "Tooltip". Pass an `aria-label` to name it in your site's language, for example `<TableTooltip aria-label="Maklumat">`. Its other props go to the tooltip root, Radix UI's `Tooltip`.
+`TableTooltip` puts a question-mark icon in a header cell and shows its `children` as a tooltip. The icon is the tooltip's trigger, a button: hovering over it or focusing it opens the tooltip. Its hit area is 24×24px, centred on the 16px icon, so it is easier to hover over. The icon, the header's layout and the focus ring around the icon stay as they are.
+
+Screen readers announce the trigger as "Tooltip". Pass an `aria-label` to name it in your site's language, for example `<TableTooltip aria-label="Maklumat">`.
+
+`open`, `defaultOpen`, `onOpenChange`, `delayDuration` and `disableHoverableContent` go to the tooltip root, Radix UI's `Tooltip`. Every other prop goes to the trigger button, and so does a `ref`: for example `className`, `id`, `style`, `type`, event handlers, and `data-*` and `aria-*` attributes.
+
+A header cell is named by its content, so the trigger's name joins the header's: screen readers announce a header holding "Umur" and a trigger named "Maklumat" as "Umur Maklumat". To keep the header's name to its text, put the text in an element with an id, and name the `TableHead` from it with `aria-labelledby`. `useId` gives each header its own id. Or give the `TableHead` an `aria-label` with its text. DataTable already names each header from its text, so its `meta.tooltip` needs neither.
 
 ```tsx
-<TableHead>
-  <div className="flex items-center gap-1">
-    Umur
-    <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
-  </div>
-</TableHead>
+import { useId } from "react";
+
+function AgeHeader() {
+  const labelId = useId();
+  return (
+    <TableHead aria-labelledby={labelId}>
+      <div className="flex items-center gap-1">
+        <span id={labelId}>Umur</span>
+        <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
+      </div>
+    </TableHead>
+  );
+}
 ```
 
 <TypeTable
   type={{
+    children: {
+      description: "The tooltip's content",
+      type: "ReactNode",
+    },
     "aria-label": {
       description:
-        "Accessible name of the trigger, a question-mark icon. Screen readers announce it; it is not shown.",
+        "Accessible name of the trigger, a question-mark icon. Screen readers announce it; it is not shown. An undefined name gets the default too.",
       type: "string",
       default: "Tooltip",
+    },
+    open: {
+      description: "Whether the tooltip is open, when you control it",
+      type: "boolean",
+    },
+    defaultOpen: {
+      description:
+        "Whether the tooltip is open when it first renders, when you don't control it",
+      type: "boolean",
+      default: "false",
+    },
+    onOpenChange: {
+      description: "Called when the tooltip opens or closes",
+      type: "(open: boolean) => void",
+    },
+    delayDuration: {
+      description:
+        "How long the pointer rests on the trigger before the tooltip opens, in milliseconds",
+      type: "number",
+      default: "200",
+    },
+    disableHoverableContent: {
+      description:
+        "Closes the tooltip as soon as the pointer leaves the trigger, instead of letting the pointer move onto the tooltip",
+      type: "boolean",
+      default: "false",
+    },
+    ref: {
+      description: "The trigger button",
+      type: "Ref<HTMLButtonElement>",
     },
   }}
 />

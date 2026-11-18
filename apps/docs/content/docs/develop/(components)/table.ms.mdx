@@ -631,24 +631,71 @@ Gunakan komponen `TableEmpty` untuk menunjukkan keadaan kosong.
 
 ### TableTooltip
 
-`TableTooltip` meletakkan ikon tanda soal dalam sel tajuk dan memaparkan kandungan `children` sebagai tooltip. Pembaca skrin menyebut ikon itu sebagai "Tooltip". Hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<TableTooltip aria-label="Maklumat">`. Prop lain dihantar kepada akar tooltip, iaitu `Tooltip` Radix UI.
+`TableTooltip` meletakkan ikon tanda soal dalam sel tajuk dan memaparkan kandungan `children` sebagai tooltip. Ikon itu ialah pencetus tooltip, iaitu sebuah butang: mengarahkan kursor ke atasnya atau memfokusnya membuka tooltip. Kawasan sasarannya berukuran 24×24px, berpusat pada ikon 16px, jadi lebih mudah untuk mengarahkan kursor ke atasnya. Ikon, susun atur tajuk dan cincin fokus di sekeliling ikon kekal seperti sedia ada.
+
+Pembaca skrin menyebut pencetus itu sebagai "Tooltip". Hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<TableTooltip aria-label="Maklumat">`.
+
+`open`, `defaultOpen`, `onOpenChange`, `delayDuration` dan `disableHoverableContent` dihantar kepada akar tooltip, iaitu `Tooltip` Radix UI. Setiap prop lain dihantar kepada butang pencetus, begitu juga `ref`: contohnya `className`, `id`, `style`, `type`, pengendali peristiwa, serta atribut `data-*` dan `aria-*`.
+
+Sel tajuk dinamakan oleh kandungannya, jadi nama pencetus turut menjadi sebahagian daripada nama tajuk: pembaca skrin menyebut tajuk yang mengandungi "Umur" dan pencetus bernama "Maklumat" sebagai "Umur Maklumat". Untuk mengekalkan nama tajuk kepada teksnya sahaja, letakkan teks itu dalam elemen yang mempunyai id, dan namakan `TableHead` daripadanya dengan `aria-labelledby`. `useId` memberikan setiap tajuk id tersendiri. Atau berikan `TableHead` `aria-label` dengan teksnya. DataTable sudah menamakan setiap tajuk daripada teksnya, jadi `meta.tooltip` tidak memerlukan kedua-duanya.
 
 ```tsx
-<TableHead>
-  <div className="flex items-center gap-1">
-    Umur
-    <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
-  </div>
-</TableHead>
+import { useId } from "react";
+
+function AgeHeader() {
+  const labelId = useId();
+  return (
+    <TableHead aria-labelledby={labelId}>
+      <div className="flex items-center gap-1">
+        <span id={labelId}>Umur</span>
+        <TableTooltip aria-label="Maklumat">Umur dalam tahun</TableTooltip>
+      </div>
+    </TableHead>
+  );
+}
 ```
 
 <TypeTable
   type={{
+    children: {
+      description: "Kandungan tooltip",
+      type: "ReactNode",
+    },
     "aria-label": {
       description:
-        "Nama boleh capai pencetus, iaitu ikon tanda soal. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+        "Nama boleh capai pencetus, iaitu ikon tanda soal. Pembaca skrin menyebutnya; ia tidak dipaparkan. Nama undefined juga mendapat nilai lalai.",
       type: "string",
       default: "Tooltip",
+    },
+    open: {
+      description: "Sama ada tooltip terbuka, apabila anda mengawalnya",
+      type: "boolean",
+    },
+    defaultOpen: {
+      description:
+        "Sama ada tooltip terbuka semasa mula dipaparkan, apabila anda tidak mengawalnya",
+      type: "boolean",
+      default: "false",
+    },
+    onOpenChange: {
+      description: "Dipanggil apabila tooltip dibuka atau ditutup",
+      type: "(open: boolean) => void",
+    },
+    delayDuration: {
+      description:
+        "Tempoh kursor berada pada pencetus sebelum tooltip dibuka, dalam milisaat",
+      type: "number",
+      default: "200",
+    },
+    disableHoverableContent: {
+      description:
+        "Menutup tooltip sebaik sahaja kursor meninggalkan pencetus, dan bukannya membenarkan kursor bergerak ke atas tooltip",
+      type: "boolean",
+      default: "false",
+    },
+    ref: {
+      description: "Butang pencetus",
+      type: "Ref<HTMLButtonElement>",
     },
   }}
 />

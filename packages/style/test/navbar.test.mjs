@@ -420,108 +420,129 @@ for (const theme of themes) {
       },
       { ...options, forcedColors: "active" },
     ));
-}
 
-test("with a dropdown open, the first Escape closes only the dropdown, and the second closes the menu and leaves focus on the toggle", () =>
-  withPage(async (page) => {
-    await openWithEnter(page);
-    await openDropdown(page);
-    assert.deepEqual(await presses(page, "Tab", 1), ["Sub C"]);
-    await page.keyboard.press("Escape");
-    await page.waitForSelector(`${list} a[href="#Sub-C"]`, {
-      state: "detached",
-    });
-    await frames(page);
-    assert.equal(await focused(page), "Dropdown");
-    assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
-    await page.keyboard.press("Escape");
-    assert.deepEqual(await closed(page), {
-      focused: "toggle",
-      expanded: "false",
-    });
-  }));
-
-test("a click on the button before the Navbar closes the menu and leaves focus on that button", () =>
-  withPage(async (page) => {
-    await openWithEnter(page);
-    await page.click("[data-test=before]");
-    assert.deepEqual(await closed(page), {
-      focused: "before",
-      expanded: "false",
-    });
-  }));
-
-test("a click in the list's padding leaves the menu open and focus on the item that had it", () =>
-  withPage(async (page) => {
-    await openWithEnter(page);
-    await presses(page, "Tab", 1);
-    const box = await page.locator(list).boundingBox();
-    await page.mouse.click(box.x + 4, box.y + 4);
-    await frames(page);
-    assert.equal(await focused(page), "Menu B");
-    assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
-  }));
-
-test("a click on the toggle opens the menu and focuses Menu A, and the overlay closes it back to the toggle", () =>
-  withPage(async (page) => {
-    await page.click(toggle);
-    await page.waitForSelector(list);
-    await frames(page);
-    assert.equal(await focused(page), "Menu A");
-    const { x, y } = await overlayPoint(page);
-    await page.mouse.click(x, y);
-    assert.deepEqual(await closed(page), {
-      focused: "toggle",
-      expanded: "false",
-    });
-  }));
-
-test("a Dialog opened from a button in the menu keeps Tab and Shift+Tab inside it, and Escape closes only the Dialog", () =>
-  withPage(
-    async (page) => {
+  test(`${theme}: once a click outside has closed the menu, Escape and the overlay still close it back to the toggle`, () =>
+    withPage(async (page) => {
       await openWithEnter(page);
-      assert.deepEqual(await presses(page, "Tab", 1), ["open-dialog"]);
-      await page.keyboard.press("Enter");
-      await page.waitForSelector("[data-test=dialog][data-state=open]");
-      await frames(page);
-      const inDialog = (seen) =>
-        seen.filter((name) => !name.startsWith("dialog "));
-      const tabbed = await presses(page, "Tab", 4);
-      const shiftTabbed = await presses(page, "Shift+Tab", 4);
-      assert.deepEqual(
-        { tabbed: inDialog(tabbed), shiftTabbed: inDialog(shiftTabbed) },
-        { tabbed: [], shiftTabbed: [] },
-      );
-      // Tab cycles through the Dialog's buttons: its two, and the close
-      // cross
-      assert.equal(new Set(tabbed).size, 3);
+      await page.click("[data-test=before]");
+      assert.equal((await closed(page)).focused, "before");
+      assert.equal(await openWithEnter(page), "Menu A");
       await page.keyboard.press("Escape");
-      await page.waitForSelector("[data-test=dialog]", { state: "detached" });
-      await frames(page);
-      assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
-    },
-    { menu: "dialog" },
-  ));
+      assert.deepEqual(await closed(page), {
+        focused: "toggle",
+        expanded: "false",
+      });
+      await page.click(toggle);
+      await page.waitForSelector(list);
+      const { x, y } = await overlayPoint(page);
+      await page.mouse.click(x, y);
+      assert.deepEqual(await closed(page), {
+        focused: "toggle",
+        expanded: "false",
+      });
+    }, options));
 
-test("from xl: up, Tab and Shift+Tab run through the desktop menu in DOM order, and the toggle is hidden", () =>
-  withPage(
-    async (page) => {
-      assert.equal(await page.isVisible(toggle), false);
-      await page.focus("[data-test=before]");
-      assert.deepEqual(await presses(page, "Tab", 5), [
-        "header Agency",
-        "header Menu A",
-        "header Menu B",
-        "header Dropdown",
-        "after-1",
-      ]);
-      assert.deepEqual(await presses(page, "Shift+Tab", 5), [
-        "header Dropdown",
-        "header Menu B",
-        "header Menu A",
-        "header Agency",
-        "before",
-      ]);
-    },
-    { viewport: desktop },
-  ));
+  test(`${theme}: with a dropdown open, the first Escape closes only the dropdown, and the second closes the menu and leaves focus on the toggle`, () =>
+    withPage(async (page) => {
+      await openWithEnter(page);
+      await openDropdown(page);
+      assert.deepEqual(await presses(page, "Tab", 1), ["Sub C"]);
+      await page.keyboard.press("Escape");
+      await page.waitForSelector(`${list} a[href="#Sub-C"]`, {
+        state: "detached",
+      });
+      await frames(page);
+      assert.equal(await focused(page), "Dropdown");
+      assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
+      await page.keyboard.press("Escape");
+      assert.deepEqual(await closed(page), {
+        focused: "toggle",
+        expanded: "false",
+      });
+    }, options));
+
+  test(`${theme}: a click on the button before the Navbar closes the menu and leaves focus on that button`, () =>
+    withPage(async (page) => {
+      await openWithEnter(page);
+      await page.click("[data-test=before]");
+      assert.deepEqual(await closed(page), {
+        focused: "before",
+        expanded: "false",
+      });
+    }, options));
+
+  test(`${theme}: a click in the list's padding leaves the menu open and focus on the item that had it`, () =>
+    withPage(async (page) => {
+      await openWithEnter(page);
+      await presses(page, "Tab", 1);
+      const box = await page.locator(list).boundingBox();
+      await page.mouse.click(box.x + 4, box.y + 4);
+      await frames(page);
+      assert.equal(await focused(page), "Menu B");
+      assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
+    }, options));
+
+  test(`${theme}: a click on the toggle opens the menu and focuses Menu A, and the overlay closes it back to the toggle`, () =>
+    withPage(async (page) => {
+      await page.click(toggle);
+      await page.waitForSelector(list);
+      await frames(page);
+      assert.equal(await focused(page), "Menu A");
+      const { x, y } = await overlayPoint(page);
+      await page.mouse.click(x, y);
+      assert.deepEqual(await closed(page), {
+        focused: "toggle",
+        expanded: "false",
+      });
+    }, options));
+
+  test(`${theme}: a Dialog opened from a button in the menu keeps Tab and Shift+Tab inside it, and Escape closes only the Dialog`, () =>
+    withPage(
+      async (page) => {
+        await openWithEnter(page);
+        assert.deepEqual(await presses(page, "Tab", 1), ["open-dialog"]);
+        await page.keyboard.press("Enter");
+        await page.waitForSelector("[data-test=dialog][data-state=open]");
+        await frames(page);
+        const inDialog = (seen) =>
+          seen.filter((name) => !name.startsWith("dialog "));
+        const tabbed = await presses(page, "Tab", 4);
+        const shiftTabbed = await presses(page, "Shift+Tab", 4);
+        assert.deepEqual(
+          { tabbed: inDialog(tabbed), shiftTabbed: inDialog(shiftTabbed) },
+          { tabbed: [], shiftTabbed: [] },
+        );
+        // Tab cycles through the Dialog's buttons: its two, and the close
+        // cross
+        assert.equal(new Set(tabbed).size, 3);
+        await page.keyboard.press("Escape");
+        await page.waitForSelector("[data-test=dialog]", { state: "detached" });
+        await frames(page);
+        assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
+      },
+      { ...options, menu: "dialog" },
+    ));
+
+  test(`${theme}: from xl: up, Tab and Shift+Tab run through the desktop menu in DOM order, and the toggle is hidden`, () =>
+    withPage(
+      async (page) => {
+        assert.equal(await page.isVisible(toggle), false);
+        await page.focus("[data-test=before]");
+        assert.deepEqual(await presses(page, "Tab", 5), [
+          "header Agency",
+          "header Menu A",
+          "header Menu B",
+          "header Dropdown",
+          "after-1",
+        ]);
+        assert.deepEqual(await presses(page, "Shift+Tab", 5), [
+          "header Dropdown",
+          "header Menu B",
+          "header Menu A",
+          "header Agency",
+          "before",
+        ]);
+      },
+      { ...options, viewport: desktop },
+    ));
+}

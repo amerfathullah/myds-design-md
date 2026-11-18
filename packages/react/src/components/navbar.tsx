@@ -290,7 +290,7 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
   const panelRef = useRef<HTMLDivElement | null>(null);
   // Whether a press or focus outside the menu, other than on the toggle, is
   // closing it. Focus then stays where it went.
-  const leftRef = useRef(false);
+  const closedFromOutsideRef = useRef(false);
 
   // The panel, for the menu's own focus moves and for the toggle's
   // `aria-controls`
@@ -310,6 +310,12 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
     }
   }, [id]);
 
+  // This component stays mounted while the menu is closed, so each opening
+  // starts with no press or focus outside it
+  useEffect(() => {
+    if (show) closedFromOutsideRef.current = false;
+  }, [show]);
+
   if (!show) {
     return null;
   }
@@ -324,15 +330,15 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
   };
 
   // Closing returns focus to the toggle, unless it went outside the menu.
-  // Radix would focus a PopoverTrigger, and there's none. The menu unmounts
-  // as it closes, so focus has fallen to `<body>`.
+  // Radix would focus a PopoverTrigger, and there's none. The Popover
+  // unmounts as the menu closes, so focus has fallen to `<body>`.
   const returnFocus = (event: Event) => {
     event.preventDefault();
     const toggle = toggleRef?.current;
     const active = toggle?.ownerDocument.activeElement;
     if (
       toggle &&
-      !leftRef.current &&
+      !closedFromOutsideRef.current &&
       (!active || active === active.ownerDocument.body)
     )
       toggle.focus();
@@ -345,7 +351,7 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
     const target = event.target;
     if (target instanceof Node && toggleRef?.current?.contains(target))
       event.preventDefault();
-    else leftRef.current = true;
+    else closedFromOutsideRef.current = true;
   };
 
   // Tab and Shift+Tab move through the menu's items and the toggle. In the

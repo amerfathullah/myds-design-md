@@ -631,7 +631,7 @@ Use the `TableEmpty` component to show the empty state.
 
 ### TableTooltip
 
-`TableTooltip` puts a question-mark icon in a header cell and shows its `children` as a tooltip. The icon is the tooltip's trigger, a button: hovering over it or focusing it opens the tooltip. Its hit area is 24×24px, centred on the 16px icon, so it is easier to hover over. The icon, the header's layout and the focus ring around the icon stay as they are.
+`TableTooltip` puts a question-mark icon in a header cell and shows its `children` as a tooltip. The icon is the tooltip's trigger, a button: hovering over it or focusing it opens the tooltip. Its hit area is at least 24×24px, centred on the 16px icon, so it is easier to hover over. The icon, the header's layout and the focus ring around the icon stay as they are.
 
 Screen readers announce the trigger as "Tooltip". Pass an `aria-label` to name it in your site's language, for example `<TableTooltip aria-label="Maklumat">`.
 
@@ -641,6 +641,7 @@ A header cell is named by its content, so the trigger's name joins the header's:
 
 ```tsx
 import { useId } from "react";
+import { TableHead, TableTooltip } from "@amerfathullah/myds-react/table";
 
 function AgeHeader() {
   const labelId = useId();

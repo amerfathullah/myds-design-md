@@ -377,6 +377,21 @@ import { SiteLinkGroup, SiteLink } from "@amerfathullah/myds-react/footer";
   </Tab>
 </Tabs>
 
+### SiteLink dengan asChild
+
+Untuk menggunakan pautan router, seperti `Link` Next.js, sebagai `SiteLink`, hantar `asChild` dan letakkan pautan anda di dalamnya. Ia mendapat kelas, cincin fokus (focus ring) dan `target="_self"` yang sama seperti pautan laman yang lain, jadi ia digaris bawah apabila tetikus dilayangkan di atasnya seperti pautan-pautan itu, dan Next.js mengekalkan navigasi sisi klien (client-side navigation).
+
+```tsx
+import { SiteLinkGroup, SiteLink } from "@amerfathullah/myds-react/footer";
+import NextLink from "next/link";
+
+<SiteLinkGroup groupTitle="Tentang Kami">
+  <SiteLink asChild>
+    <NextLink href="/about">Tentang</NextLink>
+  </SiteLink>
+</SiteLinkGroup>
+```
+
 ## Props
 
 ### Footer
@@ -480,7 +495,8 @@ import { SiteLinkGroup, SiteLink } from "@amerfathullah/myds-react/footer";
       type: "ReactNode",
     },
     asChild: {
-      description: "Suis untuk mewarisi komponen anak secara langsung",
+      description:
+        'Memaparkan elemen anda, seperti `Link` Next.js, sebagai ganti `<a>`. Ia mengambil `href` SiteLink melainkan ia mempunyai `href` sendiri, mendapat kelas dan cincin fokus (focus ring) Link, dan mendapat `target="_self"` melainkan ia menetapkan `target` sendiri.',
       type: "boolean",
       default: "false",
     },

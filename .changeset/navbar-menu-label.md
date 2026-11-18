@@ -9,4 +9,4 @@ You can now rename the Navbar menu's `<nav>` landmark in your site's language. S
 
 Nothing changes visually: the same elements, classes and icons render.
 
-The docs (EN/MS) give the default names of the Navbar menu's `<nav>` ("Main"), the Navbar menu toggle ("Open navigation menu" / "Close navigation menu"), the Masthead trigger ("Toggle masthead") and the Breadcrumb's `<nav>` ("breadcrumb"), and show how to rename each one with an `aria-label`. The Masthead examples pass an `aria-label` that matches the trigger's visible text.
+The docs (EN/MS) give the default names of the Navbar menu's `<nav>` ("Main"), the Navbar menu toggle ("Menu"), the Masthead trigger ("Toggle masthead") and the Breadcrumb's `<nav>` ("breadcrumb"), and show how to rename each one with an `aria-label`. The Masthead examples pass an `aria-label` that matches the trigger's visible text.

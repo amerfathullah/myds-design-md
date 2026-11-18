@@ -7,9 +7,14 @@ import {
   useRef,
   useId,
   useEffect,
+  useCallback,
   RefObject,
+  Ref,
+  KeyboardEvent,
+  MouseEvent,
 } from "react";
 import { clx } from "../utils";
+import { composeEventHandlers } from "../utils/compose-event-handlers";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -37,12 +42,96 @@ interface NavbarContextProps {
   id: string;
   show: boolean;
   setShow: (value: boolean) => void;
+  // The fields below are optional, and each reader works without them: a
+  // copy of the library from before them provides the context without them
+  // (CONTRIBUTING.md, Contexts).
+  // NavbarAction's toggle, which the mobile menu returns focus to and keeps
+  // in its Tab order
+  toggleRef?: RefObject<HTMLButtonElement | null>;
+  // The mobile menu's panel while it's rendered, which the toggle controls
+  panel?: HTMLElement | null;
+  setPanel?: (panel: HTMLElement | null) => void;
 }
 const NavbarContext = sharedContext<NavbarContextProps>("NavbarContext", {
   id: "",
   show: false,
   setShow: () => {},
 });
+
+// Whether Tab can reach `element`: it's in the tab order, enabled and shown.
+// `tabIndex` is its own, unless the caller passes another (`menuTabIndex`).
+// Inside `within`, an element under `aria-hidden` doesn't count either, such
+// as an open dropdown's focus proxy.
+function isTabbable(
+  element: Element,
+  within?: HTMLElement,
+  tabIndex = element instanceof HTMLElement ? element.tabIndex : -1,
+): element is HTMLElement {
+  const hidden = within ? element.closest('[aria-hidden="true"]') : null;
+  return (
+    element instanceof HTMLElement &&
+    tabIndex >= 0 &&
+    !element.matches(":disabled") &&
+    !element.closest("[inert]") &&
+    !(hidden && within?.contains(hidden)) &&
+    (typeof element.checkVisibility !== "function" ||
+      element.checkVisibility({
+        checkVisibilityCSS: true,
+        visibilityProperty: true,
+      }))
+  );
+}
+
+// An element's tab index in the mobile menu. While focus is outside an open
+// dropdown's links, NavigationMenuContent sets them to tabindex="-1" and
+// keeps what they had in `data-tabindex`: empty when they had none, as a link
+// has none. They're still the menu's.
+function menuTabIndex(element: HTMLElement) {
+  const kept = element.dataset.tabindex;
+  if (element.getAttribute("tabindex") !== "-1" || kept === undefined)
+    return element.tabIndex;
+  return kept === "" ? 0 : Number(kept);
+}
+
+// What Tab reaches in the mobile menu's `panel`, in DOM order
+const menuTabbables = (panel: HTMLElement) =>
+  [...panel.querySelectorAll<HTMLElement>("*")].filter((element) =>
+    isTabbable(element, panel, menuTabIndex(element)),
+  );
+
+// The first or, with `last`, the last of what Tab reaches in `panel`
+function menuEdge(panel: HTMLElement, last: boolean) {
+  const tabbables = menuTabbables(panel);
+  return tabbables[last ? tabbables.length - 1 : 0];
+}
+
+// Where Tab, or Shift+Tab when `back`, moves from `from` in the mobile
+// menu's `panel`: to the next of its tabbables in DOM order; past its last,
+// or before its first, to the toggle; and with no toggle to reach, around
+// to its other end
+function menuStop(
+  panel: HTMLElement,
+  from: Element,
+  back: boolean,
+  toggle: HTMLElement | null | undefined,
+) {
+  const side = back
+    ? Node.DOCUMENT_POSITION_PRECEDING
+    : Node.DOCUMENT_POSITION_FOLLOWING;
+  const onward = menuTabbables(panel).filter(
+    (element) =>
+      element !== from && from.compareDocumentPosition(element) & side,
+  );
+  const next = onward[back ? onward.length - 1 : 0];
+  if (next) return next;
+  if (toggle && toggle.isConnected && isTabbable(toggle)) return toggle;
+  return menuEdge(panel, back);
+}
+
+function assignRef<T>(ref: Ref<T> | undefined, node: T | null) {
+  if (typeof ref === "function") ref(node);
+  else if (ref) (ref as { current: T | null }).current = node;
+}
 
 const Navbar: FunctionComponent<NavbarProps> = ({
   children,
@@ -52,8 +141,12 @@ const Navbar: FunctionComponent<NavbarProps> = ({
   const id = useId();
 
   const [show, setShow] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+  const [panel, setPanel] = useState<HTMLElement | null>(null);
   return (
-    <NavbarContext.Provider value={{ id, show, setShow }}>
+    <NavbarContext.Provider
+      value={{ id, show, setShow, toggleRef, panel, setPanel }}
+    >
       <header
         id={id}
         className={clx(
@@ -191,9 +284,23 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
   children,
   className,
 }) => {
-  const { id, show, setShow } = useContext(NavbarContext);
+  const { id, show, setShow, toggleRef, setPanel } = useContext(NavbarContext);
 
   const virtualRef = useRef<Measurable | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  // Whether a press or focus outside the menu, other than on the toggle, is
+  // closing it. Focus then stays where it went.
+  const closedFromOutsideRef = useRef(false);
+
+  // The panel, for the menu's own focus moves and for the toggle's
+  // `aria-controls`
+  const attachPanel = useCallback(
+    (node: HTMLDivElement | null) => {
+      panelRef.current = node;
+      setPanel?.(node);
+    },
+    [setPanel],
+  );
 
   useEffect(() => {
     const node = document.getElementById(id);
@@ -203,9 +310,83 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
     }
   }, [id]);
 
+  // This component stays mounted while the menu is closed, so each opening
+  // starts with no press or focus outside it
+  useEffect(() => {
+    if (show) closedFromOutsideRef.current = false;
+  }, [show]);
+
   if (!show) {
     return null;
   }
+
+  // Opening focuses the menu's first item, whatever it is. Radix would skip
+  // links, and focus the panel, which has no size, when only links are left.
+  const focusFirstItem = (event: Event) => {
+    event.preventDefault();
+    const panel = panelRef.current;
+    const first = panel && menuEdge(panel, false);
+    first?.focus({ preventScroll: true });
+  };
+
+  // Closing returns focus to the toggle, unless it went outside the menu.
+  // Radix would focus a PopoverTrigger, and there's none. The Popover
+  // unmounts as the menu closes, so focus has fallen to `<body>`.
+  const returnFocus = (event: Event) => {
+    event.preventDefault();
+    const toggle = toggleRef?.current;
+    const active = toggle?.ownerDocument.activeElement;
+    if (
+      toggle &&
+      !closedFromOutsideRef.current &&
+      (!active || active === active.ownerDocument.body)
+    )
+      toggle.focus();
+  };
+
+  // The toggle is part of the menu: focus visiting it doesn't close the
+  // menu, and a press on it closes the menu itself. Radix counts it as
+  // outside, and would then not return focus on close.
+  const keepToggleInside = (event: Event) => {
+    const target = event.target;
+    if (target instanceof Node && toggleRef?.current?.contains(target))
+      event.preventDefault();
+    else closedFromOutsideRef.current = true;
+  };
+
+  // Tab and Shift+Tab move through the menu's items and the toggle. In the
+  // capture phase, as an open dropdown moves focus on Tab itself, and the
+  // Popover's own loop then wraps from where it landed. A key press from a
+  // portalled child, such as a Dialog opened from an item, reaches the panel
+  // through React but isn't the menu's.
+  const moveOnTab = (event: KeyboardEvent<HTMLDivElement>) => {
+    const panel = event.currentTarget;
+    const from = event.target;
+    if (event.key !== "Tab" || event.altKey || event.ctrlKey || event.metaKey)
+      return;
+    if (!(from instanceof Element) || !panel.contains(from)) return;
+    const next = menuStop(panel, from, event.shiftKey, toggleRef?.current);
+    if (!next) return;
+    event.preventDefault();
+    event.stopPropagation();
+    next.focus();
+  };
+
+  // A press on the panel that isn't on something focusable, such as in the
+  // list's padding or on the overlay, would focus the panel. Focus stays
+  // where it is.
+  const keepFocus = (event: MouseEvent<HTMLDivElement>) => {
+    const panel = event.currentTarget;
+    let node = event.target instanceof Element ? event.target : null;
+    if (!node || !panel.contains(node)) return;
+    for (; node && node !== panel; node = node.parentElement)
+      if (
+        node instanceof HTMLElement &&
+        (node.tabIndex >= 0 || node.hasAttribute("tabindex"))
+      )
+        return;
+    event.preventDefault();
+  };
 
   return (
     <RemoveScroll as={Root} allowPinchZoom enabled>
@@ -213,9 +394,15 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
         <PopoverAnchor virtualRef={virtualRef as RefObject<Measurable>} />
         <PopoverPortal>
           <PopoverContent
+            ref={attachPanel}
             sideOffset={0}
             align="start"
             className={clx("absolute top-full z-40 h-dvh xl:hidden", className)}
+            onOpenAutoFocus={focusFirstItem}
+            onCloseAutoFocus={returnFocus}
+            onInteractOutside={keepToggleInside}
+            onKeyDownCapture={moveOnTab}
+            onMouseDown={keepFocus}
           >
             <div
               className={clx(
@@ -373,12 +560,34 @@ const NavbarAction: FunctionComponent<NavbarActionProps> = ({
   children,
   className,
   onClick,
+  onKeyDown,
+  ref,
   ...props
 }) => {
-  const { show, setShow } = useContext(NavbarContext);
+  const { show, setShow, toggleRef, panel } = useContext(NavbarContext);
+  // The toggle, for the Navbar, and for an author's ref
+  const attachToggle = useCallback(
+    (node: HTMLButtonElement | null) => {
+      assignRef(ref, node);
+      assignRef(toggleRef, node);
+    },
+    [ref, toggleRef],
+  );
   const handleToggle = () => {
     setShow(!show);
     if (onClick) onClick();
+  };
+  // The panel, while the menu shows it
+  const shownPanel = show ? panel : null;
+  // While the menu is open, Tab moves from the toggle to its first item, and
+  // Shift+Tab to its last
+  const enterMenu = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (!shownPanel || event.key !== "Tab") return;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const next = menuEdge(shownPanel, event.shiftKey);
+    if (!next) return;
+    event.preventDefault();
+    next.focus();
   };
   return (
     <div className="flex items-center justify-end gap-2">
@@ -387,9 +596,13 @@ const NavbarAction: FunctionComponent<NavbarActionProps> = ({
         variant="default-ghost"
         iconOnly
         className={clx("xl:hidden", className)}
-        onClick={handleToggle}
-        aria-label={`${show ? "Close" : "Open"} navigation menu`}
+        aria-label="Menu"
+        aria-expanded={show}
+        aria-controls={shownPanel?.id || undefined}
         {...props}
+        ref={attachToggle}
+        onClick={handleToggle}
+        onKeyDown={composeEventHandlers(onKeyDown, enterMenu)}
       >
         {show ? <CrossIcon /> : <HamburgerMenuIcon />}
       </Button>

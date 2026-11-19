@@ -8,7 +8,9 @@
 // close it and leave focus on the toggle, even after focus has visited the
 // toggle and gone back into the menu; a click elsewhere on the page leaves
 // focus where it was clicked. A Dialog opened from the menu keeps its own Tab
-// order. From `xl:` up, the desktop menu's Tab order is as it was.
+// order. From `xl:` up, the desktop menu's Tab order is as it was. The
+// menu's panel is a dialog the accessibility tree names after the toggle,
+// "Menu", or what an `aria-label` on NavbarAction renames both to (#169).
 //
 // The page is navbar.page.jsx: the React components themselves, bundled with
 // esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -64,13 +66,15 @@ const still =
   "*,::before,::after{transition:none!important;animation:none!important}";
 
 // Opens the page with the menu `menu` (see navbar.page.jsx) at `viewport`,
-// in `theme`, and runs `use` on it once React has rendered it. `hasTouch`
-// gives the page a touchscreen, and `forcedColors` is Playwright's option,
-// "active" for forced colours. Nothing logs an error or a warning.
+// in `theme`, with `label` as the toggle's `aria-label` when it's given, and
+// runs `use` on it once React has rendered it. `hasTouch` gives the page a
+// touchscreen, and `forcedColors` is Playwright's option, "active" for
+// forced colours. Nothing logs an error or a warning.
 async function withPage(
   use,
   {
     menu = "a",
+    label,
     viewport = phone,
     theme = "light",
     hasTouch = false,
@@ -98,7 +102,9 @@ async function withPage(
         body: `<!doctype html><html class="${theme === "dark" ? "dark" : ""}"><head><style>${css}</style><style>${still}</style></head><body class="bg-bg-white"><div id="root"></div><script>${script}</script></body></html>`,
       }),
     );
-    await page.goto(`${pageUrl}?menu=${menu}`);
+    const query = new URLSearchParams({ menu });
+    if (label !== undefined) query.set("label", label);
+    await page.goto(`${pageUrl}?${query}`);
     await page.waitForFunction(() => window.ready.length === 1);
     const result = await use(page);
     assert.deepEqual(errors, []);
@@ -132,6 +138,28 @@ function readFocus() {
   return name;
 }
 const focused = (page) => page.evaluate(readFocus);
+
+// The role and name Chromium's accessibility tree gives the element
+// `selector` matches on `page`
+async function treeNode(page, selector) {
+  const client = await page.context().newCDPSession(page);
+  try {
+    const {
+      result: { objectId },
+    } = await client.send("Runtime.evaluate", {
+      expression: `document.querySelector(${JSON.stringify(selector)})`,
+    });
+    const {
+      nodes: [node],
+    } = await client.send("Accessibility.getPartialAXTree", {
+      objectId,
+      fetchRelatives: false,
+    });
+    return { role: node.role?.value, name: node.name?.value };
+  } finally {
+    await client.detach();
+  }
+}
 
 // Waits for two frames, so effects and focus moves have run
 const frames = (page) =>
@@ -206,6 +234,29 @@ function readIndicator() {
 async function overlayPoint(page) {
   const box = await page.locator(list).boundingBox();
   return { x: box.x + 20, y: box.y + box.height + 100 };
+}
+
+for (const [label, name] of [
+  [undefined, "Menu"],
+  ["Navigasi", "Navigasi"],
+]) {
+  test(`the menu's panel is a dialog the tree names "${name}" after the toggle${label === undefined ? "" : `, which \`aria-label="${label}"\` renames`}`, () =>
+    withPage(
+      async (page) => {
+        assert.equal(await openWithEnter(page), "Menu A");
+        assert.deepEqual(
+          {
+            toggle: await treeNode(page, toggle),
+            panel: await treeNode(page, panel),
+          },
+          {
+            toggle: { role: "button", name },
+            panel: { role: "dialog", name },
+          },
+        );
+      },
+      { label },
+    ));
 }
 
 for (const theme of themes) {

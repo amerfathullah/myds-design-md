@@ -1,7 +1,8 @@
 // The page navbar.test.mjs renders in Chromium: a button before the Navbar,
 // the Navbar composed as the docs compose it, with a logo, a menu and
 // NavbarAction's toggle, then a main column of controls. The `menu` query
-// parameter picks the menu's items, from `menus` below. `data-test` names
+// parameter picks the menu's items, from `menus` below, and `label`, when
+// given, is the toggle's `aria-label`. `data-test` names
 // what the test focuses; NavbarMenu renders its items twice, in the desktop
 // list and in the mobile menu, so the test tells them apart by where they
 // are. The test bundles this file with esbuild.
@@ -116,7 +117,10 @@ const menus = {
 };
 
 function Page() {
-  const menu = new URLSearchParams(location.search).get("menu") ?? "a";
+  const params = new URLSearchParams(location.search);
+  const menu = params.get("menu") ?? "a";
+  // Only a given label replaces the toggle's own "Menu"
+  const label = params.get("label");
   useEffect(() => void window.ready.push("page"), []);
   return (
     <>
@@ -128,7 +132,10 @@ function Page() {
           Agency
         </NavbarLogo>
         <NavbarMenu>{menus[menu]}</NavbarMenu>
-        <NavbarAction data-test="toggle" />
+        <NavbarAction
+          data-test="toggle"
+          {...(label === null ? {} : { "aria-label": label })}
+        />
       </Navbar>
       <main className="flex flex-col gap-4 p-4">
         <button type="button" data-test="after-1">

@@ -7,11 +7,14 @@ import {
   useRef,
   useId,
   useEffect,
+  useLayoutEffect,
   useCallback,
   RefObject,
   Ref,
   KeyboardEvent,
   MouseEvent,
+  Dispatch,
+  SetStateAction,
 } from "react";
 import { clx } from "../utils";
 import { composeEventHandlers } from "../utils/compose-event-handlers";
@@ -55,13 +58,22 @@ interface NavbarContextProps {
   // panel is named as the toggle is: the toggle's own id, or the ids in the
   // toggle's `aria-labelledby`
   panelLabelledBy?: string;
-  setPanelLabelledBy?: (ids: string | undefined) => void;
+  setPanelLabelledBy?: Dispatch<SetStateAction<string | undefined>>;
 }
 const NavbarContext = sharedContext<NavbarContextProps>("NavbarContext", {
   id: "",
   show: false,
   setShow: () => {},
 });
+
+// The menu toggle's default name, which the mobile menu's panel falls back to
+const menuLabel = "Menu";
+
+// Layout effects don't run on the server, and React 18 warns there, so the
+// server gets useEffect. In the browser, the panel's name follows the toggle's
+// before the page paints.
+const useBeforePaint =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 // Whether Tab can reach `element`: it's in the tab order, enabled and shown.
 // `tabIndex` is its own, unless the caller passes another (`menuTabIndex`).
@@ -419,11 +431,14 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
             onInteractOutside={keepToggleInside}
             onKeyDownCapture={moveOnTab}
             onMouseDown={keepFocus}
-            // The panel is a dialog, named as the toggle is. With no toggle
-            // to name it, as when the Navbar's context comes from a copy of
-            // the library from before `panelLabelledBy`, it's still "Menu".
+            // The panel is a dialog, named as the toggle is. Its own
+            // `aria-label` names it only where `aria-labelledby` names
+            // nothing: with no toggle to name it, as when the Navbar's
+            // context comes from a copy of the library from before
+            // `panelLabelledBy`, or when the toggle's `aria-labelledby`
+            // points at no element, which leaves the toggle "Menu" too.
             aria-labelledby={panelLabelledBy}
-            aria-label={panelLabelledBy ? undefined : "Menu"}
+            aria-label={menuLabel}
           >
             <div
               className={clx(
@@ -583,6 +598,11 @@ interface NavbarActionProps extends ComponentProps<typeof Button> {
    * @default "Menu"
    */
   "aria-label"?: string;
+  /**
+   * The id of an element whose text names the toggle and the mobile menu's
+   * panel, in place of `aria-label`.
+   */
+  "aria-labelledby"?: string;
 }
 
 const NavbarAction: FunctionComponent<NavbarActionProps> = ({
@@ -605,10 +625,13 @@ const NavbarAction: FunctionComponent<NavbarActionProps> = ({
   // Otherwise it points at the toggle, which its `aria-label` names.
   const ariaLabelledBy = props["aria-labelledby"];
   const panelLabelledBy = ariaLabelledBy?.trim() ? ariaLabelledBy : id;
-  useEffect(() => {
+  useBeforePaint(() => {
     if (!setPanelLabelledBy) return;
     setPanelLabelledBy(panelLabelledBy);
-    return () => setPanelLabelledBy(undefined);
+    return () =>
+      setPanelLabelledBy((current) =>
+        current === panelLabelledBy ? undefined : current,
+      );
   }, [setPanelLabelledBy, panelLabelledBy]);
   // The toggle, for the Navbar, and for an author's ref
   const attachToggle = useCallback(
@@ -642,7 +665,7 @@ const NavbarAction: FunctionComponent<NavbarActionProps> = ({
         iconOnly
         className={clx("xl:hidden", className)}
         id={id}
-        aria-label="Menu"
+        aria-label={menuLabel}
         aria-expanded={show}
         aria-controls={shownPanel?.id || undefined}
         {...props}

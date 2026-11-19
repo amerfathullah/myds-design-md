@@ -17,7 +17,7 @@ import { QuestionCircleIcon } from "@amerfathullah/myds-react/icon";
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center gap-1">
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>This is a helpful description.</TooltipContent>
@@ -29,7 +29,7 @@ import { QuestionCircleIcon } from "@amerfathullah/myds-react/icon";
     import { QuestionCircleIcon } from "@amerfathullah/myds-react/icon";
 
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>This is a helpful description.</TooltipContent>
@@ -76,7 +76,7 @@ The `defaulOpen` props can be used to treat the component as an uncontrolled com
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
     <Tooltip open={true}>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>This is a helpful description.</TooltipContent>
@@ -87,7 +87,7 @@ The `defaulOpen` props can be used to treat the component as an uncontrolled com
     import { Tooltip, TooltipTrigger, TooltipContent } from "@amerfathullah/myds-react/tooltip";
 
     <Tooltip open={true}>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>This is a helpful description.</TooltipContent>
@@ -104,25 +104,25 @@ The `side` props can be used to manually adjust the placement of the `TooltipCon
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex flex-col justify-center items-center gap-10">
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"left"}>This helpful description is placed on the left.</TooltipContent>
     </Tooltip>
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"right"}>This helpful description is placed on the right.</TooltipContent>
     </Tooltip>
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"top"}>This helpful description is placed on the top.</TooltipContent>
     </Tooltip>
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"bottom"}>This helpful description is placed on the bottom.</TooltipContent>
@@ -133,25 +133,25 @@ The `side` props can be used to manually adjust the placement of the `TooltipCon
     import { Tooltip, TooltipTrigger, TooltipContent } from "@amerfathullah/myds-react/tooltip";
 
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"left"}>This helpful description is placed on the left.</TooltipContent>
     </Tooltip>
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"right"}>This helpful description is placed on the right.</TooltipContent>
     </Tooltip>
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"top"}>This helpful description is placed on the top.</TooltipContent>
     </Tooltip>
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="More information">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"bottom"}>This helpful description is placed on the bottom.</TooltipContent>
@@ -228,3 +228,5 @@ The `side` props can be used to manually adjust the placement of the `TooltipCon
 ### TooltipTrigger
 
 `TooltipTrigger` is the component where the user interacts with to show the tooltip. It is being built on top of `TooltipPrimitive.Trigger`. Please refer to the full API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/tooltip#content).
+
+A trigger that holds only an icon, such as `<QuestionCircleIcon />`, has no accessible name. Pass `TooltipTrigger` an `aria-label` in your site's language that says what the tooltip explains, for example `aria-label="More information"`. The tooltip's text doesn't name the trigger: screen readers read it only as the trigger's description, and only while the tooltip is open. With `asChild`, your own element is the trigger: name it as you would without a tooltip.

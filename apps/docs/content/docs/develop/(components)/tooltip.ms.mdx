@@ -17,7 +17,7 @@ import { QuestionCircleIcon } from "@amerfathullah/myds-react/icon";
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center gap-1">
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="Maklumat lanjut">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>Ini merupakan penjelasan ringkas.</TooltipContent>
@@ -29,7 +29,7 @@ import { QuestionCircleIcon } from "@amerfathullah/myds-react/icon";
     import { QuestionCircleIcon } from "@amerfathullah/myds-react/icon";
 
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="Maklumat lanjut">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>Ini merupakan penjelasan ringkas.</TooltipContent>
@@ -76,7 +76,7 @@ Untuk menggunakan komponen dalam keadaan terkawal, gunakan prop `open` dan `onOp
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
     <Tooltip open={true}>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="Maklumat lanjut">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>Ini merupakan penjelasan ringkas.</TooltipContent>
@@ -87,7 +87,7 @@ Untuk menggunakan komponen dalam keadaan terkawal, gunakan prop `open` dan `onOp
     import { Tooltip, TooltipTrigger, TooltipContent } from "@amerfathullah/myds-react/tooltip";
 
     <Tooltip open={true}>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="Maklumat lanjut">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent>Ini merupakan penjelasan ringkas.</TooltipContent>
@@ -104,25 +104,25 @@ Props `side` boleh digunakan untuk melaraskan kedudukan `TooltipContent`. Nilai-
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex flex-col justify-center items-center gap-10">
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="Maklumat lanjut">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"left"}>Penjelasan terletak di sebelah kiri.</TooltipContent>
     </Tooltip>
     <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger aria-label="Maklumat lanjut">
             <QuestionCircleIcon />
         </TooltipTrigger>
         <TooltipContent side={"right"}>Penjelasan terletak di sebelah kanan.</TooltipContent>
     </Tooltip>
     <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger aria-label="Maklumat lanjut">
             <QuestionCircleIcon />
         </TooltipTrigger>
         <TooltipContent side={"top"}>Penjelasan terletak di sebelah atas.</TooltipContent>
     </Tooltip>
     <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger aria-label="Maklumat lanjut">
             <QuestionCircleIcon />
         </TooltipTrigger>
         <TooltipContent side={"bottom"}>Penjelasan terletak di sebelah bawah.</TooltipContent>
@@ -133,25 +133,25 @@ Props `side` boleh digunakan untuk melaraskan kedudukan `TooltipContent`. Nilai-
     import { Tooltip, TooltipTrigger, TooltipContent } from "@amerfathullah/myds-react/tooltip";
 
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger aria-label="Maklumat lanjut">
           <QuestionCircleIcon />
       </TooltipTrigger>
       <TooltipContent side={"left"}>Penjelasan terletak di sebelah kiri.</TooltipContent>
     </Tooltip>
     <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger aria-label="Maklumat lanjut">
             <QuestionCircleIcon />
         </TooltipTrigger>
         <TooltipContent side={"right"}>Penjelasan terletak di sebelah kanan.</TooltipContent>
     </Tooltip>
     <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger aria-label="Maklumat lanjut">
             <QuestionCircleIcon />
         </TooltipTrigger>
         <TooltipContent side={"top"}>Penjelasan terletak di sebelah atas.</TooltipContent>
     </Tooltip>
     <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger aria-label="Maklumat lanjut">
             <QuestionCircleIcon />
         </TooltipTrigger>
         <TooltipContent side={"bottom"}>Penjelasan terletak di sebelah bawah.</TooltipContent>
@@ -228,3 +228,5 @@ Komponen `TooltipContent` ini dibina di atas `TooltipPrimitive.Portal` dan `Tool
 ### TooltipTrigger
 
 `TooltipTrigger` membolehkan pengguna untuk berinteraksi atas tujuan menunjukkan "tooltip". Komponenen ini dibina menggunakan `TooltipPrimitive.Trigger`. Sila rujuk senarai penuh API di [dokumentasi ini](https://www.radix-ui.com/primitives/docs/components/tooltip#content).
+
+Pencetus yang hanya memaparkan ikon, seperti `<QuestionCircleIcon />`, tiada nama boleh capai. Hantar `aria-label` dalam bahasa laman anda kepada `TooltipTrigger` yang menyatakan perkara yang dijelaskan oleh tooltip, contohnya `aria-label="Maklumat lanjut"`. Teks tooltip tidak menamakan pencetus: pembaca skrin membacanya sebagai keterangan pencetus sahaja, dan hanya semasa tooltip dibuka. Dengan `asChild`, elemen anda sendiri ialah pencetus: namakannya seperti tanpa tooltip.

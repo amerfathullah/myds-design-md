@@ -908,6 +908,15 @@ describe("NavbarAction's menu toggle, opening and closing the menu", () => {
 // The mobile menu's panel, a `role="dialog"` with no visible title, takes its
 // name from the toggle (#169), so renaming the toggle renames the panel too
 describe("The mobile menu's panel", () => {
+  // A menu with one item
+  const menu = () =>
+    createElement(NavbarMenu, {
+      children: createElement(NavbarMenuItem, {
+        href: "#perkhidmatan",
+        children: "Perkhidmatan",
+      }),
+    });
+
   // A Navbar with a one-item menu and its toggle, after a heading that the
   // toggle's `aria-labelledby` can point at. `action` goes to NavbarAction.
   const navbar = (action: ComponentProps<typeof NavbarAction> = {}) =>
@@ -915,17 +924,7 @@ describe("The mobile menu's panel", () => {
       "div",
       null,
       createElement("h2", { id: "menu-title" }, "Menu utama"),
-      createElement(
-        Navbar,
-        null,
-        createElement(NavbarMenu, {
-          children: createElement(NavbarMenuItem, {
-            href: "#perkhidmatan",
-            children: "Perkhidmatan",
-          }),
-        }),
-        createElement(NavbarAction, action),
-      ),
+      createElement(Navbar, null, menu(), createElement(NavbarAction, action)),
     );
 
   // The one toggle in `page`
@@ -984,6 +983,16 @@ describe("The mobile menu's panel", () => {
       computeAccessibleName(toggle),
       computeAccessibleName(panel),
     ]).toEqual(["Menu utama", "Menu utama"]);
+  });
+
+  test('is still named "Menu", as the toggle is, when NavbarAction\'s `aria-labelledby` points at no element on the page', async () => {
+    const { toggle, panel } = await openMenu(
+      await mount(navbar({ "aria-labelledby": "no-such-element" })),
+    );
+    expect([
+      computeAccessibleName(toggle),
+      computeAccessibleName(panel),
+    ]).toEqual(["Menu", "Menu"]);
   });
 
   test('leaves an `id` on NavbarAction on the toggle, and is still named "Menu"', async () => {
@@ -1051,15 +1060,6 @@ describe("The mobile menu's panel", () => {
     show: boolean;
     setShow: (value: boolean) => void;
   }>("NavbarContext", { id: "", show: false, setShow: () => {} });
-
-  // A menu with one item, as `navbar` renders
-  const menu = () =>
-    createElement(NavbarMenu, {
-      children: createElement(NavbarMenuItem, {
-        href: "#perkhidmatan",
-        children: "Perkhidmatan",
-      }),
-    });
 
   test("is still named \"Menu\" when the Navbar's context comes from an older copy, without the toggle's name", async () => {
     await mount(

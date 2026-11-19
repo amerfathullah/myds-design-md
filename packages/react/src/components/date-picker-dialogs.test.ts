@@ -50,10 +50,8 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-// No test logs an error or a warning, no label prop leaks, and nothing is
-// left on the page
+// No test logs an error or a warning, and nothing is left on the page
 afterEach(async () => {
-  const stray = strayCalendarLabels();
   while (unmounts.length) await unmounts.pop()!();
   const logged = [
     ...vi.mocked(console.error).mock.calls,
@@ -61,7 +59,6 @@ afterEach(async () => {
   ];
   vi.restoreAllMocks();
   expect(logged).toEqual([]);
-  expect(stray).toBe(0);
   expect(document.body.innerHTML).toBe("");
 });
 
@@ -79,12 +76,14 @@ async function open(page: HTMLElement, index: number) {
 }
 
 // Opens each of `triggers` in turn, in a picker `render` mounts afresh for
-// each, and returns the accessible names of the dialogs they open
+// each, and returns the accessible names of the dialogs they open. No label
+// prop reaches the DOM, in the picker or in the open dialog.
 async function dialogNames(render: () => ReactElement, triggers: number[]) {
   const names = [];
   for (const trigger of triggers) {
     const page = await mount(render());
     names.push(computeAccessibleName(await open(page, trigger)));
+    expect(strayCalendarLabels()).toBe(0);
     await unmounts.pop()!();
   }
   return names;
@@ -94,29 +93,23 @@ const october1 = new Date(2026, 9, 1);
 const october30 = new Date(2026, 9, 30);
 const range = { from: october1, to: october30 };
 
-// The number of the trigger that opens each calendar, in the order the
+// The triggers that open each calendar, by their number in the order the
 // pickers render them: DatePicker its dialog's trigger, then its popover's;
-// DateRangePicker its dialogs' From and To triggers, then its popovers'
-const triggers = {
-  DatePicker: { dialog: 0, popover: 1 },
-  From: { dialog: 0, popover: 2 },
-  To: { dialog: 1, popover: 3 },
-} as const;
+// DateRangePicker its dialogs' From and To triggers, then its popovers'.
+// DatePicker's here are its dialog's, then its popover's.
+const datePickerTriggers = [0, 1];
 
-// DatePicker's triggers: its dialog's, then its popover's
-const datePickerTriggers = [
-  triggers.DatePicker.dialog,
-  triggers.DatePicker.popover,
-];
+// DateRangePicker's, its From dialog's and popover's, then its To dialog's
+// and popover's
+const dateRangePickerTriggers = [0, 2, 1, 3];
 
-// DateRangePicker's triggers: its From dialog's and popover's, then its To
-// dialog's and popover's
-const dateRangePickerTriggers = [
-  triggers.From.dialog,
-  triggers.From.popover,
-  triggers.To.dialog,
-  triggers.To.popover,
-];
+// The names of DateRangePicker's dialogs and popovers, in the order of
+// `dateRangePickerTriggers`, with `from` on the From side and `to` on the To
+// side
+const rangeNames = (from: string, to: string) => [from, from, to, to];
+
+// Their default names
+const rangeDefaults = rangeNames("Choose start date", "Choose end date");
 
 // A Label with the id "label" and the text "Dates", then `picker`
 const field = (picker: ReactElement) =>
@@ -188,12 +181,7 @@ describe("DateRangePicker's dialogs and popovers", () => {
       () => createElement(DateRangePicker, { value: range }),
       dateRangePickerTriggers,
     );
-    expect(names).toEqual([
-      "Choose start date",
-      "Choose start date",
-      "Choose end date",
-      "Choose end date",
-    ]);
+    expect(names).toEqual(rangeDefaults);
   });
 
   test("are renamed on each side by `fromCalendarLabel` and `toCalendarLabel`", async () => {
@@ -206,12 +194,9 @@ describe("DateRangePicker's dialogs and popovers", () => {
         }),
       dateRangePickerTriggers,
     );
-    expect(names).toEqual([
-      "Pilih tarikh mula",
-      "Pilih tarikh mula",
-      "Pilih tarikh akhir",
-      "Pilih tarikh akhir",
-    ]);
+    expect(names).toEqual(
+      rangeNames("Pilih tarikh mula", "Pilih tarikh akhir"),
+    );
   });
 
   test.each<[string, { fromCalendarLabel?: string; toCalendarLabel?: string }]>(
@@ -224,9 +209,12 @@ describe("DateRangePicker's dialogs and popovers", () => {
       () => createElement(DateRangePicker, { value: range, ...props }),
       dateRangePickerTriggers,
     );
-    const from = props.fromCalendarLabel ?? "Choose start date";
-    const to = props.toCalendarLabel ?? "Choose end date";
-    expect(names).toEqual([from, from, to, to]);
+    expect(names).toEqual(
+      rangeNames(
+        props.fromCalendarLabel ?? "Choose start date",
+        props.toCalendarLabel ?? "Choose end date",
+      ),
+    );
   });
 
   test("keep their names when `fromLabel` and `toLabel` change the triggers' prefixes", async () => {
@@ -239,12 +227,7 @@ describe("DateRangePicker's dialogs and popovers", () => {
         }),
       dateRangePickerTriggers,
     );
-    expect(names).toEqual([
-      "Choose start date",
-      "Choose start date",
-      "Choose end date",
-      "Choose end date",
-    ]);
+    expect(names).toEqual(rangeDefaults);
   });
 
   test('are still named in English under `locale="ms"`, which doesn\'t translate the names', async () => {
@@ -252,12 +235,7 @@ describe("DateRangePicker's dialogs and popovers", () => {
       () => createElement(DateRangePicker, { value: range, locale: "ms" }),
       dateRangePickerTriggers,
     );
-    expect(names).toEqual([
-      "Choose start date",
-      "Choose start date",
-      "Choose end date",
-      "Choose end date",
-    ]);
+    expect(names).toEqual(rangeDefaults);
   });
 
   test("aren't named by the picker's `aria-labelledby` or `aria-label`, which name only its triggers", async () => {
@@ -279,12 +257,6 @@ describe("DateRangePicker's dialogs and popovers", () => {
         }),
       dateRangePickerTriggers,
     );
-    const defaults = [
-      "Choose start date",
-      "Choose start date",
-      "Choose end date",
-      "Choose end date",
-    ];
-    expect([names, labelled]).toEqual([defaults, defaults]);
+    expect([names, labelled]).toEqual([rangeDefaults, rangeDefaults]);
   });
 });

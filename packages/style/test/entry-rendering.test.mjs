@@ -76,7 +76,8 @@ const schemePage = (
 </html>`;
 
 // The `color-scheme` that <html>, and #subtree where the page has one,
-// compute on each page: `cases` is a list of [name, page, expected]
+// compute on each case's page. `cases` is a list of [name, markup, expected],
+// where `markup` is the `schemePage` options that build the page
 async function colorSchemes(entry, cases) {
   const context = await browser.newContext();
   try {
@@ -99,10 +100,12 @@ async function colorSchemes(entry, cases) {
   }
 }
 
-const expected = (cases) =>
+// What `colorSchemes` should return for `cases`: each case's name with the
+// schemes it expects
+const expectedSchemes = (cases) =>
   Object.fromEntries(cases.map(([name, , schemes]) => [name, schemes]));
 
-const themeSchemes = [
+const themeCases = [
   ["a light page", {}, { html: "light" }],
   ['<html class="dark">', { html: 'class="dark"' }, { html: "dark" }],
   [
@@ -112,7 +115,7 @@ const themeSchemes = [
   ],
 ];
 
-const overrides = [
+const overrideCases = [
   [
     '<html class="scheme-light-dark">',
     { html: 'class="scheme-light-dark"' },
@@ -238,12 +241,15 @@ for (const entry of Object.keys(entries)) {
 
   test(`${entry}: a light page computes color-scheme light, and .dark, on <html> or a subtree, computes dark`, async () => {
     assert.deepEqual(
-      await colorSchemes(entry, themeSchemes),
-      expected(themeSchemes),
+      await colorSchemes(entry, themeCases),
+      expectedSchemes(themeCases),
     );
   });
 
   test(`${entry}: a scheme-* utility, an inline style or an app's own unlayered rule wins over the theme's color-scheme`, async () => {
-    assert.deepEqual(await colorSchemes(entry, overrides), expected(overrides));
+    assert.deepEqual(
+      await colorSchemes(entry, overrideCases),
+      expectedSchemes(overrideCases),
+    );
   });
 }

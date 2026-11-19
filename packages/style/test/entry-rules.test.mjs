@@ -8,9 +8,10 @@
 //   outline, as with Tailwind's `outline-hidden`;
 // - `underline`, with any Tailwind variant, sets the line from the font;
 // - the theme files set `color-scheme`, `light` on `:root` and `dark` on
-//   `.dark`, in `@layer base`, so a `scheme-*` utility overrides it. Their
-//   token custom properties stay outside any layer. The standalone
-//   `./light.css` and `./dark.css` exports are those same files.
+//   `.dark`, in `@layer base`, so a `scheme-*` utility, an inline style or an
+//   app's own unlayered rule overrides it. Their token custom properties stay
+//   outside any layer. The standalone `./light.css` and `./dark.css` exports
+//   are those same files.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
@@ -280,7 +281,8 @@ const themeSchemes = Object.values(themes).map(({ selector, value }) => ({
   value,
 }));
 
-// A token both theme files define, which must stay unlayered once compiled
+// Where a compiled entry must put `--bg-white`, a token both theme files
+// define: in each file's own rule, outside any layer
 const tokenPlacements = Object.values(themes).map(({ selector }) => ({
   selector,
   atRules: "",

@@ -7,7 +7,8 @@ import {
   type FormEvent,
   type ReactElement,
 } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -22,26 +23,26 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const unmounts: (() => Promise<void>)[] = [];
 
 // Mounts `element` in a container on the page, as an app would, and returns
-// the container. Portalled content lands in `<body>`, outside it.
-async function mount(element: ReactElement) {
+// the container and a function that renders another element in its place.
+// Portalled content lands in `<body>`, outside it.
+async function mountRoot(element: ReactElement) {
   const container = document.body.appendChild(document.createElement("div"));
   const root = createRoot(container);
   unmounts.push(async () => {
     await act(async () => root.unmount());
     container.remove();
   });
-  await act(async () => root.render(element));
-  return container;
+  const render = (next: ReactElement) => act(async () => root.render(next));
+  await render(element);
+  return { container, render };
 }
 
-// React's warning for each of DataTable's radios, which have `checked` and no
-// `onChange` (#165). A test that renders radio selection allows it.
-const radioWarning =
-  "You provided a `checked` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultChecked`. Otherwise, set either `onChange` or `readOnly`.";
-let radioWarningAllowed = false;
+// Mounts `element` as `mountRoot` does, and returns its container
+async function mount(element: ReactElement) {
+  return (await mountRoot(element)).container;
+}
 
 beforeEach(() => {
-  radioWarningAllowed = false;
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -52,8 +53,8 @@ beforeEach(() => {
 const labelAttributes =
   "[rowlabel], [selectalllabel], [clearlabel], [columnlabel], [expandlabel], [tooltiplabel], [sortlabel], [widenlabel]";
 
-// No label option reaches the DOM, no test logs an error or a warning apart
-// from an allowed radio warning, and nothing is left on the page
+// No label option reaches the DOM, no test logs an error or a warning, and
+// nothing is left on the page
 afterEach(async () => {
   const strayLabels = [...document.querySelectorAll(labelAttributes)].map(
     (element) => element.outerHTML,
@@ -62,7 +63,7 @@ afterEach(async () => {
   const logged = [
     ...vi.mocked(console.error).mock.calls,
     ...vi.mocked(console.warn).mock.calls,
-  ].filter((call) => !(radioWarningAllowed && call[0] === radioWarning));
+  ];
   vi.restoreAllMocks();
   expect(strayLabels).toEqual([]);
   expect(logged).toEqual([]);
@@ -96,12 +97,10 @@ type ExpandLabel = NonNullable<
   ComponentProps<typeof DataTable<Person>>["nest"]
 >["expandLabel"];
 
-// Mounts a DataTable with `props`, and returns its container. Radio selection
-// allows the radio warning, and no other.
+// Mounts a DataTable with `props`, and returns its container
 async function dataTable<TData extends Record<string, any>>(
   props: ComponentProps<typeof DataTable<TData>>,
 ) {
-  if (props.selection?.mode === "radio") radioWarningAllowed = true;
   return mount(createElement(DataTable<TData>, props));
 }
 
@@ -124,6 +123,11 @@ const rowCheckboxes = 'tbody [role="checkbox"]';
 const selectAllCheckbox = 'thead [role="checkbox"]';
 // Each row's radio in the table body
 const rowRadios = 'tbody input[type="radio"]';
+// The `name` of each row radio in `within`, top to bottom
+const radioNames = (within: ParentNode) =>
+  [...within.querySelectorAll(rowRadios)].map((radio) =>
+    radio.getAttribute("name"),
+  );
 // Each nested-row toggle, a button that carries its row's `data-expanded`
 const toggles = "tbody button[data-expanded]";
 
@@ -317,6 +321,257 @@ describe("The radio column's reset button", () => {
     expect(checked(page)).toEqual([false, false, false]);
     expect(reset.getAttribute("data-selected")).toBe("false");
   });
+  test('is `type="button"`: inside a form, it clears the selection and submits nothing', async () => {
+    const submits: string[] = [];
+    const page = await mount(
+      createElement(
+        "form",
+        {
+          onSubmit: (event: FormEvent) => {
+            event.preventDefault();
+            submits.push("submitted");
+          },
+        },
+        createElement(DataTable<Person>, {
+          columns: [nameColumn],
+          data: people,
+          selection: { id_by: "id", mode: "radio" },
+        }),
+      ),
+    );
+    await click(page.querySelectorAll(rowRadios)[1]!);
+    const reset = page.querySelector(resetButton)!;
+    await click(reset);
+    expect({
+      type: reset.getAttribute("type"),
+      checked: checked(page),
+      submits,
+    }).toEqual({ type: "button", checked: [false, false, false], submits: [] });
+  });
+});
+
+describe("Radio selection's row radios", () => {
+  test("share one non-empty name per table, which differs between two tables", async () => {
+    const first = await dataTable({
+      columns: [nameColumn],
+      data: people,
+      selection: { id_by: "id", mode: "radio" },
+    });
+    const second = await dataTable({
+      columns: [nameColumn],
+      data: people,
+      selection: { id_by: "id", mode: "radio" },
+    });
+    const [name] = radioNames(first);
+    const [otherName] = radioNames(second);
+    expect(name).toBeTruthy();
+    expect(otherName).toBeTruthy();
+    expect(otherName).not.toBe(name);
+    expect(radioNames(first)).toEqual([name, name, name]);
+    expect(radioNames(second)).toEqual([otherName, otherName, otherName]);
+  });
+
+  test("take their name from `selection.name`", async () => {
+    const page = await dataTable({
+      columns: [nameColumn],
+      data: people,
+      selection: { id_by: "id", mode: "radio", name: "pegawai" },
+    });
+    expect(radioNames(page)).toEqual(["pegawai", "pegawai", "pegawai"]);
+  });
+
+  test("take the generated name when `selection.name` is empty", async () => {
+    const generated = await dataTable({
+      columns: [nameColumn],
+      data: people,
+      selection: { id_by: "id", mode: "radio" },
+    });
+    const empty = await dataTable({
+      columns: [nameColumn],
+      data: people,
+      selection: { id_by: "id", mode: "radio", name: "" },
+    });
+    const [name] = radioNames(empty);
+    expect(name).toBeTruthy();
+    expect(name).not.toBe(radioNames(generated)[0]);
+    expect(radioNames(empty)).toEqual([name, name, name]);
+  });
+
+  test("have no `id`", async () => {
+    const page = await dataTable({
+      columns: [nameColumn],
+      data: people,
+      selection: { id_by: "id", mode: "radio" },
+    });
+    const radios = [...page.querySelectorAll(rowRadios)];
+    expect(radios).toHaveLength(3);
+    expect(radios.filter((radio) => radio.hasAttribute("id"))).toEqual([]);
+  });
+
+  test("select their row when clicked, and report no change when clicked again", async () => {
+    const onSelectionChange = vi.fn();
+    const page = await dataTable<Person>({
+      columns: [nameColumn],
+      data: people,
+      selection: { id_by: "id", mode: "radio", onSelectionChange },
+    });
+    const radios = page.querySelectorAll<HTMLInputElement>(rowRadios);
+    await click(radios[1]!);
+    await click(radios[1]!);
+    await click(radios[2]!);
+    expect({
+      checked: [...radios].map((radio) => radio.checked),
+      calls: onSelectionChange.mock.calls,
+    }).toEqual({
+      checked: [false, false, true],
+      calls: [[[]], [["b"]], [["c"]]],
+    });
+  });
+});
+
+describe("Server rendering a radio DataTable", () => {
+  // Two radio DataTables of `people`, side by side
+  const twoTables = () =>
+    createElement(
+      "div",
+      null,
+      ...[1, 2].map((key) =>
+        createElement(DataTable<Person>, {
+          key,
+          columns: [nameColumn],
+          data: people,
+          selection: { id_by: "id", mode: "radio" },
+        }),
+      ),
+    );
+  test("logs nothing", () => {
+    const html = renderToString(twoTables());
+    expect(html).toContain('type="radio"');
+  });
+
+  test("hydrates with nothing logged, and the radios keep the names the server gave them", async () => {
+    const container = document.body.appendChild(document.createElement("div"));
+    container.innerHTML = renderToString(twoTables());
+    const served = radioNames(container);
+    const recovered: unknown[] = [];
+    const root = await act(async () =>
+      hydrateRoot(container, twoTables(), {
+        onRecoverableError: (error) => recovered.push(error),
+      }),
+    );
+    unmounts.push(async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    });
+    const [first, , , second] = served;
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+    expect(served).toEqual([first, first, first, second, second, second]);
+    expect(second).not.toBe(first);
+    expect({ hydrated: radioNames(container), recovered }).toEqual({
+      hydrated: served,
+      recovered: [],
+    });
+  });
+});
+
+describe("A radio DataTable inside a form", () => {
+  // A form holding two radio DataTables of `people`. The first takes
+  // `name`, and its rows in `locked` can't be selected.
+  const twoTableForm = (name?: string, locked: string[] = []) =>
+    createElement(
+      "form",
+      null,
+      createElement(DataTable<Person>, {
+        columns: [nameColumn],
+        data: people,
+        selection: {
+          id_by: "id",
+          mode: "radio",
+          name,
+          enableRowSelection: (row) => !locked.includes(row.id),
+        },
+      }),
+      createElement(DataTable<Person>, {
+        columns: [nameColumn],
+        data: people,
+        selection: { id_by: "id", mode: "radio" },
+      }),
+    );
+  // The entries the form in `within` submits, as [name, value] pairs
+  const entries = (within: ParentNode) => [
+    ...new FormData(within.querySelector("form")!).entries(),
+  ];
+  // The row radios of the first and the second table in `within`
+  const tablesRadios = (within: ParentNode) =>
+    [...within.querySelectorAll("table")].map((table) => [
+      ...table.querySelectorAll<HTMLInputElement>(rowRadios),
+    ]);
+
+  test("submits nothing while no row is selected", async () => {
+    const page = await mount(twoTableForm());
+    expect(entries(page)).toEqual([]);
+  });
+
+  test("submits the selected row's id under the table's name, and each table under its own", async () => {
+    const page = await mount(twoTableForm());
+    const [first, second] = tablesRadios(page);
+    const [name, otherName] = [first![0]!.name, second![0]!.name];
+    await click(first![1]!);
+    expect(entries(page)).toEqual([[name, "b"]]);
+    await click(second![2]!);
+    expect(entries(page)).toEqual([
+      [name, "b"],
+      [otherName, "c"],
+    ]);
+  });
+
+  test("submits the selected row under `selection.name`", async () => {
+    const page = await mount(twoTableForm("pegawai"));
+    await click(tablesRadios(page)[0]![1]!);
+    expect(entries(page)).toEqual([["pegawai", "b"]]);
+  });
+
+  test("submits nothing for a table once its selected row can't be selected", async () => {
+    const { container: page, render } = await mountRoot(
+      twoTableForm("pegawai"),
+    );
+    await click(tablesRadios(page)[0]![1]!);
+    await render(twoTableForm("pegawai", ["b"]));
+    const b = tablesRadios(page)[0]![1]!;
+    expect({ checked: b.checked, disabled: b.disabled }).toEqual({
+      checked: true,
+      disabled: true,
+    });
+    expect(entries(page)).toEqual([]);
+  });
+});
+
+test("Checkbox selection ignores `selection.name`: no element has a `name`, inside a form or not", async () => {
+  const selection = {
+    id_by: "id",
+    mode: "checkbox",
+    name: "pegawai",
+  } as const;
+  const page = await dataTable<Person>({
+    columns: [nameColumn],
+    data: people,
+    selection,
+  });
+  const form = await mount(
+    createElement(
+      "form",
+      null,
+      createElement(DataTable<Person>, {
+        columns: [nameColumn],
+        data: people,
+        selection,
+      }),
+    ),
+  );
+  await click(page.querySelectorAll(rowCheckboxes)[1]!);
+  await click(form.querySelectorAll(rowCheckboxes)[1]!);
+  expect(document.querySelectorAll("[name]")).toHaveLength(0);
 });
 
 describe.each(modes)("The %s selection column's header", (mode) => {
@@ -669,6 +924,37 @@ describe("A sorted column's header", () => {
     expect(firstColumn(page)).toEqual(["Badrul", "Aminah", "Chong"]);
     expect(sortedHeaders(page)).toEqual(["Unit: ascending"]);
   });
+});
+
+test("DataTable's classes don't include the two that generate no CSS", async () => {
+  await dataTable<Officer>({
+    columns: officerColumns,
+    data: officers,
+    selection: {
+      id_by: "id",
+      mode: "radio",
+      enableRowSelection: (row) => row.id !== "a",
+    },
+    pin: { left: ["name"], right: ["office"] },
+  });
+  const classes = [...document.querySelectorAll("[class]")].flatMap(
+    (element) => [...element.classList],
+  );
+  // The pinned columns' edge shadows are drawn
+  expect(classes).toEqual(
+    expect.arrayContaining([
+      "before:shadow-[inset_3px_0_8px_-8px]",
+      "before:shadow-[inset_-3px_0_8px_-8px]",
+    ]),
+  );
+  expect(
+    classes.filter((name) =>
+      [
+        "has-[:disabled]:has-[:checked]::bg-primary-600",
+        "before:contents-['']",
+      ].includes(name),
+    ),
+  ).toEqual([]);
 });
 
 describe("TableTooltip", () => {

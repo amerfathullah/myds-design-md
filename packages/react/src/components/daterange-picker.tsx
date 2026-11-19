@@ -39,6 +39,22 @@ export type DateRangePickerProps = {
    * @default "Go to the Next Year"
    */
   nextYearLabel?: string;
+  /**
+   * Accessible name of the dialog the From calendar opens in: the Dialog
+   * below `lg:` and the Popover from `lg:` up. Screen readers announce it; it
+   * isn't shown. Set it in your site's language: `locale` doesn't change it,
+   * and neither does `fromLabel`.
+   * @default "Choose start date"
+   */
+  fromCalendarLabel?: string;
+  /**
+   * Accessible name of the dialog the To calendar opens in: the Dialog below
+   * `lg:` and the Popover from `lg:` up. Screen readers announce it; it isn't
+   * shown. Set it in your site's language: `locale` doesn't change it, and
+   * neither does `toLabel`.
+   * @default "Choose end date"
+   */
+  toCalendarLabel?: string;
   onValueChange?: (date: DateRange) => void;
   placeholder?: string;
   value?: DateRange;
@@ -95,6 +111,8 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
   value,
   size,
   toLabel,
+  fromCalendarLabel = "Choose start date",
+  toCalendarLabel = "Choose end date",
   "aria-labelledby": ariaLabelledBy,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
@@ -156,7 +174,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               </span>
             </Button>
           </DialogTrigger>
-          <DialogBody className="w-fit min-w-fit" hideClose>
+          <DialogBody
+            className="w-fit min-w-fit"
+            hideClose
+            aria-label={fromCalendarLabel}
+          >
             <DialogContent className="w-[304px] p-0">
               <Calendar
                 disabled={
@@ -204,7 +226,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               </span>
             </Button>
           </DialogTrigger>
-          <DialogBody className="w-fit min-w-fit" hideClose>
+          <DialogBody
+            className="w-fit min-w-fit"
+            hideClose
+            aria-label={toCalendarLabel}
+          >
             <DialogContent className="w-[304px] p-0">
               <Calendar
                 disabled={
@@ -252,7 +278,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[304px] p-0" align="start">
+          <PopoverContent
+            className="w-[304px] p-0"
+            align="start"
+            aria-label={fromCalendarLabel}
+          >
             <Calendar
               disabled={
                 selectedDateRange?.to
@@ -298,7 +328,11 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[304px] p-0" align="end">
+          <PopoverContent
+            className="w-[304px] p-0"
+            align="end"
+            aria-label={toCalendarLabel}
+          >
             <Calendar
               disabled={
                 selectedDateRange?.from

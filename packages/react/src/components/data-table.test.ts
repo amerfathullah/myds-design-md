@@ -7,7 +7,7 @@ import {
   type FormEvent,
   type ReactElement,
 } from "react";
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { createRoot, hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -22,16 +22,21 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const unmounts: (() => Promise<void>)[] = [];
 
+// Unmounts `root` and removes its `container` once the test ends
+function unmountAfterTest(root: Root, container: HTMLElement) {
+  unmounts.push(async () => {
+    await act(async () => root.unmount());
+    container.remove();
+  });
+}
+
 // Mounts `element` in a container on the page, as an app would, and returns
 // the container and a function that renders another element in its place.
 // Portalled content lands in `<body>`, outside it.
 async function mountRoot(element: ReactElement) {
   const container = document.body.appendChild(document.createElement("div"));
   const root = createRoot(container);
-  unmounts.push(async () => {
-    await act(async () => root.unmount());
-    container.remove();
-  });
+  unmountAfterTest(root, container);
   const render = (next: ReactElement) => act(async () => root.render(next));
   await render(element);
   return { container, render };
@@ -459,10 +464,7 @@ describe("Server rendering a radio DataTable", () => {
         onRecoverableError: (error) => recovered.push(error),
       }),
     );
-    unmounts.push(async () => {
-      await act(async () => root.unmount());
-      container.remove();
-    });
+    unmountAfterTest(root, container);
     const [first, , , second] = served;
     expect(first).toBeTruthy();
     expect(second).toBeTruthy();

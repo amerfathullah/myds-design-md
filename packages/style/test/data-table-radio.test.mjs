@@ -365,7 +365,7 @@ test("a disabled radio, selected or not, looks as the library's Radio does, in b
               (radio) => getComputedStyle(radio, "::before").backgroundColor,
             ),
         );
-        const page_ = colours[theme]["bg-white"];
+        const pageColour = colours[theme]["bg-white"];
         const { checked, unchecked } = disabledLooks[theme];
         assert.deepEqual(
           { ...actual, dots },
@@ -374,25 +374,37 @@ test("a disabled radio, selected or not, looks as the library's Radio does, in b
             lockedSelected: {
               fill: checked,
               centre: actual.radioDisabledChecked.centre,
-              corner: page_,
+              corner: pageColour,
             },
             // bg-washed at full opacity, with no dot, round
-            disabled: { fill: unchecked, centre: unchecked, corner: page_ },
+            disabled: {
+              fill: unchecked,
+              centre: unchecked,
+              corner: pageColour,
+            },
             // As before: primary-600 with its bg-white dot
             selected: actual.radioChecked,
-            unselected: { fill: page_, centre: page_, corner: page_ },
+            unselected: {
+              fill: pageColour,
+              centre: pageColour,
+              corner: pageColour,
+            },
             radioDisabledChecked: {
               fill: checked,
               centre: actual.radioDisabledChecked.centre,
-              corner: page_,
+              corner: pageColour,
             },
             radioDisabled: {
               fill: unchecked,
               centre: unchecked,
-              corner: page_,
+              corner: pageColour,
             },
             radioChecked: actual.radioChecked,
-            radioUnchecked: { fill: page_, centre: page_, corner: page_ },
+            radioUnchecked: {
+              fill: pageColour,
+              centre: pageColour,
+              corner: pageColour,
+            },
             // a, b and d
             dots: ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"],
           },

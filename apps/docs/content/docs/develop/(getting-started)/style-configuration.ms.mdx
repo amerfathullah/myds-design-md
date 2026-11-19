@@ -55,7 +55,9 @@ Oleh itu, anda boleh mengabaikan import tema yang tidak diingini dari projek and
 
 Import `light.css` sebelum `dark.css`, seperti di atas: pada `<html>`, `.dark` mengatasi `:root` hanya kerana ia datang kemudian.
 
-Setiap fail tema juga menetapkan `color-scheme` pelayar: `light.css` menetapkan `light` pada `:root`, dan `dark.css` menetapkan `dark` pada `.dark`. Jadi pelayar memaparkan bar tatal dan kawalan borangnya, seperti butang naik turun nombor dan pemilih tarikh, mengikut tema. Kedua-duanya menetapkannya dalam `@layer base`, jadi utiliti `scheme-*` Tailwind atau gaya sebaris masih boleh mengatasinya.
+Setiap fail tema juga menetapkan `color-scheme` pelayar: `light.css` menetapkan `light` pada `:root`, dan `dark.css` menetapkan `dark` pada `.dark`. Jadi pelayar memaparkan bar tatal dan kawalan borangnya, seperti butang naik turun nombor dan pemilih tarikh asli pelayar, mengikut tema. Kedua-duanya menetapkannya dalam `@layer base`, jadi utiliti `scheme-*` Tailwind, gaya sebaris atau peraturan anda sendiri di luar sebarang lapisan masih boleh mengatasinya.
+
+Letakkan `.dark` pada `<html>`, supaya bar tatal halaman itu sendiri mengikutnya, dan warnakan `<body>` dengan token tema, seperti `bg-bg-white text-txt-black-900`. Apabila `.dark` berada pada `<html>`, kanvas gelap pelayar bukan latar belakang gelap MYDS, dan teks tanpa warnanya sendiri menjadi putih.
 
 <Callout
   type="info"

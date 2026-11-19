@@ -1,7 +1,7 @@
 /*
  * The browser draws its own parts, such as scrollbars and form controls, for
- * a light page. In `@layer base`, so a `scheme-*` utility or an inline style
- * overrides it.
+ * a light page. In `@layer base`, so a `scheme-*` utility, an inline style or
+ * an app's own unlayered rule overrides it.
  */
 @layer base {
   :root {

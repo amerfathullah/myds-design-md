@@ -5,7 +5,7 @@
 
 The theme files now set the browser's `color-scheme`, `light` on `:root` and `dark` on `.dark`, so the browser draws its own parts to match the theme. Nothing set it before, so in the dark theme the browser drew them as it does for a light page. Both entries carry the change, the Tailwind import and `full.css`, and so do the standalone `light.css` and `dark.css`.
 
-- **Inside `.dark`, on `<html>` or on a subtree, the browser draws its own parts dark:** scrollbars, number spinners, date and time pickers, and native form controls in your own markup, such as checkboxes and range sliders. MYDS's Checkbox, Radio and Select draw no native control, so they look the same.
+- **Inside `.dark`, on `<html>` or on a subtree, the browser draws its own parts dark:** scrollbars, number spinners, the pickers of native date and time inputs, and native form controls in your own markup, such as checkboxes and range sliders. MYDS's Checkbox, Radio and Select draw no native control, so they look the same.
 - **The browser's focus ring is drawn for a dark page** on your own links and buttons that have no focus style of their own. It was drawn for a light page, so its dark inner line almost vanished in the dark theme.
 - **On a dark root,** with `.dark` on `<html>`, three things change. `bg-bg-white text-txt-black-900` on `<body>` avoids the first two:
   - Where nothing colours `<html>` or `<body>`, the page shows the browser's dark canvas, which isn't MYDS's dark background.
@@ -16,4 +16,4 @@ The theme files now set the browser's `color-scheme`, `light` on `:root` and `da
 
 Only `.dark` sets `dark`. Under a custom theme class, such as `system`, the root keeps `light` unless you set `color-scheme` for that class. `.dark` wins on `<html>` only because `dark.css` comes after `light.css`, as both entries already import them, so keep that order if you import the standalone files. ThemeProvider and `getThemeScript` don't change.
 
-The docs (EN/MS) say, in Style Configuration's Theme section, that the theme files set `color-scheme` and that `light.css` comes before `dark.css`, and, in ThemeSwitch's Custom Themes, that a custom theme class keeps `light`.
+The docs (EN/MS) say, in Style Configuration's Theme section, that the theme files set `color-scheme`, that `light.css` comes before `dark.css`, and to put `.dark` on `<html>` and colour `<body>` with the theme's tokens. In ThemeSwitch's Custom Themes, they say that a custom theme class keeps `light`.

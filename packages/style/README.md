@@ -61,7 +61,7 @@ For a Fumadocs site, add the MYDS colours for Fumadocs after its theme, and keep
 import "@amerfathullah/myds-style/full.css";
 ```
 
-`color.css`, `light.css` and `dark.css` hold only the CSS variables for the colours and the two themes.
+`color.css` holds the CSS variables for the colours, and `light.css` and `dark.css` those for the two themes. The theme files also set the browser's `color-scheme`, `light` on `:root` and `dark` on `.dark`, so the browser draws scrollbars and form controls to match the theme. They set it in `@layer base`, so a `scheme-*` utility or an inline style still overrides it. Import `light.css` before `dark.css`, as the tokens already require: `.dark` wins over `:root` on `<html>` only because it comes later.
 
 MYDS is an open-source project and welcomes contributions from the public. To contribute:
 

@@ -53,6 +53,10 @@ Oleh itu, anda boleh mengabaikan import tema yang tidak diingini dari projek and
 @import "@amerfathullah/myds-style/dark.css";
 ```
 
+Import `light.css` sebelum `dark.css`, seperti di atas: pada `<html>`, `.dark` mengatasi `:root` hanya kerana ia datang kemudian.
+
+Setiap fail tema juga menetapkan `color-scheme` pelayar: `light.css` menetapkan `light` pada `:root`, dan `dark.css` menetapkan `dark` pada `.dark`. Jadi pelayar memaparkan bar tatal dan kawalan borangnya, seperti butang naik turun nombor dan pemilih tarikh, mengikut tema. Kedua-duanya menetapkannya dalam `@layer base`, jadi utiliti `scheme-*` Tailwind atau gaya sebaris masih boleh mengatasinya.
+
 <Callout
   type="info"
   title="Penting"

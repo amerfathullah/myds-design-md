@@ -154,7 +154,7 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 
 Anda juga boleh memperluaskan tema yang tersedia dengan menentukan sifat `themes`! Ini juga membolehkan anda menyesuaikan ikon tema atau mengubah susunan tema.
 
-Hantar nama yang sama kepada `themes` ThemeProvider, supaya tema yang dipilih pengguna dipulihkan semasa halaman dimuatkan. Preset gaya MYDS hanya menggayakan tema terang dan `.dark`. Di bawah ThemeProvider, sebarang nama lain, termasuk `system`, hanyalah kelas pada `<html>` untuk anda gayakan sendiri. Jadi memilih Sistem di situ memaparkan tema terang, melainkan anda menggayakan `.system`. ThemeProvider tidak mempunyai pilihan yang mengikut tetapan OS.
+Hantar nama yang sama kepada `themes` ThemeProvider, supaya tema yang dipilih pengguna dipulihkan semasa halaman dimuatkan. Preset gaya MYDS hanya menggayakan tema terang dan `.dark`. Di bawah ThemeProvider, sebarang nama lain, termasuk `system`, hanyalah kelas pada `<html>` untuk anda gayakan sendiri. Jadi memilih Sistem di situ memaparkan tema terang, melainkan anda menggayakan `.system`. Hanya `.dark` menetapkan `color-scheme` pelayar kepada `dark`. Di bawah sebarang kelas lain, termasuk `.system`, halaman kekal `light`, jadi pelayar memaparkan bar tatal dan kawalan borangnya untuk halaman terang, melainkan anda turut menetapkan `color-scheme` untuk kelas itu. ThemeProvider tidak mempunyai pilihan yang mengikut tetapan OS.
 
 Dalam contoh langsung di bawah, Sistem mengikut tetapan OS anda hanya kerana laman ini membekalkan `ThemeContext` dengan tema daripada next-themes.
 

@@ -153,7 +153,7 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 
 You can also extend themes available by defining the `themes` property! This also lets you to customize the theme icons or change up the order of themes.
 
-Pass the same names to ThemeProvider's `themes`, so the theme a user picks is restored on load. The MYDS style preset styles only the light theme and `.dark`. Under ThemeProvider, any other name, `system` included, is only a class on `<html>` for you to style. So choosing System there shows the light theme, unless you style `.system`. ThemeProvider has no choice that follows the OS setting.
+Pass the same names to ThemeProvider's `themes`, so the theme a user picks is restored on load. The MYDS style preset styles only the light theme and `.dark`. Under ThemeProvider, any other name, `system` included, is only a class on `<html>` for you to style. So choosing System there shows the light theme, unless you style `.system`. Only `.dark` sets the browser's `color-scheme` to `dark`. Under any other class, `.system` included, the page keeps `light`, so the browser draws its scrollbars and form controls for a light page, unless you also set `color-scheme` for that class. ThemeProvider has no choice that follows the OS setting.
 
 In the live example below, System follows your OS setting only because this site feeds `ThemeContext` from next-themes.
 

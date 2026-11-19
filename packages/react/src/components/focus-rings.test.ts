@@ -16,22 +16,19 @@ function classesOf(html: string, match: RegExp) {
     .map((tag) => tag.match(/\sclass="([^"]*)"/)?.[1] ?? "");
 }
 
-// A DataTable with radio selection renders its native radio inputs with
-// `checked` and an `onClick` but no `onChange`, so React warns about each one
-// on the server. That warning is allowed here; any other fails the test.
-const checkedWithoutOnChange =
-  /You provided a `checked` prop to a form field without an `onChange` handler/;
-
+// Rendering logs no error or warning
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
 afterEach(() => {
-  const warnings = vi
-    .mocked(console.error)
-    .mock.calls.filter(([message]) => !checkedWithoutOnChange.test(message));
+  const logged = [
+    ...vi.mocked(console.error).mock.calls,
+    ...vi.mocked(console.warn).mock.calls,
+  ];
   vi.restoreAllMocks();
-  expect(warnings).toEqual([]);
+  expect(logged).toEqual([]);
 });
 
 // A Tailwind 3 colour-opacity utility such as `ring-opacity-40` next to a

@@ -187,6 +187,16 @@ interface DataTableProps<TData extends Record<string, any>> {
      * @default "Select"
      */
     columnLabel?: string;
+    /**
+     * Form field name of the row radios, in `radio` mode; `checkbox` mode
+     * ignores it. Inside a `<form>`, the selected row is submitted as
+     * `<name>=<row id>`. Nothing is submitted while no row is selected, or
+     * once the selected row can't be selected. Make it unique within its
+     * form: tables that share a name share one radio group. An empty name
+     * takes the default.
+     * @default a name generated for each table
+     */
+    name?: string;
   };
   pin?: {
     left?: string[];
@@ -224,13 +234,13 @@ const pin_cva = cva(["bg-bg-white"], {
       pin_direction: ["left"],
       pin_last: true,
       className:
-        "before:right-0 before:border-none before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_3px_0_8px_-8px]",
+        "before:right-0 before:border-none before:bottom-0 before:pointer-events-none before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_3px_0_8px_-8px]",
     },
     {
       pin_direction: ["right"],
       pin_last: true,
       className:
-        "before:left-0 before:border-none before:bottom-0 before:pointer-events-none before:contents-[''] before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_-3px_0_8px_-8px]",
+        "before:left-0 before:border-none before:bottom-0 before:pointer-events-none before:absolute top-0 before:w-1 before:bg-transparent before:h-full before:py-0 before:shadow-[inset_-3px_0_8px_-8px]",
     },
   ],
 });
@@ -268,6 +278,11 @@ interface DataTableContextProps {
   /** The reserved columns and cells take their labels from these */
   selection?: DataTableProps<any>["selection"];
   nest?: DataTableProps<any>["nest"];
+  /**
+   * An id from `useId()`, unique to this table on the page. The radio
+   * column's group is named after it unless `selection.name` names it.
+   */
+  tableId?: string;
 }
 
 const DataTableContext = sharedContext<DataTableContextProps>(
@@ -289,6 +304,7 @@ const DataTableProvider = <TData extends Record<string, any>>({
   ...props
 }: DataTableProviderProps<TData>) => {
   const { columns, data, selection, pin, nest } = props;
+  const tableId = useId();
   const [expandableColumns, setExpandableColumns] = useState(
     pick(columns, "id", () => false),
   );
@@ -351,6 +367,7 @@ const DataTableProvider = <TData extends Record<string, any>>({
         expandableColumns,
         toggleColumnWidth,
         ...(props as DataTableProps<any>),
+        tableId,
       }}
     >
       <Table
@@ -681,6 +698,7 @@ const RadioColumn = <TData extends Record<string, any>>() => {
       return (
         <div className="flex items-center gap-1">
           <Button
+            type="button"
             size="small"
             variant="default-ghost"
             onClick={() => table.resetRowSelection(false)}
@@ -695,7 +713,20 @@ const RadioColumn = <TData extends Record<string, any>>() => {
     },
     cell: function RowRadio(context) {
       const { row } = context;
-      const { selection } = useContext(DataTableContext);
+      const { selection, tableId } = useContext(DataTableContext);
+      // One radio group per table, which a form submits as `name=<row id>`
+      const name = selection?.name || tableId;
+      const disabled = !row.getCanSelect();
+
+      // When a group's checked radio becomes disabled, Chromium doesn't
+      // notice, and no radio in the group is a Tab stop until the radio
+      // rejoins its group. Setting its name again rejoins it. React 19 sets
+      // the name on every update; React 18 doesn't.
+      const radioRef = useRef<HTMLInputElement>(null);
+      useBeforePaint(() => {
+        if (radioRef.current && name) radioRef.current.name = name;
+      }, [disabled, name]);
+
       return (
         <div
           className={clx(
@@ -703,20 +734,23 @@ const RadioColumn = <TData extends Record<string, any>>() => {
             // The wrapper can't match :focus-visible itself, so it rings while
             // its input does
             "has-[:focus-visible]:ring-fr-primary focus:outline-hidden has-[:focus-visible]:ring-3",
-            "has-[:checked]:bg-primary-600 has-[:disabled]:has-[:checked]::bg-primary-600 has-[:checked]:border-none has-[:disabled]:opacity-30",
+            // As Radio: checked, it's primary-600, faded when disabled;
+            // unchecked, its input is bg-washed when disabled
+            "has-[:checked]:bg-primary-600 has-[:checked]:border-none has-[:disabled]:has-[:checked]:opacity-30",
           )}
         >
           <input
+            ref={radioRef}
             type="radio"
+            name={name}
             aria-label={getSelectRowLabel(context, selection)}
-            id={row.id}
             value={row.id}
             checked={row.getIsSelected()}
-            disabled={!row.getCanSelect()}
-            onClick={row.getToggleSelectedHandler()}
+            disabled={disabled}
+            onChange={row.getToggleSelectedHandler()}
             className={clx(
-              "disabled:bg-bg-washed relative h-full w-full focus-visible:outline-hidden disabled:cursor-not-allowed",
-              "before:bg-bg-white before:contents-[''] appearance-none before:absolute before:left-[5px] before:top-[5px] before:size-[6px] before:rounded-full",
+              "disabled:not-checked:bg-bg-washed relative h-full w-full rounded-full focus-visible:outline-hidden disabled:cursor-not-allowed",
+              "checked:before:bg-bg-white appearance-none before:absolute before:top-[5px] before:left-[5px] before:size-[6px] before:rounded-full",
             )}
           />
         </div>

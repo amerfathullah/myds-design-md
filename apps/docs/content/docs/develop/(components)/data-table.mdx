@@ -958,6 +958,23 @@ Screen readers announce each row's checkbox or radio as "Select row 1", "Select 
 />
 ```
 
+In `radio` mode, each table's row radios are one radio group, so the table is one Tab stop: the selected row, or the first row that can be selected while no row is selected or the selected row can no longer be selected. From there, as in any radio group, the arrow keys move to the next or previous row that can be selected and select it, wrapping from the last row to the first, and Space selects the focused row. The arrow keys never leave the table. While a row is selected, the header's "Clear selection" button is a Tab stop of its own, before the rows. It's `type="button"`, so it never submits a form.
+
+Inside a `<form>`, the table submits its selected row's id, the value of its `id_by` key, as `<name>=<row id>`. Nothing is submitted while no row is selected. By default each table generates a name of its own; set `name` in `selection` to give the field the name your form expects. The name must be unique within its form: tables that share one are one radio group, and their selections and radios fall out of step. A row that was selected and then can no longer be selected isn't submitted, because a form never submits a disabled control. `checkbox` mode ignores `name`.
+
+```tsx
+<form action="/pegawai/simpan">
+  <DataTable
+    data={data}
+    columns={columns}
+    selection={{ id_by: "id", mode: "radio", name: "pegawai" }}
+  />
+  <Button type="submit">Simpan</Button>
+</form>
+```
+
+With the row whose `id` is `b` selected, the form submits `pegawai=b`.
+
 ### Grouped Header
 
 You can group columns together by setting the `columns` property to an array of `ColumnGroupDef` objects. Each `ColumnGroupDef` object represents a group of columns in the table.

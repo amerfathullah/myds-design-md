@@ -666,6 +666,28 @@ export const DataTableLabels = () => (
   </>
 );
 
+// A radio DataTable's `selection.name` is the name a form submits its
+// selected row under
+export const DataTableRadioName = () => (
+  <>
+    <DataTable
+      columns={columns}
+      data={data}
+      selection={{ id_by: "id", mode: "radio", name: "pegawai" }}
+    />
+    <DataTable
+      columns={columns}
+      data={data}
+      selection={{
+        id_by: "id",
+        mode: "radio",
+        // @ts-expect-error `name` is a string
+        name: 1,
+      }}
+    />
+  </>
+);
+
 // TableTooltip passes the tooltip root's props to the root, and its other
 // props and its ref to the trigger button. The trigger renders its own icon,
 // so it takes no `asChild`.

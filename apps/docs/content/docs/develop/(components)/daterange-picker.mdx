@@ -270,6 +270,8 @@ Default value is `en`. To switch to Bahasa Melayu, pass `ms`.
 
 `locale` also sets what screen readers announce in the From and To calendars: with `ms`, their buttons, grids, weekday headings and days have Malay names. The month view's year buttons are the exception. Screen readers announce them as "Go to the Previous Year" and "Go to the Next Year" unless `previousYearLabel` and `nextYearLabel` rename them in both calendars. Set these in your site's language, for example `previousYearLabel="Pergi ke tahun sebelumnya"` and `nextYearLabel="Pergi ke tahun seterusnya"`.
 
+`locale` doesn't name the dialog or popover each calendar opens in, either. Screen readers announce them as "Choose start date" for the From calendar and "Choose end date" for the To calendar, unless `fromCalendarLabel` and `toCalendarLabel` rename them. Set these in your site's language too, for example `fromCalendarLabel="Pilih tarikh mula"` and `toCalendarLabel="Pilih tarikh akhir"`. `fromLabel` and `toLabel` change only the buttons' prefixes, not these names.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
@@ -361,6 +363,18 @@ Default value is `en`. To switch to Bahasa Melayu, pass `ms`.
       type: "string",
       default: "Go to the Next Year",
     },
+    fromCalendarLabel: {
+      description:
+        'Accessible name of the dialog or popover the From calendar opens in. Screen readers announce it; it is not shown. It doesn\'t follow `locale`, so set it in your site\'s language, e.g. `fromCalendarLabel="Pilih tarikh mula"`.',
+      type: "string",
+      default: "Choose start date",
+    },
+    toCalendarLabel: {
+      description:
+        'Accessible name of the dialog or popover the To calendar opens in. Screen readers announce it; it is not shown. It doesn\'t follow `locale`, so set it in your site\'s language, e.g. `toCalendarLabel="Pilih tarikh akhir"`.',
+      type: "string",
+      default: "Choose end date",
+    },
     fromLabel: {
       description:
         'Text before the start date on its button, which screen readers announce with the date. Set it in your site\'s language, and end it with a colon, e.g. `fromLabel="Mula:"`.',
@@ -380,7 +394,7 @@ Default value is `en`. To switch to Bahasa Melayu, pass `ms`.
     },
     "aria-label": {
       description:
-        "Accessible name of the date range picker, when no visible label names it. Screen readers announce it, then each button's prefix and date; it is not shown. There is no default name.",
+        "Accessible name of the date range picker, when no visible label names it. Screen readers announce it, then each button's prefix and date; it is not shown. The buttons that open its calendars have no default name.",
       type: "string",
     },
     "aria-describedby": {

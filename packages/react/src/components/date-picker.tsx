@@ -39,6 +39,13 @@ type DatePickerProps = {
    * @default "Go to the Next Year"
    */
   nextYearLabel?: string;
+  /**
+   * Accessible name of the dialog the calendar opens in: the Dialog below
+   * `lg:` and the Popover from `lg:` up. Screen readers announce it; it isn't
+   * shown. Set it in your site's language: `locale` doesn't change it.
+   * @default "Choose date"
+   */
+  calendarLabel?: string;
   placeholder?: string;
   value?: Date;
   onValueChange?: (date: Date) => void;
@@ -79,6 +86,7 @@ const DatePicker: FC<DatePickerProps> = ({
   placeholder = "dd / mm / yyyy",
   value,
   size,
+  calendarLabel = "Choose date",
   "aria-labelledby": ariaLabelledBy,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
@@ -125,7 +133,7 @@ const DatePicker: FC<DatePickerProps> = ({
             </span>
           </Button>
         </DialogTrigger>
-        <DialogBody hideClose className="sm:w-fit">
+        <DialogBody hideClose className="sm:w-fit" aria-label={calendarLabel}>
           <DialogContent className="p-0">
             <Calendar
               disabled={disabled}
@@ -158,7 +166,11 @@ const DatePicker: FC<DatePickerProps> = ({
             </span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[304px] p-0" align="start">
+        <PopoverContent
+          className="w-[304px] p-0"
+          align="start"
+          aria-label={calendarLabel}
+        >
           <Calendar
             disabled={disabled}
             locale={_locale}

@@ -2,10 +2,11 @@
 import {
   act,
   createElement,
+  useContext,
   type ComponentProps,
   type ReactElement,
 } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -13,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { useToast } from "../hooks";
 import { CrossIcon } from "../icons";
 import { isIcon } from "../svg/icon-test-markup";
+import { sharedContext } from "../utils/registry";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -900,6 +902,195 @@ describe("NavbarAction's menu toggle, opening and closing the menu", () => {
       expanded: "false",
       controls: null,
     });
+  });
+});
+
+// The mobile menu's panel, a `role="dialog"` with no visible title, takes its
+// name from the toggle (#169), so renaming the toggle renames the panel too
+describe("The mobile menu's panel", () => {
+  // A menu with one item
+  const menu = () =>
+    createElement(NavbarMenu, {
+      children: createElement(NavbarMenuItem, {
+        href: "#perkhidmatan",
+        children: "Perkhidmatan",
+      }),
+    });
+
+  // A Navbar with a one-item menu and its toggle, after a heading that the
+  // toggle's `aria-labelledby` can point at. `action` goes to NavbarAction.
+  const navbar = (action: ComponentProps<typeof NavbarAction> = {}) =>
+    createElement(
+      "div",
+      null,
+      createElement("h2", { id: "menu-title" }, "Menu utama"),
+      createElement(Navbar, null, menu(), createElement(NavbarAction, action)),
+    );
+
+  // The one toggle in `page`
+  const toggleIn = (page: ParentNode) => {
+    const [button, ...others] = page.querySelectorAll("button");
+    expect(others).toEqual([]);
+    expect(button).toBeDefined();
+    return button!;
+  };
+
+  // The panel `toggle` controls. Its `aria-controls` names the panel only
+  // while the menu is open.
+  const panelOf = (toggle: HTMLButtonElement) => {
+    const panel = document.getElementById(
+      toggle.getAttribute("aria-controls") ?? "",
+    );
+    expect(panel).not.toBeNull();
+    return panel!;
+  };
+
+  // Opens the menu from the toggle in `page`, and returns the toggle and the
+  // panel
+  async function openMenu(page: ParentNode) {
+    const toggle = toggleIn(page);
+    await act(async () => toggle.click());
+    return { toggle, panel: panelOf(toggle) };
+  }
+
+  test('is a dialog named "Menu", after the toggle, by default', async () => {
+    const { toggle, panel } = await openMenu(await mount(navbar()));
+    expect({
+      role: panel.getAttribute("role"),
+      name: computeAccessibleName(panel),
+    }).toEqual({ role: "dialog", name: "Menu" });
+    expect(computeAccessibleName(toggle)).toBe("Menu");
+    expect(toggle.hasAttribute("aria-haspopup")).toBe(false);
+  });
+
+  test("is renamed with the toggle by an `aria-label` on NavbarAction", async () => {
+    const { toggle, panel } = await openMenu(
+      await mount(navbar(ariaLabel("Navigasi"))),
+    );
+    expect([
+      computeAccessibleName(toggle),
+      computeAccessibleName(panel),
+    ]).toEqual(["Navigasi", "Navigasi"]);
+    // The panel refers to the toggle's name, rather than copying it
+    expect(withAttribute("aria-label", "Navigasi")).toEqual([toggle]);
+  });
+
+  test("is renamed with the toggle by an `aria-labelledby` on NavbarAction", async () => {
+    const { toggle, panel } = await openMenu(
+      await mount(navbar({ "aria-labelledby": "menu-title" })),
+    );
+    expect([
+      computeAccessibleName(toggle),
+      computeAccessibleName(panel),
+    ]).toEqual(["Menu utama", "Menu utama"]);
+  });
+
+  test('is still named "Menu", as the toggle is, when NavbarAction\'s `aria-labelledby` points at no element on the page', async () => {
+    const { toggle, panel } = await openMenu(
+      await mount(navbar({ "aria-labelledby": "no-such-element" })),
+    );
+    expect([
+      computeAccessibleName(toggle),
+      computeAccessibleName(panel),
+    ]).toEqual(["Menu", "Menu"]);
+  });
+
+  test('leaves an `id` on NavbarAction on the toggle, and is still named "Menu"', async () => {
+    const { toggle, panel } = await openMenu(
+      await mount(navbar({ id: "my-toggle" })),
+    );
+    expect(toggle.id).toBe("my-toggle");
+    expect(document.querySelectorAll("#my-toggle")).toHaveLength(1);
+    expect(computeAccessibleName(panel)).toBe("Menu");
+  });
+
+  test("follows the toggle's name as NavbarAction's `id`, `aria-label` and `aria-labelledby` change while the menu is open", async () => {
+    const container = document.body.appendChild(document.createElement("div"));
+    const root = createRoot(container);
+    unmounts.push(async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    });
+    const render = (action: ComponentProps<typeof NavbarAction>) =>
+      act(async () => root.render(navbar(action)));
+    await render({});
+    const { toggle } = await openMenu(container);
+    const names = [computeAccessibleName(panelOf(toggle))];
+    for (const action of [
+      { id: "my-toggle" },
+      { id: "my-toggle", "aria-label": "Navigasi" },
+      { "aria-labelledby": "menu-title" },
+      {},
+    ]) {
+      await render(action);
+      names.push(computeAccessibleName(panelOf(toggleIn(container))));
+    }
+    expect(names).toEqual(["Menu", "Menu", "Navigasi", "Menu utama", "Menu"]);
+  });
+
+  test("hydrates from server HTML with no error or warning, and is then named after the toggle", async () => {
+    const tree = () => navbar(ariaLabel("Navigasi"));
+    const container = document.body.appendChild(document.createElement("div"));
+    container.innerHTML = renderToString(tree());
+    // The toggle's own id, which the panel will refer to
+    const serverId = toggleIn(container).id;
+    const recoverable: unknown[] = [];
+    const root = await act(async () =>
+      hydrateRoot(container, tree(), {
+        onRecoverableError: (error) => recoverable.push(error),
+      }),
+    );
+    unmounts.push(async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    });
+    expect(recoverable).toEqual([]);
+    expect(serverId).not.toBe("");
+    const { toggle, panel } = await openMenu(container);
+    expect(toggle.id).toBe(serverId);
+    expect(computeAccessibleName(panel)).toBe("Navigasi");
+  });
+
+  // NavbarContext, under the name the library's registry holds it by, so a
+  // test can provide what a copy of the library from before #169 provides,
+  // or toggle the menu as such a copy's toggle does (CONTRIBUTING.md,
+  // Contexts)
+  const OlderNavbarContext = sharedContext<{
+    id: string;
+    show: boolean;
+    setShow: (value: boolean) => void;
+  }>("NavbarContext", { id: "", show: false, setShow: () => {} });
+
+  test("is still named \"Menu\" when the Navbar's context comes from an older copy, without the toggle's name", async () => {
+    await mount(
+      createElement(
+        OlderNavbarContext.Provider,
+        { value: { id: "older-header", show: true, setShow: () => {} } },
+        createElement("header", { id: "older-header" }, menu()),
+        createElement(NavbarAction, ariaLabel("Navigasi")),
+      ),
+    );
+    const [panel, ...others] = document.querySelectorAll('[role="dialog"]');
+    expect(others).toEqual([]);
+    expect(computeAccessibleName(panel!)).toBe("Menu");
+  });
+
+  test("is still named \"Menu\" when an older copy's toggle opens it, which doesn't give its name", async () => {
+    const OlderToggle = () => {
+      const { show, setShow } = useContext(OlderNavbarContext);
+      return createElement("button", {
+        type: "button",
+        "aria-label": "Navigasi",
+        onClick: () => setShow(!show),
+      });
+    };
+    const page = await mount(
+      createElement(Navbar, null, menu(), createElement(OlderToggle)),
+    );
+    await act(async () => toggleIn(page).click());
+    const [panel, ...others] = document.querySelectorAll('[role="dialog"]');
+    expect(others).toEqual([]);
+    expect(computeAccessibleName(panel!)).toBe("Menu");
   });
 });
 

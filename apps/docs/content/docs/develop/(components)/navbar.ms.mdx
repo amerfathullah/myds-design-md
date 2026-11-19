@@ -267,7 +267,7 @@ Pembaca skrin menyebut landmark `<nav>` menu ini sebagai "Main". Hantar `aria-la
 
 ### Tindakan Bar Navigasi
 
-Pada skrin yang lebih sempit daripada 1280px, `NavbarAction` turut memaparkan butang yang membuka dan menutup menu mudah alih. Pembaca skrin menyebutnya sebagai "Menu", dan memberitahu sama ada menu dibuka. `aria-label` pada `NavbarAction` menamakannya semula, contohnya `aria-label="Navigasi"`, dan pembaca skrin masih memberitahu sama ada menu dibuka.
+Pada skrin yang lebih sempit daripada 1280px, `NavbarAction` turut memaparkan butang yang membuka dan menutup menu mudah alih. Pembaca skrin menyebutnya sebagai "Menu", dan memberitahu sama ada menu dibuka. Menu dibuka dalam panel, dan pembaca skrin menyebut panel itu sebagai dialog. Panel itu mengambil nama butang itu, jadi namanya juga "Menu". `aria-label` pada `NavbarAction` menamakan semula kedua-dua butang dan panel itu, contohnya `aria-label="Navigasi"`, dan pembaca skrin masih memberitahu sama ada menu dibuka. Atau hantar `aria-labelledby` dengan id elemen yang teksnya menamakan kedua-duanya.
 
 Kekunci Enter atau Space pada butang itu membuka menu dan mengalihkan fokus ke item pertamanya. Tab dan Shift+Tab bergerak melalui item menu dan butang itu. Kekunci Escape menutup menu dan mengembalikan fokus ke butang itu, begitu juga butang itu sendiri dan menekan lapisan di belakang menu. Menekan di tempat lain pada halaman menutup menu dan membiarkan fokus di tempat yang ditekan.
 
@@ -472,9 +472,14 @@ Kekunci Enter atau Space pada butang itu membuka menu dan mengalihkan fokus ke i
     },
     "aria-label": {
       description:
-        "Nama boleh capai butang yang membuka dan menutup menu mudah alih. Pembaca skrin masih memberitahu sama ada menu dibuka.",
+        "Nama boleh capai butang yang membuka dan menutup menu mudah alih, dan nama panel menu itu. Pembaca skrin masih memberitahu sama ada menu dibuka.",
       type: "string",
       default: "Menu",
+    },
+    "aria-labelledby": {
+      description:
+        "Id elemen yang teksnya menamakan butang itu dan panel menu mudah alih, sebagai ganti `aria-label`.",
+      type: "string",
     },
   }}
 />

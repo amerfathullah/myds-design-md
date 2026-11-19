@@ -251,6 +251,8 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
 
 `locale` juga menetapkan apa yang disebut oleh pembaca skrin dalam kalendar: dengan `ms`, butang, grid, tajuk hari dan hari kalendar mempunyai nama dalam Bahasa Melayu. Butang tahun dalam paparan bulan adalah pengecualian. Pembaca skrin menyebutnya sebagai "Go to the Previous Year" dan "Go to the Next Year" melainkan `previousYearLabel` dan `nextYearLabel` menamakannya semula. Tetapkan kedua-duanya dalam bahasa laman anda, contohnya `previousYearLabel="Pergi ke tahun sebelumnya"` dan `nextYearLabel="Pergi ke tahun seterusnya"`.
 
+`locale` juga tidak menamakan dialog atau popover yang memuatkan kalendar. Pembaca skrin menyebutnya sebagai "Choose date" melainkan `calendarLabel` menamakannya semula. Tetapkannya juga dalam bahasa laman anda, contohnya `calendarLabel="Pilih tarikh"`.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
@@ -340,6 +342,12 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
       type: "string",
       default: "Go to the Next Year",
     },
+    calendarLabel: {
+      description:
+        'Nama boleh capai dialog atau popover yang memuatkan kalendar. Pembaca skrin menyebutnya; ia tidak dipaparkan. Ia tidak mengikut `locale`, jadi tetapkan dalam bahasa laman anda, contohnya `calendarLabel="Pilih tarikh"`.',
+      type: "string",
+      default: "Choose date",
+    },
     "aria-labelledby": {
       description:
         "Id `Label`, atau elemen lain, yang teksnya menamakan pemilih tarikh. Pembaca skrin menyebut teks itu, diikuti tarikh yang dipaparkan pemilih. `htmlFor` pada `Label` tidak menamakan pemilih.",
@@ -347,7 +355,7 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
     },
     "aria-label": {
       description:
-        "Nama boleh capai pemilih tarikh, apabila tiada label yang kelihatan menamakannya. Pembaca skrin menyebutnya, diikuti tarikh yang dipaparkan pemilih; ia tidak dipaparkan. Tiada nama lalai.",
+        "Nama boleh capai pemilih tarikh, apabila tiada label yang kelihatan menamakannya. Pembaca skrin menyebutnya, diikuti tarikh yang dipaparkan pemilih; ia tidak dipaparkan. Butang yang membuka kalendarnya tidak mempunyai nama lalai.",
       type: "string",
     },
     "aria-describedby": {

@@ -251,6 +251,8 @@ Default value is English `en`. To switch to Bahasa Melayu, pass `ms`.
 
 `locale` also sets what screen readers announce in the calendar: with `ms`, its buttons, grids, weekday headings and days have Malay names. The month view's year buttons are the exception. Screen readers announce them as "Go to the Previous Year" and "Go to the Next Year" unless `previousYearLabel` and `nextYearLabel` rename them. Set these in your site's language, for example `previousYearLabel="Pergi ke tahun sebelumnya"` and `nextYearLabel="Pergi ke tahun seterusnya"`.
 
+`locale` doesn't name the dialog or popover the calendar opens in, either. Screen readers announce it as "Choose date" unless `calendarLabel` renames it. Set it in your site's language too, for example `calendarLabel="Pilih tarikh"`.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose flex justify-center gap-3">
@@ -342,6 +344,12 @@ Default value is English `en`. To switch to Bahasa Melayu, pass `ms`.
       type: "string",
       default: "Go to the Next Year",
     },
+    calendarLabel: {
+      description:
+        'Accessible name of the dialog or popover the calendar opens in. Screen readers announce it; it is not shown. It doesn\'t follow `locale`, so set it in your site\'s language, e.g. `calendarLabel="Pilih tarikh"`.',
+      type: "string",
+      default: "Choose date",
+    },
     "aria-labelledby": {
       description:
         "The id of the `Label`, or other element, whose text names the date picker. Screen readers announce that text, then the date the picker shows. A `Label`'s `htmlFor` doesn't name the picker.",
@@ -349,7 +357,7 @@ Default value is English `en`. To switch to Bahasa Melayu, pass `ms`.
     },
     "aria-label": {
       description:
-        "Accessible name of the date picker, when no visible label names it. Screen readers announce it, then the date the picker shows; it is not shown. There is no default name.",
+        "Accessible name of the date picker, when no visible label names it. Screen readers announce it, then the date the picker shows; it is not shown. The buttons that open its calendar have no default name.",
       type: "string",
     },
     "aria-describedby": {

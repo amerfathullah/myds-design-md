@@ -752,6 +752,28 @@ export const CalendarLabels = () => (
   </>
 );
 
+// The dialogs and popovers the date pickers' calendars open in take their
+// names from `calendarLabel`, and `fromCalendarLabel` / `toCalendarLabel`
+// (#169)
+export const CalendarDialogLabels = () => (
+  <>
+    <DatePicker locale="ms" calendarLabel="Pilih tarikh" />
+    <DateRangePicker
+      locale="ms"
+      fromCalendarLabel="Pilih tarikh mula"
+      toCalendarLabel="Pilih tarikh akhir"
+    />
+    {/* @ts-expect-error `calendarLabel` is a string */}
+    <DatePicker calendarLabel={1} />
+    {/* @ts-expect-error `fromCalendarLabel` is a string */}
+    <DateRangePicker fromCalendarLabel={1} />
+    {/* @ts-expect-error `toCalendarLabel` is a string */}
+    <DateRangePicker toCalendarLabel={1} />
+    {/* @ts-expect-error DateRangePicker's are `fromCalendarLabel` and `toCalendarLabel` */}
+    <DateRangePicker calendarLabel="Pilih tarikh" />
+  </>
+);
+
 // The date pickers' triggers take their names from `aria-labelledby`, the id
 // of a Label, or from `aria-label`, and take `aria-describedby`. The pickers
 // take no `id`, so a Label's `htmlFor` can't name them (ADR-0011).

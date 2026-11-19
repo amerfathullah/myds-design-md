@@ -8,7 +8,12 @@
 // `aria-describedby` names describes each trigger. A picker with none of the
 // props is named by what it shows, as before. Each holds in pickers rendered
 // on the client and in pickers hydrated from server HTML. A visible trigger
-// still opens its calendar, and none of the naming props reaches it.
+// still opens its calendar, and none of the naming props reaches it. The
+// dialog or popover the calendar opens in is named "Choose date", or on
+// DateRangePicker "Choose start date" and "Choose end date" (#169), or in
+// Malay where `calendarLabel`, `fromCalendarLabel` and `toCalendarLabel` name
+// it; neither `locale`, `fromLabel` / `toLabel` nor the naming props change
+// it.
 //
 // `disabled={true}` and a `<fieldset disabled>` around a DateRangePicker
 // disable its shown triggers: the tree reports them disabled, under the names
@@ -166,6 +171,7 @@ const fields = {
   "date-aria-label": {
     picker: "date",
     triggers: [["Tarikh lahir 30 Okt 2026", ""]],
+    calendars: ["Pilih tarikh"],
   },
   "date-unnamed": { picker: "date", triggers: [["30 Oct 2026", ""]] },
   "range-labelled": {
@@ -181,6 +187,7 @@ const fields = {
       ["Tarikh perjalanan Dari: 01 Okt 2026", ""],
       ["Tarikh perjalanan Hingga: 30 Okt 2026", ""],
     ],
+    calendars: ["Pilih tarikh mula", "Pilih tarikh akhir"],
   },
   "range-from-to": {
     picker: "range",
@@ -225,6 +232,35 @@ const fields = {
 const disabledFields = Object.keys(fields).filter(
   (field) => fields[field].disabled,
 );
+
+// The names of the dialogs and popovers each picker's calendars open in,
+// where a field's `calendars` doesn't rename them: in the order of the
+// picker's shown triggers, DatePicker's one, and DateRangePicker's From and
+// To
+const defaultCalendars = {
+  date: ["Choose date"],
+  range: ["Choose start date", "Choose end date"],
+};
+
+// The role and name of each dialog Chromium's accessibility tree holds on
+// `page`
+async function treeDialogs(page) {
+  const client = await page.context().newCDPSession(page);
+  try {
+    const {
+      result: { objectId },
+    } = await client.send("Runtime.evaluate", { expression: "document.body" });
+    const { nodes } = await client.send("Accessibility.queryAXTree", {
+      objectId,
+      role: "dialog",
+    });
+    return nodes
+      .filter((node) => !node.ignored)
+      .map((node) => ({ role: node.role?.value, name: node.name?.value }));
+  } finally {
+    await client.detach();
+  }
+}
 
 // The number of dialogs and popovers open on `page`
 const openCount = (page) =>
@@ -330,6 +366,38 @@ for (const width of widths) {
         "ssr range-labelled": opened,
         "ssr range-in-legend": opened,
       });
+    }));
+
+  test(`at ${width}px, each shown trigger opens its calendar in a dialog the tree names "Choose date", "Choose start date" or "Choose end date", unless the picker renames it`, () =>
+    withPage(width, async (page) => {
+      const actual = {};
+      const want = {};
+      for (const mode of modes) {
+        for (const [field, { picker, disabled, calendars }] of Object.entries(
+          fields,
+        )) {
+          if (disabled) continue;
+          const triggers = shown[width][picker];
+          const names = calendars ?? defaultCalendars[picker];
+          for (const [index, trigger] of triggers.entries()) {
+            const key = `${mode} ${field} ${trigger}`;
+            await page
+              .locator(`[data-test="${mode}-${field}"] button`)
+              .nth(trigger)
+              .click();
+            await page.waitForFunction(
+              () => document.querySelectorAll('[role="dialog"]').length === 1,
+            );
+            actual[key] = await treeDialogs(page);
+            want[key] = [{ role: "dialog", name: names[index] }];
+            await page.keyboard.press("Escape");
+            await page.waitForFunction(
+              () => document.querySelectorAll('[role="dialog"]').length === 0,
+            );
+          }
+        }
+      }
+      assert.deepEqual(actual, want);
     }));
 
   test(`at ${width}px, Tab reaches every shown trigger but a disabled picker's`, () =>

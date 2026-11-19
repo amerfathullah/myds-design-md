@@ -267,7 +267,7 @@ Screen readers announce the menu's `<nav>` landmark as "Main". Pass an `aria-lab
 
 ### Navbar Action
 
-On screens narrower than 1280px, `NavbarAction` also shows a button that opens and closes the mobile menu. Screen readers announce it as "Menu", and say whether the menu is open. An `aria-label` on `NavbarAction` renames it, for example `aria-label="Navigasi"`, and screen readers still say whether the menu is open.
+On screens narrower than 1280px, `NavbarAction` also shows a button that opens and closes the mobile menu. Screen readers announce it as "Menu", and say whether the menu is open. The menu opens in a panel, and screen readers announce the panel as a dialog. The panel takes the button's name, so it is named "Menu" too. An `aria-label` on `NavbarAction` renames both the button and the panel, for example `aria-label="Navigasi"`, and screen readers still say whether the menu is open. Or pass `aria-labelledby` with the id of an element whose text names both.
 
 Enter or Space on the button opens the menu and moves focus to its first item. Tab and Shift+Tab move through the menu's items and the button. Escape closes the menu and returns focus to the button, as do the button itself and a press on the overlay behind the menu. A press elsewhere on the page closes the menu and leaves focus where you pressed.
 
@@ -470,9 +470,14 @@ Enter or Space on the button opens the menu and moves focus to its first item. T
     },
     "aria-label": {
       description:
-        "Accessible name of the button that opens and closes the mobile menu. Screen readers still say whether the menu is open.",
+        "Accessible name of the button that opens and closes the mobile menu, and of the menu's panel. Screen readers still say whether the menu is open.",
       type: "string",
       default: "Menu",
+    },
+    "aria-labelledby": {
+      description:
+        "The id of an element whose text names the button and the mobile menu's panel, in place of `aria-label`.",
+      type: "string",
     },
   }}
 />

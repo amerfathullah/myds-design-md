@@ -19,20 +19,21 @@ So both pickers take `aria-labelledby`, `aria-label` and `aria-describedby`, and
 - **`aria-labelledby` that points at the trigger itself** (the label's id, then the trigger's own), which #85's suggested `id` for the trigger implies: rejected. When a `<label>` also labels the trigger, Chrome and dom-accessibility-api, which the library's tests use, compute different names. That happens with a Label wrapped around the picker, or a Label's `htmlFor` if the pickers ever take an `id`. Chrome keeps the date, and dom-accessibility-api drops it. Instead, a trigger's `aria-labelledby` points at the author's ids and at elements inside the trigger that hold its visible text, and the two engines compute that the same way.
 - **The date in `aria-describedby`, with a Label's `htmlFor` naming the trigger**: rejected. A Label's `htmlFor` can name only one of the doubled triggers, so this doesn't solve the doubling. And without a Label, the date would be both the name and the description.
 - **A `label` prop that renders a Label**: rejected. No form control in the library renders a Label of its own; the author places it, as for DateField. SelectValue's `label` and DateRangePicker's `fromLabel` / `toLabel` are text inside the trigger, not a Label.
-- **An English default name, such as "Choose date"**: rejected by ADR-0008's Scope.
+- **An English default name for the triggers, such as "Choose date"**: rejected by ADR-0008's Scope.
   - The triggers already show text of their own, and a form control the author names gets no default.
   - A default `aria-label` would also replace the date in the trigger's name, and it would hide a picker the author forgot to label.
+  - The dialogs and popovers the triggers open have no visible title, so they do get such a default, as ADR-0008's Scope sets (#169).
 
 ## Consequences
 
 - The authoring pattern differs from DateField's. The author pairs a Label's `id` with `aria-labelledby` on the picker, not `htmlFor` with an `id`. Clicking the Label doesn't open the picker. The docs (EN, MS) and DESIGN.md must say so.
 - Copying DateField's pattern doesn't work. An author who does gets a trigger named only by its date. TypeScript rejects `id` on the pickers, but a Label whose `htmlFor` matches nothing fails silently. In plain JavaScript, an `id` reaches only the open calendar.
-- With none of the three props, the triggers render as before, with the same names and text and no `aria-labelledby` or `aria-describedby`. The pickers add no default label, as ADR-0008's Scope sets for form controls.
+- With none of the three props, the triggers render as before, with the same names and text and no `aria-labelledby` or `aria-describedby`. The pickers add no default label to the triggers, as ADR-0008's Scope sets for form controls.
 - `aria-label` names a picker with no visible label, and the trigger's text still follows it, e.g. "Tarikh lahir 12 Mac 2024". An `aria-label` on a button would replace its text, so the picker renders the given text in a hidden element that each trigger's `aria-labelledby` points at. If both props are passed, `aria-labelledby` wins, as it does on any element.
 - The props name the whole picker, so they reach every trigger it renders.
   - DateRangePicker's From and To triggers start with the same label. Their prefixes ("From:" / "To:", `fromLabel` / `toLabel`, "Dari:" / "Hingga:") tell them apart.
   - The ids the pickers generate are unique per trigger and per picker, so several pickers on one page never collide.
-  - The props don't reach the dialogs and popovers the pickers open; naming those is #169.
+  - The props don't reach the dialogs and popovers the pickers open. Those are named by their own props with English defaults, DatePicker's `calendarLabel` and DateRangePicker's `fromCalendarLabel` / `toCalendarLabel`, as ADR-0008's Scope sets for a dialog with no visible title (#169).
 - An `aria-label` or `aria-labelledby` passed before this change moves to the trigger. TypeScript doesn't check hyphenated attributes, so authors in TypeScript or plain JavaScript could already pass them. They reached the calendar's root `<div>`, and only while it was open; `aria-describedby` was dropped.
 - The change ships as a minor release, since ADR-0008 makes a new naming prop a minor change. The changeset notes that these props now go to the trigger.
 - A single trigger remains possible later. If the pickers ever render one, they could also take an `id`, so a Label's `htmlFor` works, without breaking these props. The picker would still have to keep the date in the trigger's name, since a `<label for>` alone replaces it.

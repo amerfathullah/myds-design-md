@@ -1,3 +1,16 @@
+/*
+ * The browser draws its own parts, such as scrollbars and form controls, for
+ * a dark page, inside `.dark` on <html> or on a subtree. In `@layer base`, so
+ * a `scheme-*` utility, an inline style or an app's own unlayered rule
+ * overrides it. It beats light.css's `:root` rule on <html> only because this
+ * file is imported after light.css.
+ */
+@layer base {
+  .dark {
+    color-scheme: dark;
+  }
+}
+
 .dark {
   /* bg - White */
   --bg-white: var(--_gray-900);

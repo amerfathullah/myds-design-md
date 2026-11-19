@@ -1,11 +1,17 @@
-// Both entries set the same rules for scrolling, mouse focus and underlines,
-// so an app looks the same on either. The Tailwind import sets them, and
-// full.css, which imports it, adds only the fonts and the box-sizing pair:
+// Both entries set the same rules for scrolling, mouse focus, underlines and
+// the browser's `color-scheme`, so an app looks the same on either. The
+// Tailwind import sets them, and full.css, which imports it, adds only the
+// fonts and the box-sizing pair:
 // - html gets a 65px scroll padding, which clears the sticky Navbar, and
 //   scrolls smoothly unless the user asks for reduced motion;
 // - focus that isn't `:focus-visible`, as after a mouse click, shows no
 //   outline, as with Tailwind's `outline-hidden`;
-// - `underline`, with any Tailwind variant, sets the line from the font.
+// - `underline`, with any Tailwind variant, sets the line from the font;
+// - the theme files set `color-scheme`, `light` on `:root` and `dark` on
+//   `.dark`, in `@layer base`, so a `scheme-*` utility, an inline style or an
+//   app's own unlayered rule overrides it. Their token custom properties stay
+//   outside any layer. The standalone `./light.css` and `./dark.css` exports
+//   are those same files.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
@@ -234,4 +240,68 @@ test("full.css sets each scroll, focus and underline rule once, with no underlin
     1,
   );
   assert.deepEqual(shorthands(full), []);
+});
+
+// Each theme file, as a consumer imports it through the package's exports,
+// and the rule that sets its `color-scheme`
+const themes = {
+  "./light.css": { selector: ":root", value: "light" },
+  "./dark.css": { selector: ".dark", value: "dark" },
+};
+
+// Where a stylesheet puts a declaration: its rule's selector and the at-rules
+// around it
+const placement = ({ selector, atRules }) => ({ selector, atRules });
+
+for (const [file, { selector, value }] of Object.entries(themes)) {
+  test(`${file} sets color-scheme: ${value} on ${selector} in @layer base, and keeps its tokens outside any layer`, () => {
+    const css = fs.readFileSync(
+      new URL(
+        import.meta.resolve(`@amerfathullah/myds-style/${file.slice(2)}`),
+      ),
+      "utf8",
+    );
+    assert.deepEqual(declarations(css, "color-scheme"), [
+      { selector, atRules: "@layer base", value },
+    ]);
+    const tokens = declarations(css, /^--/);
+    assert.ok(tokens.length > 0, `${file} defines no tokens`);
+    assert.deepEqual(
+      [...new Set(tokens.map((token) => JSON.stringify(placement(token))))],
+      [JSON.stringify({ selector, atRules: "" })],
+    );
+  });
+}
+
+// Both theme files' `color-scheme` rules, in the order the entries import
+// them: `.dark` beats `:root` on <html> only because it comes later
+const themeSchemes = Object.values(themes).map(({ selector, value }) => ({
+  selector,
+  atRules: "@layer base",
+  value,
+}));
+
+// Where a compiled entry must put `--bg-white`, a token both theme files
+// define: in each file's own rule, outside any layer
+const tokenPlacements = Object.values(themes).map(({ selector }) => ({
+  selector,
+  atRules: "",
+}));
+
+test("the Tailwind import sets color-scheme only in the theme files' rules, in @layer base, and keeps their tokens unlayered", async () => {
+  const css = await compile("");
+  assert.deepEqual(declarations(css, "color-scheme"), themeSchemes);
+  assert.deepEqual(
+    declarations(css, "--bg-white").map(placement),
+    tokenPlacements,
+  );
+});
+
+test("full.css sets color-scheme only in the theme files' rules, in @layer base, and keeps their tokens unlayered", async () => {
+  const full = await compileFull();
+  assert.deepEqual(declarations(full, "color-scheme"), themeSchemes);
+  assert.deepEqual(
+    declarations(full, "--bg-white").map(placement),
+    tokenPlacements,
+  );
 });

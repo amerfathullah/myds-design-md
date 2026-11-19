@@ -53,6 +53,12 @@ So, you can omit importing the unwanted theme from your project!
 @import "@amerfathullah/myds-style/dark.css";
 ```
 
+Import `light.css` before `dark.css`, as above: on `<html>`, `.dark` overrides `:root` only because it comes later.
+
+Each theme file also sets the browser's `color-scheme`: `light.css` sets `light` on `:root`, and `dark.css` sets `dark` on `.dark`. So the browser draws its scrollbars and form controls, such as number spinners and the native date picker, to match the theme. Both set it in `@layer base`, so a Tailwind `scheme-*` utility, an inline style or a rule of your own outside any layer still overrides it.
+
+Put `.dark` on `<html>`, so the page's own scrollbar follows it, and colour `<body>` with the theme's tokens, such as `bg-bg-white text-txt-black-900`. With `.dark` on `<html>`, the browser's dark canvas isn't MYDS's dark background, and text with no colour of its own turns white.
+
 <Callout
   type="info"
   title="Important"

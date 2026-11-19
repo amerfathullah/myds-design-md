@@ -3,8 +3,12 @@
 // scrolls there smoothly, unless the user asks for reduced motion. Focus that
 // isn't `:focus-visible`, as after a mouse click, shows no outline, even one
 // an outline-width utility such as `focus:outline-[3px]` draws, while
-// keyboard focus shows it. And an underlined link keeps the `decoration-*`
-// utilities on it, the `decoration-inherit` Link uses included.
+// keyboard focus shows it. An underlined link keeps the `decoration-*`
+// utilities on it, the `decoration-inherit` Link uses included. And the theme
+// files set the browser's `color-scheme`, so it draws scrollbars and form
+// controls to match: the page computes `light`, and `.dark`, on <html> or on
+// a subtree, computes `dark`. They set it in `@layer base`, so a `scheme-*`
+// utility, an inline style or an app's own unlayered rule wins over it.
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 
@@ -14,7 +18,7 @@ import { compile, compileFull } from "./compile.mjs";
 
 const outlineClasses =
   "focus:outline-primary-600/20 focus:outline-[3px] focus:outline-offset-0";
-const classes = `@source inline("${outlineClasses} underline decoration-inherit decoration-wavy decoration-3");`;
+const classes = `@source inline("${outlineClasses} underline decoration-inherit decoration-wavy decoration-3 scheme-light scheme-light-dark");`;
 const entries = {
   "the Tailwind import": () => compile(classes),
   "full.css": () => compileFull(classes),
@@ -59,6 +63,85 @@ async function withTab(entry, reducedMotion, use) {
     await context.close();
   }
 }
+
+// A page whose <html> has the `html` attributes and holds `body`, with an
+// app's own unlayered `rule` in a stylesheet after the entry's
+const schemePage = (
+  css,
+  { html = "", body = "", rule = "" },
+) => `<!doctype html>
+<html ${html}>
+  <head><style>${css}</style><style>${rule}</style></head>
+  <body>${body}</body>
+</html>`;
+
+// The `color-scheme` that <html>, and #subtree where the page has one,
+// compute on each case's page. `cases` is a list of [name, markup, expected],
+// where `markup` is the `schemePage` options that build the page
+async function colorSchemes(entry, cases) {
+  const context = await browser.newContext();
+  try {
+    const tab = await context.newPage();
+    const found = {};
+    for (const [name, markup] of cases) {
+      await tab.setContent(schemePage(stylesheets[entry], markup));
+      found[name] = await tab.evaluate(() => {
+        const scheme = (element) => getComputedStyle(element).colorScheme;
+        const subtree = document.getElementById("subtree");
+        return {
+          html: scheme(document.documentElement),
+          ...(subtree && { subtree: scheme(subtree) }),
+        };
+      });
+    }
+    return found;
+  } finally {
+    await context.close();
+  }
+}
+
+// What `colorSchemes` should return for `cases`: each case's name with the
+// schemes it expects
+const expectedSchemes = (cases) =>
+  Object.fromEntries(cases.map(([name, , schemes]) => [name, schemes]));
+
+const themeCases = [
+  ["a light page", {}, { html: "light" }],
+  ['<html class="dark">', { html: 'class="dark"' }, { html: "dark" }],
+  [
+    "a .dark subtree on a light page",
+    { body: '<div id="subtree" class="dark"></div>' },
+    { html: "light", subtree: "dark" },
+  ],
+];
+
+const overrideCases = [
+  [
+    '<html class="scheme-light-dark">',
+    { html: 'class="scheme-light-dark"' },
+    { html: "light dark" },
+  ],
+  [
+    '<html class="dark scheme-light">',
+    { html: 'class="dark scheme-light"' },
+    { html: "light" },
+  ],
+  [
+    "a .dark scheme-light subtree on a light page",
+    { body: '<div id="subtree" class="dark scheme-light"></div>' },
+    { html: "light", subtree: "light" },
+  ],
+  [
+    '<html class="dark" style="color-scheme: light">',
+    { html: 'class="dark" style="color-scheme: light"' },
+    { html: "light" },
+  ],
+  [
+    '<html class="dark">, with an app\'s unlayered html rule after MYDS',
+    { html: 'class="dark"', rule: "html { color-scheme: light dark }" },
+    { html: "light dark" },
+  ],
+];
 
 // Waits until the page has scrolled and then stopped for 10 frames, and
 // fails if it hasn't within 5 seconds
@@ -155,4 +238,18 @@ for (const entry of Object.keys(entries)) {
         },
       );
     }));
+
+  test(`${entry}: a light page computes color-scheme light, and .dark, on <html> or a subtree, computes dark`, async () => {
+    assert.deepEqual(
+      await colorSchemes(entry, themeCases),
+      expectedSchemes(themeCases),
+    );
+  });
+
+  test(`${entry}: a scheme-* utility, an inline style or an app's own unlayered rule wins over the theme's color-scheme`, async () => {
+    assert.deepEqual(
+      await colorSchemes(entry, overrideCases),
+      expectedSchemes(overrideCases),
+    );
+  });
 }

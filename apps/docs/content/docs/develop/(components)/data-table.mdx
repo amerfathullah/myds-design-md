@@ -1710,12 +1710,12 @@ You can add footer per column by setting the `footer` in **ColumnDef** object of
   type={{
     "aria-label": {
       description:
-        "Accessible name of the table. Screen readers announce it; it is not shown. Use it only when the page shows no title for the table. aria-labelledby wins over it. With neither, the table has no name.",
+        "Accessible name of the table. Screen readers announce it; it is not shown. Use it only when the page shows no title for the table. `aria-labelledby` wins over it. There is no default name.",
       type: "string",
     },
     "aria-labelledby": {
       description:
-        "The id of a visible element, usually a heading above the table, whose text names the table. The id must be unique on the page. With neither, the table has no name.",
+        "The id of a visible element, usually a heading above the table, whose text names the table. The id must be unique on the page. It wins over `aria-label`. There is no default name.",
       type: "string",
     },
     columns: {

@@ -219,6 +219,10 @@ const PaginationNumber: ForwardRefExoticComponent<
         "h-10 w-10 items-center justify-center",
       )}
       aria-label={pageLabelOf(number)}
+      // Screen readers announce which page is current, which the fill shows
+      // only by sight. An author's `aria-current` replaces it; the fill still
+      // follows the current page.
+      aria-current={isActive ? "page" : undefined}
       {...props}
     >
       {number}

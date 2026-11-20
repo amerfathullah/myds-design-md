@@ -43,7 +43,11 @@ import { Pill } from "@amerfathullah/myds-react/pill";
  *
  * <SearchBar size="large">
  *   <SearchBarInputContainer>
- *     <SearchBarInput value={query} onValueChange={setQuery} />
+ *     <SearchBarInput
+ *       aria-label="Search by name"
+ *       value={query}
+ *       onValueChange={setQuery}
+ *     />
  *     <SearchBarHint>
  *       Press <Pill size="small">/</Pill> to search
  *     </SearchBarHint>
@@ -139,6 +143,7 @@ const DemoBasicSearchBar = (props: ComponentProps<typeof SearchBar>) => {
       <SearchBarInputContainer>
         <SearchBarInput
           ref={inputRef}
+          aria-label="Search by name"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -214,6 +219,7 @@ const DemoGroupedSearchBar = (props: ComponentProps<typeof SearchBar>) => {
       <SearchBarInputContainer>
         <SearchBarInput
           ref={inputRef}
+          aria-label="Search by name"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}

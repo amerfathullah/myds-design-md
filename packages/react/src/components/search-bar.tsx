@@ -111,15 +111,42 @@ export const SearchBarInputContainer: FunctionComponent<
   );
 };
 
+// A naming prop counts only when it holds text: `undefined`, as a
+// prop-forwarding wrapper passes, and an empty or blank string name nothing
+const hasText = (value: string | undefined): value is string =>
+  typeof value === "string" && value.trim() !== "";
+
 /**
- * Uses cmdk's Command.Input API.
+ * Uses cmdk's Command.Input API. Its own `aria-labelledby` names the input,
+ * then its own `aria-label`, then SearchBar's `label`; it has no default.
+ * cmdk owns the input's `id`, so an `id` doesn't reach it: for a visible
+ * label, point `aria-labelledby` at a Label's `id`.
  * @see https://github.com/pacocoursey/cmdk#input-cmdk-input
  */
 export const SearchBarInput: FunctionComponent<
-  ComponentProps<typeof Command.Input>
+  Omit<ComponentProps<typeof Command.Input>, "asChild">
 > = forwardRef(
-  ({ className, "aria-controls": ariaControls, ...props }, ref) => {
+  (
+    {
+      className,
+      "aria-controls": ariaControls,
+      "aria-labelledby": ariaLabelledBy,
+      ...props
+    },
+    ref,
+  ) => {
     const { resultsId } = useContext(SearchBarContext);
+    // cmdk's `aria-labelledby` points at its hidden label, which holds
+    // SearchBar's `label`. It stays unless the author names the input: their
+    // `aria-labelledby` replaces it, and their `aria-label` drops it, as
+    // dom-accessibility-api, and so Testing Library, doesn't fall through
+    // from an empty label to an `aria-label`. The key is left off the child
+    // otherwise, since even an `undefined` there would erase cmdk's.
+    const labelledBy = hasText(ariaLabelledBy)
+      ? { "aria-labelledby": ariaLabelledBy }
+      : hasText(props["aria-label"])
+        ? { "aria-labelledby": undefined }
+        : {};
     return (
       <Command.Input
         ref={ref}
@@ -127,17 +154,19 @@ export const SearchBarInput: FunctionComponent<
           "text-txt-black-900 placeholder:text-txt-black-500 flex-1 bg-transparent focus:outline-hidden",
           className,
         )}
-        asChild
         {...props}
+        // After the props, so an untyped `asChild={false}` can't make cmdk
+        // render a second <input> around this one (#206)
+        asChild
       >
         {/* cmdk points `aria-controls` at its listbox, SearchBarResultsList,
         while always reporting `aria-expanded="true"`. The listbox may be
         unmounted, as when there are no results, which would leave the input
         controlling an element that doesn't exist. So the input points at the
-        SearchBarResults panel, which stays mounted. The value sits on this
-        child because its props win over the ones cmdk passes, and cmdk sets
-        its own after spreading ours. */}
-        <input aria-controls={ariaControls ?? resultsId} />
+        SearchBarResults panel, which stays mounted. The value and the name
+        sit on this child because its props win over the ones cmdk passes,
+        and cmdk sets its own after spreading ours. */}
+        <input aria-controls={ariaControls ?? resultsId} {...labelledBy} />
       </Command.Input>
     );
   },

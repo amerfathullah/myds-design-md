@@ -268,6 +268,7 @@ export const SearchBarControlledStateExample = () => {
     >
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Search by name"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -314,7 +315,10 @@ export function SearchBarResultsExample() {
   return (
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput
+          aria-label="Search by name"
+          placeholder="Search by name"
+        />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
       <SearchBarResults open>
@@ -357,7 +361,10 @@ export function SearchBarGroupedResultsExample() {
   return (
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput
+          aria-label="Search by name"
+          placeholder="Search by name"
+        />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
       <SearchBarResults open>
@@ -400,6 +407,7 @@ export function SearchBarClearButtonExample() {
     <SearchBar size="large">
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Search by name"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}

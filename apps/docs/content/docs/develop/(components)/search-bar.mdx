@@ -17,6 +17,7 @@ import {
   SearchBarResultsGroup,
   SearchBarHint,
   Pill,
+  Label,
 } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
@@ -81,6 +82,7 @@ import {
     >
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Search by name"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -153,7 +155,7 @@ import {
 export default () => (
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput value={query} onValueChange={setQuery} />
+      <SearchBarInput aria-label="Search by name" value={query} onValueChange={setQuery} />
       <SearchBarHint>
         Press <Pill size="small">/</Pill> to search
       </SearchBarHint>
@@ -186,19 +188,19 @@ Use the `size` prop to change the search bar's size.
   <Tab value="Preview" className="not-prose flex flex-col gap-4">
     <SearchBar size="small">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
     <SearchBar size="medium">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
@@ -214,21 +216,21 @@ Use the `size` prop to change the search bar's size.
 
     <SearchBar size="small">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
 
     <SearchBar size="medium">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
 
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
@@ -261,6 +263,7 @@ You can use `SearchBarClearButton` to show a clear button.
     <SearchBar size="large">
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Search by name"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -284,7 +287,7 @@ Show a hint with `SearchBarHint`.
 <Tab value="Preview" className="not-prose">
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput placeholder="Search by name" />
+      <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
       <SearchBarHint className="hidden lg:flex">Press <Pill size="small">/</Pill> to search</SearchBarHint>
       <SearchBarSearchButton />
     </SearchBarInputContainer>
@@ -303,7 +306,7 @@ Show a hint with `SearchBarHint`.
 
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput placeholder="Search by name" />
+      <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
       <SearchBarHint className="hidden lg:flex">
         Press <Pill size="small">/</Pill> to search
       </SearchBarHint>
@@ -312,6 +315,47 @@ Show a hint with `SearchBarHint`.
   </SearchBar>
 ````
 
+  </Tab>
+</Tabs>
+
+### Visible Label
+
+The other examples name the search input with an `aria-label`, which isn't shown. To show a label, give a `Label` an `id`, and pass the same id to `SearchBarInput`'s `aria-labelledby`. Screen readers then announce the input by the label's text.
+
+A `Label`'s `htmlFor` doesn't work here: cmdk sets the input's `id` itself, so an `id` you pass to `SearchBarInput` doesn't reach the input, and the `Label` names nothing. Clicking this `Label` doesn't focus the input either.
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview" className="not-prose flex flex-col gap-2">
+    <Label id="search-by-name" size="small">
+      Search by name
+    </Label>
+    <SearchBar size="large">
+      <SearchBarInputContainer>
+        <SearchBarInput aria-labelledby="search-by-name" />
+        <SearchBarSearchButton />
+      </SearchBarInputContainer>
+    </SearchBar>
+  </Tab>
+  <Tab value="Code">
+    ```tsx
+    import {
+        SearchBar,
+        SearchBarInput,
+        SearchBarInputContainer,
+        SearchBarSearchButton,
+    } from "@amerfathullah/myds-react/search-bar";
+    import { Label } from "@amerfathullah/myds-react/label";
+
+    <Label id="search-by-name" size="small">
+      Search by name
+    </Label>
+    <SearchBar size="large">
+      <SearchBarInputContainer>
+        <SearchBarInput aria-labelledby="search-by-name" />
+        <SearchBarSearchButton />
+      </SearchBarInputContainer>
+    </SearchBar>
+    ```
   </Tab>
 </Tabs>
 
@@ -341,7 +385,7 @@ You can show search results or suggestions with the `SearchBarResults`, `SearchB
 
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
       <SearchBarResults open>
@@ -395,7 +439,7 @@ You can also group results with the `SearchBarResultsGroup` component:
 
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput placeholder="Search by name" />
+      <SearchBarInput aria-label="Search by name" placeholder="Search by name" />
       <SearchBarSearchButton />
     </SearchBarInputContainer>
     <SearchBarResults open>
@@ -485,6 +529,7 @@ In the example below, we also keep track of whether the search bar is focused or
     >
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Search by name"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -542,12 +587,19 @@ type={{
     typeDescription: "small | medium | large",
     default: "medium",
   },
+  label: {
+    description:
+      'Accessible name of the search input, which cmdk renders in a visually hidden label. Screen readers announce it; it is not shown. `SearchBarInput`\'s own `aria-labelledby` and `aria-label` win over it. Set it in your site\'s language, e.g. `label="Cari nama"`.',
+    type: "string",
+  },
 }}
 />
 
 ### SearchBarInput
 
 `SearchBarInput` is abstracted from cmdk's `Command.Input`. Please refer to the API references in [this documentation](https://github.com/pacocoursey/cmdk#input-cmdk-input)
+
+Its accessible name comes from its `aria-labelledby`, then its `aria-label`, then `SearchBar`'s `label`: the first one you pass wins. An empty or blank one counts as not passed. It has no default name, and its placeholder doesn't name it. An `id` doesn't reach the input, since cmdk sets the input's `id` itself, so a `Label`'s `htmlFor` can't name it. Point `aria-labelledby` at the `Label`'s `id` instead, as [shown above](#visible-label).
 
 <TypeTable
 type={{
@@ -559,6 +611,16 @@ type={{
     description: "Callback function when the input changes",
     type: "function",
     typeDescription: "(value: string) => void",
+  },
+  "aria-labelledby": {
+    description:
+      "The id of the `Label`, or other element, whose text names the search input. It wins over `aria-label` and `SearchBar`'s `label`. A `Label`'s `htmlFor` doesn't name the input.",
+    type: "string",
+  },
+  "aria-label": {
+    description:
+      "Accessible name of the search input, when no visible label names it. Screen readers announce it; it is not shown. It wins over `SearchBar`'s `label`. There is no default name.",
+    type: "string",
   },
 }}
 />

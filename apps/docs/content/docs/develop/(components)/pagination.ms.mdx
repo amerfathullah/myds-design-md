@@ -69,7 +69,7 @@ import { AutoPagination } from "@amerfathullah/myds-react/pagination";
 <AutoPagination />
 ```
 
-Pembaca skrin menyebut butang sebelumnya dan seterusnya bagi jenis `default` sebagai "previous page" dan "next page", setiap butang halaman sebagai "page" diikuti nombornya, seperti "page 3", dan setiap elipsis sebagai "More pages". Butang halaman semasa mempunyai `aria-current="page"`, jadi pembaca skrin turut menyebutnya sebagai halaman semasa; jangan tambah "semasa" pada `pageLabel`, atau ia akan disebut dua kali. Jenis `simple` dan `full` memaparkan "Previous" dan "Next" pada butangnya, dan teks itu yang menamakannya. Tetapkan `previousLabel`, `nextLabel`, `pageLabel` dan `ellipsisLabel` untuk menamakannya dalam bahasa laman anda. Elemen `<nav>` disebut sebagai "pagination"; hantar `aria-label` untuk menamakannya semula, contohnya `aria-label="Penomboran"`.
+Pembaca skrin menyebut butang sebelumnya dan seterusnya bagi jenis `default` sebagai "previous page" dan "next page", setiap butang halaman sebagai "page" diikuti nombornya, seperti "page 3", dan setiap elipsis sebagai "More pages". Butang halaman semasa mempunyai `aria-current="page"`, jadi pembaca skrin turut menyebutnya sebagai halaman semasa; jangan tambah "semasa" pada `pageLabel`; jika tidak, halaman semasa akan disebut dua kali. Jenis `simple` dan `full` memaparkan "Previous" dan "Next" pada butangnya, dan teks itu yang menamakannya. Tetapkan `previousLabel`, `nextLabel`, `pageLabel` dan `ellipsisLabel` untuk menamakannya dalam bahasa laman anda. Elemen `<nav>` disebut sebagai "pagination"; hantar `aria-label` untuk menamakannya semula, contohnya `aria-label="Penomboran"`.
 
 ```tsx copy title="Nama dalam bahasa Melayu"
 <AutoPagination

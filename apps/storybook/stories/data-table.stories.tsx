@@ -38,6 +38,7 @@ type EmployeeProps = {
  * import Table from "@amerfathullah/myds-react/table";
  *
  * <DataTable
+ * aria-label="Employees"
  * columns={[
  *   {
  *     accessorKey: 'name',
@@ -121,6 +122,7 @@ const meta: Meta<typeof DataTable> = {
     layout: "padded",
   },
   args: {
+    "aria-label": "Employees",
     columns: [
       {
         id: "name",
@@ -209,6 +211,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = createStory({});
 
 export const SelectionCheckbox: Story = createStory({
+  "aria-label": "Employees (checkbox selection)",
   selection: {
     rowId: "id",
     mode: "checkbox",
@@ -217,6 +220,7 @@ export const SelectionCheckbox: Story = createStory({
 });
 
 export const SelectionRadio: Story = createStory({
+  "aria-label": "Employees (radio selection)",
   selection: {
     rowId: "id",
     mode: "radio",
@@ -225,10 +229,12 @@ export const SelectionRadio: Story = createStory({
 });
 
 export const Loading: Story = createStory({
+  "aria-label": "Employees (loading)",
   loading: true,
 });
 
 export const GroupedHeader: Story = createStory({
+  "aria-label": "Employee applications (grouped header)",
   columns: [
     {
       id: "employee",
@@ -321,9 +327,13 @@ export const GroupedHeader: Story = createStory({
   ],
 });
 
-export const EmptyState: Story = createStory({ data: [] });
+export const EmptyState: Story = createStory({
+  "aria-label": "Employees (empty)",
+  data: [],
+});
 
 export const FixedHeader: Story = createStory({
+  "aria-label": "Employee applications (fixed header)",
   className: "max-h-[300px]",
   columns: [
     {
@@ -565,6 +575,7 @@ const nested_data = [
 ];
 
 export const NestedRows: Story = createStory({
+  "aria-label": "Employees and their families (nested rows)",
   columns: [
     {
       id: "name",
@@ -618,6 +629,7 @@ export const NestedRows: Story = createStory({
 });
 
 export const Footer: Story = createStory({
+  "aria-label": "Employees (footer)",
   columns: [
     {
       id: "name",
@@ -669,6 +681,7 @@ export const Footer: Story = createStory({
 });
 
 export const PinnedColumns: Story = createStory({
+  "aria-label": "Employees (pinned columns)",
   columns: [
     {
       id: "name",

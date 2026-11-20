@@ -18,14 +18,20 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InfoIcon } from "@amerfathullah/myds-react/icon";
+import { DataTableNamedExample } from "./data-table.client";
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
-    <DataTable data={DataTableData} columns={DataTableColumns} />
+    <DataTable
+      aria-label="Senarai pekerja"
+      data={DataTableData}
+      columns={DataTableColumns}
+    />
   </Tab>
   <Tab value="Kod">
     ```tsx
     <DataTable
+      aria-label="Senarai pekerja"
       data={[
         {
           age: 25,
@@ -245,6 +251,69 @@ Komponen `DataTable` terutamanya ditakrifkan oleh 2 prop penting: `data` dan `co
   [dokumentasi](https://tanstack.com/table/latest/docs/guide/column-defs) di
   sini.
 </Callout>
+
+### Menamakan Jadual
+
+`<table>` yang dipaparkan oleh `DataTable` tidak mempunyai nama secara lalai. Berikan setiap jadual nama, supaya pengguna pembaca skrin dapat membezakan jadual pada sesebuah halaman apabila mereka beralih antara jadual atau menyenaraikannya.
+
+- **Dengan tajuk yang dipaparkan:** letakkan tajuk di atas jadual, dan hantar `id` tajuk itu kepada `aria-labelledby`. Pembaca skrin menyebut jadual itu dengan teks tajuk, contohnya "Senarai pemohon".
+- **Tanpa tajuk yang dipaparkan:** hantar `aria-label`, contohnya `aria-label="Senarai pemohon"`. Ia tidak dipaparkan, jadi gunakannya hanya apabila halaman tidak memaparkan tajuk untuk jadual itu, dan tetapkannya dalam bahasa laman anda.
+
+Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan. Kedua-duanya hanya sampai kepada `<table>`.
+
+Id mesti unik pada halaman. Komponen yang dipaparkan lebih daripada sekali, seperti komponen dalam contoh ini, menjana id tajuknya dengan `useId()`.
+
+`DataTable` tidak menerima `caption` atau anak (children), jadi ia tidak boleh memaparkan `TableCaption`. Namakan jadual dengan tajuk dan `aria-labelledby`.
+
+<Tabs items={["Pratonton", "Kod"]}>
+  <Tab value="Pratonton">
+    <div className="not-prose">
+      <DataTableNamedExample />
+    </div>
+  </Tab>
+  <Tab value="Kod">
+    ```tsx
+    import { useId } from "react";
+    import {
+      DataTable,
+      type ColumnDef,
+    } from "@amerfathullah/myds-react/data-table";
+
+    type Applicant = {
+      id: string;
+      name: string;
+      reference: string;
+      status: string;
+    };
+
+    const columns: ColumnDef<Applicant>[] = [
+      { id: "name", accessorKey: "name", header: "Nama" },
+      { id: "reference", accessorKey: "reference", header: "No. rujukan" },
+      { id: "status", accessorKey: "status", header: "Status" },
+    ];
+
+    export function ApplicantTable({ applicants }: { applicants: Applicant[] }) {
+      const headingId = useId();
+      return (
+        <section>
+          <h2 id={headingId}>Senarai pemohon</h2>
+          <DataTable
+            aria-labelledby={headingId}
+            columns={columns}
+            data={applicants}
+          />
+        </section>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+Jika halaman tidak memaparkan tajuk untuk jadual itu, namakannya dengan `aria-label`:
+
+```tsx
+<DataTable aria-label="Senarai pemohon" columns={columns} data={applicants} />
+```
 
 ### Mengembangkan Lajur
 
@@ -1608,6 +1677,16 @@ Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **Colu
 
 <TypeTable
   type={{
+    "aria-label": {
+      description:
+        "Nama boleh capai jadual. Pembaca skrin menyebutnya; ia tidak dipaparkan. Gunakannya hanya apabila halaman tidak memaparkan tajuk untuk jadual itu. aria-labelledby diutamakan berbanding prop ini. Tanpa kedua-duanya, jadual tidak mempunyai nama.",
+      type: "string",
+    },
+    "aria-labelledby": {
+      description:
+        "Id elemen yang dipaparkan, biasanya tajuk di atas jadual, yang teksnya menamakan jadual. Id itu mesti unik pada halaman. Tanpa kedua-duanya, jadual tidak mempunyai nama.",
+      type: "string",
+    },
     columns: {
       description: "Definisi Lajur (Rujuk kepada dokumentasi TanStack/table)",
       type: "ColumnDef",

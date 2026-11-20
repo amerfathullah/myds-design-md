@@ -18,14 +18,20 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InfoIcon } from "@amerfathullah/myds-react/icon";
+import { DataTableNamedExample } from "./data-table.client";
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
-    <DataTable data={DataTableData} columns={DataTableColumns} />
+    <DataTable
+      aria-label="Senarai pekerja"
+      data={DataTableData}
+      columns={DataTableColumns}
+    />
   </Tab>
   <Tab value="Code">
     ```tsx
     <DataTable
+      aria-label="Senarai pekerja"
       data={[
         {
           age: 25,
@@ -245,6 +251,69 @@ export default () => <DataTable />;
   [documentation](https://tanstack.com/table/latest/docs/guide/column-defs)
   here.
 </Callout>
+
+### Naming the Table
+
+The `<table>` that `DataTable` renders has no name by default. Give each table a name, so screen reader users can tell the tables on a page apart when they move between them or list them.
+
+- **With a visible title:** put a heading above the table, and pass the heading's `id` to `aria-labelledby`. Screen readers announce the table by the heading's text, for example "Senarai pemohon".
+- **With no visible title:** pass `aria-label`, for example `aria-label="Senarai pemohon"`. It isn't shown, so use it only when the page shows no title for the table, and set it in your site's language.
+
+If you pass both, `aria-labelledby` wins. Both go to the `<table>` only.
+
+Ids must be unique on the page. A component that renders more than once, like the one in this example, makes its heading's id with `useId()`.
+
+`DataTable` doesn't take a `caption` or children, so it can't render a `TableCaption`. Name the table with a heading and `aria-labelledby` instead.
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview">
+    <div className="not-prose">
+      <DataTableNamedExample />
+    </div>
+  </Tab>
+  <Tab value="Code">
+    ```tsx
+    import { useId } from "react";
+    import {
+      DataTable,
+      type ColumnDef,
+    } from "@amerfathullah/myds-react/data-table";
+
+    type Applicant = {
+      id: string;
+      name: string;
+      reference: string;
+      status: string;
+    };
+
+    const columns: ColumnDef<Applicant>[] = [
+      { id: "name", accessorKey: "name", header: "Nama" },
+      { id: "reference", accessorKey: "reference", header: "No. rujukan" },
+      { id: "status", accessorKey: "status", header: "Status" },
+    ];
+
+    export function ApplicantTable({ applicants }: { applicants: Applicant[] }) {
+      const headingId = useId();
+      return (
+        <section>
+          <h2 id={headingId}>Senarai pemohon</h2>
+          <DataTable
+            aria-labelledby={headingId}
+            columns={columns}
+            data={applicants}
+          />
+        </section>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+Where the page shows no title for the table, name it with `aria-label`:
+
+```tsx
+<DataTable aria-label="Senarai pemohon" columns={columns} data={applicants} />
+```
 
 ### Expanding Columns
 
@@ -1608,6 +1677,16 @@ You can add footer per column by setting the `footer` in **ColumnDef** object of
 
 <TypeTable
   type={{
+    "aria-label": {
+      description:
+        "Accessible name of the table. Screen readers announce it; it is not shown. Use it only when the page shows no title for the table. aria-labelledby wins over it. With neither, the table has no name.",
+      type: "string",
+    },
+    "aria-labelledby": {
+      description:
+        "The id of a visible element, usually a heading above the table, whose text names the table. The id must be unique on the page. With neither, the table has no name.",
+      type: "string",
+    },
     columns: {
       description: "Column Definition (Refer to TanStack/table documentation)",
       type: "ColumnDef",

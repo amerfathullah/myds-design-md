@@ -10,6 +10,7 @@
 - **`htmlFor` and `form` are deprecated.** They still compile, but do nothing and never reach the DOM. Leave them out; they're removed at the next major.
 - **Clicking the hint no longer selects the radio.** Clicking the `RadioLabel` still does.
 - **Your ids.** An `aria-describedby` you pass `RadioButton` follows the hints' ids, each id once, and `aria-describedby={undefined}` doesn't drop them. A radio with no hint gets no `aria-describedby`. An `id` you pass `RadioHintText` is rendered and referenced, or it generates one. Code that wired the hint by hand, with an `id` on the hint and the same id in the button's `aria-describedby`, still reads the hint once.
+- **Disabled options.** A hint in a disabled `RadioItem`, or in a disabled `Radio`, is marked `aria-disabled="true"`, as part of the inactive option, so accessibility checkers such as axe exempt its dimmed colour from contrast, as they did when it was a label of the disabled radio. An `aria-disabled` you pass the hint wins.
 - **Server rendering.** Server-rendered HTML doesn't carry the description; it arrives when the page hydrates, as the radios themselves work only after hydration.
 
 The generated ids come from React's `useId()`, so don't rely on their format; it differs between React 18 and 19. The hint keeps its classes at every size and when disabled.

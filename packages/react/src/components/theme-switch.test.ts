@@ -14,11 +14,15 @@ type ProviderProps = Omit<ComponentProps<typeof ThemeProvider>, "children">;
 
 // The theme a ThemeSwitch shows in server HTML: the toggle's accessible name
 // and the select trigger's text, with the icon either one shows
-function shown(as: "toggle" | "select", props: ProviderProps) {
+function shown(
+  as: "toggle" | "select",
+  props: ProviderProps,
+  switchProps: Record<string, unknown> = {},
+) {
   const html = renderToStaticMarkup(
     createElement(ThemeProvider, {
       ...props,
-      children: createElement(ThemeSwitch, { as }),
+      children: createElement(ThemeSwitch, { as, ...switchProps }),
     }),
   );
   return {
@@ -59,4 +63,22 @@ describe.each(["toggle", "select"] as const)("ThemeSwitch as %s", (as) => {
   test("shows Light in server HTML under a ThemeProvider with no props", () => {
     expect(shown(as, {})).toEqual({ label: "Light", icon: "sun" });
   });
+
+  // The provider counts `defaultTheme` among its themes even when the switch
+  // doesn't list it, as with "system", so the toggle must not go empty and
+  // unnamed (#175)
+  test('shows the fallback name "Theme" in server HTML under `defaultTheme="system"`', () => {
+    expect(shown(as, { defaultTheme: "system" })).toEqual({
+      label: as === "toggle" ? "Theme" : "",
+      icon: "",
+    });
+  });
+});
+
+// The toggle's fallback name, which `toggleLabel` replaces; the select always
+// keeps its `selectLabel` name
+test('names the unlisted-theme toggle with `toggleLabel` instead of "Theme"', () => {
+  expect(
+    shown("toggle", { defaultTheme: "system" }, { toggleLabel: "Appearance" }),
+  ).toEqual({ label: "Appearance", icon: "" });
 });

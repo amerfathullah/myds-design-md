@@ -23,6 +23,12 @@ interface ThemeSwitch {
   onChange?: (value: string) => void;
   /** Accessible name of the select trigger when `as="select"`; announced, not shown. */
   selectLabel?: string;
+  /**
+   * Name and text of the toggle when the provider's theme isn't in `themes`
+   * (as with "system"), so the button is neither empty nor unnamed;
+   * announced and shown.
+   */
+  toggleLabel?: string;
 }
 
 const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
@@ -33,6 +39,7 @@ const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
   ],
   onChange,
   selectLabel = "Theme",
+  toggleLabel = "Theme",
 }) => {
   const { theme, setTheme, defaultTheme } = useTheme();
   // The provider's theme in `themes`, worked out on every render, so the
@@ -69,20 +76,23 @@ const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
     }
   };
 
-  if (as === "toggle")
+  if (as === "toggle") {
+    // The provider's theme isn't in `themes` (as with "system"): fall back to
+    // `toggleLabel`, so the button keeps a name and something to show
+    const current = themes[currentIndex];
     return (
       <Button
         variant="default-ghost"
         className="aspect-square flex-shrink-0 rounded-md"
         onClick={() => handleChange()}
         size="small"
-        aria-label={themes[currentIndex]?.label}
+        aria-label={current?.label || toggleLabel}
         iconOnly
       >
-        {displayIcon(themes[currentIndex]?.value) ||
-          themes[currentIndex]?.label}
+        {displayIcon(current?.value) || current?.label || toggleLabel}
       </Button>
     );
+  }
 
   /*------------------ as select -----------------*/
 

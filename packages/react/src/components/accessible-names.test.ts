@@ -57,6 +57,8 @@ import {
   AutoToast,
   ToastClose,
   ToastDescription,
+  ToastIcon,
+  ToastProgress,
   ToastProvider,
   ToastRoot,
   ToastTitle,
@@ -208,9 +210,9 @@ describe("AutoToast", () => {
     },
   );
 
-  // ToastIcon and ToastProgress aren't exported, so only AutoToast renders
-  // them. They have no name or value to give, and the title carries the
-  // toast's meaning, so assistive technology skips them.
+  // AutoToast renders ToastIcon and ToastProgress in every toast. They have
+  // no name or value to give, and the title carries the toast's meaning, so
+  // assistive technology skips them.
   test.each(variants.map((variant, index) => [variant, index] as const))(
     "hides a %s toast's status icon and countdown bar",
     async (variant, index) => {
@@ -632,8 +634,9 @@ describe("SearchBarResultsList", () => {
   });
 });
 
-describe("ToastClose in a toast composed by hand", () => {
-  // A toast composed as the docs compose one. Returns its root.
+describe("A toast composed by hand", () => {
+  // A toast composed as the docs compose one, with its status icon, title,
+  // description, close button and countdown bar. Returns its root.
   async function toast(label?: string) {
     const page = await mount(
       createElement(
@@ -642,9 +645,15 @@ describe("ToastClose in a toast composed by hand", () => {
         createElement(
           ToastRoot,
           { variant: "success" },
-          createElement(ToastTitle, null, "Saved"),
-          createElement(ToastDescription, null, "Your changes are saved."),
+          createElement(ToastIcon),
+          createElement(
+            "div",
+            { className: "space-y-1" },
+            createElement(ToastTitle, null, "Saved"),
+            createElement(ToastDescription, null, "Your changes are saved."),
+          ),
           createElement(ToastClose, ariaLabel(label)),
+          createElement(ToastProgress),
         ),
         createElement(ToastViewport),
       ),
@@ -655,12 +664,27 @@ describe("ToastClose in a toast composed by hand", () => {
     return root!;
   }
 
-  test('is named "Close" by default', async () => {
+  test('names its ToastClose "Close" by default', async () => {
     expect(nameOf(await toast())).toBe("Close");
   });
 
-  test("lets an `aria-label` rename it", async () => {
+  test("lets an `aria-label` rename its ToastClose", async () => {
     expect(nameOf(await toast("Tutup"))).toBe("Tutup");
+  });
+
+  // As in AutoToast's toasts, the title carries the toast's meaning
+  test("hides its ToastIcon and ToastProgress", async () => {
+    const root = await toast();
+    const [statusIcon, ...others] = [...root.querySelectorAll("svg")].filter(
+      (svg) => !isIcon(svg, CrossIcon),
+    );
+    expect(others).toEqual([]);
+    const countdown = root.querySelector(".animate-expire");
+    for (const hidden of [statusIcon!.parentElement, countdown])
+      expect(hidden!.getAttribute("aria-hidden")).toBe("true");
+    expect(
+      root.querySelectorAll('[role="img"], [role="progressbar"]'),
+    ).toHaveLength(0);
   });
 });
 

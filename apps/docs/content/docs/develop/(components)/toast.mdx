@@ -5,17 +5,7 @@ description: Non-intrusive notification that appears temporarily on the screen t
 
 import { Quicklinks } from "@/components/quicklinks";
 import Preview from "@/components/preview";
-import {
-  AutoToast,
-  ToastRoot,
-  ToastIcon,
-  ToastProgress,
-  ToastProvider,
-  ToastViewport,
-  ToastTitle,
-  ToastDescription,
-  ToastTriggerButton,
-} from "@/components/myds";
+import { ToastTriggerButton } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
@@ -26,63 +16,35 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
   </div>
   </Tab>
   <Tab value="Code">
-  ```tsx 
-  import { AutoToast, 
-ToastRoot, 
-ToastIcon, 
-ToastProgress, 
-ToastProvider, 
-ToastViewport, 
-ToastTitle, 
-ToastDescription 
-}from "@amerfathullah/myds-react/toast";
- 
-  <button
-   onClick={() => {
-     toast({ variant: "message", 
-     title: "Hello, world!", 
-     description: "this is a description" 
-     });
-   }}>
-     Message
-  </button>
- 
-  //* Simple usage
-  <AutoToast />
- 
-  //* Advanced usage
-  const { toasts, subscribe, unsubscribe } = useToast();
- 
-  useEffect(() => {
-    subscribe();
-    return () => {
-      unsubscribe();
-    };
-  }, []);
- 
-  return (
-    <ToastProvider>
-      {toasts.map((toast, index) => (
-        <ToastRoot
-          key={props.id || index}
-          variant={toast.variant || "message"}
-          {...props}
+  ```tsx
+  "use client";
+
+  import { Button } from "@amerfathullah/myds-react/button";
+  import { useToast } from "@amerfathullah/myds-react/hooks";
+  import { AutoToast } from "@amerfathullah/myds-react/toast";
+
+  // This demo mounts AutoToast beside its button. An app mounts only one:
+  // if your root layout already has one, as in Simple Usage, leave it out here.
+  export default function ToastDemo() {
+    const { toast } = useToast();
+
+    return (
+      <>
+        <Button
+          onClick={() =>
+            toast({
+              variant: "message",
+              title: "Hello, world!",
+              description: "this is a description",
+            })
+          }
         >
-          <ToastIcon />
-          <div className="space-y-1">
-            <ToastTitle>{toast.title}</ToastTitle>
-            {toast.description && (
-              <ToastDescription>{toast.description}</ToastDescription>
-            )}
-          </div>
-          <ToastClose />
-          <ToastProgress />
-         </ToastRoot>
-     ))}
- 
-      <ToastViewport />
-    </ToastProvider>
-  );
+          Message variant
+        </Button>
+        <AutoToast />
+      </>
+    );
+  }
   ```
   </Tab>
 </Tabs>
@@ -110,6 +72,8 @@ import { AutoToast } from "@amerfathullah/myds-react/toast";
 ```
 
 ```tsx copy title="Anatomy"
+"use client";
+
 // Then, publish or emit a new event to the Toast
 import { useToast } from "@amerfathullah/myds-react/hooks";
 
@@ -140,39 +104,53 @@ Screen readers announce the region that holds the toasts as "Notifications (F8)"
 Instead of using `AutoToast`, the `Toast` component can be assembled manually for more control.
 
 ```tsx copy
+"use client";
+
+import { useEffect } from "react";
+import { useToast } from "@amerfathullah/myds-react/hooks";
 import {
-  ToastRoot,
+  ToastClose,
+  ToastDescription,
   ToastIcon,
   ToastProgress,
   ToastProvider,
-  ToastViewport,
+  ToastRoot,
   ToastTitle,
-  ToastDescription,
+  ToastViewport,
 } from "@amerfathullah/myds-react/toast";
 
-export default () => (
-  <ToastProvider>
-    {toasts.map((toast, index) => (
-      <ToastRoot
-        key={props.id || index}
-        variant={toast.variant || "message"}
-        {...props}
-      >
-        <ToastIcon />
-        <div className="space-y-1">
-          <ToastTitle>{toast.title}</ToastTitle>
-          {toast.description && (
-            <ToastDescription>{toast.description}</ToastDescription>
-          )}
-        </div>
-        <ToastClose />
-        <ToastProgress />
-      </ToastRoot>
-    ))}
+// Mount the toaster once in your app, high up the tree, in place of AutoToast
+export default function Toaster() {
+  const { toasts, subscribe, unsubscribe } = useToast();
 
-    <ToastViewport />
-  </ToastProvider>
-);
+  // Show each toast that toast() from useToast publishes
+  useEffect(() => {
+    subscribe();
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  return (
+    <ToastProvider>
+      {toasts.map((event, index) => (
+        <ToastRoot key={index} variant={event.variant || "message"}>
+          <ToastIcon />
+          <div className="space-y-1">
+            <ToastTitle>{event.title}</ToastTitle>
+            {event.description && (
+              <ToastDescription>{event.description}</ToastDescription>
+            )}
+          </div>
+          <ToastClose />
+          <ToastProgress />
+        </ToastRoot>
+      ))}
+
+      <ToastViewport />
+    </ToastProvider>
+  );
+}
 ```
 
 Screen readers announce `ToastClose` as "Close". Pass an `aria-label` to name it in your site's language, for example `<ToastClose aria-label="Tutup" />`.
@@ -287,6 +265,11 @@ Its `label` names the region that holds the toasts, `Notifications ({hotkey})` b
   }}
 />
 
+### ToastIcon
+`ToastIcon` draws the toast's 20px status icon in the variant's colour. Render it inside `ToastRoot`, which gives it its variant. It draws no icon for `message`, and renders nothing outside a `ToastRoot`.
+
+It is hidden from assistive technology (`aria-hidden="true"`), because the toast's title carries its meaning. It takes a `<div>`'s props, apart from `children`, and a `className` goes on that `<div>`, around the icon.
+
 ### ToastTitle
 `ToastTitle` is abstracted from Radix UI's `ToastTitle`. Please refer to the API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/toast#title).
 
@@ -298,3 +281,8 @@ Its `label` names the region that holds the toasts, `Notifications ({hotkey})` b
 `ToastClose` is abstracted from Radix UI's `ToastClose`. Please refer to the API references in this [documentation](https://www.radix-ui.com/primitives/docs/components/toast#close).
 
 Its accessible name is "Close" by default. Pass an `aria-label` to replace it, for example `aria-label="Tutup"`. It always shows a cross icon and ignores `children`, so name it with `aria-label`.
+
+### ToastProgress
+`ToastProgress` draws the 4px countdown bar along the toast's bottom edge, filled in the variant's colour. Render it inside `ToastRoot`, which gives it its variant and its duration: the bar shrinks to nothing over `ToastRoot`'s `duration` (default 5000ms), and pauses while the pointer is over the toast. Outside a `ToastRoot` it draws the `message` bar over 5000ms.
+
+It is hidden from assistive technology (`aria-hidden="true"`), because the toast's title carries its meaning. It takes a `<div>`'s props, apart from `children`. A `className` adds to the bar's own classes, and a `style` to its animation duration.

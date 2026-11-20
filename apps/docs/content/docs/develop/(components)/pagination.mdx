@@ -69,7 +69,7 @@ import { AutoPagination } from "@amerfathullah/myds-react/pagination";
 <AutoPagination />
 ```
 
-Screen readers announce the `default` type's previous and next buttons as "previous page" and "next page", each page button as "page" and its number, such as "page 3", and each ellipsis as "More pages". The `simple` and `full` types show "Previous" and "Next" on their buttons, and that text names them. Set `previousLabel`, `nextLabel`, `pageLabel` and `ellipsisLabel` to name them in your site's language. The `<nav>` landmark is announced as "pagination"; pass an `aria-label` to rename it, for example `aria-label="Penomboran"`.
+Screen readers announce the `default` type's previous and next buttons as "previous page" and "next page", each page button as "page" and its number, such as "page 3", and each ellipsis as "More pages". The current page's button carries `aria-current="page"`, so they also announce it as the current page; don't add "current" to `pageLabel`, or they'll announce it twice. The `simple` and `full` types show "Previous" and "Next" on their buttons, and that text names them. Set `previousLabel`, `nextLabel`, `pageLabel` and `ellipsisLabel` to name them in your site's language. The `<nav>` landmark is announced as "pagination"; pass an `aria-label` to rename it, for example `aria-label="Penomboran"`.
 
 ```tsx copy title="Malay names"
 <AutoPagination
@@ -126,6 +126,8 @@ import {
 ```
 
 Each part has an English name for screen readers, and an `aria-label` replaces it: on `Pagination` for the landmark ("pagination"), on `PaginationPrevious` and `PaginationNext` ("previous page" and "next page"), and on `PaginationNumber` ("page 3" on page 3's button). `PaginationEllipsis` announces "More pages"; pass children to replace it, for example `<PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>`.
+
+The `PaginationNumber` whose `number` is the `Pagination`'s `page` carries `aria-current="page"`, so screen readers announce it as the current page; the others carry no `aria-current`. An `aria-current` you pass `PaginationNumber` replaces it, and `aria-current={undefined}` removes it. The current page keeps its fill either way.
 
 Children name `PaginationPrevious` and `PaginationNext` in place of the default, so `<PaginationPrevious>Sebelumnya</PaginationPrevious>` is named "Sebelumnya". Children with no text, such as an icon alone, need an `aria-label`. With `asChild`, `PaginationPrevious` and `PaginationNext` add no name: name your own element, for example with an `aria-label`.
 

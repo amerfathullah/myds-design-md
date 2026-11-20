@@ -504,3 +504,180 @@ describe("The pagination landmark", () => {
     },
   );
 });
+
+describe("The current page", () => {
+  // Each element in `within` that carries an `aria-current`, whatever its
+  // value
+  const currents = (within: ParentNode) => [
+    ...within.querySelectorAll("[aria-current]"),
+  ];
+
+  describe("in AutoPagination", () => {
+    // 100 items, 10 a page, on page `page` of 10
+    const onPage = (page: number, props: Partial<AutoPaginationProps> = {}) =>
+      mount(
+        createElement(AutoPagination, {
+          ...pages,
+          page,
+          type: "default",
+          ...props,
+        }),
+      );
+
+    // The first, a middle and the last page
+    test.each([1, 5, 10])(
+      'marks only page %i\'s button aria-current="page"',
+      async (page) => {
+        const [current, ...others] = currents(await onPage(page));
+        expect(others).toEqual([]);
+        expect(current!.tagName).toBe("BUTTON");
+        expect(current!.getAttribute("aria-current")).toBe("page");
+        expect(current!.textContent).toBe(String(page));
+        expect(computeAccessibleName(current!)).toBe(`page ${page}`);
+      },
+    );
+
+    // The current page is a link-like place in a set of pages, not a pressed
+    // or selected option, and it stays a button the user can press
+    test("keeps the current page's button enabled, and neither pressed nor selected", async () => {
+      const page = await onPage(5);
+      const [current] = currents(page);
+      expect(current).toBeInstanceOf(HTMLButtonElement);
+      expect((current as HTMLButtonElement).disabled).toBe(false);
+      expect([
+        ...page.querySelectorAll("[aria-pressed], [aria-selected]"),
+      ]).toEqual([]);
+    });
+
+    test("leaves the page buttons' names as they were", async () => {
+      expect(buttonNames(await onPage(2))).toEqual([
+        "previous page",
+        "page 1",
+        "page 2",
+        "page 3",
+        "page 4",
+        "page 10",
+        "next page",
+      ]);
+    });
+
+    test("leaves names from `pageLabel` as they were", async () => {
+      const page = await onPage(2, malay);
+      expect(buttonNames(page)).toEqual([
+        "Halaman sebelumnya",
+        "Halaman 1",
+        "Halaman 2",
+        "Halaman 3",
+        "Halaman 4",
+        "Halaman 10",
+        "Halaman seterusnya",
+      ]);
+      const [current, ...others] = currents(page);
+      expect(others).toEqual([]);
+      expect(computeAccessibleName(current!)).toBe("Halaman 2");
+    });
+
+    // They render no page buttons
+    test.each(["simple", "full"] as const)(
+      'marks nothing aria-current in type="%s"',
+      async (type) => {
+        expect(currents(await onPage(5, { type }))).toEqual([]);
+      },
+    );
+  });
+
+  describe("in a composed Pagination", () => {
+    // A Pagination on page 5 composed by hand from the buttons of pages 4, 5
+    // and 6. `current` replaces page 5's button. Returns the three buttons.
+    async function composed(
+      current = createElement(PaginationNumber, { number: 5 }),
+    ) {
+      const page = await mount(
+        createElement(
+          Pagination,
+          { ...pages, type: "default" },
+          createElement(
+            PaginationContent,
+            null,
+            createElement(
+              PaginationItem,
+              null,
+              createElement(PaginationNumber, { number: 4 }),
+            ),
+            createElement(PaginationItem, null, current),
+            createElement(
+              PaginationItem,
+              null,
+              createElement(PaginationNumber, { number: 6 }),
+            ),
+          ),
+        ),
+      );
+      const buttons = [...page.querySelectorAll("button")];
+      expect(buttons).toHaveLength(3);
+      return buttons as [
+        HTMLButtonElement,
+        HTMLButtonElement,
+        HTMLButtonElement,
+      ];
+    }
+
+    test('marks the current PaginationNumber aria-current="page" and leaves the others without the attribute', async () => {
+      const [before, current, after] = await composed();
+      expect(current.getAttribute("aria-current")).toBe("page");
+      expect(before.hasAttribute("aria-current")).toBe(false);
+      expect(after.hasAttribute("aria-current")).toBe(false);
+      expect(
+        [before, current, after].map((b) => computeAccessibleName(b)),
+      ).toEqual(["page 4", "page 5", "page 6"]);
+    });
+
+    // React renders `false` as "false"
+    test.each([
+      ["true", "true"],
+      ["step", "step"],
+      [false, "false"],
+    ] as const)(
+      "lets an `aria-current` of %j replace the default",
+      async (value, rendered) => {
+        const [, current] = await composed(
+          createElement(PaginationNumber, { number: 5, "aria-current": value }),
+        );
+        expect(current.getAttribute("aria-current")).toBe(rendered);
+      },
+    );
+
+    test("lets `aria-current={undefined}` remove the default", async () => {
+      const [, current] = await composed(
+        createElement(PaginationNumber, {
+          number: 5,
+          "aria-current": undefined,
+        }),
+      );
+      expect(current.hasAttribute("aria-current")).toBe(false);
+    });
+
+    // The fill follows which page is current, not the attribute
+    test("fills the current page whatever its `aria-current`, and no other page", async () => {
+      const [other, current, after] = await composed();
+      expect(current.className).toContain("bg-bg-washed-active");
+      expect(other.className).not.toContain("bg-bg-washed-active");
+      expect(after.className).toBe(other.className);
+
+      const [, unmarked] = await composed(
+        createElement(PaginationNumber, {
+          number: 5,
+          "aria-current": undefined,
+        }),
+      );
+      expect(unmarked.className).toBe(current.className);
+
+      // Page 7, which isn't current, marked current by its author
+      const [, marked] = await composed(
+        createElement(PaginationNumber, { number: 7, "aria-current": "page" }),
+      );
+      expect(marked.getAttribute("aria-current")).toBe("page");
+      expect(marked.className).toBe(other.className);
+    });
+  });
+});

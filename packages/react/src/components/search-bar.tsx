@@ -142,7 +142,7 @@ export const SearchBarInput: FunctionComponent<
     // dom-accessibility-api, and so Testing Library, doesn't fall through
     // from an empty label to an `aria-label`. The key is left off the child
     // otherwise, since even an `undefined` there would erase cmdk's.
-    const name = hasText(ariaLabelledBy)
+    const labelledBy = hasText(ariaLabelledBy)
       ? { "aria-labelledby": ariaLabelledBy }
       : hasText(props["aria-label"])
         ? { "aria-labelledby": undefined }
@@ -166,7 +166,7 @@ export const SearchBarInput: FunctionComponent<
         SearchBarResults panel, which stays mounted. The value and the name
         sit on this child because its props win over the ones cmdk passes,
         and cmdk sets its own after spreading ours. */}
-        <input aria-controls={ariaControls ?? resultsId} {...name} />
+        <input aria-controls={ariaControls ?? resultsId} {...labelledBy} />
       </Command.Input>
     );
   },

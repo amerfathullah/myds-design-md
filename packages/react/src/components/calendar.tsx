@@ -530,10 +530,12 @@ function getSelectedDate(
 // shorter than `day` gives its last day, so the 31st in February gives the
 // 28th or 29th rather than rolling into March. Years below 100 stay as they
 // are, which `new Date(year, monthIndex, day)` would move into the 1900s.
+// The time is reset on the day itself, last: where daylight-saving time
+// starts at 00:00 on the 1st, a reset there would give every day 01:00.
 function clampedDate(year: number, monthIndex: number, day: number): Date {
   const date = new Date(0);
   date.setFullYear(year, monthIndex, 1);
+  date.setFullYear(year, monthIndex, Math.min(day, getDaysInMonth(date)));
   date.setHours(0, 0, 0, 0);
-  date.setDate(Math.min(day, getDaysInMonth(date)));
   return date;
 }

@@ -72,6 +72,14 @@ const cells = (root: HTMLElement) => [
   ...root.querySelectorAll<HTMLButtonElement>('[role="grid"] button'),
 ];
 
+// The accessible name of the one element in `within` that matches `selector`
+function nameOf(within: ParentNode, selector: string) {
+  const [element, ...others] = within.querySelectorAll(selector);
+  expect(others).toEqual([]);
+  expect(element).toBeDefined();
+  return computeAccessibleName(element!);
+}
+
 // The text of each button in the open view's grid
 const texts = (root: HTMLElement) =>
   cells(root).map((button) => button.textContent);
@@ -142,6 +150,7 @@ afterEach(async () => {
     ...vi.mocked(console.warn).mock.calls,
   ];
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   vi.useRealTimers();
   expect(logged).toEqual([]);
   expect(document.body.innerHTML).toBe("");
@@ -173,9 +182,7 @@ describe.each([30, 31])(
       const { root, onValueChange } = await monthView();
       await press(cells(root)[1]!);
       expect(onValueChange.mock.calls).toEqual([[new Date(2026, 1, 28)]]);
-      expect(computeAccessibleName(root.querySelector('[role="grid"]')!)).toBe(
-        "February 2026",
-      );
+      expect(nameOf(root, '[role="grid"]')).toBe("February 2026");
     });
   },
 );
@@ -312,9 +319,7 @@ describe("DatePicker's year view", () => {
     'lists no years with `minYear={2030} maxYear={2026} yearOrder="%s"`',
     async (yearOrder) => {
       const root = await yearView({ minYear: 2030, maxYear: 2026, yearOrder });
-      expect(computeAccessibleName(root.querySelector('[role="grid"]')!)).toBe(
-        "Choose the Year",
-      );
+      expect(nameOf(root, '[role="grid"]')).toBe("Choose the Year");
       expect(rows(root)).toEqual([]);
     },
   );
@@ -331,9 +336,7 @@ test("With 29 February 2024 selected, DatePicker's year view picks 28 February 2
   const root = await toggle(await open(page, triggers.DatePicker), "year");
   await press(cell(root, "2025"));
   expect(onValueChange.mock.calls).toEqual([[new Date(2025, 1, 28)]]);
-  expect(computeAccessibleName(root.querySelector('[role="grid"]')!)).toBe(
-    "Choose the Month",
-  );
+  expect(nameOf(root, '[role="grid"]')).toBe("Choose the Month");
   expect(filled(root)).toEqual(["Feb"]);
 });
 
@@ -443,5 +446,28 @@ test.each(["asc", "desc"] as const)(
     const [scrolled, ...others] = scrollIntoView.mock.contexts;
     expect(others).toEqual([]);
     expect(scrolled).toBe(cell(root, "2026"));
+  },
+);
+
+// Where daylight-saving time starts at 00:00 on the 1st, that day has no
+// midnight, but the rest of the month does
+test.each([
+  ["month", "Oct", 2023],
+  ["year", "2023", 2024],
+] as const)(
+  "In America/Asuncion, where 1 October 2023 has no midnight, DatePicker's %s view picks 15 October 2023 at local midnight from its %s cell",
+  async (view, text, year) => {
+    vi.stubEnv("TZ", "America/Asuncion");
+    const onValueChange = vi.fn();
+    const page = await mount(
+      createElement(DatePicker, {
+        defaultValue: new Date(year, 9, 15),
+        onValueChange,
+      }),
+    );
+    const root = await toggle(await open(page, triggers.DatePicker), view);
+    await press(cell(root, text));
+    expect(onValueChange.mock.calls).toEqual([[new Date(2023, 9, 15)]]);
+    expect(onValueChange.mock.calls[0]![0].getHours()).toBe(0);
   },
 );

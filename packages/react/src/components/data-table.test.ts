@@ -291,8 +291,12 @@ describe("The table's name", () => {
       label: wrapper.hasAttribute("aria-label"),
       labelledBy: wrapper.hasAttribute("aria-labelledby"),
     }).toEqual({ label: false, labelledBy: false });
+    // The header cells have an `aria-labelledby` of their own, so look for
+    // the values passed
     expect([
-      ...page.querySelectorAll("[aria-label], [aria-labelledby]"),
+      ...page.querySelectorAll(
+        '[aria-label="Pemohon"], [aria-labelledby="tajuk-pemohon"]',
+      ),
     ]).toEqual([table]);
   });
 
@@ -338,9 +342,11 @@ describe("The table's name", () => {
     expect(
       tables.map((table) => table.getAttribute("aria-labelledby")),
     ).toEqual([null, "tajuk-pegawai"]);
-    // Only the `<table>`s carry them
+    // Only the `<table>`s carry the values passed
     expect([
-      ...served.querySelectorAll("[aria-label], [aria-labelledby]"),
+      ...served.querySelectorAll(
+        '[aria-label="Senarai pemohon"], [aria-labelledby="tajuk-pegawai"]',
+      ),
     ]).toEqual(tables);
   });
 });

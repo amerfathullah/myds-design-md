@@ -128,6 +128,7 @@ import {
 import {
   createRef,
   useContext,
+  useId,
   useRef,
   type ComponentProps,
   type ComponentPropsWithoutRef,
@@ -736,6 +737,35 @@ export const DataTableRadioName = () => (
     />
   </>
 );
+
+// DataTable's `aria-labelledby` and `aria-label` name its `<table>`, and take
+// strings. DataTable takes no other table attribute, and no caption.
+export const DataTableName = () => {
+  const headingId = useId();
+  return (
+    <>
+      <h2 id={headingId}>Senarai pemohon</h2>
+      <DataTable columns={columns} data={data} aria-labelledby={headingId} />
+      <DataTable columns={columns} data={data} aria-label="Senarai pemohon" />
+      <DataTable
+        columns={columns}
+        data={data}
+        aria-label="Pemohon"
+        aria-labelledby={headingId}
+      />
+      {/* @ts-expect-error `aria-label` is a string */}
+      <DataTable columns={columns} data={data} aria-label={1} />
+      {/* @ts-expect-error `aria-labelledby` is a string */}
+      <DataTable columns={columns} data={data} aria-labelledby={1} />
+      {/* @ts-expect-error DataTable takes no `id` */}
+      <DataTable columns={columns} data={data} id="pemohon" />
+      {/* @ts-expect-error DataTable takes no `title` */}
+      <DataTable columns={columns} data={data} title="Senarai pemohon" />
+      {/* @ts-expect-error DataTable takes no `caption` */}
+      <DataTable columns={columns} data={data} caption="Senarai pemohon" />
+    </>
+  );
+};
 
 // TableTooltip passes the tooltip root's props to the root, and its other
 // props and its ref to the trigger button. The trigger renders its own icon,

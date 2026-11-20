@@ -144,6 +144,20 @@ type RowLabel<TData extends RowData> =
 
 interface DataTableProps<TData extends Record<string, any>> {
   className?: string;
+  /**
+   * Accessible name of the `<table>`. Screen readers announce it; it isn't
+   * shown. Set it in your site's language, and use it only when the page
+   * shows no title for the table: otherwise point `aria-labelledby` at that
+   * title. `aria-labelledby` wins over it. The table has no default name.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of a visible element, usually a heading above the table, whose
+   * text names the `<table>`. The id must be unique on the page, so a
+   * component that renders more than once makes it with `useId()`. It wins
+   * over `aria-label`. The table has no default name.
+   */
+  "aria-labelledby"?: string;
   columns: ColumnDef<TData>[];
   data: TData[];
   loading?: boolean;
@@ -301,6 +315,10 @@ interface DataTableProviderProps<TData extends Record<string, any>>
 const DataTableProvider = <TData extends Record<string, any>>({
   children,
   className,
+  // They name the `<table>` and nothing in the context reads them, so they
+  // go to Table alone
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   ...props
 }: DataTableProviderProps<TData>) => {
   const { columns, data, selection, pin, nest } = props;
@@ -372,6 +390,8 @@ const DataTableProvider = <TData extends Record<string, any>>({
     >
       <Table
         className={className}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
         style={{
           width: props.pin ? table.getTotalSize() : undefined,
         }}

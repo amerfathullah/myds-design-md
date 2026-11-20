@@ -18,14 +18,20 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InfoIcon } from "@amerfathullah/myds-react/icon";
+import { ApplicantTable } from "./data-table.client";
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
-    <DataTable data={DataTableData} columns={DataTableColumns} />
+    <DataTable
+      aria-label="Senarai pekerja"
+      data={DataTableData}
+      columns={DataTableColumns}
+    />
   </Tab>
   <Tab value="Kod">
     ```tsx
     <DataTable
+      aria-label="Senarai pekerja"
       data={[
         {
           age: 25,
@@ -245,6 +251,100 @@ Komponen `DataTable` terutamanya ditakrifkan oleh 2 prop penting: `data` dan `co
   [dokumentasi](https://tanstack.com/table/latest/docs/guide/column-defs) di
   sini.
 </Callout>
+
+### Menamakan Jadual
+
+`<table>` yang dipaparkan oleh `DataTable` tidak mempunyai nama secara lalai. Berikan setiap jadual nama, supaya pengguna pembaca skrin dapat membezakan jadual pada sesebuah halaman apabila mereka beralih antara jadual atau menyenaraikannya.
+
+- **Dengan tajuk yang dipaparkan:** letakkan tajuk di atas jadual, dan hantar `id` tajuk itu kepada `aria-labelledby`. Pembaca skrin menyebut jadual itu dengan teks tajuk, contohnya "Senarai pemohon".
+- **Tanpa tajuk yang dipaparkan:** hantar `aria-label`, contohnya `aria-label="Senarai pemohon"`. Ia tidak dipaparkan, jadi gunakannya hanya apabila halaman tidak memaparkan tajuk untuk jadual itu, dan tetapkannya dalam bahasa laman anda.
+
+Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan. Kedua-duanya hanya sampai kepada `<table>`.
+
+Id mesti unik pada halaman. Komponen yang dipaparkan lebih daripada sekali, seperti komponen dalam contoh ini, menjana id tajuknya dengan `useId()`.
+
+`DataTable` tidak menerima `caption` atau anak (children), jadi ia tidak boleh memaparkan `TableCaption`. Namakan jadual dengan tajuk dan `aria-labelledby`.
+
+<Tabs items={["Pratonton", "Kod"]}>
+  <Tab value="Pratonton">
+    <div className="not-prose">
+      <ApplicantTable />
+    </div>
+  </Tab>
+  <Tab value="Kod">
+    ```tsx
+    import { useId } from "react";
+    import {
+      DataTable,
+      type ColumnDef,
+    } from "@amerfathullah/myds-react/data-table";
+
+    type Applicant = {
+      id: string;
+      name: string;
+      reference: string;
+      status: string;
+    };
+
+    const applicants: Applicant[] = [
+      {
+        id: "1",
+        name: "Aminah binti Yusof",
+        reference: "PMH-0142",
+        status: "Diluluskan",
+      },
+      {
+        id: "2",
+        name: "Ravi a/l Muthu",
+        reference: "PMH-0143",
+        status: "Dalam semakan",
+      },
+      { id: "3", name: "Tan Mei Ling", reference: "PMH-0144", status: "Ditolak" },
+    ];
+
+    // DataTable menjana id sel tajuk dan sel badannya daripada id lajur, jadi
+    // setiap jadual pada satu halaman memerlukan id lajurnya sendiri
+    const columns: ColumnDef<Applicant>[] = [
+      { id: "applicant-name", accessorKey: "name", header: "Nama" },
+      {
+        id: "applicant-reference",
+        accessorKey: "reference",
+        header: "No. rujukan",
+      },
+      { id: "applicant-status", accessorKey: "status", header: "Status" },
+    ];
+
+    // Tajuk di atas jadual menamakannya melalui `aria-labelledby`. `useId()`
+    // memberikan tajuk itu id tersendiri, jadi tiada id berulang pada halaman
+    // walau berapa kali komponen ini dipaparkan.
+    export function ApplicantTable() {
+      const headingId = useId();
+      return (
+        <div className="flex flex-col gap-3">
+          {/* Gunakan aras tajuk yang diperlukan oleh halaman anda */}
+          <h4
+            id={headingId}
+            className="font-heading text-txt-black-900 text-body-lg font-semibold"
+          >
+            Senarai pemohon
+          </h4>
+          <DataTable
+            aria-labelledby={headingId}
+            columns={columns}
+            data={applicants}
+          />
+        </div>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+Jika halaman tidak memaparkan tajuk untuk jadual itu, namakannya dengan `aria-label`:
+
+```tsx
+<DataTable aria-label="Senarai pemohon" columns={columns} data={applicants} />
+```
 
 ### Mengembangkan Lajur
 
@@ -1608,6 +1708,16 @@ Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **Colu
 
 <TypeTable
   type={{
+    "aria-label": {
+      description:
+        "Nama boleh capai jadual. Pembaca skrin menyebutnya; ia tidak dipaparkan. Gunakannya hanya apabila halaman tidak memaparkan tajuk untuk jadual itu. `aria-labelledby` diutamakan berbanding prop ini. Tiada nama lalai.",
+      type: "string",
+    },
+    "aria-labelledby": {
+      description:
+        "Id elemen yang dipaparkan, biasanya tajuk di atas jadual, yang teksnya menamakan jadual. Id itu mesti unik pada halaman. Ia diutamakan berbanding `aria-label`. Tiada nama lalai.",
+      type: "string",
+    },
     columns: {
       description: "Definisi Lajur (Rujuk kepada dokumentasi TanStack/table)",
       type: "ColumnDef",

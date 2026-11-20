@@ -18,7 +18,7 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InfoIcon } from "@amerfathullah/myds-react/icon";
-import { DataTableNamedExample } from "./data-table.client";
+import { ApplicantTable } from "./data-table.client";
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose flex justify-center">
@@ -268,7 +268,7 @@ Ids must be unique on the page. A component that renders more than once, like th
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="not-prose">
-      <DataTableNamedExample />
+      <ApplicantTable />
     </div>
   </Tab>
   <Tab value="Code">
@@ -286,23 +286,54 @@ Ids must be unique on the page. A component that renders more than once, like th
       status: string;
     };
 
-    const columns: ColumnDef<Applicant>[] = [
-      { id: "name", accessorKey: "name", header: "Nama" },
-      { id: "reference", accessorKey: "reference", header: "No. rujukan" },
-      { id: "status", accessorKey: "status", header: "Status" },
+    const applicants: Applicant[] = [
+      {
+        id: "1",
+        name: "Aminah binti Yusof",
+        reference: "PMH-0142",
+        status: "Diluluskan",
+      },
+      {
+        id: "2",
+        name: "Ravi a/l Muthu",
+        reference: "PMH-0143",
+        status: "Dalam semakan",
+      },
+      { id: "3", name: "Tan Mei Ling", reference: "PMH-0144", status: "Ditolak" },
     ];
 
-    export function ApplicantTable({ applicants }: { applicants: Applicant[] }) {
+    // DataTable makes its header and body cells' ids from the column ids, so the
+    // tables on one page need column ids of their own
+    const columns: ColumnDef<Applicant>[] = [
+      { id: "applicant-name", accessorKey: "name", header: "Nama" },
+      {
+        id: "applicant-reference",
+        accessorKey: "reference",
+        header: "No. rujukan",
+      },
+      { id: "applicant-status", accessorKey: "status", header: "Status" },
+    ];
+
+    // The heading above the table names it through `aria-labelledby`. `useId()`
+    // gives the heading an id of its own, so the page repeats no id however many
+    // times this renders.
+    export function ApplicantTable() {
       const headingId = useId();
       return (
-        <section>
-          <h2 id={headingId}>Senarai pemohon</h2>
+        <div className="flex flex-col gap-3">
+          {/* Use the heading level your page needs */}
+          <h4
+            id={headingId}
+            className="font-heading text-txt-black-900 text-body-lg font-semibold"
+          >
+            Senarai pemohon
+          </h4>
           <DataTable
             aria-labelledby={headingId}
             columns={columns}
             data={applicants}
           />
-        </section>
+        </div>
       );
     }
     ```

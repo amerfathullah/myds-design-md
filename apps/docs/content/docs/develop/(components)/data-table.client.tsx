@@ -26,9 +26,9 @@ const applicants: Applicant[] = [
   { id: "3", name: "Tan Mei Ling", reference: "PMH-0144", status: "Ditolak" },
 ];
 
-// DataTable gives its header and body cells ids made from the column ids, so
-// these differ from the other examples' columns on the page
-const applicantColumns: ColumnDef<Applicant>[] = [
+// DataTable makes its header and body cells' ids from the column ids, so the
+// tables on one page need column ids of their own
+const columns: ColumnDef<Applicant>[] = [
   { id: "applicant-name", accessorKey: "name", header: "Nama" },
   {
     id: "applicant-reference",
@@ -38,13 +38,14 @@ const applicantColumns: ColumnDef<Applicant>[] = [
   { id: "applicant-status", accessorKey: "status", header: "Status" },
 ];
 
-// A heading above the table names it through `aria-labelledby`. `useId()`
+// The heading above the table names it through `aria-labelledby`. `useId()`
 // gives the heading an id of its own, so the page repeats no id however many
 // times this renders.
-export function DataTableNamedExample() {
+export function ApplicantTable() {
   const headingId = useId();
   return (
     <div className="flex flex-col gap-3">
+      {/* Use the heading level your page needs */}
       <h4
         id={headingId}
         className="font-heading text-txt-black-900 text-body-lg font-semibold"
@@ -53,7 +54,7 @@ export function DataTableNamedExample() {
       </h4>
       <DataTable
         aria-labelledby={headingId}
-        columns={applicantColumns}
+        columns={columns}
         data={applicants}
       />
     </div>

@@ -18,7 +18,7 @@ import {
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { InfoIcon } from "@amerfathullah/myds-react/icon";
-import { DataTableNamedExample } from "./data-table.client";
+import { ApplicantTable } from "./data-table.client";
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose flex justify-center">
@@ -268,7 +268,7 @@ Id mesti unik pada halaman. Komponen yang dipaparkan lebih daripada sekali, sepe
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="not-prose">
-      <DataTableNamedExample />
+      <ApplicantTable />
     </div>
   </Tab>
   <Tab value="Kod">
@@ -286,23 +286,54 @@ Id mesti unik pada halaman. Komponen yang dipaparkan lebih daripada sekali, sepe
       status: string;
     };
 
-    const columns: ColumnDef<Applicant>[] = [
-      { id: "name", accessorKey: "name", header: "Nama" },
-      { id: "reference", accessorKey: "reference", header: "No. rujukan" },
-      { id: "status", accessorKey: "status", header: "Status" },
+    const applicants: Applicant[] = [
+      {
+        id: "1",
+        name: "Aminah binti Yusof",
+        reference: "PMH-0142",
+        status: "Diluluskan",
+      },
+      {
+        id: "2",
+        name: "Ravi a/l Muthu",
+        reference: "PMH-0143",
+        status: "Dalam semakan",
+      },
+      { id: "3", name: "Tan Mei Ling", reference: "PMH-0144", status: "Ditolak" },
     ];
 
-    export function ApplicantTable({ applicants }: { applicants: Applicant[] }) {
+    // DataTable menjana id sel tajuk dan sel badannya daripada id lajur, jadi
+    // setiap jadual pada satu halaman memerlukan id lajurnya sendiri
+    const columns: ColumnDef<Applicant>[] = [
+      { id: "applicant-name", accessorKey: "name", header: "Nama" },
+      {
+        id: "applicant-reference",
+        accessorKey: "reference",
+        header: "No. rujukan",
+      },
+      { id: "applicant-status", accessorKey: "status", header: "Status" },
+    ];
+
+    // Tajuk di atas jadual menamakannya melalui `aria-labelledby`. `useId()`
+    // memberikan tajuk itu id tersendiri, jadi tiada id berulang pada halaman
+    // walau berapa kali komponen ini dipaparkan.
+    export function ApplicantTable() {
       const headingId = useId();
       return (
-        <section>
-          <h2 id={headingId}>Senarai pemohon</h2>
+        <div className="flex flex-col gap-3">
+          {/* Gunakan aras tajuk yang diperlukan oleh halaman anda */}
+          <h4
+            id={headingId}
+            className="font-heading text-txt-black-900 text-body-lg font-semibold"
+          >
+            Senarai pemohon
+          </h4>
           <DataTable
             aria-labelledby={headingId}
             columns={columns}
             data={applicants}
           />
-        </section>
+        </div>
       );
     }
     ```

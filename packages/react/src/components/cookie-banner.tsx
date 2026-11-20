@@ -24,6 +24,7 @@ import { cva } from "class-variance-authority";
 import { CrossIcon } from "../icons/cross";
 import { clx } from "../utils";
 import { composeEventHandlers } from "../utils/compose-event-handlers";
+import { inDocumentOrder } from "../utils/document-order";
 import { Button } from "./button";
 import { sharedContext } from "../utils/registry";
 
@@ -180,9 +181,6 @@ function* focusablesAfter(node: HTMLElement) {
     )
       yield element;
 }
-
-const inDocumentOrder = (a: Node, b: Node) =>
-  a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
 
 // Whether the browser has just seen a visitor action, such as a click or a
 // key press

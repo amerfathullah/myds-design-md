@@ -9,6 +9,7 @@ import {
   createElement,
   createRef,
   StrictMode,
+  useState,
   type ComponentProps,
   type ReactElement,
   type ReactNode,
@@ -104,7 +105,8 @@ type HintProps = ComponentProps<typeof RadioHintText> & {
 };
 
 // One option, composed as the docs compose it: a RadioButton with the id its
-// RadioLabel points at, and the label and hints stacked beside it
+// RadioLabel points at, and the label and hints stacked beside it. Each hint
+// is made with `hint()`, so the tests find it.
 const option = (
   value: string,
   {
@@ -121,15 +123,15 @@ const option = (
       "div",
       { className: "grid" },
       createElement(RadioLabel, { htmlFor: value }, label(value)),
-      ...hints.map((hint, index) =>
-        createElement(RadioHintText, { key: index, ...hint }),
+      ...hints.map(({ children, ...props }, index) =>
+        hint(children, { key: String(index), ...props }),
       ),
     ),
   );
 
-// A RadioHintText reading `text`, marked so the tests find it
+// A RadioHintText reading `text`, marked with `data-hint` so the tests find it
 function hint(
-  text: string,
+  text: ReactNode,
   { key, ...props }: HintProps & { key?: string } = {},
 ): ReactElement {
   const marked: HintProps = { "data-hint": "", ...props };
@@ -170,7 +172,7 @@ describe("a RadioHintText in a RadioItem", () => {
       radio(
         {},
         option("email", {
-          hints: [{ children: "We will email you.", "data-hint": "" }],
+          hints: [{ children: "We will email you." }],
         }),
         option("post"),
       ),
@@ -193,7 +195,6 @@ describe("a RadioHintText in a RadioItem", () => {
               children: "We will email you.",
               htmlFor: "email",
               form: "notifications",
-              "data-hint": "",
             },
           ],
         }),
@@ -220,7 +221,6 @@ describe("a RadioHintText in a RadioItem", () => {
             {
               children: "We will email you.",
               htmlFor: "email",
-              "data-hint": "",
             },
           ],
         }),
@@ -245,7 +245,7 @@ describe("a RadioHintText in a RadioItem", () => {
       radio(
         {},
         option("email", {
-          hints: [{ children: "We will email you.", "data-hint": "", ref }],
+          hints: [{ children: "We will email you.", ref }],
         }),
       ),
     );
@@ -277,7 +277,7 @@ describe("RadioButton's aria-describedby", () => {
           {},
           option("email", {
             button: { "aria-describedby": "err" },
-            hints: [{ children: "We will email you.", "data-hint": "" }],
+            hints: [{ children: "We will email you." }],
           }),
         ),
         createElement("p", { id: "err" }, "Choose one."),
@@ -295,7 +295,7 @@ describe("RadioButton's aria-describedby", () => {
         {},
         option("email", {
           button: { "aria-describedby": undefined },
-          hints: [{ children: "We will email you.", "data-hint": "" }],
+          hints: [{ children: "We will email you." }],
         }),
       ),
     );
@@ -315,7 +315,6 @@ describe("RadioButton's aria-describedby", () => {
             {
               children: "We will email you.",
               id: "email-hint",
-              "data-hint": "",
             },
           ],
         }),
@@ -332,7 +331,7 @@ describe("RadioButton's aria-describedby", () => {
         {},
         option("email", {
           button: { "aria-describedby": "  a  b a  " },
-          hints: [{ children: "Hint.", id: "b", "data-hint": "" }],
+          hints: [{ children: "Hint.", id: "b" }],
         }),
       ),
     );
@@ -346,9 +345,7 @@ describe("the hint's id", () => {
       radio(
         {},
         option("email", {
-          hints: [
-            { children: "We will email you.", id: "mine", "data-hint": "" },
-          ],
+          hints: [{ children: "We will email you.", id: "mine" }],
         }),
       ),
     );
@@ -362,10 +359,10 @@ describe("the hint's id", () => {
       radio(
         {},
         option("email", {
-          hints: [{ children: "We will email you.", id: "", "data-hint": "" }],
+          hints: [{ children: "We will email you.", id: "" }],
         }),
         option("post", {
-          hints: [{ children: "We will post it.", "data-hint": "" }],
+          hints: [{ children: "We will post it." }],
         }),
       ),
     );
@@ -381,7 +378,7 @@ describe("the hint's id", () => {
       radio(
         { name: value },
         option(value, {
-          hints: [{ children: `About ${value}.`, "data-hint": "" }],
+          hints: [{ children: `About ${value}.` }],
         }),
       );
     const { container } = await mount(
@@ -401,10 +398,7 @@ describe("two hints in one item", () => {
       radio(
         {},
         option("email", {
-          hints: [
-            { children: "First.", "data-hint": "" },
-            { children: "Second.", "data-hint": "" },
-          ],
+          hints: [{ children: "First." }, { children: "Second." }],
         }),
       ),
     );
@@ -436,6 +430,54 @@ describe("two hints in one item", () => {
     expect(describedBy(email)).toBe(`${first!.id} ${second!.id}`);
     expect(description(email)).toBe("First. Second.");
   });
+
+  test("describe it in their new order when they move without remounting", async () => {
+    const tree = (order: readonly string[]) =>
+      radio(
+        {},
+        createElement(
+          RadioItem,
+          null,
+          createElement(RadioButton, { value: "email", id: "email" }),
+          createElement(RadioLabel, { htmlFor: "email" }, "Email"),
+          ...order.map((text) => hint(text, { key: text, id: text })),
+        ),
+      );
+    const { container, rerender } = await mount(tree(["a", "b"]));
+    const email = button(container, "email");
+    expect(describedBy(email)).toBe("a b");
+    await rerender(tree(["b", "a"]));
+    expect(hints(container, "email").map(({ id }) => id)).toEqual(["b", "a"]);
+    expect(describedBy(email)).toBe("b a");
+  });
+
+  test("describe it in their new order when a component inside the item moves them", async () => {
+    let swap: () => void = () => {};
+    // Holds its own order, so the RadioItem doesn't render again when it
+    // changes
+    function Hints() {
+      const [order, setOrder] = useState(["a", "b"]);
+      swap = () => setOrder(["b", "a"]);
+      return order.map((text) => hint(text, { key: text, id: text }));
+    }
+    const { container } = await mount(
+      radio(
+        {},
+        createElement(
+          RadioItem,
+          null,
+          createElement(RadioButton, { value: "email", id: "email" }),
+          createElement(RadioLabel, { htmlFor: "email" }, "Email"),
+          createElement(Hints),
+        ),
+      ),
+    );
+    const email = button(container, "email");
+    expect(describedBy(email)).toBe("a b");
+    await act(async () => swap());
+    expect(hints(container, "email").map(({ id }) => id)).toEqual(["b", "a"]);
+    expect(describedBy(email)).toBe("b a");
+  });
 });
 
 describe("aria-describedby follows the hints", () => {
@@ -444,9 +486,7 @@ describe("aria-describedby follows the hints", () => {
       radio(
         {},
         option("email", {
-          hints: withHint
-            ? [{ children: "We will email you.", "data-hint": "" }]
-            : [],
+          hints: withHint ? [{ children: "We will email you." }] : [],
         }),
       );
     const { container, rerender } = await mount(tree(true));
@@ -462,7 +502,7 @@ describe("aria-describedby follows the hints", () => {
       radio(
         {},
         option("email", {
-          hints: [{ children: "We will email you.", id, "data-hint": "" }],
+          hints: [{ children: "We will email you.", id }],
         }),
       );
     const { container, rerender } = await mount(tree("one"));
@@ -482,8 +522,8 @@ describe("aria-describedby follows the hints", () => {
           {},
           option("email", {
             hints: [
-              { children: "First.", "data-hint": "" },
-              { children: "Second.", id: "second", "data-hint": "" },
+              { children: "First." },
+              { children: "Second.", id: "second" },
             ],
           }),
         ),
@@ -520,12 +560,12 @@ test("server-rendered, then hydrated, logs nothing, and each hinted radio has it
   const tree = radio(
     { defaultValue: "email" },
     option("email", {
-      hints: [{ children: "We will email you.", "data-hint": "" }],
+      hints: [{ children: "We will email you." }],
     }),
     option("post", {
       hints: [
-        { children: "We will post it.", "data-hint": "" },
-        { children: "It takes a week.", id: "week", "data-hint": "" },
+        { children: "We will post it." },
+        { children: "It takes a week.", id: "week" },
       ],
     }),
     option("none"),
@@ -562,7 +602,7 @@ describe.each([
         { size, ...props },
         option("email", {
           disabled: itemDisabled,
-          hints: [{ children: "Hint", "data-hint": "" }],
+          hints: [{ children: "Hint" }],
         }),
       ),
     );
@@ -578,5 +618,45 @@ describe.each([
   test("are as before when the Radio or its RadioItem is disabled", () => {
     expect(classes({ disabled: true })).toBe(disabled);
     expect(classes({}, true)).toBe(disabled);
+  });
+});
+
+// A disabled option's hint is part of that inactive option, as its label is.
+// It's marked `aria-disabled`, which assistive technology and accessibility
+// checkers such as axe read as inherited, so axe exempts its dimmed colour
+// from contrast, as it did when the hint was a label of the disabled radio.
+describe("the hint's aria-disabled", () => {
+  const hintOf = async (props: RadioProps, item?: boolean, own?: HintProps) => {
+    const { container } = await mount(
+      radio(
+        props,
+        option("email", {
+          disabled: item,
+          hints: [{ children: "We will email you.", ...own }],
+        }),
+      ),
+    );
+    return hints(container, "email")[0]!;
+  };
+
+  test('is "true" when the Radio or the hint\'s RadioItem is disabled', async () => {
+    expect(
+      (await hintOf({ disabled: true })).getAttribute("aria-disabled"),
+    ).toBe("true");
+    expect((await hintOf({}, true)).getAttribute("aria-disabled")).toBe("true");
+  });
+
+  test("is left off when the option is enabled", async () => {
+    expect((await hintOf({})).hasAttribute("aria-disabled")).toBe(false);
+    expect(
+      (await hintOf({ disabled: true }, false)).hasAttribute("aria-disabled"),
+    ).toBe(false);
+  });
+
+  test("is the author's when they pass one", async () => {
+    const hint = await hintOf({ disabled: true }, undefined, {
+      "aria-disabled": false,
+    });
+    expect(hint.getAttribute("aria-disabled")).toBe("false");
   });
 });

@@ -16,7 +16,9 @@ import React, {
 } from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { clx } from "../utils";
+import { inDocumentOrder } from "../utils/document-order";
 import { sharedContext } from "../utils/registry";
+import { setRef } from "../utils/set-ref";
 
 type RadioSize = "small" | "medium" | "large";
 const DEFAULT_SIZE = "medium";
@@ -45,6 +47,8 @@ interface RadioItemContextValue {
   hintIds?: readonly string[];
   /** Records a RadioHintText's id and element, and returns what forgets them */
   registerHint?: (id: string, element: HTMLElement) => () => void;
+  /** Puts the hints back in document order after one moves */
+  sortHints?: () => void;
 }
 
 // An item needs it's own context because labels and radio buttons need to be
@@ -61,14 +65,9 @@ interface Hint {
   element: HTMLElement;
 }
 
-// Sorts hints in document order, as the description reads them
-const byDocumentOrder = (a: Hint, b: Hint) =>
-  a.element === b.element
-    ? 0
-    : a.element.compareDocumentPosition(b.element) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-      ? -1
-      : 1;
+// The hints in document order, as the description reads them
+const inOrder = (hints: readonly Hint[]) =>
+  [...hints].sort((a, b) => inDocumentOrder(a.element, b.element));
 
 const noHints: readonly string[] = [];
 
@@ -77,14 +76,6 @@ const noHints: readonly string[] = [];
 // paints.
 const useBeforePaint =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
-
-// Sets `ref` to `element` as React sets a ref it's given, and returns what a
-// callback ref returns: under React 19, a cleanup to run in place of a later
-// call with `null`
-function setRef<T>(ref: Ref<T> | undefined, element: T | null): unknown {
-  if (typeof ref === "function") return ref(element);
-  if (ref) (ref as { current: T | null }).current = element;
-}
 
 /**
  * Uses RadixUI's RadioGroup.Root API.
@@ -119,16 +110,29 @@ const RadioItem: FunctionComponent<
   const [hints, setHints] = useState<readonly Hint[]>([]);
   const registerHint = useCallback((id: string, element: HTMLElement) => {
     const hint: Hint = { id, element };
-    setHints((current) => [...current, hint].sort(byDocumentOrder));
+    setHints((current) => inOrder([...current, hint]));
     return () => setHints((current) => current.filter((each) => each !== hint));
   }, []);
+  // Keeps the state as it is when the order hasn't changed, so React renders
+  // nothing again
+  const sortHints = useCallback(
+    () =>
+      setHints((current) => {
+        const sorted = inOrder(current);
+        return sorted.some((hint, index) => hint !== current[index])
+          ? sorted
+          : current;
+      }),
+    [],
+  );
   const context = useMemo<RadioItemContextValue>(
     () => ({
       disabled: itemDisabled,
       hintIds: hints.map((hint) => hint.id),
       registerHint,
+      sortHints,
     }),
-    [itemDisabled, hints, registerHint],
+    [itemDisabled, hints, registerHint, sortHints],
   );
   return (
     <RadioItemContext.Provider value={context}>
@@ -238,7 +242,8 @@ interface RadioHintTextProps extends HTMLAttributes<HTMLElement> {
  * Hint text for an option: a `<div>` that describes the RadioButton in its
  * RadioItem, which points `aria-describedby` at it. Screen readers read it
  * after the radio's name, which the RadioLabel gives. Clicking it doesn't
- * select the radio. It renders your `id`, or generates one.
+ * select the radio. It renders your `id`, or generates one. In a disabled
+ * item it's marked `aria-disabled`.
  */
 const RadioHintText = ({
   className,
@@ -252,7 +257,7 @@ const RadioHintText = ({
   ...props
 }: RadioHintTextProps) => {
   const { size } = useContext(RadioContext);
-  const { disabled, registerHint } = useContext(RadioItemContext);
+  const { disabled, registerHint, sortHints } = useContext(RadioItemContext);
   const generatedId = useId();
   const hintId = id || generatedId;
   const element = useRef<HTMLDivElement | null>(null);
@@ -277,10 +282,19 @@ const RadioHintText = ({
     if (!registerHint || !element.current) return;
     return registerHint(hintId, element.current);
   }, [registerHint, hintId]);
+  // After every render, as keyed hints can move among their item's others
+  // without remounting, which the registration above doesn't see
+  useBeforePaint(() => {
+    sortHints?.();
+  });
   return (
     <div
       ref={divRef}
       id={hintId}
+      // A disabled option's hint is part of that inactive option, as its
+      // label is, so accessibility checkers exempt its dimmed colour from
+      // contrast. Before the spread, so an `aria-disabled` you pass wins.
+      aria-disabled={disabled || undefined}
       className={clx(
         "text-txt-black-500",
         size === "small" && "text-xs",

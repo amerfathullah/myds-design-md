@@ -72,6 +72,13 @@ import {
 } from "@amerfathullah/myds-react/pagination";
 import { Pill } from "@amerfathullah/myds-react/pill";
 import {
+  Radio,
+  RadioButton,
+  RadioHintText,
+  RadioItem,
+  RadioLabel,
+} from "@amerfathullah/myds-react/radio";
+import {
   SearchBar,
   SearchBarClearButton,
   SearchBarInputContainer,
@@ -1063,5 +1070,57 @@ export const ToastParts = () => {
       </ToastRoot>
       <ToastViewport />
     </ToastProvider>
+  );
+};
+
+// RadioHintText renders a `<div>` that describes the RadioButton in its
+// RadioItem (#173). It takes a `<div>`'s attributes, an `id` among them, and
+// `htmlFor` and `form` still compile, deprecated and ignored. Code written for
+// the `<label>` it used to render still compiles: a ref typed for a
+// `<label>`, and an event handler typed for one.
+export const RadioHint = () => {
+  const label = useRef<HTMLLabelElement>(null);
+  const element = useRef<HTMLElement>(null);
+  const div = createRef<HTMLDivElement>();
+  return (
+    <Radio defaultValue="email">
+      <RadioItem>
+        <RadioButton value="email" id="email" aria-describedby="email-error" />
+        <div className="grid">
+          <RadioLabel htmlFor="email">E-mel</RadioLabel>
+          <RadioHintText htmlFor="email" form="notifications">
+            Kami akan menghantar e-mel.
+          </RadioHintText>
+          <RadioHintText
+            ref={element}
+            id="email-hint"
+            className="mt-1"
+            style={{ marginTop: 4 }}
+            title="Petunjuk"
+            aria-live="polite"
+            data-part="hint"
+            onClick={(event: MouseEvent<HTMLDivElement>) =>
+              event.preventDefault()
+            }
+          >
+            Semak folder spam anda.
+          </RadioHintText>
+          <RadioHintText
+            ref={label}
+            onClick={(event: MouseEvent<HTMLLabelElement>) =>
+              event.preventDefault()
+            }
+          >
+            Sekali sehari.
+          </RadioHintText>
+          <RadioHintText ref={div}>Percuma.</RadioHintText>
+          <RadioHintText ref={(node: HTMLLabelElement | null) => void node}>
+            Boleh dibatalkan.
+          </RadioHintText>
+          {/* @ts-expect-error its ref is an HTML element */}
+          <RadioHintText ref={createRef<SVGSVGElement>()}>Tidak.</RadioHintText>
+        </div>
+      </RadioItem>
+    </Radio>
   );
 };

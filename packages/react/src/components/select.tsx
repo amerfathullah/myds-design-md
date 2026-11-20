@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { clx } from "../utils";
+import { setRef } from "../utils/set-ref";
 import { cva } from "class-variance-authority";
 import { ChevronDownFillIcon } from "../icons/chevron-down-fill";
 import { CheckCircleFillIcon } from "../icons/check-circle-fill";
@@ -70,14 +71,6 @@ const selectByDefault = (option: HTMLOptionElement | null) => {
 const makeInert = (element: HTMLElement | null) => {
   element?.setAttribute("inert", "");
 };
-
-// Sets `ref` to `node` as React sets a ref it's given, and returns what a
-// callback ref returns: under React 19, a cleanup to run in place of a later
-// call with `null`
-function setRef<T>(ref: React.Ref<T> | undefined, node: T | null): unknown {
-  if (typeof ref === "function") return ref(node);
-  if (ref) (ref as { current: T | null }).current = node;
-}
 
 const SelectContext = sharedContext<SelectProps & SelectInternalProps>(
   "SelectContext",

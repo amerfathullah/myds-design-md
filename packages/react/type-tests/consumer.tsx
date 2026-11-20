@@ -1033,7 +1033,7 @@ type ToastPart = ForwardRefExoticComponent<
   Omit<ComponentPropsWithoutRef<"div">, "children"> &
     RefAttributes<HTMLDivElement>
 >;
-const toastParts: ToastPart[] = [ToastIcon, ToastProgress];
+export const ToastPartTypes: ToastPart[] = [ToastIcon, ToastProgress];
 
 export const ToastParts = () => {
   const icon = useRef<HTMLDivElement>(null);
@@ -1061,7 +1061,6 @@ export const ToastParts = () => {
         {/* @ts-expect-error its ref is its outer `<div>` */}
         <ToastProgress ref={createRef<HTMLButtonElement>()} />
       </ToastRoot>
-      {toastParts.length}
       <ToastViewport />
     </ToastProvider>
   );

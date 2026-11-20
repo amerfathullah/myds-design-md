@@ -5,8 +5,10 @@
 // JSDoc, in the declarations of each condition. The Toast samples a consumer
 // copies, from the develop pages (EN/MS) and from the Toast story's doc
 // comment, compile against the built package as published, and the Advanced
-// Usage toaster, run as published, shows the toast useToast() fires. It needs
-// `pnpm build` first, and fails, rather than skips, without it.
+// Usage toaster, run as published, shows the toast useToast() fires. Since
+// these tests sit beside the components the build takes as entries, it also
+// checks that no test file is built or exported. It needs `pnpm build` first,
+// and fails, rather than skips, without it.
 /// <reference types="node" />
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -23,8 +25,8 @@ const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
 };
 const toastEntry = `${pkg.name}/toast`;
 const hooksEntry = `${pkg.name}/hooks`;
-const docs = resolve(root, "../../apps/docs");
-const pagesDir = resolve(docs, "content/docs/develop/(components)");
+const docsApp = resolve(root, "../../apps/docs");
+const pagesDir = resolve(docsApp, "content/docs/develop/(components)");
 const storyFile = resolve(
   root,
   "../../apps/storybook/stories/toast.stories.tsx",
@@ -105,7 +107,7 @@ function declarations(condition: Condition) {
   const source = program.getSourceFile(file);
   const module = source && checker.getSymbolAtLocation(source);
   if (!module) throw new Error(`${toastEntry} declares no module`);
-  const docs = Object.fromEntries(
+  const jsdoc = Object.fromEntries(
     checker.getExportsOfModule(module).map((symbol) => {
       const target =
         symbol.flags & ts.SymbolFlags.Alias
@@ -119,7 +121,7 @@ function declarations(condition: Condition) {
       ];
     }),
   );
-  return { file, docs };
+  return { file, jsdoc };
 }
 
 describe.each(conditions)(
@@ -132,26 +134,26 @@ describe.each(conditions)(
     });
 
     test("declares the same exports, and the type ToastEvent", () => {
-      const { file, docs } = declarations(condition);
+      const { file, jsdoc } = declarations(condition);
       expect(file).toMatch(
         condition === "import"
           ? /\/dist\/components\/toast\.d\.mts$/
           : /\/dist\/components\/toast\.d\.ts$/,
       );
-      expect(Object.keys(docs).sort()).toEqual(
+      expect(Object.keys(jsdoc).sort()).toEqual(
         [...runtimeExports, "ToastEvent"].sort(),
       );
     });
 
     test("documents where ToastIcon and ToastProgress go and that they're hidden", () => {
-      const { docs } = declarations(condition);
+      const { jsdoc } = declarations(condition);
       for (const part of ["ToastIcon", "ToastProgress"]) {
-        expect(docs[part]).toContain("inside a `ToastRoot`");
-        expect(docs[part]).toContain("hidden from assistive technology");
-        expect(docs[part]).toContain("the toast's title carries its meaning");
+        expect(jsdoc[part]).toContain("inside a `ToastRoot`");
+        expect(jsdoc[part]).toContain("hidden from assistive technology");
+        expect(jsdoc[part]).toContain("the toast's title carries its meaning");
       }
-      expect(docs.ToastIcon).toContain("no icon for `message`");
-      expect(docs.ToastProgress).toContain("its duration (default 5000ms)");
+      expect(jsdoc.ToastIcon).toContain("no icon for `message`");
+      expect(jsdoc.ToastProgress).toContain("its duration (default 5000ms)");
     });
   },
 );
@@ -349,7 +351,7 @@ describe("the Toast develop pages", () => {
   // with the docs site's compiler options
   function docsModuleExports() {
     const config = ts.getParsedCommandLineOfConfigFile(
-      resolve(docs, "tsconfig.json"),
+      resolve(docsApp, "tsconfig.json"),
       undefined,
       {
         ...ts.sys,
@@ -361,7 +363,7 @@ describe("the Toast develop pages", () => {
       },
     );
     if (!config) throw new Error("The docs site's tsconfig.json can't be read");
-    const file = resolve(docs, "components/myds.tsx");
+    const file = resolve(docsApp, "components/myds.tsx");
     const program = ts.createProgram([file], {
       ...config.options,
       incremental: false,

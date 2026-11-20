@@ -659,9 +659,10 @@ describe("The current page", () => {
 
     // The fill follows which page is current, not the attribute
     test("fills the current page whatever its `aria-current`, and no other page", async () => {
-      const [other, current] = await composed();
+      const [other, current, after] = await composed();
       expect(current.className).toContain("bg-bg-washed-active");
       expect(other.className).not.toContain("bg-bg-washed-active");
+      expect(after.className).toBe(other.className);
 
       const [, unmarked] = await composed(
         createElement(PaginationNumber, {

@@ -69,7 +69,7 @@ import { AutoPagination } from "@amerfathullah/myds-react/pagination";
 <AutoPagination />
 ```
 
-Pembaca skrin menyebut butang sebelumnya dan seterusnya bagi jenis `default` sebagai "previous page" dan "next page", setiap butang halaman sebagai "page" diikuti nombornya, seperti "page 3", dan setiap elipsis sebagai "More pages". Jenis `simple` dan `full` memaparkan "Previous" dan "Next" pada butangnya, dan teks itu yang menamakannya. Tetapkan `previousLabel`, `nextLabel`, `pageLabel` dan `ellipsisLabel` untuk menamakannya dalam bahasa laman anda. Elemen `<nav>` disebut sebagai "pagination"; hantar `aria-label` untuk menamakannya semula, contohnya `aria-label="Penomboran"`.
+Pembaca skrin menyebut butang sebelumnya dan seterusnya bagi jenis `default` sebagai "previous page" dan "next page", setiap butang halaman sebagai "page" diikuti nombornya, seperti "page 3", dan setiap elipsis sebagai "More pages". Butang halaman semasa mempunyai `aria-current="page"`, jadi pembaca skrin turut menyebutnya sebagai halaman semasa; jangan tambah "semasa" pada `pageLabel`, atau ia akan disebut dua kali. Jenis `simple` dan `full` memaparkan "Previous" dan "Next" pada butangnya, dan teks itu yang menamakannya. Tetapkan `previousLabel`, `nextLabel`, `pageLabel` dan `ellipsisLabel` untuk menamakannya dalam bahasa laman anda. Elemen `<nav>` disebut sebagai "pagination"; hantar `aria-label` untuk menamakannya semula, contohnya `aria-label="Penomboran"`.
 
 ```tsx copy title="Nama dalam bahasa Melayu"
 <AutoPagination
@@ -126,6 +126,8 @@ import {
 ```
 
 Setiap subkomponen mempunyai nama dalam bahasa Inggeris untuk pembaca skrin, dan `aria-label` menggantikannya: pada `Pagination` bagi elemen `nav` ("pagination"), pada `PaginationPrevious` dan `PaginationNext` ("previous page" dan "next page"), dan pada `PaginationNumber` ("page 3" bagi butang halaman 3). `PaginationEllipsis` menyebut "More pages"; hantar `children` untuk menggantikannya, contohnya `<PaginationEllipsis>Lebih banyak halaman</PaginationEllipsis>`.
+
+`PaginationNumber` yang `number`nya sama dengan `page` pada `Pagination` mempunyai `aria-current="page"`, jadi pembaca skrin menyebutnya sebagai halaman semasa; yang lain tidak mempunyai `aria-current`. `aria-current` yang anda hantar kepada `PaginationNumber` menggantikannya, dan `aria-current={undefined}` membuangnya. Warna latar halaman semasa kekal dalam kedua-dua keadaan.
 
 `children` menamakan `PaginationPrevious` dan `PaginationNext` menggantikan nama lalai, jadi `<PaginationPrevious>Sebelumnya</PaginationPrevious>` dinamakan "Sebelumnya". `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, `PaginationPrevious` dan `PaginationNext` tidak menambah nama: namakan elemen anda sendiri, contohnya dengan `aria-label`.
 

@@ -17,6 +17,7 @@ import {
   SearchBarResultsGroup,
   SearchBarHint,
   Pill,
+  Label,
 } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
@@ -81,6 +82,7 @@ import {
     >
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Cari nama"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -153,7 +155,7 @@ SearchBarHint,
 export default () => (
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput value={query} onValueChange={setQuery} />
+      <SearchBarInput aria-label="Cari nama" value={query} onValueChange={setQuery} />
       <SearchBarHint>
         Press <Pill size="small">/</Pill> to search
       </SearchBarHint>
@@ -186,19 +188,19 @@ Gunakan prop `size` untuk menukar saiz bar carian.
   <Tab value="Preview" className="not-prose flex flex-col gap-4">
     <SearchBar size="small">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
     <SearchBar size="medium">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
@@ -214,21 +216,21 @@ Gunakan prop `size` untuk menukar saiz bar carian.
 
     <SearchBar size="small">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
 
     <SearchBar size="medium">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
 
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
     </SearchBar>
@@ -261,6 +263,7 @@ Anda boleh menggunakan `SearchBarClearButton` untuk menunjukkan butang _clear_.
     <SearchBar size="large">
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Cari nama"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -284,7 +287,7 @@ Tunjukkan _hint_ dengan `SearchBarHint`.
 <Tab value="Preview" className="not-prose">
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput placeholder="Search by name" />
+      <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
       <SearchBarHint className="hidden lg:flex">Press <Pill size="small">/</Pill> to search</SearchBarHint>
       <SearchBarSearchButton />
     </SearchBarInputContainer>
@@ -303,7 +306,7 @@ Tunjukkan _hint_ dengan `SearchBarHint`.
 
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput placeholder="Search by name" />
+      <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
       <SearchBarHint className="hidden lg:flex">
         Press <Pill size="small">/</Pill> to search
       </SearchBarHint>
@@ -312,6 +315,47 @@ Tunjukkan _hint_ dengan `SearchBarHint`.
   </SearchBar>
 ````
 
+  </Tab>
+</Tabs>
+
+### Label yang Kelihatan
+
+Contoh lain menamakan input carian dengan `aria-label`, yang tidak dipaparkan. Untuk memaparkan label, berikan `id` kepada `Label`, dan hantar id yang sama kepada `aria-labelledby` pada `SearchBarInput`. Pembaca skrin kemudian menyebut input dengan teks label.
+
+`htmlFor` pada `Label` tidak berfungsi di sini: cmdk sendiri yang menetapkan `id` input, jadi `id` yang anda hantar kepada `SearchBarInput` tidak sampai kepada input, dan `Label` itu tidak menamakan apa-apa. Mengklik `Label` ini juga tidak memfokuskan input.
+
+<Tabs items={["Preview", "Code"]}>
+  <Tab value="Preview" className="not-prose flex flex-col gap-2">
+    <Label id="search-by-name" size="small">
+      Cari nama
+    </Label>
+    <SearchBar size="large">
+      <SearchBarInputContainer>
+        <SearchBarInput aria-labelledby="search-by-name" />
+        <SearchBarSearchButton />
+      </SearchBarInputContainer>
+    </SearchBar>
+  </Tab>
+  <Tab value="Code">
+    ```tsx
+    import {
+        SearchBar,
+        SearchBarInput,
+        SearchBarInputContainer,
+        SearchBarSearchButton,
+    } from "@amerfathullah/myds-react/search-bar";
+    import { Label } from "@amerfathullah/myds-react/label";
+
+    <Label id="search-by-name" size="small">
+      Cari nama
+    </Label>
+    <SearchBar size="large">
+      <SearchBarInputContainer>
+        <SearchBarInput aria-labelledby="search-by-name" />
+        <SearchBarSearchButton />
+      </SearchBarInputContainer>
+    </SearchBar>
+    ```
   </Tab>
 </Tabs>
 
@@ -341,7 +385,7 @@ Anda boleh menunjukkan hasil carian atau cadangan dengan komponen `SearchBarResu
 
     <SearchBar size="large">
       <SearchBarInputContainer>
-        <SearchBarInput placeholder="Search by name" />
+        <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
         <SearchBarSearchButton />
       </SearchBarInputContainer>
       <SearchBarResults open>
@@ -395,7 +439,7 @@ Anda juga boleh mengumpulkan hasil dengan komponen `SearchBarResultsGroup`:
 
   <SearchBar size="large">
     <SearchBarInputContainer>
-      <SearchBarInput placeholder="Search by name" />
+      <SearchBarInput aria-label="Cari nama" placeholder="Search by name" />
       <SearchBarSearchButton />
     </SearchBarInputContainer>
     <SearchBarResults open>
@@ -485,6 +529,7 @@ Dalam contoh di bawah, kami juga menjejaki sama ada bar carian difokuskan atau t
     >
       <SearchBarInputContainer>
         <SearchBarInput
+          aria-label="Cari nama"
           placeholder="Search by name"
           value={query}
           onValueChange={setQuery}
@@ -542,12 +587,19 @@ type={{
     typeDescription: "small | medium | large",
     default: "medium",
   },
+  label: {
+    description:
+      'Nama boleh capai input carian, yang diletakkan oleh cmdk dalam label yang disembunyikan secara visual. Pembaca skrin menyebutnya; ia tidak dipaparkan. `aria-labelledby` dan `aria-label` pada `SearchBarInput` sendiri diutamakan berbanding prop ini. Tetapkan dalam bahasa laman anda, contohnya `label="Cari nama"`.',
+    type: "string",
+  },
 }}
 />
 
 ### SearchBarInput
 
 `SearchBarInput` disarikan daripada `Command.Input` cmdk. Sila rujuk rujukan API dalam [dokumentasi ini](https://github.com/pacocoursey/cmdk#input-cmdk-input)
+
+Nama boleh capainya datang daripada `aria-labelledby`nya, kemudian `aria-label`nya, kemudian `label` pada `SearchBar`: yang pertama anda hantar diutamakan. Nilai yang kosong atau hanya mengandungi ruang dikira sebagai tidak dihantar. Ia tidak mempunyai nama lalai, dan teks pemegang tempatnya tidak menamakannya. `id` tidak sampai kepada input, kerana cmdk sendiri yang menetapkan `id` input, jadi `htmlFor` pada `Label` tidak dapat menamakannya. Sebaliknya, berikan `id` kepada `Label` dan hantar id itu kepada `aria-labelledby`, seperti [di atas](#label-yang-kelihatan).
 
 <TypeTable
 type={{
@@ -559,6 +611,16 @@ type={{
     description: "Callback function apabila input berubah",
     type: "function",
     typeDescription: "(value: string) => void",
+  },
+  "aria-labelledby": {
+    description:
+      "Id `Label`, atau elemen lain, yang teksnya menamakan input carian. Ia diutamakan berbanding `aria-label` dan `label` pada `SearchBar`. `htmlFor` pada `Label` tidak menamakan input.",
+    type: "string",
+  },
+  "aria-label": {
+    description:
+      "Nama boleh capai input carian, apabila tiada label yang kelihatan menamakannya. Pembaca skrin menyebutnya; ia tidak dipaparkan. Ia diutamakan berbanding `label` pada `SearchBar`. Tiada nama lalai.",
+    type: "string",
   },
 }}
 />

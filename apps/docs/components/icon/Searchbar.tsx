@@ -64,6 +64,7 @@ const SearchBarIcon: FunctionComponent = () => {
       <SearchBarInputContainer>
         <SearchBarInput
           ref={inputRef}
+          aria-label={t("searchbar.searchname")}
           placeholder={t("searchbar.searchname")}
           onValueChange={(newValue) => setQuery(newValue)}
           onFocus={() => setHasFocus(true)}

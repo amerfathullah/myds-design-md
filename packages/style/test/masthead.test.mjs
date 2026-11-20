@@ -130,7 +130,7 @@ function readMasthead() {
   const button = document.querySelector("[data-test=trigger]");
   const label = button.querySelector("span");
   const title = document.querySelector("[data-test=title]");
-  const strip = title.parentElement.parentElement;
+  const strip = document.querySelector("[data-test=strip]");
   const box = (element) => {
     const { width, height } = element.getBoundingClientRect();
     return { width: Math.round(width), height: Math.round(height) };

@@ -26,8 +26,8 @@ function Page() {
   const label = params.get("label");
   useEffect(() => void window.ready.push("page"), []);
   return (
-    <Masthead data-test="masthead">
-      <MastheadHeader>
+    <Masthead>
+      <MastheadHeader data-test="strip">
         <MastheadTitle data-test="title">{title}</MastheadTitle>
         <MastheadTrigger
           data-test="trigger"

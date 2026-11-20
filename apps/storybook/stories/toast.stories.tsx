@@ -101,7 +101,8 @@ const DemoToast = (props: any) => {
  * import { useToast } from "@amerfathullah/myds-react/hooks";
  * import { AutoToast } from "@amerfathullah/myds-react/toast";
  *
- * // Mount AutoToast once in your app, high up the tree, such as in the root layout
+ * // This demo mounts AutoToast beside its button. An app mounts only one:
+ * // if your root layout already has one, as in Simple Usage, leave it out here.
  * export default function ToastDemo() {
  *   const { toast } = useToast();
  *

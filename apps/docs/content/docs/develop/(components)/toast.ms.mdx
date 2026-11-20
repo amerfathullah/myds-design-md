@@ -5,17 +5,7 @@ description: Notifikasi tidak mengganggu yang muncul sementara pada skrin untuk 
 
 import { Quicklinks } from "@/components/quicklinks";
 import Preview from "@/components/preview";
-import {
-  AutoToast,
-  ToastRoot,
-  ToastIcon,
-  ToastProgress,
-  ToastProvider,
-  ToastViewport,
-  ToastTitle,
-  ToastDescription,
-  ToastTriggerButton,
-} from "@/components/myds";
+import { ToastTriggerButton } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
@@ -26,63 +16,34 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
   </div>
   </Tab>
   <Tab value="Kod">
-  ```tsx 
-  import { AutoToast, 
-ToastRoot, 
-ToastIcon, 
-ToastProgress, 
-ToastProvider, 
-ToastViewport, 
-ToastTitle, 
-ToastDescription 
-}from "@amerfathullah/myds-react/toast";
- 
-  <button
-   onClick={() => {
-     toast({ variant: "message", 
-     title: "Hello, world!", 
-     description: "this is a description" 
-     });
-   }}>
-     Message
-  </button>
- 
-  //* Simple usage
-  <AutoToast />
- 
-  //* Advanced usage
-  const { toasts, subscribe, unsubscribe } = useToast();
- 
-  useEffect(() => {
-    subscribe();
-    return () => {
-      unsubscribe();
-    };
-  }, []);
- 
-  return (
-    <ToastProvider>
-      {toasts.map((toast, index) => (
-        <ToastRoot
-          key={props.id || index}
-          variant={toast.variant || "message"}
-          {...props}
+  ```tsx
+  "use client";
+
+  import { Button } from "@amerfathullah/myds-react/button";
+  import { useToast } from "@amerfathullah/myds-react/hooks";
+  import { AutoToast } from "@amerfathullah/myds-react/toast";
+
+  // Letakkan AutoToast sekali sahaja dalam aplikasi anda, di bahagian atas pepohon komponen, contohnya dalam layout akar
+  export default function ToastDemo() {
+    const { toast } = useToast();
+
+    return (
+      <>
+        <Button
+          onClick={() =>
+            toast({
+              variant: "message",
+              title: "Hello, world!",
+              description: "this is a description",
+            })
+          }
         >
-          <ToastIcon />
-          <div className="space-y-1">
-            <ToastTitle>{toast.title}</ToastTitle>
-            {toast.description && (
-              <ToastDescription>{toast.description}</ToastDescription>
-            )}
-          </div>
-          <ToastClose />
-          <ToastProgress />
-         </ToastRoot>
-     ))}
- 
-      <ToastViewport />
-    </ToastProvider>
-  );
+          Message variant
+        </Button>
+        <AutoToast />
+      </>
+    );
+  }
   ```
   </Tab>
 </Tabs>
@@ -110,21 +71,27 @@ import { AutoToast } from "@amerfathullah/myds-react/toast";
 ```
 
 ```tsx copy title="Anatomi"
+"use client";
+
 // Kemudian, terbitkan atau hantar peristiwa baru kepada Toast
 import { useToast } from "@amerfathullah/myds-react/hooks";
 
-export default () => (
+export default () => {
   const { toast } = useToast();
-<button
-  onClick={() => {
-    toast({ variant: "message",
-    title: "Hello, world!",
-    description: "this is a message toast description"
-    });
-  }}>
-    Message
-</button>
-);
+  return (
+    <button
+      onClick={() => {
+        toast({
+          variant: "message",
+          title: "Hello, world!",
+          description: "this is a message toast description",
+        });
+      }}
+    >
+      Message
+    </button>
+  );
+};
 ```
 
 Pembaca skrin menyebut butang tutup setiap toast sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `<AutoToast closeLabel="Tutup" />`.
@@ -136,60 +103,56 @@ Pembaca skrin menyebut kawasan yang memuatkan toast sebagai "Notifications (F8)"
 Sebagai alternatif kepada penggunaan AutoToast, konstituensi komponen `Toast` boleh disusun secara manual.
 
 ```tsx copy
+"use client";
+
+import { useEffect } from "react";
+import { useToast } from "@amerfathullah/myds-react/hooks";
 import {
-  ToastRoot,
+  ToastClose,
+  ToastDescription,
   ToastIcon,
   ToastProgress,
   ToastProvider,
-  ToastViewport,
+  ToastRoot,
   ToastTitle,
-  ToastDescription,
+  ToastViewport,
 } from "@amerfathullah/myds-react/toast";
 
-export default () => (
-  <ToastProvider>
-    {toasts.map((toast, index) => (
-      <ToastRoot
-        key={props.id || index}
-        variant={toast.variant || "message"}
-        {...props}
-      >
-        <ToastIcon />
-        <div className="space-y-1">
-          <ToastTitle>{toast.title}</ToastTitle>
-          {toast.description && (
-            <ToastDescription>{toast.description}</ToastDescription>
-          )}
-        </div>
-        <ToastClose />
-        <ToastProgress />
-      </ToastRoot>
-    ))}
+// Letakkan toaster ini sekali sahaja dalam aplikasi anda, di bahagian atas pepohon komponen, sebagai ganti AutoToast
+export default function Toaster() {
+  const { toasts, subscribe, unsubscribe } = useToast();
 
-    <ToastViewport />
-  </ToastProvider>
-);
+  // Paparkan setiap toast yang diterbitkan oleh toast() daripada useToast
+  useEffect(() => {
+    subscribe();
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  return (
+    <ToastProvider>
+      {toasts.map((event, index) => (
+        <ToastRoot key={index} variant={event.variant || "message"}>
+          <ToastIcon />
+          <div className="space-y-1">
+            <ToastTitle>{event.title}</ToastTitle>
+            {event.description && (
+              <ToastDescription>{event.description}</ToastDescription>
+            )}
+          </div>
+          <ToastClose />
+          <ToastProgress />
+        </ToastRoot>
+      ))}
+
+      <ToastViewport />
+    </ToastProvider>
+  );
+}
 ```
 
 Pembaca skrin menyebut `ToastClose` sebagai "Close". Hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<ToastClose aria-label="Tutup" />`.
-
-```tsx copy title="Anatomi"
-// to publish or emit a new event to the Toast
-import { useToast } from "@amerfathullah/myds-react/hooks";
-
-export default () => (
-  const { toast } = useToast();
-<button
-  onClick={() => {
-    toast({ variant: "message",
-    title: "Hello, world!",
-    description: "this is a message toast description"
-    });
-  }}>
-    Message
-</button>
-);
-```
 
 ## Contoh
 
@@ -301,6 +264,11 @@ Prop `label` pada `ToastViewport` menamakan kawasan yang memuatkan toast, iaitu 
   }}
 />
 
+### ToastIcon
+`ToastIcon` melukis ikon status toast bersaiz 20px dalam warna varian. Paparkannya di dalam `ToastRoot`, yang memberikan variannya. Ia tidak melukis ikon untuk `message`, dan tidak memaparkan apa-apa di luar `ToastRoot`.
+
+Ia disembunyikan daripada teknologi bantuan (`aria-hidden="true"`), kerana tajuk toast membawa maksudnya. Ia menerima prop `<div>`, kecuali `children`, dan `className` diletakkan pada `<div>` itu, di sekeliling ikon.
+
 ### ToastTitle
 `ToastTitle` menggunakan `ToastTitle` dari komponen perpustakaan Radiux UI. Sila rujuk kepada rujukan API dalam  [dokumentasi ini](https://www.radix-ui.com/primitives/docs/components/toast#title).
 
@@ -312,3 +280,8 @@ Prop `label` pada `ToastViewport` menamakan kawasan yang memuatkan toast, iaitu 
 `ToastClose` menggunakan `ToastClose` dari komponen perpustakaan Radiux UI. Sila rujuk kepada rujukan API dalam  [dokumentasi ini](https://www.radix-ui.com/primitives/docs/components/toast#close).
 
 Nama boleh capainya ialah "Close" secara lalai. Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Tutup"`. Ia sentiasa memaparkan ikon silang dan mengabaikan `children`, jadi namakannya dengan `aria-label`.
+
+### ToastProgress
+`ToastProgress` melukis bar kiraan detik setebal 4px di sepanjang tepi bawah toast, diisi dengan warna varian. Paparkannya di dalam `ToastRoot`, yang memberikan varian dan tempohnya: bar itu memendek hingga hilang sepanjang `duration` `ToastRoot` (lalai 5000ms), dan berhenti seketika semasa penuding berada di atas toast. Di luar `ToastRoot`, ia melukis bar `message` selama 5000ms.
+
+Ia disembunyikan daripada teknologi bantuan (`aria-hidden="true"`), kerana tajuk toast membawa maksudnya. Ia menerima prop `<div>`, kecuali `children`. `className` ditambah kepada kelas bar itu sendiri, dan `style` kepada tempoh animasinya.

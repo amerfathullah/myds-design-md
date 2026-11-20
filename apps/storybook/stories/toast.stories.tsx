@@ -90,54 +90,91 @@ const DemoToast = (props: any) => {
  *
  *
  * ### Usage
+ *
+ * Publish a toast with `toast()` from `useToast`, and mount `AutoToast` once
+ * to show it:
+ *
  * ```tsx
- * import { AutoToast, ToastRoot, ToastIcon, ToastProgress, ToastProvider, ToastViewport, ToastTitle, ToastDescription } from "@amerfathullah/myds-react/toast";
+ * "use client";
  *
- * <button
- *  onClick={() => {
- *    toast({ variant: "message", title: "Hello, world!", description: "this is a description" });
- *  }}>
- *    Message
- * </button>
+ * import { Button } from "@amerfathullah/myds-react/button";
+ * import { useToast } from "@amerfathullah/myds-react/hooks";
+ * import { AutoToast } from "@amerfathullah/myds-react/toast";
  *
- * //* Simple usage
- * <AutoToast />
+ * // Mount AutoToast once in your app, high up the tree, such as in the root layout
+ * export default function ToastDemo() {
+ *   const { toast } = useToast();
  *
- * //* Advanced usage
- * const { toasts, subscribe, unsubscribe } = useToast();
- *
- * useEffect(() => {
- *   subscribe();
- *   return () => {
- *     unsubscribe();
- *   };
- * }, []);
- *
- * return (
- *   <ToastProvider>
- *     {toasts.map((toast, index) => (
- *       <ToastRoot
- *         key={props.id || index}
- *         variant={toast.variant || "message"}
- *         {...props}
+ *   return (
+ *     <>
+ *       <Button
+ *         onClick={() =>
+ *           toast({
+ *             variant: "message",
+ *             title: "Hello, world!",
+ *             description: "this is a description",
+ *           })
+ *         }
  *       >
- *         <ToastIcon />
- *         <div className="space-y-1">
- *           <ToastTitle>{toast.title}</ToastTitle>
- *           {toast.description && (
- *             <ToastDescription>{toast.description}</ToastDescription>
- *           )}
- *         </div>
- *         <ToastClose />
- *         <ToastProgress />
- *        </ToastRoot>
- *    ))}
+ *         Message variant
+ *       </Button>
+ *       <AutoToast />
+ *     </>
+ *   );
+ * }
+ * ```
  *
- *     <ToastViewport />
- *   </ToastProvider>
- * );
+ * Or, for more control, compose the toaster yourself from the toast's parts,
+ * `ToastIcon` and `ToastProgress` among them:
  *
+ * ```tsx
+ * "use client";
  *
+ * import { useEffect } from "react";
+ * import { useToast } from "@amerfathullah/myds-react/hooks";
+ * import {
+ *   ToastClose,
+ *   ToastDescription,
+ *   ToastIcon,
+ *   ToastProgress,
+ *   ToastProvider,
+ *   ToastRoot,
+ *   ToastTitle,
+ *   ToastViewport,
+ * } from "@amerfathullah/myds-react/toast";
+ *
+ * // Mount the toaster once in your app, high up the tree, in place of AutoToast
+ * export default function Toaster() {
+ *   const { toasts, subscribe, unsubscribe } = useToast();
+ *
+ *   // Show each toast that toast() from useToast publishes
+ *   useEffect(() => {
+ *     subscribe();
+ *     return () => {
+ *       unsubscribe();
+ *     };
+ *   }, []);
+ *
+ *   return (
+ *     <ToastProvider>
+ *       {toasts.map((event, index) => (
+ *         <ToastRoot key={index} variant={event.variant || "message"}>
+ *           <ToastIcon />
+ *           <div className="space-y-1">
+ *             <ToastTitle>{event.title}</ToastTitle>
+ *             {event.description && (
+ *               <ToastDescription>{event.description}</ToastDescription>
+ *             )}
+ *           </div>
+ *           <ToastClose />
+ *           <ToastProgress />
+ *         </ToastRoot>
+ *       ))}
+ *
+ *       <ToastViewport />
+ *     </ToastProvider>
+ *   );
+ * }
  * ```
  */
 const meta = {

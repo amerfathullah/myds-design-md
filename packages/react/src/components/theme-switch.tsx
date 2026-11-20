@@ -1,5 +1,5 @@
 import { FunctionComponent, isValidElement, ReactNode } from "react";
-import { MoonIcon, SunIcon } from "../icons";
+import { DesktopIcon, MoonIcon, SunIcon } from "../icons";
 import { Button } from "./button";
 import { useTheme } from "../hooks/use-theme";
 import {
@@ -23,6 +23,8 @@ interface ThemeSwitch {
   onChange?: (value: string) => void;
   /** Accessible name of the select trigger when `as="select"`; announced, not shown. */
   selectLabel?: string;
+  /** Accessible name of the toggle while the provider's theme isn't one of this switch's `themes`, when `as="toggle"`; announced, not shown. */
+  toggleLabel?: string;
 }
 
 const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
@@ -33,54 +35,52 @@ const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
   ],
   onChange,
   selectLabel = "Theme",
+  toggleLabel = "Theme",
 }) => {
   const { theme, setTheme, defaultTheme } = useTheme();
   // The provider's theme in `themes`, worked out on every render, so the
-  // server HTML already shows it
+  // server HTML already shows it. It's -1 while the theme is unlisted: one
+  // `themes` doesn't hold, such as "system" chosen in another switch.
   const currentIndex = themes.findIndex((t) => t.value === theme);
+  const current = themes[currentIndex];
 
   const getTheme = (value: string) =>
     themes.find((theme) => theme.value === value);
 
-  const displayIcon = (value?: string | null) => {
-    if (!value) return null;
-    const _theme = getTheme(value);
-    if (isValidElement(_theme?.icon))
-      return (
-        <Slot className={"text-txt-black-900 size-4 flex-shrink-0"}>
-          {_theme?.icon}
-        </Slot>
-      );
-    return _theme?.icon;
+  // An element icon is drawn at 16px in `txt-black-900`; any other icon,
+  // such as an emoji, as given
+  const styledIcon = (icon: ReactNode) =>
+    isValidElement(icon) ? (
+      <Slot className={"text-txt-black-900 size-4 flex-shrink-0"}>{icon}</Slot>
+    ) : (
+      icon
+    );
+
+  // What both forms show while the theme is unlisted, as System is most often
+  const unlistedIcon = styledIcon(<DesktopIcon />);
+
+  const change = (value: string) => {
+    setTheme(value);
+    if (onChange) onChange(value);
   };
 
   /*------------------ as toggle -----------------*/
-  const handleChange = (value?: string) => {
-    if (themes.length <= 1) return;
-
-    if (as === "toggle") {
-      const next = themes[(currentIndex + 1) % themes.length]!.value;
-      setTheme(next);
-      if (onChange) onChange(next);
-    } else if (as === "select") {
-      if (!value) return;
-      setTheme(value);
-      if (onChange) onChange(value);
-    }
-  };
-
   if (as === "toggle")
     return (
       <Button
         variant="default-ghost"
         className="aspect-square flex-shrink-0 rounded-md"
-        onClick={() => handleChange()}
+        // The next theme, or the first while the theme is unlisted. A switch
+        // with nothing else to switch to does nothing.
+        onClick={() => {
+          const next = themes[(currentIndex + 1) % themes.length]?.value;
+          if (next !== undefined && next !== theme) change(next);
+        }}
         size="small"
-        aria-label={themes[currentIndex]?.label}
+        aria-label={current ? current.label : toggleLabel}
         iconOnly
       >
-        {displayIcon(themes[currentIndex]?.value) ||
-          themes[currentIndex]?.label}
+        {current ? styledIcon(current.icon) || current.label : unlistedIcon}
       </Button>
     );
 
@@ -91,16 +91,22 @@ const ThemeSwitch: FunctionComponent<ThemeSwitch> = ({
       size="small"
       variant="outline"
       value={theme || defaultTheme}
-      onValueChange={handleChange}
+      // Radix's Select calls it only for a theme other than its value
+      onValueChange={(value) => value && change(value)}
     >
       <SelectTrigger aria-label={selectLabel}>
         <SelectValue>
-          {(value) => (
-            <div className="flex items-center gap-2">
-              <div>{displayIcon(value as string)}</div>
-              <span>{getTheme(value as string)?.label}</span>
-            </div>
-          )}
+          {(value) => {
+            const selected = getTheme(value as string);
+            // An unlisted value shows the icon alone: text would be read
+            // after the trigger's name, as "Theme, Theme"
+            return (
+              <div className="flex items-center gap-2">
+                <div>{selected ? styledIcon(selected.icon) : unlistedIcon}</div>
+                {selected && <span>{selected.label}</span>}
+              </div>
+            );
+          }}
         </SelectValue>
       </SelectTrigger>
       <SelectContent align="end">

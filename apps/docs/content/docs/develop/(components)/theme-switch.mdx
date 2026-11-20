@@ -61,6 +61,8 @@ export default () => (
 
 By default, `ThemeSwitch` will appear as a toggle button, switching between `light` and `dark` mode, just like below.
 
+If ThemeProvider's theme isn't one of this ThemeSwitch's `themes`, for example System chosen in another switch, the toggle shows a monitor icon and screen readers announce it as "Theme". Clicking it switches to the first of its `themes`. Set `toggleLabel` to name it in your site's language, for example `toggleLabel="Tema"`.
+
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
     <div className="flex justify-center">
@@ -382,6 +384,12 @@ node -e 'console.log(require("@amerfathullah/myds-react/utils").getThemeScript()
     selectLabel: {
       description:
         'Accessible name of the select, when `as="select"`. Screen readers announce it; it is not shown.',
+      type: "string",
+      default: "Theme",
+    },
+    toggleLabel: {
+      description:
+        "Accessible name of the toggle while ThemeProvider's theme isn't one of `themes`, when `as=\"toggle\"`. Screen readers announce it; it is not shown.",
       type: "string",
       default: "Theme",
     },

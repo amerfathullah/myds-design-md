@@ -53,6 +53,15 @@ const meta = {
         'Accessible name of the select trigger, when `as="select"`. Screen readers announce it; it is not shown.',
       control: "text",
     },
+    toggleLabel: {
+      table: {
+        type: { summary: "string" },
+        defaultValue: { summary: '"Theme"' },
+      },
+      description:
+        "Accessible name of the toggle while ThemeProvider's theme isn't one of `themes`, when `as=\"toggle\"`. Screen readers announce it; it is not shown.",
+      control: "text",
+    },
   },
 } satisfies Meta<typeof ThemeSwitch>;
 

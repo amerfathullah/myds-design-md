@@ -492,6 +492,7 @@ export const Themes = ({ resolvedTheme }: { resolvedTheme?: string }) => (
       themes={["light", "dark", "system"]}
     >
       <ThemeSwitch as="select" selectLabel="Tema" />
+      <ThemeSwitch toggleLabel="Tema" />
       <ThemeName />
     </ThemeProvider>
     {/* @ts-expect-error `themes` is a list of names */}

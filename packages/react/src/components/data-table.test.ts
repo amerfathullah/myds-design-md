@@ -165,6 +165,186 @@ const modes = [
   ["radio", rowRadios],
 ] as const;
 
+describe("The table's name", () => {
+  // The only `<table>` in `within`
+  const tableIn = (within: ParentNode) => {
+    const tables = within.querySelectorAll("table");
+    expect(tables).toHaveLength(1);
+    return tables[0]!;
+  };
+
+  // A heading above a DataTable of `people` with `props`, as a page names
+  // its table with a visible title
+  const headedTable = (
+    props: Partial<ComponentProps<typeof DataTable<Person>>>,
+  ) =>
+    mount(
+      createElement(
+        "section",
+        null,
+        createElement("h2", { id: "tajuk-pemohon" }, "Senarai pemohon"),
+        createElement(DataTable<Person>, {
+          columns: [nameColumn],
+          data: people,
+          ...props,
+        }),
+      ),
+    );
+
+  test("is `aria-label`, which lands on the `<table>`", async () => {
+    const page = await dataTable<Person>({
+      columns: [nameColumn],
+      data: people,
+      "aria-label": "Senarai pemohon",
+    });
+    const table = tableIn(page);
+    expect(computeAccessibleName(table)).toBe("Senarai pemohon");
+    expect(table.getAttribute("aria-label")).toBe("Senarai pemohon");
+  });
+
+  test("is the text of the heading `aria-labelledby` points at", async () => {
+    const page = await headedTable({ "aria-labelledby": "tajuk-pemohon" });
+    const table = tableIn(page);
+    expect(computeAccessibleName(table)).toBe("Senarai pemohon");
+    expect(table.getAttribute("aria-labelledby")).toBe("tajuk-pemohon");
+  });
+
+  test("is `aria-labelledby`'s when both are passed", async () => {
+    const page = await headedTable({
+      "aria-label": "Pemohon",
+      "aria-labelledby": "tajuk-pemohon",
+    });
+    const table = tableIn(page);
+    expect(computeAccessibleName(table)).toBe("Senarai pemohon");
+    expect({
+      label: table.getAttribute("aria-label"),
+      labelledBy: table.getAttribute("aria-labelledby"),
+    }).toEqual({ label: "Pemohon", labelledBy: "tajuk-pemohon" });
+  });
+
+  test("tells two tables on one page apart", async () => {
+    const page = await mount(
+      createElement(
+        "div",
+        null,
+        createElement("h2", { id: "tajuk-pegawai" }, "Senarai pegawai"),
+        createElement(DataTable<Person>, {
+          columns: [nameColumn],
+          data: people,
+          "aria-labelledby": "tajuk-pegawai",
+        }),
+        createElement(DataTable<Person>, {
+          columns: [nameColumn],
+          data: people,
+          "aria-label": "Senarai pemohon",
+        }),
+      ),
+    );
+    expect(namesOf(page, "table")).toEqual([
+      "Senarai pegawai",
+      "Senarai pemohon",
+    ]);
+  });
+
+  test("is empty by default, and the `<table>` has neither attribute", async () => {
+    const page = await dataTable<Person>({
+      columns: [nameColumn],
+      data: people,
+    });
+    const table = tableIn(page);
+    expect(computeAccessibleName(table)).toBe("");
+    expect({
+      label: table.hasAttribute("aria-label"),
+      labelledBy: table.hasAttribute("aria-labelledby"),
+    }).toEqual({ label: false, labelledBy: false });
+  });
+
+  test.each([
+    ["while `loading`", { loading: true }],
+    ["with no rows", { data: [] }],
+  ])("holds %s", async (_, props) => {
+    const page = await headedTable({
+      "aria-labelledby": "tajuk-pemohon",
+      ...props,
+    });
+    expect(namesOf(page, "table")).toEqual(["Senarai pemohon"]);
+    const second = await dataTable<Person>({
+      columns: [nameColumn],
+      data: people,
+      "aria-label": "Senarai pegawai",
+      ...props,
+    });
+    expect(namesOf(second, "table")).toEqual(["Senarai pegawai"]);
+  });
+
+  test("is set only on the `<table>`, not on its scroll wrapper or any other element", async () => {
+    const page = await headedTable({
+      className: "max-h-[300px]",
+      "aria-label": "Pemohon",
+      "aria-labelledby": "tajuk-pemohon",
+    });
+    const table = tableIn(page);
+    const wrapper = table.parentElement!;
+    // `className` still styles the wrapper
+    expect(wrapper.classList.contains("max-h-[300px]")).toBe(true);
+    expect({
+      label: wrapper.hasAttribute("aria-label"),
+      labelledBy: wrapper.hasAttribute("aria-labelledby"),
+    }).toEqual({ label: false, labelledBy: false });
+    expect([
+      ...page.querySelectorAll("[aria-label], [aria-labelledby]"),
+    ]).toEqual([table]);
+  });
+
+  test("leaves DataTable's other options off the `<table>`", async () => {
+    const page = await headedTable({
+      className: "max-h-[300px]",
+      loading: false,
+      emptyState: "Tiada pemohon",
+      nest: { id_by: "children" },
+      "aria-label": "Pemohon",
+      "aria-labelledby": "tajuk-pemohon",
+    });
+    expect(tableIn(page).getAttributeNames().sort()).toEqual([
+      "aria-label",
+      "aria-labelledby",
+      "class",
+    ]);
+  });
+
+  test("is in the server-rendered HTML, on the `<table>`", () => {
+    const served = document.createElement("div");
+    served.innerHTML = renderToString(
+      createElement(
+        "div",
+        null,
+        createElement(DataTable<Person>, {
+          columns: [nameColumn],
+          data: people,
+          "aria-label": "Senarai pemohon",
+        }),
+        createElement(DataTable<Person>, {
+          columns: [nameColumn],
+          data: people,
+          "aria-labelledby": "tajuk-pegawai",
+        }),
+      ),
+    );
+    const tables = [...served.querySelectorAll("table")];
+    expect(tables.map((table) => table.getAttribute("aria-label"))).toEqual([
+      "Senarai pemohon",
+      null,
+    ]);
+    expect(
+      tables.map((table) => table.getAttribute("aria-labelledby")),
+    ).toEqual([null, "tajuk-pegawai"]);
+    // Only the `<table>`s carry them
+    expect([
+      ...served.querySelectorAll("[aria-label], [aria-labelledby]"),
+    ]).toEqual(tables);
+  });
+});
+
 describe.each(modes)("Each row's control in %s selection", (mode, controls) => {
   test('is named "Select row N" by default', async () => {
     const page = await dataTable({

@@ -416,7 +416,7 @@ const [value, setValue] = useState("")
 
 ### RadioHintText
 
-`RadioHintText` menggunakan prop yang sama seperti elemen `div` biasa. Ia menerangkan `RadioButton` dalam `RadioItem`nya: pembaca skrin membacanya selepas nama radio, yang diberikan oleh `RadioLabel`, bukan sebagai sebahagian daripada nama itu. `RadioButton` menunjukkan `aria-describedby`nya kepada setiap petunjuk dalam itemnya, mengikut susunan, sebelum sebarang id yang anda berikan kepadanya, jadi anda tidak perlu menyambungkan petunjuk itu sendiri. Mengklik petunjuk tidak memilih radio; mengklik `RadioLabel` memilihnya.
+`RadioHintText` menggunakan prop yang sama seperti elemen `div` biasa. Ia menerangkan `RadioButton` dalam `RadioItem`nya: pembaca skrin membacanya selepas nama radio, yang diberikan oleh `RadioLabel`, bukan sebagai sebahagian daripada nama itu. `RadioButton` menunjukkan `aria-describedby`nya kepada setiap petunjuk dalam itemnya, mengikut susunan, sebelum sebarang id yang anda berikan kepadanya, jadi anda tidak perlu menyambungkan petunjuk itu sendiri. Mengklik petunjuk tidak memilih radio; mengklik `RadioLabel` memilihnya. Dalam `RadioItem` atau `Radio` yang dinyahaktifkan, petunjuk ditanda dengan `aria-disabled`, sebagai sebahagian daripada pilihan yang tidak aktif.
 
 <TypeTable
   type={{

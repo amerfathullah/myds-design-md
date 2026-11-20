@@ -416,7 +416,7 @@ const [value, setValue] = useState("")
 
 ### RadioHintText
 
-`RadioHintText` uses the same props as a regular `div` element. It describes the `RadioButton` in its `RadioItem`: screen readers read it after the radio's name, which the `RadioLabel` gives, not as part of the name. The `RadioButton` points its `aria-describedby` at each hint in its item, in order, before any ids you pass it, so you don't wire the hint yourself. Clicking the hint doesn't select the radio; clicking the `RadioLabel` does.
+`RadioHintText` uses the same props as a regular `div` element. It describes the `RadioButton` in its `RadioItem`: screen readers read it after the radio's name, which the `RadioLabel` gives, not as part of the name. The `RadioButton` points its `aria-describedby` at each hint in its item, in order, before any ids you pass it, so you don't wire the hint yourself. Clicking the hint doesn't select the radio; clicking the `RadioLabel` does. In a disabled `RadioItem` or `Radio`, the hint is marked `aria-disabled`, as part of the inactive option.
 
 <TypeTable
   type={{

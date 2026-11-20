@@ -111,12 +111,15 @@ const MastheadTrigger: FunctionComponent<ComponentProps<"button">> = ({
   return (
     <CollapsibleTrigger
       className="text-txt-primary focus:ring-fr-primary bg-otl-gray-200 group flex items-center gap-0.5 rounded-md p-1 px-1 focus:outline-hidden focus:ring-3 focus:ring-inset sm:bg-transparent sm:pl-1.5 xl:rounded-sm"
-      aria-label="Toggle masthead"
+      // Children name the button. With none, it shows only the chevron.
+      aria-label={children ? undefined : "Toggle masthead"}
       tabIndex={0}
       onClick={handleToggle}
       {...props}
     >
-      <span className="text-txt-primary hidden select-none tracking-[-0.01em] sm:block">
+      {/* Below `sm:` the text is visually hidden, but it still names the
+          button, which shows only its chevron */}
+      <span className="text-txt-primary tracking-[-0.01em] select-none max-sm:sr-only">
         {children}
       </span>
       <ChevronDownIcon className="size-4 transform transition-transform group-data-[state=closed]:rotate-0 group-data-[state=open]:rotate-180" />

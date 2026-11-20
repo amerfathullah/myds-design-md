@@ -18,6 +18,8 @@ import { computeAccessibleName } from "dom-accessibility-api";
 import ts from "typescript";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { codeBlocks, commentText, metaComment } from "./docs-samples";
+
 const root = resolve(__dirname, "../..");
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
   name: string;
@@ -172,35 +174,6 @@ test("no test file is built, or exported as an entry", () => {
 /*========================================================================================================================*/
 // The samples
 
-type Block = { info: string; code: string; line: number };
-
-// The fenced code blocks in `text`: each one's info string, its code as a
-// reader copies it, with the fence's indent removed from each line as
-// Markdown removes it, and the line its opening fence is on
-function codeBlocks(text: string): Block[] {
-  const lines = text.split("\n");
-  const blocks: Block[] = [];
-  for (let start = 0; start < lines.length; start++) {
-    const open = /^( *)```(.*)$/.exec(lines[start]!);
-    if (!open) continue;
-    const indent = new RegExp(`^ {0,${open[1]!.length}}`);
-    let end = start + 1;
-    while (end < lines.length && !/^ *```\s*$/.test(lines[end]!)) end++;
-    if (end === lines.length)
-      throw new Error(`The fence on line ${start + 1} isn't closed`);
-    blocks.push({
-      info: open[2]!.trim(),
-      code: lines
-        .slice(start + 1, end)
-        .map((line) => line.replace(indent, ""))
-        .join("\n"),
-      line: start + 1,
-    });
-    start = end;
-  }
-  return blocks;
-}
-
 // Each Toast develop page, and the words it uses where the samples are
 const pages = {
   en: {
@@ -241,26 +214,10 @@ function samplesOf(page: Page) {
 }
 
 // The Toast story's doc comment, the JSDoc on `meta`, as written in the file
-function storyComment() {
-  const text = readFileSync(storyFile, "utf8");
-  const end = text.indexOf("\nconst meta = ");
-  expect(end).toBeGreaterThan(-1);
-  const start = text.lastIndexOf("/**", end);
-  expect(start).toBeGreaterThan(-1);
-  return text.slice(start, end).trim();
-}
+const storyComment = () => metaComment(readFileSync(storyFile, "utf8"));
 
-// The code blocks in the story's doc comment, with each line's leading ` * `
-// stripped
-const storyBlocks = () =>
-  codeBlocks(
-    storyComment()
-      .replace(/^\/\*\*/, "")
-      .replace(/\*\/$/, "")
-      .split("\n")
-      .map((line) => line.replace(/^\s*\* ?/, ""))
-      .join("\n"),
-  );
+// The code blocks in the story's doc comment
+const storyBlocks = () => codeBlocks(commentText(storyComment()));
 
 // Every sample a consumer pastes into a file of its own, by name
 function samples() {

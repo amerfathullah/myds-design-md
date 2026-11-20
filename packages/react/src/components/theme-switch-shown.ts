@@ -1,9 +1,7 @@
-/**
- * Reads what a ThemeSwitch shows, for its tests: the toggle's accessible name
- * and content, and the select trigger's name and value area. Shared by the
- * server HTML tests and the browser tests. No entry imports it, so the build
- * leaves it out.
- */
+// Reads what a ThemeSwitch shows, for its tests: the toggle's accessible name
+// and content, and the select trigger's name and value area. Shared by the
+// server HTML tests and the browser tests. It's a `.ts` file, so the build,
+// which takes `src/components/**/*.tsx` as entries, leaves it out.
 import { DesktopIcon, MoonIcon, SunIcon } from "../icons";
 import { isIcon } from "../svg/icon-test-markup";
 
@@ -45,4 +43,9 @@ export function selectShows(container: ParentNode) {
   const value = trigger?.firstElementChild;
   if (!trigger || !value) throw new Error("There is no select trigger");
   return { name: trigger.getAttribute("aria-label"), ...contentOf(value) };
+}
+
+/** What the ThemeSwitch in `container` shows, read as its form `as` shows it */
+export function shows(as: "toggle" | "select", container: ParentNode) {
+  return as === "toggle" ? toggleShows(container) : selectShows(container);
 }

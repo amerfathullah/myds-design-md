@@ -12,38 +12,11 @@ import {
 } from "vitest";
 
 import { ThemeProvider } from "../hooks/use-theme";
-import { MoonIcon, SunIcon } from "../icons";
-import { containsIcon } from "../svg/icon-test-markup";
 import { ThemeSwitch } from "./theme-switch";
-import { selectShows, toggleShows } from "./theme-switch-shown";
-
-// The theme icons, by the name each test expects
-const themeIcons = { sun: SunIcon, moon: MoonIcon };
+import { selectShows, shows, toggleShows } from "./theme-switch-shown";
 
 type ProviderProps = Omit<ComponentProps<typeof ThemeProvider>, "children">;
 type SwitchProps = ComponentProps<typeof ThemeSwitch>;
-
-// The theme a ThemeSwitch shows in server HTML: the toggle's accessible name
-// and the select trigger's text, with the icon either one shows
-function shown(as: "toggle" | "select", props: ProviderProps) {
-  const html = renderToStaticMarkup(
-    createElement(ThemeProvider, {
-      ...props,
-      children: createElement(ThemeSwitch, { as }),
-    }),
-  );
-  return {
-    label:
-      as === "toggle"
-        ? html.match(/^<button\s[^>]*\saria-label="([^"]*)"/)?.[1]
-        : html.match(/<span>([^<]*)<\/span>/)?.[1],
-    // The one theme icon whose drawing the HTML holds
-    icon: Object.entries(themeIcons)
-      .filter(([, icon]) => containsIcon(html, icon))
-      .map(([name]) => name)
-      .join(),
-  };
-}
 
 // A page to read server HTML on as elements. Server HTML runs no script.
 const page = new Window();
@@ -62,6 +35,16 @@ function server(provider: ProviderProps, props: SwitchProps) {
   container.innerHTML = html;
   // happy-dom's elements have the DOM's shape, though not its types
   return { html, container: container as unknown as HTMLElement };
+}
+
+// The theme a ThemeSwitch shows in server HTML: the toggle's accessible name
+// and the select trigger's text, with the icon either one shows
+function shown(as: "toggle" | "select", props: ProviderProps) {
+  const { name, text, icons } = shows(as, server(props, { as }).container);
+  return {
+    label: as === "toggle" ? name : text,
+    icon: icons.map(({ icon }) => icon).join(),
+  };
 }
 
 // Server HTML that disagrees with the first client render makes React warn
@@ -117,10 +100,9 @@ const unlisted: [string, ProviderProps, SwitchProps][] = [
 // its fallback icon carries too
 function sunClasses(as: "toggle" | "select") {
   const { container } = server({}, { as });
-  const shows =
-    as === "toggle" ? toggleShows(container) : selectShows(container);
-  expect(shows.icons).toEqual([{ icon: "sun", classes: expect.any(String) }]);
-  return shows.icons[0]!.classes;
+  const { icons } = shows(as, container);
+  expect(icons).toEqual([{ icon: "sun", classes: expect.any(String) }]);
+  return icons[0]!.classes;
 }
 
 describe("ThemeSwitch as toggle, under a theme it doesn't list", () => {
@@ -189,9 +171,7 @@ describe.each(["toggle", "select"] as const)(
         { defaultTheme: "dark" },
         { as, toggleLabel: "Tema" },
       );
-      const shows =
-        as === "toggle" ? toggleShows(container) : selectShows(container);
-      expect(shows).toMatchObject({
+      expect(shows(as, container)).toMatchObject({
         name: as === "toggle" ? "Dark" : "Theme",
         text: as === "toggle" ? "" : "Dark",
         icons: [{ icon: "moon" }],

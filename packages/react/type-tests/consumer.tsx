@@ -81,6 +81,7 @@ import {
 import {
   SearchBar,
   SearchBarClearButton,
+  SearchBarInput,
   SearchBarInputContainer,
   SearchBarResults,
   SearchBarResultsList,
@@ -534,6 +535,34 @@ export const CloseLabels = () => (
     <Callout dismissible closeLabel={1} />
   </>
 );
+
+// SearchBarInput is named by its own `aria-labelledby`, then its own
+// `aria-label`, then SearchBar's `label` (#178). It takes an `id`, which
+// doesn't reach its <input>, and no `asChild`, which it always sets (#206).
+export const SearchBarInputNames = () => {
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <SearchBar label="Cari nama">
+        <SearchBarInputContainer>
+          <SearchBarInput
+            ref={input}
+            id="q"
+            aria-label="Cari nama"
+            aria-labelledby="nama"
+            aria-describedby="petunjuk"
+          />
+        </SearchBarInputContainer>
+      </SearchBar>
+      {/* @ts-expect-error SearchBarInput takes no `asChild` */}
+      <SearchBarInput asChild />
+      {/* @ts-expect-error SearchBarInput takes no `asChild` */}
+      <SearchBarInput asChild={false} />
+      {/* @ts-expect-error SearchBar's `label` is a string */}
+      <SearchBar label={1} />
+    </>
+  );
+};
 
 // AutoPagination names the controls it renders from its label props, and
 // `pageLabel` names each page button from its number

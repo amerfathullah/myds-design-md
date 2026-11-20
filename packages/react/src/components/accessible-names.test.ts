@@ -35,6 +35,7 @@ import {
   CookieBannerTitle,
 } from "./cookie-banner";
 import { Dialog, DialogBody, DialogDescription, DialogTitle } from "./dialog";
+import { Label } from "./label";
 import { Pill } from "./pill";
 import {
   Masthead,
@@ -631,6 +632,216 @@ describe("SearchBarResultsList", () => {
   test("takes its name from an `aria-label` over `label`", async () => {
     const page = await results({ "aria-label": "Cadangan", label: "Senarai" });
     expect(nameOf(page, '[role="listbox"]')).toBe("Cadangan");
+  });
+});
+
+// SearchBarInput is a form control the author names, so it has no default
+// (ADR-0008's Scope). Its own `aria-labelledby` names it, then its own
+// `aria-label`, then SearchBar's `label`, which cmdk renders in a hidden
+// `<label>` (#178).
+describe("SearchBarInput's name", () => {
+  type BarProps = Omit<ComponentProps<typeof SearchBar>, "children">;
+  type InputProps = ComponentProps<typeof SearchBarInput>;
+
+  // A SearchBar whose input takes `input`, as the docs compose one, with the
+  // docs' placeholder
+  const searchBar = (bar: BarProps = {}, input: InputProps = {}) =>
+    createElement(
+      SearchBar,
+      bar,
+      createElement(
+        SearchBarInputContainer,
+        null,
+        createElement(SearchBarInput, {
+          placeholder: "Search by name",
+          ...input,
+        }),
+      ),
+    );
+
+  // The one <input> in `within`
+  function inputIn(within: ParentNode) {
+    const [input, ...others] = within.querySelectorAll("input");
+    expect(others).toEqual([]);
+    expect(input).toBeDefined();
+    return input!;
+  }
+
+  // The `id` of cmdk's hidden `<label>` in `within`, which SearchBar's
+  // `label` fills
+  function cmdkLabelId(within: ParentNode) {
+    const [label, ...others] = within.querySelectorAll("label[cmdk-label]");
+    expect(others).toEqual([]);
+    expect(label?.id).toBeTruthy();
+    return label!.id;
+  }
+
+  // Mounts a SearchBar after `before`, such as a Label or a heading, and
+  // returns its <input>
+  async function input(
+    bar: BarProps,
+    props: InputProps,
+    before: ReactElement | null = null,
+  ) {
+    const page = await mount(
+      createElement("div", null, before, searchBar(bar, props)),
+    );
+    return inputIn(page);
+  }
+
+  test("is the placeholder-only input's empty name: there is no default", async () => {
+    const field = await input({}, {});
+    expect(field.getAttribute("role")).toBe("combobox");
+    expect(computeAccessibleName(field)).toBe("");
+  });
+
+  test("comes from its `aria-label`, and cmdk's `aria-labelledby` is dropped", async () => {
+    const field = await input({}, { "aria-label": "Cari nama" });
+    expect(computeAccessibleName(field)).toBe("Cari nama");
+    expect(field.hasAttribute("aria-labelledby")).toBe(false);
+  });
+
+  test("comes from a Label's `id` that its `aria-labelledby` points at", async () => {
+    const field = await input(
+      {},
+      { "aria-labelledby": "nama" },
+      createElement(Label, { id: "nama" }, "Cari nama"),
+    );
+    expect(field.getAttribute("aria-labelledby")).toBe("nama");
+    expect(computeAccessibleName(field)).toBe("Cari nama");
+  });
+
+  test("comes from a heading its `aria-labelledby` points at", async () => {
+    const field = await input(
+      {},
+      { "aria-labelledby": "tajuk" },
+      createElement("h2", { id: "tajuk" }, "Cari pegawai"),
+    );
+    expect(computeAccessibleName(field)).toBe("Cari pegawai");
+  });
+
+  test("comes from its `aria-labelledby` over its `aria-label`", async () => {
+    const field = await input(
+      {},
+      { "aria-labelledby": "tajuk", "aria-label": "Nama" },
+      createElement("h2", { id: "tajuk" }, "Cari pegawai"),
+    );
+    expect(computeAccessibleName(field)).toBe("Cari pegawai");
+  });
+
+  test("comes from SearchBar's `label`", async () => {
+    const field = await input({ label: "Cari nama" }, {});
+    expect(computeAccessibleName(field)).toBe("Cari nama");
+  });
+
+  test("comes from its `aria-label` over SearchBar's `label`", async () => {
+    const field = await input({ label: "Cari nama" }, { "aria-label": "Nama" });
+    expect(computeAccessibleName(field)).toBe("Nama");
+  });
+
+  test("comes from its `aria-labelledby` over SearchBar's `label`", async () => {
+    const field = await input(
+      { label: "Cari nama" },
+      { "aria-labelledby": "tajuk" },
+      createElement("h2", { id: "tajuk" }, "Cari pegawai"),
+    );
+    expect(computeAccessibleName(field)).toBe("Cari pegawai");
+  });
+
+  // A prop-forwarding wrapper passes `undefined`, and an empty or blank
+  // string names nothing, so each counts as not passed
+  test.each<[string, InputProps]>([
+    ["aria-labelledby={undefined}", { "aria-labelledby": undefined }],
+    ['aria-labelledby=""', { "aria-labelledby": "" }],
+    ['aria-labelledby="  "', { "aria-labelledby": "  " }],
+    ["aria-label={undefined}", { "aria-label": undefined }],
+    ['aria-label=""', { "aria-label": "" }],
+    ['aria-label="  "', { "aria-label": "  " }],
+  ])(
+    "comes from SearchBar's `label` with %s, through cmdk's hidden label",
+    async (_, props) => {
+      const page = await mount(searchBar({ label: "Cari nama" }, props));
+      const field = inputIn(page);
+      expect(computeAccessibleName(field)).toBe("Cari nama");
+      expect(field.getAttribute("aria-labelledby")).toBe(cmdkLabelId(page));
+    },
+  );
+
+  test('comes from its `aria-label` with aria-labelledby=""', async () => {
+    const field = await input(
+      {},
+      { "aria-labelledby": "", "aria-label": "Cari nama" },
+    );
+    expect(computeAccessibleName(field)).toBe("Cari nama");
+    expect(field.hasAttribute("aria-labelledby")).toBe(false);
+  });
+
+  test("is each SearchBar's own, with several on one page", async () => {
+    const bars = (ids: string[]) =>
+      ids.map((id) =>
+        createElement("div", { key: id, "data-bar": id }, [
+          createElement(Label, { key: "label", id }, `Cari ${id}`),
+          createElement(
+            SearchBar,
+            { key: "bar" },
+            createElement(SearchBarInput, { "aria-labelledby": id }),
+          ),
+        ]),
+      );
+    const page = await mount(
+      createElement(
+        "div",
+        null,
+        createElement(
+          "div",
+          { "data-bar": "satu" },
+          searchBar({}, { "aria-label": "Satu" }),
+        ),
+        createElement(
+          "div",
+          { "data-bar": "dua" },
+          searchBar({ label: "Dua" }),
+        ),
+        ...bars(["negeri", "daerah"]),
+      ),
+    );
+    const named = (bar: string) =>
+      computeAccessibleName(inputIn(page.querySelector(`[data-bar=${bar}]`)!));
+    expect(["satu", "dua", "negeri", "daerah"].map(named)).toEqual([
+      "Satu",
+      "Dua",
+      "Cari negeri",
+      "Cari daerah",
+    ]);
+  });
+
+  test("follows an `aria-label` added and removed across renders", async () => {
+    const container = document.body.appendChild(document.createElement("div"));
+    const root = createRoot(container);
+    unmounts.push(async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    });
+    const names: string[] = [];
+    for (const props of [{}, { "aria-label": "Nama" }, {}]) {
+      await act(async () =>
+        root.render(searchBar({ label: "Cari nama" }, props)),
+      );
+      names.push(computeAccessibleName(inputIn(container)));
+    }
+    expect(names).toEqual(["Cari nama", "Nama", "Cari nama"]);
+    expect(inputIn(container).getAttribute("aria-labelledby")).toBe(
+      cmdkLabelId(container),
+    );
+  });
+
+  test("leaves an `aria-describedby` on the <input>", async () => {
+    const field = await input(
+      {},
+      { "aria-label": "Cari nama", "aria-describedby": "petunjuk" },
+      createElement("p", { id: "petunjuk" }, "Taip sekurang-kurangnya 3 huruf"),
+    );
+    expect(field.getAttribute("aria-describedby")).toBe("petunjuk");
   });
 });
 

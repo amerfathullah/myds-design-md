@@ -2,13 +2,16 @@
 import {
   act,
   createElement,
+  useState,
   type ComponentProps,
   type ReactElement,
 } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
+import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { Label } from "./label";
 import {
   SearchBar,
   SearchBarInput,
@@ -301,4 +304,185 @@ describe("server rendering", () => {
     expect(panel.id).toBe("x");
     expect(input.getAttribute("aria-controls")).toBe("x");
   });
+});
+
+// The people the docs' search lists. "tu" matches every one.
+const people = ["Tunku Abdul Rahman", "Tun Abdul Razak", "Tun Hussein Onn"];
+
+// A SearchBar composed as the docs compose it: its results list is mounted
+// only while there's a query. Its input takes `input`, and choosing a result
+// calls `onSelect` with that result's name.
+function DocsSearch({
+  input = {},
+  onSelect = () => {},
+}: {
+  input?: InputProps;
+  onSelect?: (name: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const hasQuery = query.length > 0;
+  return createElement(
+    SearchBar,
+    null,
+    createElement(
+      SearchBarInputContainer,
+      null,
+      createElement(SearchBarInput, {
+        placeholder: "Search by name",
+        value: query,
+        onValueChange: setQuery,
+        ...input,
+      }),
+    ),
+    createElement(
+      SearchBarResults,
+      { open: hasQuery },
+      hasQuery &&
+        createElement(
+          SearchBarResultsList,
+          null,
+          people.map((name) =>
+            createElement(
+              SearchBarResultsItem,
+              { key: name, value: name, onSelect: () => onSelect(name) },
+              name,
+            ),
+          ),
+        ),
+    ),
+  );
+}
+
+// Types `text` into `input` a character at a time, as a user does
+async function type(input: HTMLInputElement, text: string) {
+  const setValue = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value",
+  )!.set!;
+  for (const character of text)
+    await act(async () => {
+      setValue.call(input, input.value + character);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+}
+
+// Presses `key` on whatever has focus
+const press = (key: string) =>
+  act(async () => {
+    document.activeElement!.dispatchEvent(
+      new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+    );
+  });
+
+// The text of the result cmdk has selected, if any
+const selected = (within: ParentNode) =>
+  within.querySelector('[cmdk-item][aria-selected="true"]')?.textContent;
+
+// cmdk finds its <input> by the id it generates, so an author's `id` never
+// reaches it: with one there, cmdk would move focus to the listbox whenever
+// its selection changed, and typing would stop reaching the input (#178)
+describe("an id on SearchBarInput", () => {
+  test("doesn't reach the <input>, which keeps cmdk's, the `for` of cmdk's hidden label", async () => {
+    const { container } = await mount(
+      createElement(DocsSearch, { input: { id: "q" } }),
+    );
+    const input = container.querySelector("input")!;
+    const label = container.querySelector("label[cmdk-label]")!;
+    expect(input.id).not.toBe("q");
+    expect(input.id).toBeTruthy();
+    expect(label.getAttribute("for")).toBe(input.id);
+  });
+
+  test("leaves focus on the <input> while typing mounts the results", async () => {
+    const { container } = await mount(
+      createElement(DocsSearch, { input: { id: "q" } }),
+    );
+    const input = container.querySelector("input")!;
+    await act(async () => input.focus());
+    await type(input, "tu");
+    expect(document.activeElement).toBe(input);
+    expect(input.value).toBe("tu");
+  });
+
+  test("leaves ArrowDown, ArrowUp and Enter choosing results", async () => {
+    const chosen: string[] = [];
+    const { container } = await mount(
+      createElement(DocsSearch, {
+        input: { id: "q" },
+        onSelect: (name) => void chosen.push(name),
+      }),
+    );
+    const input = container.querySelector("input")!;
+    await act(async () => input.focus());
+    await type(input, "tu");
+    const walk: (string | null | undefined)[] = [];
+    for (const key of ["ArrowDown", "ArrowDown", "ArrowUp"]) {
+      await press(key);
+      walk.push(selected(container));
+    }
+    expect(walk).toEqual([people[0], people[1], people[0]]);
+    expect(document.activeElement).toBe(input);
+    await press("Enter");
+    expect(chosen).toEqual([people[0]]);
+  });
+});
+
+// SearchBarInput always renders its own <input> through cmdk's `asChild`,
+// which is how its `aria-controls` and name beat cmdk's (#206)
+describe("an untyped asChild={false} on SearchBarInput", () => {
+  test("still renders the one <input>, named by its `aria-label`", async () => {
+    const { container } = await mount(
+      createElement(
+        SearchBar,
+        null,
+        createElement(SearchBarInput, {
+          "aria-label": "Cari nama",
+          asChild: false,
+        } as InputProps),
+      ),
+    );
+    const inputs = container.querySelectorAll("input[cmdk-input]");
+    expect(inputs).toHaveLength(1);
+    expect(computeAccessibleName(inputs[0]!)).toBe("Cari nama");
+  });
+});
+
+describe("server rendering an input's name", () => {
+  // Each way the docs name the input: its `aria-label`, a Label's `id` its
+  // `aria-labelledby` points at, and SearchBar's `label`
+  const named = (bar: { label?: string }, input: InputProps) =>
+    createElement(
+      "div",
+      null,
+      createElement(Label, { id: "nama" }, "Cari nama"),
+      createElement(
+        SearchBar,
+        bar,
+        createElement(SearchBarInput, {
+          placeholder: "Search by name",
+          ...input,
+        }),
+      ),
+    );
+  const ways: [string, ReactElement][] = [
+    ["its `aria-label`", named({}, { "aria-label": "Cari nama" })],
+    ["a Label's `id`", named({}, { "aria-labelledby": "nama" })],
+    ["SearchBar's `label`", named({ label: "Cari nama" }, {})],
+  ];
+
+  test.each(ways)("names it by %s in the server HTML", (_, tree) => {
+    const container = serverRender(tree);
+    const input = container.querySelector("input")!;
+    expect(computeAccessibleName(input)).toBe("Cari nama");
+  });
+
+  test.each(ways)(
+    "hydrates without a warning when it's named by %s",
+    async (_, tree) => {
+      const container = serverRender(tree);
+      expect(await hydrate(container, tree)).toEqual([]);
+      const input = container.querySelector("input")!;
+      expect(computeAccessibleName(input)).toBe("Cari nama");
+    },
+  );
 });

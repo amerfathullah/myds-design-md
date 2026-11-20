@@ -55,7 +55,7 @@ const DemoNavbar = () => {
         <Button
           variant="default-ghost"
           iconOnly
-          aria-label="search-button"
+          aria-label="Search"
           size={"small"}
         >
           <ButtonIcon>

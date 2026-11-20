@@ -61,6 +61,8 @@ export default () => (
 
 Secara lalai, `ThemeSwitch` akan muncul sebagai butang togol, beralih antara mod `terang` dan `gelap`, seperti di bawah.
 
+Jika tema ThemeProvider bukan salah satu daripada `themes` ThemeSwitch ini, contohnya Sistem dipilih dalam suis lain, butang togol memaparkan ikon monitor dan pembaca skrin menyebutnya sebagai "Theme". Mengkliknya beralih kepada tema pertama dalam `themes` suis itu. Tetapkan `toggleLabel` untuk menamakannya dalam bahasa laman anda, contohnya `toggleLabel="Tema"`.
+
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
     <div className="flex justify-center">
@@ -384,6 +386,12 @@ node -e 'console.log(require("@amerfathullah/myds-react/utils").getThemeScript()
     selectLabel: {
       description:
         'Nama boleh capai menu pilihan, apabila `as="select"`. Pembaca skrin menyebutnya; ia tidak dipaparkan.',
+      type: "string",
+      default: "Theme",
+    },
+    toggleLabel: {
+      description:
+        'Nama boleh capai butang togol apabila tema ThemeProvider bukan salah satu daripada `themes` dan `as="toggle"`. Pembaca skrin menyebutnya; ia tidak dipaparkan.',
       type: "string",
       default: "Theme",
     },

@@ -270,7 +270,7 @@ export default function NavbarMyds() {
         <Button
           variant="default-ghost"
           iconOnly
-          aria-label="search-button"
+          aria-label="Search"
           size="small"
         >
           <ButtonIcon>
@@ -289,7 +289,7 @@ export default function NavbarMyds() {
             variant="outline"
             size="small"
           >
-            <SelectTrigger aria-label="language-selection">
+            <SelectTrigger aria-label="Language">
               <GlobeIcon className="h-4 w-4" />
               <SelectValue />
             </SelectTrigger>

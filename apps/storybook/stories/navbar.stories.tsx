@@ -169,7 +169,7 @@ export const NavbarCustomMyds = createStory(
           <Button
             variant="default-ghost"
             iconOnly
-            aria-label="search-button"
+            aria-label="Search"
             size={"small"}
           >
             <ButtonIcon>
@@ -183,7 +183,7 @@ export const NavbarCustomMyds = createStory(
           {/* Select Language Toggle  : mobile hide if needed  */}
           <div className="hidden sm:block">
             <Select defaultValue="EN" variant="outline" size="small">
-              <SelectTrigger aria-label="language-selection">
+              <SelectTrigger aria-label="Language">
                 <GlobeIcon className="h-4 w-4"></GlobeIcon>
                 <SelectValue />
               </SelectTrigger>
@@ -248,7 +248,7 @@ export const NavbarCustomKementerianDigital = createStory(
           <Button
             variant="default-ghost"
             iconOnly
-            aria-label="search-button"
+            aria-label="Search"
             size={"small"}
           >
             <ButtonIcon>
@@ -262,7 +262,7 @@ export const NavbarCustomKementerianDigital = createStory(
           {/* Select Language Toggle : mobile hide if needed */}
           <div className="hidden sm:block">
             <Select defaultValue="EN" variant="outline" size="medium">
-              <SelectTrigger aria-label="language-selection">
+              <SelectTrigger aria-label="Language">
                 <GlobeIcon className="h-4 w-4"></GlobeIcon>
                 <SelectValue>{(value) => value || "EN"}</SelectValue>
               </SelectTrigger>

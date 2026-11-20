@@ -100,7 +100,7 @@ function HeaderLogin() {
         <ThemeSwitch />
         <div className="hidden sm:block">
           <Select defaultValue="EN" variant="outline" size="small">
-            <SelectTrigger aria-label="language-selection">
+            <SelectTrigger aria-label="Language">
               <GlobeIcon className="h-4 w-4"></GlobeIcon>
               <SelectValue />
             </SelectTrigger>

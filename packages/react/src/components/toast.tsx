@@ -216,30 +216,50 @@ const toast_icon_cva = cva("size-5 shrink-0", {
   },
 });
 
-// The status icon and the countdown bar are hidden from assistive
-// technology: the toast's title carries its meaning.
-const ToastIcon = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
->((props, ref) => {
-  const { variant } = React.useContext(ToastContext);
-  const className = toast_icon_cva({ variant, className: props.className });
+// The props of ToastIcon and ToastProgress: a `<div>`'s, without
+// `children`, as each draws its own content
+type ToastPartProps = Omit<React.ComponentPropsWithoutRef<"div">, "children">;
 
-  if (!variant || variant === "message") return null;
+/**
+ * The toast's 20px status icon, in the variant's colour: a tick for
+ * `success`, an "i" for `info`, an exclamation mark in a circle for `warning`
+ * and in a triangle for `error`. It draws no icon for `message`.
+ *
+ * Render it inside a `ToastRoot`, which gives it its variant. Outside one it
+ * renders nothing.
+ *
+ * It is hidden from assistive technology (`aria-hidden="true"`), because the
+ * toast's title carries its meaning. A `className` goes on its wrapper, which
+ * its ref gets.
+ */
+const ToastIcon = React.forwardRef<HTMLDivElement, ToastPartProps>(
+  ({ className, ...props }, ref) => {
+    const { variant } = React.useContext(ToastContext);
 
-  return (
-    <div ref={ref} aria-hidden="true" {...props}>
-      {
+    if (!variant || variant === "message") return null;
+
+    const iconClassName = toast_icon_cva({ variant });
+    return (
+      <div
+        aria-hidden="true"
+        {...props}
+        ref={ref}
+        // No `class` attribute without a `className`, as AutoToast's icon
+        // wrapper always had
+        className={clx(className) || undefined}
+      >
         {
-          success: <CheckCircleIcon className={className} />,
-          info: <InfoIcon className={className} />,
-          warning: <WarningCircleIcon className={className} />,
-          error: <WarningIcon className={className} />,
-        }[variant]
-      }
-    </div>
-  );
-});
+          {
+            success: <CheckCircleIcon className={iconClassName} />,
+            info: <InfoIcon className={iconClassName} />,
+            warning: <WarningCircleIcon className={iconClassName} />,
+            error: <WarningIcon className={iconClassName} />,
+          }[variant]
+        }
+      </div>
+    );
+  },
+);
 ToastIcon.displayName = "ToastIcon";
 
 /*========================================================================================================================*/
@@ -256,24 +276,41 @@ const toast_progress_cva = cva("w-full h-1", {
   },
 });
 
-const ToastProgress = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
->((props, ref) => {
-  const { variant, duration } = React.useContext(ToastContext);
+/**
+ * The toast's 4px countdown bar, along its bottom edge. It is filled in the
+ * variant's colour, or `bg-washed` for `message`, and shrinks to nothing over
+ * the toast's `duration`, pausing while the pointer is over the toast.
+ *
+ * Render it inside a `ToastRoot`, which gives it its variant and its duration
+ * (default 5000ms). Outside one it draws the `message` bar over 5000ms.
+ *
+ * It is hidden from assistive technology (`aria-hidden="true"`), because the
+ * toast's title carries its meaning. A `className` adds to the classes that
+ * place and animate the bar, and a conflicting utility, such as `bottom-1`,
+ * replaces only the one it conflicts with. A `style` adds to the bar's
+ * `animationDuration`, which it can also set.
+ */
+const ToastProgress = React.forwardRef<HTMLDivElement, ToastPartProps>(
+  ({ className, style, ...props }, ref) => {
+    const { variant, duration } = React.useContext(ToastContext);
 
-  return (
-    <div
-      aria-hidden="true"
-      ref={ref}
-      className="animate-expire group-hover:paused absolute bottom-0 left-0 w-full group-hover:transition-none"
-      style={{ animationDuration: `${duration}ms` }}
-      {...props}
-    >
-      <div className={toast_progress_cva({ variant })} />
-    </div>
-  );
-});
+    return (
+      <div
+        aria-hidden="true"
+        {...props}
+        ref={ref}
+        className={clx(
+          "animate-expire group-hover:paused absolute bottom-0 left-0 w-full group-hover:transition-none",
+          className,
+        )}
+        style={{ animationDuration: `${duration}ms`, ...style }}
+      >
+        <div className={toast_progress_cva({ variant })} />
+      </div>
+    );
+  },
+);
+ToastProgress.displayName = "ToastProgress";
 
 /*========================================================================================================================*/
 
@@ -349,5 +386,7 @@ export {
   ToastTitle,
   ToastDescription,
   ToastClose,
+  ToastIcon,
+  ToastProgress,
   AutoToast,
 };

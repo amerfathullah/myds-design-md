@@ -96,7 +96,16 @@ import { TableTooltip } from "@amerfathullah/myds-react/table";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 import { TimeField } from "@amerfathullah/myds-react/time-field";
-import { AutoToast, ToastClose } from "@amerfathullah/myds-react/toast";
+import {
+  AutoToast,
+  ToastClose,
+  ToastIcon,
+  ToastProgress,
+  ToastProvider,
+  ToastRoot,
+  ToastTitle,
+  ToastViewport,
+} from "@amerfathullah/myds-react/toast";
 import {
   Toggle,
   ToggleThumb,
@@ -113,9 +122,12 @@ import {
   useContext,
   useRef,
   type ComponentProps,
+  type ComponentPropsWithoutRef,
+  type ForwardRefExoticComponent,
   type FunctionComponent,
   type KeyboardEvent,
   type MouseEvent,
+  type RefAttributes,
 } from "react";
 
 type Employee = {
@@ -1013,3 +1025,44 @@ export const SummaryListTitleFromDivProps = (props: ComponentProps<"div">) => (
 export const SummaryListTitleAsDivComponent: FunctionComponent<
   ComponentProps<"div">
 > = SummaryListHeader;
+
+// ToastIcon and ToastProgress are exported for a toast composed by hand
+// (#172). Each takes a `<div>`'s props but `children`, as each draws its own
+// content, and its ref is its outer `<div>`.
+type ToastPart = ForwardRefExoticComponent<
+  Omit<ComponentPropsWithoutRef<"div">, "children"> &
+    RefAttributes<HTMLDivElement>
+>;
+const toastParts: ToastPart[] = [ToastIcon, ToastProgress];
+
+export const ToastParts = () => {
+  const icon = useRef<HTMLDivElement>(null);
+  const bar = createRef<HTMLDivElement>();
+  return (
+    <ToastProvider>
+      <ToastRoot variant="success" duration={8000}>
+        <ToastIcon ref={icon} className="mt-1" style={{ marginTop: 2 }} />
+        <ToastTitle>Disimpan</ToastTitle>
+        <ToastClose aria-label="Tutup" />
+        <ToastProgress
+          ref={bar}
+          className="opacity-50"
+          style={{ opacity: 0.5 }}
+          data-part="countdown"
+        />
+        {/* @ts-expect-error ToastIcon draws its own icon */}
+        <ToastIcon>!</ToastIcon>
+        {/* @ts-expect-error ToastProgress draws its own bar */}
+        <ToastProgress>
+          <span />
+        </ToastProgress>
+        {/* @ts-expect-error its ref is its outer `<div>` */}
+        <ToastIcon ref={createRef<HTMLButtonElement>()} />
+        {/* @ts-expect-error its ref is its outer `<div>` */}
+        <ToastProgress ref={createRef<HTMLButtonElement>()} />
+      </ToastRoot>
+      {toastParts.length}
+      <ToastViewport />
+    </ToastProvider>
+  );
+};

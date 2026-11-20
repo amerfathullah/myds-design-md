@@ -173,30 +173,36 @@ describe("The table's name", () => {
     return tables[0]!;
   };
 
+  type PeopleTableProps = Partial<ComponentProps<typeof DataTable<Person>>>;
+
+  // A DataTable of `people` with `props`
+  const peopleTable = (props: PeopleTableProps) =>
+    createElement(DataTable<Person>, {
+      columns: [nameColumn],
+      data: people,
+      ...props,
+    });
+
   // A heading above a DataTable of `people` with `props`, as a page names
   // its table with a visible title
-  const headedTable = (
-    props: Partial<ComponentProps<typeof DataTable<Person>>>,
-  ) =>
+  const headedTable = (props: PeopleTableProps) =>
     mount(
       createElement(
         "section",
         null,
         createElement("h2", { id: "tajuk-pemohon" }, "Senarai pemohon"),
-        createElement(DataTable<Person>, {
-          columns: [nameColumn],
-          data: people,
-          ...props,
-        }),
+        peopleTable(props),
       ),
     );
 
+  // Whether `element` has each attribute that names the table
+  const namingAttributes = (element: Element) => ({
+    label: element.hasAttribute("aria-label"),
+    labelledBy: element.hasAttribute("aria-labelledby"),
+  });
+
   test("is `aria-label`, which lands on the `<table>`", async () => {
-    const page = await dataTable<Person>({
-      columns: [nameColumn],
-      data: people,
-      "aria-label": "Senarai pemohon",
-    });
+    const page = await mount(peopleTable({ "aria-label": "Senarai pemohon" }));
     const table = tableIn(page);
     expect(computeAccessibleName(table)).toBe("Senarai pemohon");
     expect(table.getAttribute("aria-label")).toBe("Senarai pemohon");
@@ -228,16 +234,8 @@ describe("The table's name", () => {
         "div",
         null,
         createElement("h2", { id: "tajuk-pegawai" }, "Senarai pegawai"),
-        createElement(DataTable<Person>, {
-          columns: [nameColumn],
-          data: people,
-          "aria-labelledby": "tajuk-pegawai",
-        }),
-        createElement(DataTable<Person>, {
-          columns: [nameColumn],
-          data: people,
-          "aria-label": "Senarai pemohon",
-        }),
+        peopleTable({ "aria-labelledby": "tajuk-pegawai" }),
+        peopleTable({ "aria-label": "Senarai pemohon" }),
       ),
     );
     expect(namesOf(page, "table")).toEqual([
@@ -247,34 +245,27 @@ describe("The table's name", () => {
   });
 
   test("is empty by default, and the `<table>` has neither attribute", async () => {
-    const page = await dataTable<Person>({
-      columns: [nameColumn],
-      data: people,
-    });
-    const table = tableIn(page);
+    const table = tableIn(await mount(peopleTable({})));
     expect(computeAccessibleName(table)).toBe("");
-    expect({
-      label: table.hasAttribute("aria-label"),
-      labelledBy: table.hasAttribute("aria-labelledby"),
-    }).toEqual({ label: false, labelledBy: false });
+    expect(namingAttributes(table)).toEqual({
+      label: false,
+      labelledBy: false,
+    });
   });
 
   test.each([
     ["while `loading`", { loading: true }],
     ["with no rows", { data: [] }],
   ])("holds %s", async (_, props) => {
-    const page = await headedTable({
+    const headed = await headedTable({
       "aria-labelledby": "tajuk-pemohon",
       ...props,
     });
-    expect(namesOf(page, "table")).toEqual(["Senarai pemohon"]);
-    const second = await dataTable<Person>({
-      columns: [nameColumn],
-      data: people,
-      "aria-label": "Senarai pegawai",
-      ...props,
-    });
-    expect(namesOf(second, "table")).toEqual(["Senarai pegawai"]);
+    expect(namesOf(headed, "table")).toEqual(["Senarai pemohon"]);
+    const labelled = await mount(
+      peopleTable({ "aria-label": "Senarai pegawai", ...props }),
+    );
+    expect(namesOf(labelled, "table")).toEqual(["Senarai pegawai"]);
   });
 
   test("is set only on the `<table>`, not on its scroll wrapper or any other element", async () => {
@@ -287,10 +278,10 @@ describe("The table's name", () => {
     const wrapper = table.parentElement!;
     // `className` still styles the wrapper
     expect(wrapper.classList.contains("max-h-[300px]")).toBe(true);
-    expect({
-      label: wrapper.hasAttribute("aria-label"),
-      labelledBy: wrapper.hasAttribute("aria-labelledby"),
-    }).toEqual({ label: false, labelledBy: false });
+    expect(namingAttributes(wrapper)).toEqual({
+      label: false,
+      labelledBy: false,
+    });
     // The header cells have an `aria-labelledby` of their own, so look for
     // the values passed
     expect([
@@ -322,16 +313,8 @@ describe("The table's name", () => {
       createElement(
         "div",
         null,
-        createElement(DataTable<Person>, {
-          columns: [nameColumn],
-          data: people,
-          "aria-label": "Senarai pemohon",
-        }),
-        createElement(DataTable<Person>, {
-          columns: [nameColumn],
-          data: people,
-          "aria-labelledby": "tajuk-pegawai",
-        }),
+        peopleTable({ "aria-label": "Senarai pemohon" }),
+        peopleTable({ "aria-labelledby": "tajuk-pegawai" }),
       ),
     );
     const tables = [...served.querySelectorAll("table")];

@@ -148,16 +148,14 @@ interface DataTableProps<TData extends Record<string, any>> {
    * Accessible name of the `<table>`. Screen readers announce it; it isn't
    * shown. Set it in your site's language, and use it only when the page
    * shows no title for the table: otherwise point `aria-labelledby` at that
-   * title. `aria-labelledby` wins over it.
-   * @default none: the table has no name
+   * title. `aria-labelledby` wins over it. The table has no default name.
    */
   "aria-label"?: string;
   /**
    * The id of a visible element, usually a heading above the table, whose
    * text names the `<table>`. The id must be unique on the page, so a
    * component that renders more than once makes it with `useId()`. It wins
-   * over `aria-label`.
-   * @default none: the table has no name
+   * over `aria-label`. The table has no default name.
    */
   "aria-labelledby"?: string;
   columns: ColumnDef<TData>[];

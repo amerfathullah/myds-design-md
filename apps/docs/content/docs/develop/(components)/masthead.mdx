@@ -27,7 +27,7 @@ import {
       <Masthead>
         <MastheadHeader>
           <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
-          <MastheadTrigger aria-label="Here's how you know">Here's how you know</MastheadTrigger>
+          <MastheadTrigger>Here's how you know</MastheadTrigger>
         </MastheadHeader>
         <MastheadContent>
           <MastheadSection
@@ -61,9 +61,7 @@ import { PutrajayaIcon, Lock2Icon, LockFillIcon } from "@amerfathullah/myds-reac
 <Masthead>
   <MastheadHeader>
     <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
-    <MastheadTrigger aria-label="Here's how you know">
-      Here's how you know
-    </MastheadTrigger>
+    <MastheadTrigger>Here's how you know</MastheadTrigger>
   </MastheadHeader>
   <MastheadContent>
     <MastheadSection
@@ -124,7 +122,7 @@ export default () => (
 );
 ```
 
-Screen readers announce `MastheadTrigger` as "Toggle masthead", in place of the text it shows. Pass an `aria-label` that contains the visible text, so people who control the page by voice can say what they see. For example, `<MastheadTrigger aria-label="Kenal pasti begini">Kenal pasti begini</MastheadTrigger>`.
+The text you pass as `MastheadTrigger`'s children names it for screen readers and speech input, at every width. Below `sm:` the trigger shows only its chevron, and the text is visually hidden but still names it. With no children, the trigger is named "Toggle masthead"; pass an `aria-label` to name it in your site's language, for example `<MastheadTrigger aria-label="Kenal pasti begini" />`. An `aria-label` also replaces the children's text as the name. If you pass both, make the `aria-label` contain the visible text, so people who control the page by voice can say what they see. Children with no text, such as an icon alone, need an `aria-label`.
 
 ## Props
 
@@ -170,12 +168,13 @@ Screen readers announce `MastheadTrigger` as "Toggle masthead", in place of the 
 <TypeTable
   type={{
     children: {
-      description: "Text for the trigger action",
+      description:
+        "The trigger's text. It shows from `sm:` up and names the trigger at every width, below `sm:` too, where it's visually hidden.",
       type: "ReactNode",
     },
     "aria-label": {
       description:
-        "Accessible name of the trigger. Screen readers announce it in place of the trigger's text, so make it contain that text.",
+        "Accessible name of the trigger, in place of its text. The default applies only when the trigger has no children; with children, their text names it. If you pass both, make it contain the children's text.",
       type: "string",
       default: "Toggle masthead",
     },

@@ -322,10 +322,11 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 @media (min-width:640px){.masthead-text{justify-content:flex-start}}
 .masthead-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .masthead-trigger{display:flex;flex-shrink:0;align-items:center;gap:2px;padding:4px;border:0;border-radius:8px;background:var(--otl-gray-200);color:var(--txt-primary);outline:none}
-.masthead-trigger span{display:none;letter-spacing:-.01em}
+.masthead-trigger span{letter-spacing:-.01em}
+@media (max-width:639px){.masthead-trigger span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}}
 .masthead-trigger svg{width:16px;height:16px}
 .masthead-trigger:focus{box-shadow:inset 0 0 0 3px var(--fr-primary)}
-@media (min-width:640px){.masthead-trigger{padding-left:6px;background:transparent}.masthead-trigger span{display:block}}
+@media (min-width:640px){.masthead-trigger{padding-left:6px;background:transparent}}
 @media (min-width:1280px){.masthead-trigger{border-radius:6px}}
 .navbar{position:relative;z-index:1;height:56px;border-bottom:1px solid var(--otl-gray-200);background:var(--bg-white);box-shadow:var(--shadow-button)}
 .navbar-inner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1280px;height:56px;margin:0 auto;padding:0 18px}
@@ -749,7 +750,7 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 <div class="section-head"><div><h2 id="h-frame">Page frame</h2><p>SkipLink → Masthead → Navbar → content → Footer. The Masthead appears only on official Malaysian government services, so this specimen replaces its flag and wording with placeholders.</p></div><button class="btn btn-default" type="button" data-focus="frame-skip">Show SkipLink</button></div>
 <div class="card frame">
 <a class="btn btn-outline skiplink" id="frame-skip" href="#frame-main">Skip to main content</a>
-<div class="masthead"><div class="masthead-header"><span class="mark-placeholder" aria-hidden="true"></span><div class="masthead-text"><p class="masthead-title">Specimen · official services only</p><button class="masthead-trigger" type="button" aria-label="Toggle masthead" data-toast="Specimen: on an official service, this opens the Masthead explainer"><span>Trigger text</span><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></button></div></div></div>
+<div class="masthead"><div class="masthead-header"><span class="mark-placeholder" aria-hidden="true"></span><div class="masthead-text"><p class="masthead-title">Specimen · official services only</p><button class="masthead-trigger" type="button" data-toast="Specimen: on an official service, this opens the Masthead explainer"><span>Trigger text</span><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></button></div></div></div>
 <header class="navbar"><div class="navbar-inner">
 <a class="navbar-logo" href="#frame-main"><span class="logo-placeholder" aria-hidden="true"></span><span class="navbar-name">Agency Name</span></a>
 <nav class="navbar-menu" aria-label="Specimen menu"><ul><li><a class="navbar-item" href="#frame-main">Home</a></li><li><a class="navbar-item" href="#frame-main">Services</a></li><li><a class="navbar-item" href="#frame-main">Contact</a></li></ul></nav>

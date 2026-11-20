@@ -27,7 +27,7 @@ import {
       <Masthead>
         <MastheadHeader>
           <MastheadTitle>Portal Rasmi Kerajaan Malaysia</MastheadTitle>
-          <MastheadTrigger aria-label="Kenal pasti begini">Kenal pasti begini</MastheadTrigger>
+          <MastheadTrigger>Kenal pasti begini</MastheadTrigger>
         </MastheadHeader>
         <MastheadContent>
           <MastheadSection
@@ -61,9 +61,7 @@ import { PutrajayaIcon, Lock2Icon, LockFillIcon } from "@amerfathullah/myds-reac
 <Masthead>
   <MastheadHeader>
     <MastheadTitle>Portal Rasmi Kerajaan Malaysia</MastheadTitle>
-    <MastheadTrigger aria-label="Ketahui Lebih Lanjut">
-      Ketahui Lebih Lanjut
-    </MastheadTrigger>
+    <MastheadTrigger>Ketahui Lebih Lanjut</MastheadTrigger>
   </MastheadHeader>
   <MastheadContent>
     <MastheadSection
@@ -124,7 +122,7 @@ export default () => (
 );
 ```
 
-Pembaca skrin menyebut `MastheadTrigger` sebagai "Toggle masthead", sebagai ganti teks yang dipaparkannya. Hantar `aria-label` yang mengandungi teks yang kelihatan, supaya pengguna yang mengawal laman dengan suara boleh menyebut apa yang mereka lihat. Contohnya, `<MastheadTrigger aria-label="Kenal pasti begini">Kenal pasti begini</MastheadTrigger>`.
+Teks yang anda hantar sebagai `children` `MastheadTrigger` menamakannya untuk pembaca skrin dan input suara, pada setiap lebar skrin. Di bawah `sm:`, pencetus hanya memaparkan ikon anak panah, dan teks itu disembunyikan secara visual tetapi masih menamakannya. Tanpa `children`, pencetus dinamakan "Toggle masthead"; hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<MastheadTrigger aria-label="Kenal pasti begini" />`. `aria-label` juga menggantikan teks `children` sebagai nama. Jika anda menghantar kedua-duanya, pastikan `aria-label` mengandungi teks yang kelihatan, supaya pengguna yang mengawal laman dengan suara boleh menyebut apa yang mereka lihat. `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`.
 
 ## Props
 
@@ -168,12 +166,13 @@ Pembaca skrin menyebut `MastheadTrigger` sebagai "Toggle masthead", sebagai gant
 <TypeTable
   type={{
     children: {
-      description: "Teks untuk tindakan pencetus",
+      description:
+        "Teks pencetus. Ia dipaparkan dari `sm:` ke atas dan menamakan pencetus pada setiap lebar skrin, termasuk di bawah `sm:`, apabila ia disembunyikan secara visual.",
       type: "ReactNode",
     },
     "aria-label": {
       description:
-        "Nama boleh capai pencetus. Pembaca skrin menyebutnya sebagai ganti teks pencetus, jadi pastikan ia mengandungi teks itu.",
+        "Nama boleh capai pencetus, sebagai ganti teksnya. Nilai lalai hanya digunakan apabila pencetus tiada `children`; dengan `children`, teksnya yang menamakan pencetus. Jika anda menghantar kedua-duanya, pastikan ia mengandungi teks `children`.",
       type: "string",
       default: "Toggle masthead",
     },

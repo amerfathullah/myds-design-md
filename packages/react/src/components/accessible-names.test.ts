@@ -1119,9 +1119,13 @@ describe("The mobile menu's panel", () => {
 });
 
 describe("MastheadTrigger", () => {
-  // A Masthead whose trigger shows "Kenal pasti begini". Returns the
-  // trigger.
-  async function trigger(label?: string) {
+  const text = "Kenal pasti begini";
+
+  // A Masthead whose trigger takes `props`, which show "Kenal pasti begini"
+  // unless they're given. Returns the trigger.
+  async function trigger(
+    props: ComponentProps<typeof MastheadTrigger> = { children: text },
+  ) {
     const page = await mount(
       createElement(
         Masthead,
@@ -1134,28 +1138,64 @@ describe("MastheadTrigger", () => {
             null,
             "Laman Web Rasmi Kerajaan Malaysia",
           ),
-          createElement(
-            MastheadTrigger,
-            ariaLabel(label),
-            "Kenal pasti begini",
-          ),
+          createElement(MastheadTrigger, props),
         ),
       ),
     );
     const [button, ...others] = page.querySelectorAll("button");
     expect(others).toEqual([]);
-    expect(button!.textContent).toBe("Kenal pasti begini");
     return button!;
   }
 
-  // The default replaces the visible text as the name (#177)
-  test('is named "Toggle masthead" by default, whatever it shows', async () => {
-    expect(computeAccessibleName(await trigger())).toBe("Toggle masthead");
+  // Its text names it, below `sm:` too, where only its chevron shows, so
+  // the name holds what sighted users see (WCAG 2.5.3, #177)
+  test("is named by the text it shows, with no `aria-label`", async () => {
+    const button = await trigger();
+    expect(button.textContent).toBe(text);
+    expect(computeAccessibleName(button)).toBe(text);
+    expect(button.hasAttribute("aria-label")).toBe(false);
   });
 
+  // With no children it shows only its chevron, at every width
+  test.each([undefined, null, false, ""])(
+    'is named "Toggle masthead" when its children are %j',
+    async (children) => {
+      const button = await trigger({ children });
+      expect(button.textContent).toBe("");
+      expect(computeAccessibleName(button)).toBe("Toggle masthead");
+    },
+  );
+
   test("takes its name from an `aria-label` that repeats its text", async () => {
-    const button = await trigger("Kenal pasti begini");
-    expect(computeAccessibleName(button)).toBe("Kenal pasti begini");
+    const button = await trigger({ "aria-label": text, children: text });
+    expect(computeAccessibleName(button)).toBe(text);
+  });
+
+  // ADR-0008: the author's `aria-label` wins over the default
+  test.each([
+    ["with", text],
+    ["without", undefined],
+  ])("lets an `aria-label` rename it, %s children", async (_, children) => {
+    const button = await trigger({ "aria-label": "Tunjuk cara", children });
+    expect(computeAccessibleName(button)).toBe("Tunjuk cara");
+  });
+
+  // The state is on `aria-expanded`, so the name stays as it is
+  test("keeps its name, and says the masthead is closed, then open, then closed", async () => {
+    const button = await trigger();
+    const named = () => [
+      computeAccessibleName(button),
+      button.getAttribute("aria-expanded"),
+    ];
+    const closed = named();
+    await act(async () => button.click());
+    const open = named();
+    await act(async () => button.click());
+    expect([closed, open, named()]).toEqual([
+      [text, "false"],
+      [text, "true"],
+      [text, "false"],
+    ]);
   });
 });
 

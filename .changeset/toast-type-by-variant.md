@@ -4,11 +4,11 @@
 "@govtechmy/myds-storybook": patch
 ---
 
-Only error toasts now interrupt the screen reader. Toasts of every other Variant are announced politely, at the next pause, and `toast()` takes `type`. Before, neither ToastRoot nor AutoToast set `type`, and `toast()` couldn't, so every toast got Radix's default, `"foreground"`, and was announced assertively. A `success` toast interrupted what the screen reader was reading just as an `error` did, and the second of two toasts could cut off the first.
+Only error toasts now interrupt the screen reader. Toasts of every other Variant are announced politely, at the next pause, and `toast()` takes `type`. Before, neither ToastRoot nor AutoToast set `type`, and `toast()` couldn't, so unless you passed `type` to ToastRoot or AutoToast yourself, every toast got Radix's default, `"foreground"`, and was announced assertively. A `success` toast interrupted what the screen reader was reading just as an `error` did, and the second of two toasts could cut off the first.
 
-- **The default follows the Variant.** ToastRoot sets `type` to `"foreground"`, an assertive live region, for an `error` toast. It sets `"background"`, a polite one, for `message`, `success`, `info` and `warning`, and for a toast whose `variant` is unset or `null`, which is a `message`. A `type` of `undefined` gets the Variant default, never Radix's `"foreground"`.
+- **The default follows the Variant.** ToastRoot sets `type` to `"foreground"` for an `error` toast, so it is announced assertively. It sets `"background"`, which is announced politely, for `message`, `success`, `info` and `warning`, and for a toast whose `variant` is unset or `null`, which is a `message`. A `type` of `undefined` gets the Variant default, never Radix's `"foreground"`.
 - **`toast()` takes `type`.** `ToastEvent` gains an optional `type?: "foreground" | "background"`. Pass `type: "foreground"` for a toast of another Variant that must be heard at once, for example `toast({ variant: "warning", title: "Warning: Your session is about to end", type: "foreground" })`, and `type: "background"` for an error that can wait.
-- **A toast's own `type` wins.** A `type` in `toast()`, or on a hand-composed ToastRoot, wins over AutoToast's `type`, which wins over the Variant default.
+- **A toast's own `type` wins.** A `type` in `toast()` wins over AutoToast's `type`, which wins over the Variant default. On a hand-composed ToastRoot, the `type` you pass wins over the Variant default.
 - **`type` isn't the design guideline's Type**, which is `variant`. It sets only how urgently screen readers announce a toast.
 - **Nothing else changes.** Nothing changes visually: the same elements, classes and sizes render. Each toast is still announced in a visually hidden `role="status"` span, with "Notification", or your `announceLabel`, before its text. The props and ref types, and ToastContext's value, are the same; only `ToastEvent` gains a field.
 

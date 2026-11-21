@@ -465,13 +465,13 @@ A wrapper component rendered as a list item `li` that contains individual pagina
 
 ### PaginationNext
 
-A button that goes to the next page. It is disabled on the last page, or when there are no pages. An `onClick` you pass runs before the page changes; call `event.preventDefault()` in it to stay on the page. With `asChild`, your own element replaces the button and keeps the page change and the disabled state: `disabled` on a `<button>` or a MYDS `Button`, and `aria-disabled="true"` on any other element, such as a link. See [Advanced Usage](#advanced-usage).
+A button that goes to the next page. It is disabled on the last page, or when there are no pages. An `onClick` you pass runs before the page changes; call `event.preventDefault()` in it to stay on the page. With `asChild`, your own element replaces the button and keeps the page change and the disabled state: `disabled` on a `<button>`, or a MYDS `Button` without `asChild`, and `aria-disabled="true"` on any other element, such as a link. See [Advanced Usage](#advanced-usage).
 
 With no children, it shows only a chevron and its accessible name is "next page". Pass an `aria-label` to replace it, for example `aria-label="Halaman seterusnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name and no classes: name and style your own element.
 
 ### PaginationPrevious
 
-A button that goes to the previous page. It is disabled on the first page. An `onClick` you pass runs before the page changes; call `event.preventDefault()` in it to stay on the page. With `asChild`, your own element replaces the button and keeps the page change and the disabled state: `disabled` on a `<button>` or a MYDS `Button`, and `aria-disabled="true"` on any other element, such as a link. See [Advanced Usage](#advanced-usage).
+A button that goes to the previous page. It is disabled on the first page. An `onClick` you pass runs before the page changes; call `event.preventDefault()` in it to stay on the page. With `asChild`, your own element replaces the button and keeps the page change and the disabled state: `disabled` on a `<button>`, or a MYDS `Button` without `asChild`, and `aria-disabled="true"` on any other element, such as a link. See [Advanced Usage](#advanced-usage).
 
 With no children, it shows only a chevron and its accessible name is "previous page". Pass an `aria-label` to replace it, for example `aria-label="Halaman sebelumnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name and no classes: name and style your own element.
 

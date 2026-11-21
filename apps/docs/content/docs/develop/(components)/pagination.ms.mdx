@@ -466,13 +466,13 @@ Komponen yang dirender sebagai elemen `li` yang mengandungi elemen seperti `Pagi
 
 ### PaginationNext
 
-Komponen `button` yang pergi ke halaman seterusnya. Ia dilumpuhkan pada halaman terakhir, atau apabila tiada halaman. `onClick` yang anda hantar dijalankan sebelum halaman ditukar; panggil `event.preventDefault()` di dalamnya untuk kekal pada halaman itu. Dengan `asChild`, elemen anda sendiri menggantikan butang dan mengekalkan pertukaran halaman dan keadaan dilumpuhkan: `disabled` pada `<button>` atau `Button` MYDS, dan `aria-disabled="true"` pada elemen lain, seperti pautan. Lihat [Penggunaan Lanjutan](#penggunaan-lanjutan).
+Komponen `button` yang pergi ke halaman seterusnya. Ia dilumpuhkan pada halaman terakhir, atau apabila tiada halaman. `onClick` yang anda hantar dijalankan sebelum halaman ditukar; panggil `event.preventDefault()` di dalamnya untuk kekal pada halaman itu. Dengan `asChild`, elemen anda sendiri menggantikan butang dan mengekalkan pertukaran halaman dan keadaan dilumpuhkan: `disabled` pada `<button>`, atau `Button` MYDS tanpa `asChild`, dan `aria-disabled="true"` pada elemen lain, seperti pautan. Lihat [Penggunaan Lanjutan](#penggunaan-lanjutan).
 
 Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "next page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman seterusnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama dan kelas: namakan dan gayakan elemen anda sendiri.
 
 ### PaginationPrevious
 
-Komponen `button` yang pergi ke halaman sebelumnya. Ia dilumpuhkan pada halaman pertama. `onClick` yang anda hantar dijalankan sebelum halaman ditukar; panggil `event.preventDefault()` di dalamnya untuk kekal pada halaman itu. Dengan `asChild`, elemen anda sendiri menggantikan butang dan mengekalkan pertukaran halaman dan keadaan dilumpuhkan: `disabled` pada `<button>` atau `Button` MYDS, dan `aria-disabled="true"` pada elemen lain, seperti pautan. Lihat [Penggunaan Lanjutan](#penggunaan-lanjutan).
+Komponen `button` yang pergi ke halaman sebelumnya. Ia dilumpuhkan pada halaman pertama. `onClick` yang anda hantar dijalankan sebelum halaman ditukar; panggil `event.preventDefault()` di dalamnya untuk kekal pada halaman itu. Dengan `asChild`, elemen anda sendiri menggantikan butang dan mengekalkan pertukaran halaman dan keadaan dilumpuhkan: `disabled` pada `<button>`, atau `Button` MYDS tanpa `asChild`, dan `aria-disabled="true"` pada elemen lain, seperti pautan. Lihat [Penggunaan Lanjutan](#penggunaan-lanjutan).
 
 Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "previous page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman sebelumnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama dan kelas: namakan dan gayakan elemen anda sendiri.
 

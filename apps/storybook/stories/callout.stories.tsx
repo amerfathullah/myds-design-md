@@ -10,10 +10,21 @@ import {
 import { Button } from "@amerfathullah/myds-react/button";
 import { ComponentProps } from "react";
 
+type CalloutVariant = NonNullable<ComponentProps<typeof Callout>["variant"]>;
+
+const variantNames: Record<CalloutVariant, string> = {
+  info: "Information",
+  success: "Success",
+  warning: "Warning",
+  danger: "Error",
+};
+
 const CalloutDemo = (props: ComponentProps<typeof Callout>) => {
   return (
     <Callout {...props}>
-      <CalloutTitle>Scheduled System Maintenance</CalloutTitle>
+      <CalloutTitle>
+        {variantNames[props.variant ?? "info"]}: Scheduled system maintenance
+      </CalloutTitle>
       <CalloutContent>
         Online services will be down for maintenance on Saturday from 10 PM to 2
         AM. Thank you for your patience!
@@ -33,7 +44,7 @@ const CalloutDemo = (props: ComponentProps<typeof Callout>) => {
  * import { Button } from "@amerfathullah/myds-react/button";
  *
  * <Callout>
- *  <CalloutTitle>Title</CalloutTitle>
+ *  <CalloutTitle>Information: Scheduled system maintenance</CalloutTitle>
  *   <CalloutContent> Online services will be down for maintenance on Saturday from 10 PM to 2 AM. Thank you for your patience! </CalloutContent>
  *   <CalloutAction>
  *    <Button variant="default-outline">Primary Button</Button>
@@ -54,7 +65,7 @@ const meta = {
   argTypes: {
     variant: {
       description:
-        "Determines the visual style and semantic meaning of the callout",
+        'Sets the callout\'s colour and icon. Screen readers get neither, so the title must say the Variant, e.g. "Error: Form not sent".',
       control: "radio",
       options: ["success", "warning", "info", "danger"],
     },
@@ -74,7 +85,7 @@ export const calloutDefaultWithTitle: Story = {
   ...createStory({}),
   render: () => (
     <Callout>
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
     </Callout>
   ),
 };
@@ -83,7 +94,7 @@ export const calloutDefaultWithTitleAndPrimaryButton: Story = {
   ...createStory({}),
   render: () => (
     <Callout>
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutAction>
         <Button variant="default-outline">Primary Button</Button>
       </CalloutAction>
@@ -94,7 +105,7 @@ export const calloutDefaultWithTitleAndPrimaryButton: Story = {
 export const calloutDefaultWithTitlePrimaryButtonAndDescription: Story = {
   render: () => (
     <Callout>
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutContent>
         Online services will be down for maintenance on Saturday from 10 PM to 2
         AM. Thank you for your patience!
@@ -111,7 +122,7 @@ export const calloutDefaultWithTitleDescriptionPrimaryAndSecondaryButton: Story 
     ...createStory({}),
     render: () => (
       <Callout>
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Information: Application under review</CalloutTitle>
         <CalloutContent>
           Online services will be down for maintenance on Saturday from 10 PM to
           2 AM. Thank you for your patience!
@@ -128,7 +139,7 @@ export const calloutSuccess: Story = {
   ...createStory({}),
   render: () => (
     <Callout variant="success">
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Success: Data saved</CalloutTitle>
       <CalloutAction>
         <Button variant="default-outline">Primary Button</Button>
       </CalloutAction>
@@ -140,7 +151,7 @@ export const calloutWarning: Story = {
   ...createStory({}),
   render: () => (
     <Callout variant="warning">
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Warning: Session ends soon</CalloutTitle>
       <CalloutAction>
         <Button variant="default-outline">Primary Button</Button>
       </CalloutAction>
@@ -152,7 +163,7 @@ export const calloutInformation: Story = {
   ...createStory({}),
   render: () => (
     <Callout variant="info">
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutAction>
         <Button variant="default-outline">Primary Button</Button>
       </CalloutAction>
@@ -164,7 +175,7 @@ export const calloutError: Story = {
   ...createStory({}),
   render: () => (
     <Callout variant="danger">
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Error: Form not sent</CalloutTitle>
       <CalloutAction>
         <Button variant="default-outline">Primary Button</Button>
       </CalloutAction>
@@ -186,7 +197,7 @@ export const calloutDefaultDarkWithTitle: Story = {
   render: () => (
     <div className="dark">
       <Callout>
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Information: Application under review</CalloutTitle>
       </Callout>
     </div>
   ),
@@ -197,7 +208,7 @@ export const calloutDefaultDarkWithTitleAndPrimaryButton: Story = {
   render: () => (
     <div className="dark">
       <Callout>
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Information: Application under review</CalloutTitle>
         <CalloutAction>
           <Button variant="default-outline">Primary Button</Button>
         </CalloutAction>
@@ -211,7 +222,7 @@ export const calloutDefaultDarkWithTitlePrimaryButtonAndDescription: Story = {
   render: () => (
     <div className="dark">
       <Callout>
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Information: Application under review</CalloutTitle>
         <CalloutContent>
           Online services will be down for maintenance on Saturday from 10 PM to
           2 AM. Thank you for your patience!
@@ -230,7 +241,7 @@ export const calloutDefaultDarkWithTitleDescriptionPrimaryAndSecondaryButton: St
     render: () => (
       <div className="dark">
         <Callout>
-          <CalloutTitle>Title</CalloutTitle>
+          <CalloutTitle>Information: Application under review</CalloutTitle>
           <CalloutContent>
             Online services will be down for maintenance on Saturday from 10 PM
             to 2 AM. Thank you for your patience!
@@ -249,7 +260,7 @@ export const calloutSuccessDark: Story = {
   render: () => (
     <div className="dark">
       <Callout variant="success">
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Success: Data saved</CalloutTitle>
         <CalloutAction>
           <Button variant="default-outline">Primary Button</Button>
         </CalloutAction>
@@ -263,7 +274,7 @@ export const calloutWarningDark: Story = {
   render: () => (
     <div className="dark">
       <Callout variant="warning">
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Warning: Session ends soon</CalloutTitle>
         <CalloutAction>
           <Button variant="default-outline">Primary Button</Button>
         </CalloutAction>
@@ -277,7 +288,7 @@ export const calloutInformationDark: Story = {
   render: () => (
     <div className="dark">
       <Callout variant="info">
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Information: Application under review</CalloutTitle>
         <CalloutAction>
           <Button variant="default-outline">Primary Button</Button>
         </CalloutAction>
@@ -291,7 +302,7 @@ export const calloutErrorDark: Story = {
   render: () => (
     <div className="dark">
       <Callout variant="danger">
-        <CalloutTitle>Title</CalloutTitle>
+        <CalloutTitle>Error: Form not sent</CalloutTitle>
         <CalloutAction>
           <Button variant="default-outline">Primary Button</Button>
         </CalloutAction>

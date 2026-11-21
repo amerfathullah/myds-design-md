@@ -18,7 +18,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton" className="not-prose">
   <Callout>
-      <CalloutTitle>Tajuk</CalloutTitle>
+      <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
       <CalloutContent>
         <span>Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat</span>
       </CalloutContent>
@@ -32,7 +32,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Callout, CalloutAction, CalloutTitle, CalloutContent } from "@amerfathullah/myds-react/callout";
 
 <Callout>
-    <CalloutTitle>Tajuk</CalloutTitle>
+    <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
     <CalloutContent>
       Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
     </CalloutContent>
@@ -84,7 +84,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
   <Tab value="Pratonton">
   <div className="space-y-2 not-prose">
   <Callout>
-      <CalloutTitle>Tajuk</CalloutTitle>
+      <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
       <CalloutContent>
         <span>Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat</span>
       </CalloutContent>
@@ -93,7 +93,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
       </CalloutAction>
   </Callout>
   <Callout variant="success">
-    <CalloutTitle>Tajuk</CalloutTitle>
+    <CalloutTitle>Berjaya: Data disimpan</CalloutTitle>
     <CalloutContent>
       <span>Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat</span>
     </CalloutContent>
@@ -102,7 +102,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
     </CalloutAction>
   </Callout>
   <Callout variant="warning">
-    <CalloutTitle>Tajuk</CalloutTitle>
+    <CalloutTitle>Amaran: Sesi akan tamat</CalloutTitle>
     <CalloutContent>
       <span>Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat</span>
     </CalloutContent>
@@ -111,7 +111,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
     </CalloutAction>
   </Callout>
   <Callout variant="danger">
-    <CalloutTitle>Tajuk</CalloutTitle>
+    <CalloutTitle>Ralat: Borang tidak dihantar</CalloutTitle>
     <CalloutContent>
       <span>Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat</span>
     </CalloutContent>
@@ -126,7 +126,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
 /** Varian: info **/
 
 <Callout variant="info">
-  <CalloutTitle>Tajuk</CalloutTitle>
+  <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
   <CalloutContent>
     Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
   </CalloutContent>
@@ -138,7 +138,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
 /** Varian: success **/
 
 <Callout variant="success">
-  <CalloutTitle>Tajuk</CalloutTitle>
+  <CalloutTitle>Berjaya: Data disimpan</CalloutTitle>
   <CalloutContent>
     Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
   </CalloutContent>
@@ -150,7 +150,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
 /** Varian: warning **/
 
 <Callout variant="warning">
-  <CalloutTitle>Tajuk</CalloutTitle>
+  <CalloutTitle>Amaran: Sesi akan tamat</CalloutTitle>
   <CalloutContent>
     Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
   </CalloutContent>
@@ -162,7 +162,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
 /** Varian: danger **/
 
 <Callout variant="danger">
-  <CalloutTitle>Tajuk</CalloutTitle>
+  <CalloutTitle>Ralat: Borang tidak dihantar</CalloutTitle>
   <CalloutContent>
     Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
   </CalloutContent>
@@ -189,12 +189,12 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
     <div className="not-prose space-y-2">
       <DismissibleCalloutExample
         type="basic"
-        title="Asas - Keadaan Hapus Tidak Terkawal"
+        title="Maklumat: Asas - Keadaan Hapus Tidak Terkawal"
         description="Anda boleh menangkap peristiwa hapus menggunakan prop onDismiss. Semak konsol untuk peristiwa hapus."
       />
       <DismissibleCalloutExample
         type="action"
-        title="Tindakan - Hapus Callout melalui Prop Render CalloutAction"
+        title="Maklumat: Tindakan - Hapus Callout melalui Prop Render CalloutAction"
         description="Anda boleh memanggil peristiwa hapus secara programatik melalui mana-mana pendengar peristiwa di dalam anak CalloutAction"
       />
     </div>
@@ -208,7 +208,7 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
         console.log("MYDS: Peristiwa hapus ditangkap!");
       }}
     >
-      <CalloutTitle>Tajuk</CalloutTitle>
+      <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
       <CalloutContent>
         <span>
           Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
@@ -228,7 +228,7 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
         console.log("MYDS: Peristiwa hapus ditangkap!");
       }}
     >
-      <CalloutTitle>Tajuk</CalloutTitle>
+      <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
       <CalloutContent>
         <span>
           Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
@@ -287,6 +287,31 @@ export default function ApplicationForm() {
 }
 ```
 
+Ikon dan warna menunjukkan varian, tetapi kedua-duanya tidak sampai kepada pembaca skrin: Callout menyembunyikan ikon itu daripadanya. Oleh itu, perkataan dalam tajuk mesti menyebut varian, dalam bahasa laman anda. Sama ada:
+
+- tulis tajuk supaya perkataannya menyebut varian, seperti "Permohonan anda tidak dihantar" dalam contoh di atas, atau
+- mulakan tajuk dengan nama varian: Maklumat (`info`), Berjaya (`success`), Amaran (`warning`) atau Ralat (`danger`). Contohnya `<CalloutTitle>Ralat: Borang tidak dihantar</CalloutTitle>`.
+
+Jika reka bentuk tidak dapat memaparkan perkataan itu, letakkannya dalam teks yang tersembunyi secara visual di awal tajuk: `<span className="sr-only">Ralat: </span>`. Gunakannya sebagai ganti nama yang dipaparkan, jangan sekali-kali bersama nama itu; jika tidak, pembaca skrin akan menyebut varian dua kali.
+
+```tsx copy title="Varian disebut dalam tajuk"
+// Nama varian, dipaparkan
+<Callout variant="danger">
+  <CalloutTitle>Ralat: Borang tidak dihantar</CalloutTitle>
+  <CalloutContent>Semak butiran anda dan cuba lagi.</CalloutContent>
+</Callout>
+
+// Nama varian, tersembunyi secara visual, apabila reka bentuk tidak dapat memaparkannya
+<Callout variant="danger">
+  <CalloutTitle>
+    <span className="sr-only">Ralat: </span>Borang tidak dihantar
+  </CalloutTitle>
+  <CalloutContent>Semak butiran anda dan cuba lagi.</CalloutContent>
+</Callout>
+```
+
+Perkara ini paling penting apabila anda menghantar `role="alert"`. Pembaca skrin membaca teks callout sebaik sahaja ia muncul, dan tajuk yang tidak menyebut varian membiarkan pengguna tertanya-tanya sama ada ia ralat.
+
 ## Props
 
 ### Callout
@@ -294,7 +319,8 @@ export default function ApplicationForm() {
 <TypeTable
   type={{
     variant: {
-      description: "Gaya varian panggilan keluar",
+      description:
+        'Warna dan ikon callout. Pembaca skrin tidak menerima kedua-duanya, jadi tajuk mesti menyebut varian, contohnya "Ralat: Borang tidak dihantar".',
       type: "enum",
       typeDescription: "info | success | warning | danger",
       default: "info",

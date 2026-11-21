@@ -3,7 +3,8 @@
 // SkipLink and a main column of controls, the first of which reopens the
 // banner. The banner starts open, as on a first visit. Each control logs its
 // clicks to `window.clicks`, and the banner its open changes to
-// `window.openChanges`. The test bundles this file with esbuild.
+// `window.openChanges`. With `?toast` in its URL, the page also shows a toast
+// that stays until it's closed. The test bundles this file with esbuild.
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -19,6 +20,14 @@ import {
   CookieBannerTitle,
 } from "../../react/src/components/cookie-banner";
 import { Skiplink } from "../../react/src/components/skiplink";
+import {
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastRoot,
+  ToastTitle,
+  ToastViewport,
+} from "../../react/src/components/toast";
 
 window.clicks = [];
 window.openChanges = [];
@@ -144,6 +153,18 @@ function Page() {
           </button>
         ))}
       </main>
+      {new URLSearchParams(location.search).has("toast") && (
+        <ToastProvider>
+          <ToastRoot variant="info" duration={Infinity}>
+            <div className="space-y-1">
+              <ToastTitle>Saved</ToastTitle>
+              <ToastDescription>Your changes are saved.</ToastDescription>
+            </div>
+            <ToastClose aria-label="Dismiss" />
+          </ToastRoot>
+          <ToastViewport />
+        </ToastProvider>
+      )}
     </>
   );
 }

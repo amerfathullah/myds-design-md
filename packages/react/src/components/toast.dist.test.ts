@@ -19,6 +19,7 @@ import ts from "typescript";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { codeBlocks, commentText, metaComment } from "./docs-samples";
+import type { ToastEvent } from "./toast";
 
 const root = resolve(__dirname, "../..");
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
@@ -109,21 +110,42 @@ function declarations(condition: Condition) {
   const source = program.getSourceFile(file);
   const module = source && checker.getSymbolAtLocation(source);
   if (!module) throw new Error(`${toastEntry} declares no module`);
-  const jsdoc = Object.fromEntries(
-    checker.getExportsOfModule(module).map((symbol) => {
-      const target =
+  const targets = new Map(
+    checker
+      .getExportsOfModule(module)
+      .map((symbol) => [
+        symbol.name,
         symbol.flags & ts.SymbolFlags.Alias
           ? checker.getAliasedSymbol(symbol)
-          : symbol;
-      return [
-        symbol.name,
-        ts
-          .displayPartsToString(target.getDocumentationComment(checker))
-          .replace(/\s+/g, " "),
-      ];
-    }),
+          : symbol,
+      ]),
   );
-  return { file, jsdoc };
+  const docOf = (symbol: ts.Symbol | undefined) =>
+    ts
+      .displayPartsToString(symbol?.getDocumentationComment(checker))
+      .replace(/\s+/g, " ");
+  const jsdoc = Object.fromEntries(
+    [...targets].map(([name, target]) => [name, docOf(target)]),
+  );
+  // The props a component takes: the type of its call signature's parameter
+  const propsOf = (name: string) => {
+    const [signature] = checker
+      .getTypeOfSymbol(targets.get(name)!)
+      .getCallSignatures();
+    return checker.getTypeOfSymbol(signature!.parameters[0]!);
+  };
+  // The JSDoc of `type` on ToastEvent, ToastRoot's props and AutoToast's
+  // props, as a consumer's editor shows it
+  const typeJsdoc = {
+    ToastEvent: docOf(
+      checker
+        .getDeclaredTypeOfSymbol(targets.get("ToastEvent")!)
+        .getProperty("type"),
+    ),
+    ToastRoot: docOf(propsOf("ToastRoot").getProperty("type")),
+    AutoToast: docOf(propsOf("AutoToast").getProperty("type")),
+  };
+  return { file, jsdoc, typeJsdoc };
 }
 
 describe.each(conditions)(
@@ -156,6 +178,27 @@ describe.each(conditions)(
       }
       expect(jsdoc.ToastIcon).toContain("no icon for `message`");
       expect(jsdoc.ToastProgress).toContain("its duration (default 5000ms)");
+    });
+
+    // `type` sets how urgently screen readers announce a toast, and only an
+    // error toast interrupts by default (ADR-0014)
+    test("documents `type` on ToastEvent, ToastRoot and AutoToast: what it does, that it isn't the guideline's Type, and its default by Variant", () => {
+      const { typeJsdoc } = declarations(condition);
+      for (const doc of Object.values(typeJsdoc)) {
+        expect(doc).toMatch(/^How urgently screen readers announce/);
+        expect(doc).toContain(
+          "It isn't the design guideline's Type, which is `variant`.",
+        );
+        expect(doc).toMatch(
+          /an `error` toast defaults to `"foreground"`, and every other Variant to `"background"`/i,
+        );
+      }
+      expect(typeJsdoc.ToastRoot).toContain(
+        'unlike Radix, whose default is `"foreground"` for every toast',
+      );
+      expect(typeJsdoc.AutoToast).toContain(
+        "a toast's own `type`, passed to `toast()`, wins",
+      );
     });
   },
 );
@@ -525,41 +568,72 @@ afterEach(async () => {
 describe.each(["en", "ms"] as const)(
   "the %s Advanced Usage toaster, as published",
   (page) => {
+    // Mounts the page's toaster beside a sibling that calls useToast(), on
+    // its own or in StrictMode. Returns the container and the sibling's
+    // `toast`.
+    async function mountToaster(strict: boolean) {
+      const Toaster = run(samplesOf(page).advanced.code).default as
+        import("react").FunctionComponent | undefined;
+      expect(typeof Toaster).toBe("function");
+
+      let toast: ReturnType<typeof useToast>["toast"] = () => {};
+      const Sender = () => {
+        toast = useToast().toast;
+        return null;
+      };
+      const container = document.body.appendChild(
+        document.createElement("div"),
+      );
+      const reactRoot = createRoot(container);
+      unmounts.push(async () => {
+        await React.act(async () => reactRoot.unmount());
+        container.remove();
+      });
+      const app = React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(Toaster!),
+        React.createElement(Sender),
+      );
+      await React.act(async () =>
+        reactRoot.render(
+          strict ? React.createElement(React.StrictMode, null, app) : app,
+        ),
+      );
+      expect(container.querySelectorAll("li")).toHaveLength(0);
+      return { container, toast: (event: ToastEvent) => toast(event) };
+    }
+
+    // Only an error toast interrupts by default, and the toaster passes
+    // each event's `type` to its ToastRoot, so `type` in toast() wins
+    // (ADR-0014). Radix fills each toast's announcement in two animation
+    // frames and removes it a second later, so it's read after 100ms.
+    test.each([
+      ["an error toast", "assertive", { variant: "error" }],
+      ["a success toast", "polite", { variant: "success" }],
+      [
+        'a success toast fired with `type: "foreground"`',
+        "assertive",
+        { variant: "success", type: "foreground" },
+      ],
+    ] as const)("announces %s as %s", async (_, live, event) => {
+      const { container, toast } = await mountToaster(false);
+      await React.act(async () => toast({ ...event, title: "Disimpan" }));
+      expect(container.querySelectorAll("li")).toHaveLength(1);
+      await React.act(() => new Promise((resolve) => setTimeout(resolve, 100)));
+      const [status, ...others] = document.querySelectorAll('[role="status"]');
+      expect(others).toEqual([]);
+      expect(status!.textContent).toBe("Notification Disimpan");
+      expect(status!.getAttribute("aria-live")).toBe(live);
+    });
+
     test.each([
       ["on its own", false],
       ["in StrictMode", true],
     ] as const)(
       "shows the one toast a sibling's useToast() fires, %s",
       async (_, strict) => {
-        const Toaster = run(samplesOf(page).advanced.code).default as
-          import("react").FunctionComponent | undefined;
-        expect(typeof Toaster).toBe("function");
-
-        let toast: ReturnType<typeof useToast>["toast"] = () => {};
-        const Sender = () => {
-          toast = useToast().toast;
-          return null;
-        };
-        const container = document.body.appendChild(
-          document.createElement("div"),
-        );
-        const reactRoot = createRoot(container);
-        unmounts.push(async () => {
-          await React.act(async () => reactRoot.unmount());
-          container.remove();
-        });
-        const app = React.createElement(
-          React.Fragment,
-          null,
-          React.createElement(Toaster!),
-          React.createElement(Sender),
-        );
-        await React.act(async () =>
-          reactRoot.render(
-            strict ? React.createElement(React.StrictMode, null, app) : app,
-          ),
-        );
-        expect(container.querySelectorAll("li")).toHaveLength(0);
+        const { container, toast } = await mountToaster(strict);
 
         await React.act(async () =>
           toast({

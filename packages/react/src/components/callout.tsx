@@ -37,11 +37,13 @@ const calloutVariants = cva(
   },
 );
 
+// The status icon is decoration, hidden from assistive technology: the
+// author's title says the Variant, in the site's language (ADR-0013)
 const iconMap: Record<CalloutVariant, ReactNode> = {
-  success: <CheckCircleIcon className="size-5 shrink-0" />,
-  warning: <WarningCircleIcon className="size-5 shrink-0" />,
-  info: <InfoIcon className="size-5 shrink-0" />,
-  danger: <WarningIcon className="size-5 shrink-0" />,
+  success: <CheckCircleIcon aria-hidden="true" className="size-5 shrink-0" />,
+  warning: <WarningCircleIcon aria-hidden="true" className="size-5 shrink-0" />,
+  info: <InfoIcon aria-hidden="true" className="size-5 shrink-0" />,
+  danger: <WarningIcon aria-hidden="true" className="size-5 shrink-0" />,
 };
 
 interface CalloutProps
@@ -105,7 +107,8 @@ const Callout: ForwardRefExoticComponent<CalloutProps> = forwardRef(
                 aria-label={closeLabel}
                 onClick={handleDismiss}
               >
-                <ButtonIcon>
+                {/* The cross is decoration: `closeLabel` names the button */}
+                <ButtonIcon aria-hidden="true">
                   <CrossIcon className="h-5 w-5" />
                 </ButtonIcon>
               </Button>

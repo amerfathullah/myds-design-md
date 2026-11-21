@@ -277,9 +277,9 @@ interface CookieBannerProps extends ComponentPropsWithoutRef<"section"> {
 }
 
 // Fixed to the window's bottom edge, with margins for its gaps, so an author's
-// top or bottom override still moves it at every width. Below `md` it
-// stretches across the window, 18px from its edges. From `md` up it's 500px
-// wide in the bottom-left corner, 24px from the edges, clear of the toasts in
+// top or bottom override still moves it at every width. Below `md:` it
+// stretches across the window, 18px from its edges. From `md:` up it's 500px
+// wide in the bottom-left corner, 24px from the edges, opposite the toasts in
 // the bottom-right. It's never taller than the window less its bottom gap.
 const cookie_content_cva = cva([
   "bg-bg-white p-4.5 shadow-card border-otl-gray-200 fixed bottom-0 left-0 right-0 z-30 mx-4.5 mb-4.5",

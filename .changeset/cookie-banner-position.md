@@ -4,7 +4,7 @@
 "@govtechmy/myds-docs": patch
 ---
 
-CookieBanner now sits where the design guideline's "Cookie banner location" puts it: across the bottom of the window below `md:` (768px), and in the bottom-left corner from `md:` up. It used to sit bottom-right, touching the window's edges on a phone. From `md:` up a toast sat over it there, and took the clicks meant for its "Reject all" and "Customise" buttons. Toasts stay bottom-right, so from `md:` up the two no longer overlap.
+CookieBanner now sits where the design guideline's "Cookie banner location" puts it: across the bottom of the window below `md:` (768px), and in the bottom-left corner from `md:` up. It used to sit bottom-right, touching the window's edges on a phone. From `md:` up a toast sat over it there, and took the clicks meant for its "Reject all" and "Customise" buttons. Toasts stay bottom-right, so from 908px up the two no longer overlap. From 768 to 907px a toast can still cover the banner's right side.
 
 - **Below `md:`.** The banner stretches across the window, 18px from its left, right and bottom edges, with 18px padding. Nothing caps its width here: it's the window's width less 36px.
 - **From `md:` up.** It's 500px wide, border and padding included, 24px from the window's left and bottom edges, with 24px padding. Its padding used to widen at `sm:` (640px); it now widens at `md:`.

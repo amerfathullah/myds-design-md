@@ -238,7 +238,7 @@ Always include a `CookieBannerTitle`. `CookieBanner` renders a `<section>` named
 
 ## Placement
 
-Render `CookieBanner` first in `<body>`, before `Skiplink`. It renders where you put it, not in a portal, and is fixed to the bottom of the window. Below `md:` (768px) it stretches across the window, 18px from its left, right and bottom edges. From `md:` up it's 500px wide in the bottom-left corner, 24px from the left and bottom edges, clear of toasts in the bottom-right. Coming first in the page is how keyboard and screen-reader users reach it when the page loads.
+Render `CookieBanner` first in `<body>`, before `Skiplink`. It renders where you put it, not in a portal, and is fixed to the bottom of the window. Below `md:` (768px) it stretches across the window, 18px from its left, right and bottom edges. From `md:` up it's 500px wide in the bottom-left corner, 24px from the left and bottom edges. Toasts sit in the bottom-right, so from 908px up they don't overlap it. Coming first in the page is how keyboard and screen-reader users reach it when the page loads.
 
 ```tsx copy title="Placement"
 export default () => (

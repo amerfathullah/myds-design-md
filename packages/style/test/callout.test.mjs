@@ -81,48 +81,47 @@ async function withPage(use) {
 
 const modes = ["client", "server"];
 
-const information = [
-  "- note:",
-  '  - term: "Maklumat: Permohonan sedang disemak"',
-  "  - definition: Kami akan menghubungi anda dalam masa lima hari bekerja.",
-];
-const error = [
-  "- note:",
-  '  - term: "Ralat: Borang tidak dihantar"',
-  "  - definition: Semak butiran anda dan cuba lagi.",
-];
+// A note's accessibility snapshot: its title as a `term`, quoted since each
+// title holds a colon, its content as a `definition`, then `after`'s lines
+const note = (title, content, ...after) =>
+  [
+    "- note:",
+    `  - term: "${title}"`,
+    `  - definition: ${content}`,
+    ...after,
+  ].join("\n");
+
+const informationNote = note(
+  "Maklumat: Permohonan sedang disemak",
+  "Kami akan menghubungi anda dalam masa lima hari bekerja.",
+);
+const errorTitle = "Ralat: Borang tidak dihantar";
+const errorContent = "Semak butiran anda dan cuba lagi.";
 
 // Each callout's accessibility snapshot, by name: a note holding the title
 // and the content, and the dismissible one's "Close" button. No image.
 const expected = {
-  omitted: information,
-  info: information,
-  success: [
-    "- note:",
-    '  - term: "Berjaya: Data disimpan"',
-    "  - definition: Perubahan anda telah disimpan.",
-  ],
-  warning: [
-    "- note:",
-    '  - term: "Amaran: Sesi akan tamat"',
-    "  - definition: Sesi anda akan tamat dalam masa lima minit.",
-  ],
-  danger: error,
-  "dismissible-danger": [...error, '  - button "Close"'],
+  omitted: informationNote,
+  info: informationNote,
+  success: note("Berjaya: Data disimpan", "Perubahan anda telah disimpan."),
+  warning: note(
+    "Amaran: Sesi akan tamat",
+    "Sesi anda akan tamat dalam masa lima minit.",
+  ),
+  danger: note(errorTitle, errorContent),
+  "dismissible-danger": note(errorTitle, errorContent, '  - button "Close"'),
 };
 
 test("each callout reads as a note holding its title and content, and the dismissible one its Close button, with no image", () =>
   withPage(async (page) => {
     const actual = {};
-    for (const mode of modes)
-      for (const name of Object.keys(expected))
-        actual[`${mode}-${name}`] = await page
-          .locator(`[data-test="${mode}-${name}"]`)
-          .ariaSnapshot();
     const wanted = {};
     for (const mode of modes)
-      for (const [name, lines] of Object.entries(expected))
-        wanted[`${mode}-${name}`] = lines.join("\n");
+      for (const [name, snapshot] of Object.entries(expected)) {
+        const id = `${mode}-${name}`;
+        actual[id] = await page.locator(`[data-test="${id}"]`).ariaSnapshot();
+        wanted[id] = snapshot;
+      }
     assert.deepEqual(actual, wanted);
   }));
 

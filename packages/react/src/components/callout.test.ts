@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { CrossIcon, InfoIcon, WarningCircleIcon, WarningIcon } from "../icons";
 import { CheckCircleIcon } from "../icons/check-circle";
+import { isIcon } from "../svg/icon-test-markup";
 import { Button } from "./button";
 import {
   Callout,
@@ -217,6 +218,14 @@ async function serverRender(element: ReactElement) {
   return container;
 }
 
+// The status icon each Variant draws; with `variant` omitted, `info`'s
+const statusIcons = {
+  success: CheckCircleIcon,
+  warning: WarningCircleIcon,
+  info: InfoIcon,
+  danger: WarningIcon,
+};
+
 const renderings = [
   ["client-mounted", mount],
   ["server-rendered", serverRender],
@@ -234,20 +243,28 @@ async function rootOf(
 
 describe.each(variants)("Callout with %s", (_, variant) => {
   describe.each(renderings)("%s", (_, render) => {
-    test('its status icon is an `<svg>` in the root with `aria-hidden="true"`', async () => {
+    test('its status icon, its Variant\'s, is an `<svg>` in the root with `aria-hidden="true"`', async () => {
       const root = await rootOf(render, titled({ variant }));
-      const icons = [...root.children].filter(
+      const [icon, ...others] = [...root.children].filter(
         (child) => child.localName === "svg",
       );
-      expect(icons).toHaveLength(1);
-      expect(icons[0]!.getAttribute("aria-hidden")).toBe("true");
+      expect(others).toEqual([]);
+      expect(isIcon(icon!, statusIcons[variant ?? "info"])).toBe(true);
+      expect(icon!.getAttribute("aria-hidden")).toBe("true");
     });
 
     test('with `dismissible`, every `<svg>` in it is `aria-hidden="true"` or inside an element that is', async () => {
       const root = await rootOf(render, titled({ variant, dismissible: true }));
       const svgs = [...root.querySelectorAll("svg")];
-      // The status icon, and the close button's cross
-      expect(svgs).toHaveLength(2);
+      // Its Variant's status icon, and the close button's cross
+      const [cross, ...otherCrosses] = svgs.filter((svg) =>
+        isIcon(svg, CrossIcon),
+      );
+      expect(otherCrosses).toEqual([]);
+      expect(cross!.closest("button")).not.toBeNull();
+      const [status, ...others] = svgs.filter((svg) => svg !== cross);
+      expect(others).toEqual([]);
+      expect(isIcon(status!, statusIcons[variant ?? "info"])).toBe(true);
       expect(
         svgs
           .filter((svg) => !svg.closest('[aria-hidden="true"]'))

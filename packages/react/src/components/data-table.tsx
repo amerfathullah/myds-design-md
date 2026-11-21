@@ -75,6 +75,11 @@ interface DataTableColumnMeta {
     cell?: string;
   };
   sortable?: boolean;
+  /**
+   * Makes a leaf column widenable: its header gets a widen button, and until
+   * the column is widened, its cells truncate their text to one line, capped
+   * at 230px. Every other column wraps. It does nothing on a column group.
+   */
   expandable?: boolean;
   tooltip?: ReactNode;
   /**

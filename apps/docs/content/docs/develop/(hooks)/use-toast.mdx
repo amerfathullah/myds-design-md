@@ -77,6 +77,8 @@ toast({
 });
 ```
 
+A `ToastEvent` can also take `type`, which sets how urgently screen readers announce the toast. `type` isn't the design guideline's Type, which is `variant`. See [Screen readers](/docs/develop/toast#screen-readers) in the Toast documentation.
+
 ### Building a Self Assembled Toast Component
 
 The `useToast` hook provides the handlers required to listen to toast events from anywhere inside your application. This can be achieved through the `subscribe` and `unsubscribe` handlers and can be seen in the [Advanced Usage](/docs/develop/toast#advanced-usage) of the Toast documentation.
@@ -120,6 +122,7 @@ console.log(toasts);
     variant: "success" | "message" | "info" | "warning" | "error";
     title: ReactNode;
     description?: ReactNode;
+    type?: "foreground" | "background";
 };`,
     },
     toasts: {
@@ -129,6 +132,7 @@ console.log(toasts);
     variant: "success" | "message" | "info" | "warning" | "error";
     title: ReactNode;
     description?: ReactNode;
+    type?: "foreground" | "background";
 };`,
     },
     subscribe: {

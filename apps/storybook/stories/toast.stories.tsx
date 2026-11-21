@@ -159,7 +159,11 @@ const DemoToast = (props: any) => {
  *   return (
  *     <ToastProvider>
  *       {toasts.map((event, index) => (
- *         <ToastRoot key={index} variant={event.variant || "message"}>
+ *         <ToastRoot
+ *           key={index}
+ *           variant={event.variant || "message"}
+ *           type={event.type}
+ *         >
  *           <ToastIcon />
  *           <div className="space-y-1">
  *             <ToastTitle>{event.title}</ToastTitle>

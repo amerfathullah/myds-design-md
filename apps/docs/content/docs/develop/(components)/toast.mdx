@@ -134,7 +134,11 @@ export default function Toaster() {
   return (
     <ToastProvider>
       {toasts.map((event, index) => (
-        <ToastRoot key={index} variant={event.variant || "message"}>
+        <ToastRoot
+          key={index}
+          variant={event.variant || "message"}
+          type={event.type}
+        >
           <ToastIcon />
           <div className="space-y-1">
             <ToastTitle>{event.title}</ToastTitle>
@@ -209,10 +213,45 @@ const { toast } = useToast();
   </Tab>
 </Tabs>
 
+### Screen readers
+
+By default, only an `error` toast interrupts the screen reader. A toast of every other Variant is announced at the next pause, such as the end of the sentence the screen reader is reading.
+
+A toast's `type` sets this: `"foreground"` interrupts, and `"background"` waits for a pause. Without a `type`, an `error` toast is `"foreground"`, and every other Variant is `"background"`. `type` isn't the design guideline's Type, which is `variant`.
+
+When a toast of another Variant must be heard at once, pass `type: "foreground"` to `toast()`. For an error that can wait, pass `type: "background"`.
+
+```tsx copy title="Choosing how a toast is announced"
+import { useToast } from "@amerfathullah/myds-react/hooks";
+
+//... inside your component
+const { toast } = useToast();
+
+// A warning that must be heard at once
+toast({
+  variant: "warning",
+  title: "Warning: Your session is about to end",
+  type: "foreground",
+});
+
+// An error that can wait
+toast({
+  variant: "error",
+  title: "Error: Your draft wasn't saved",
+  type: "background",
+});
+```
+
+`AutoToast` takes `type` too, and sets it for every toast, whatever its Variant. A toast's own `type`, passed to `toast()`, wins. Prefer setting `type` on the one toast that needs it: with `<AutoToast type="foreground" />`, every toast interrupts, and toasts shown together can interrupt each other.
+
+`ToastRoot` takes `type` as well, for example `<ToastRoot variant="warning" type="foreground">`. In a toaster you assemble yourself, pass each event's `type` to its `ToastRoot`, as the [Advanced Usage](#advanced-usage) toaster does. Otherwise a `type` passed to `toast()` has no effect.
+
+Avoid showing two `error` toasts at once: each can interrupt the other.
+
 ## Props
 
 ### AutoToast
-`AutoToast` passes any props other than `closeLabel`, `viewportLabel` and `announceLabel` to each toast's `ToastRoot`.
+`AutoToast` passes any props other than `closeLabel`, `viewportLabel` and `announceLabel` to each toast's `ToastRoot`. Its `type` applies only to a toast that doesn't set its own.
 <TypeTable
   type={{
     closeLabel: {
@@ -232,6 +271,13 @@ const { toast } = useToast();
         "What screen readers announce before each toast's text. It is not shown. Don't pass an empty one: Radix logs an error.",
       type: "string",
       default: "Notification",
+    },
+    type: {
+      description:
+        "How urgently screen readers announce each toast: foreground interrupts what they're reading, and background waits for a pause. It sets every toast's type, but a toast's own type, passed to toast(), wins. It isn't the design guideline's Type, which is variant.",
+      type: "enum",
+      typeDescription: "foreground | background",
+      default: "foreground for error, background for the rest",
     },
   }}
 />
@@ -261,6 +307,13 @@ Its `label` names the region that holds the toasts, `Notifications ({hotkey})` b
       description: "Time (ms) before toast disappears",
       type: "number",
       default: "5000"
+    },
+    type: {
+      description:
+        "How urgently screen readers announce the toast: foreground interrupts what they're reading, and background waits for a pause. Its default depends on the variant, unlike Radix's, which is foreground for every toast. A type of undefined gets this default too. It isn't the design guideline's Type, which is variant.",
+      type: "enum",
+      typeDescription: "foreground | background",
+      default: "foreground for error, background for the rest",
     },
   }}
 />

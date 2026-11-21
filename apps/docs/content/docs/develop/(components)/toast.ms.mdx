@@ -251,16 +251,16 @@ export default function SessionWarning({ endsAt }: { endsAt: number }) {
 }
 ```
 
-`AutoToast` juga menerima `type`, dan menetapkannya untuk setiap toast, contohnya `<AutoToast type="foreground" />`. `type` toast itu sendiri, yang dihantar kepada `toast()`, diutamakan.
+`AutoToast` juga menerima `type`, dan menetapkannya untuk setiap toast, tanpa mengira variannya. `type` toast itu sendiri, yang dihantar kepada `toast()`, diutamakan. Sebaiknya tetapkan `type` pada toast yang memerlukannya sahaja: dengan `<AutoToast type="foreground" />`, setiap toast memotong bacaan, dan toast yang dipaparkan serentak boleh memotong sebutan satu sama lain.
 
-`ToastRoot` turut menerima `type`, contohnya `<ToastRoot variant="success" type="foreground">`. Dalam toaster yang anda susun sendiri, hantar `type` setiap peristiwa kepada `ToastRoot`nya, seperti toaster dalam [Penggunaan Lanjutan](#penggunaan-lanjutan). Jika tidak, `type` yang dihantar kepada `toast()` tidak memberi kesan.
+`ToastRoot` turut menerima `type`, contohnya `<ToastRoot variant="warning" type="foreground">`. Dalam toaster yang anda susun sendiri, hantar `type` setiap peristiwa kepada `ToastRoot`nya, seperti toaster dalam [Penggunaan Lanjutan](#penggunaan-lanjutan). Jika tidak, `type` yang dihantar kepada `toast()` tidak memberi kesan.
 
 Elakkan memaparkan dua toast `error` serentak: setiap satu boleh memotong sebutan yang lain.
 
 ## Props
 
 ### AutoToast
-`AutoToast` menghantar prop selain `closeLabel`, `viewportLabel` dan `announceLabel` kepada `ToastRoot` setiap toast.
+`AutoToast` menghantar prop selain `closeLabel`, `viewportLabel` dan `announceLabel` kepada `ToastRoot` setiap toast. `type`nya hanya digunakan untuk toast yang tidak menetapkan `type` sendiri.
 <TypeTable
   type={{
     closeLabel: {
@@ -319,7 +319,7 @@ Prop `label` pada `ToastViewport` menamakan kawasan yang memuatkan toast, iaitu 
     },
     type: {
       description:
-        "Sama ada pembaca skrin memotong bacaannya untuk menyebut toast ini (foreground) atau menunggu jeda (background). Nilai lalainya bergantung pada varian, berbeza daripada nilai lalai Radix, iaitu foreground bagi setiap toast. Ia bukan Jenis dalam garis panduan reka bentuk; Jenis ialah variant.",
+        "Sama ada pembaca skrin memotong bacaannya untuk menyebut toast ini (foreground) atau menunggu jeda (background). Nilai lalainya bergantung pada varian, berbeza daripada nilai lalai Radix, iaitu foreground bagi setiap toast. type yang bernilai undefined juga mendapat nilai lalai ini. Ia bukan Jenis dalam garis panduan reka bentuk; Jenis ialah variant.",
       type: "enum",
       typeDescription: "foreground | background",
       default: "foreground untuk error, background untuk yang lain",

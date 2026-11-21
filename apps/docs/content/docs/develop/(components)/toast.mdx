@@ -228,7 +228,7 @@ import { useEffect } from "react";
 import { useToast } from "@amerfathullah/myds-react/hooks";
 
 // Warns the user a minute before the session ends. endsAt is a timestamp in
-// milliseconds, such as Date.now() returns.
+// milliseconds, like the one Date.now() returns.
 export default function SessionWarning({ endsAt }: { endsAt: number }) {
   const { toast } = useToast();
 
@@ -250,16 +250,16 @@ export default function SessionWarning({ endsAt }: { endsAt: number }) {
 }
 ```
 
-`AutoToast` takes `type` too, and sets it for every toast, for example `<AutoToast type="foreground" />`. A toast's own `type`, passed to `toast()`, wins.
+`AutoToast` takes `type` too, and sets it for every toast, whatever its Variant. A toast's own `type`, passed to `toast()`, wins. Prefer setting `type` on the one toast that needs it: with `<AutoToast type="foreground" />`, every toast interrupts, and toasts shown together can interrupt each other.
 
-`ToastRoot` takes `type` as well, for example `<ToastRoot variant="success" type="foreground">`. In a toaster you assemble yourself, pass each event's `type` to its `ToastRoot`, as the [Advanced Usage](#advanced-usage) toaster does. Otherwise a `type` passed to `toast()` has no effect.
+`ToastRoot` takes `type` as well, for example `<ToastRoot variant="warning" type="foreground">`. In a toaster you assemble yourself, pass each event's `type` to its `ToastRoot`, as the [Advanced Usage](#advanced-usage) toaster does. Otherwise a `type` passed to `toast()` has no effect.
 
 Avoid showing two `error` toasts at once: each can interrupt the other.
 
 ## Props
 
 ### AutoToast
-`AutoToast` passes any props other than `closeLabel`, `viewportLabel` and `announceLabel` to each toast's `ToastRoot`.
+`AutoToast` passes any props other than `closeLabel`, `viewportLabel` and `announceLabel` to each toast's `ToastRoot`. Its `type` applies only to a toast that doesn't set its own.
 <TypeTable
   type={{
     closeLabel: {
@@ -318,7 +318,7 @@ Its `label` names the region that holds the toasts, `Notifications ({hotkey})` b
     },
     type: {
       description:
-        "How urgently screen readers announce the toast: foreground interrupts what they're reading, and background waits for a pause. Its default depends on the variant, unlike Radix's, which is foreground for every toast. It isn't the design guideline's Type, which is variant.",
+        "How urgently screen readers announce the toast: foreground interrupts what they're reading, and background waits for a pause. Its default depends on the variant, unlike Radix's, which is foreground for every toast. A type of undefined gets this default too. It isn't the design guideline's Type, which is variant.",
       type: "enum",
       typeDescription: "foreground | background",
       default: "foreground for error, background for the rest",

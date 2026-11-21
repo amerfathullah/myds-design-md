@@ -1,14 +1,21 @@
 // CookieBanner in Chromium, with real mouse and keyboard input, on the
 // compiled stylesheet. It's a page region, not a dialog (ADR-0009): the
 // first click outside it reaches its target and leaves it open, and Tab and
-// Shift+Tab leave it in DOM order. While it's shown, it pads the page's
-// scroll area by its height and bottom offset, so tabbing through a phone's
-// page never leaves a focused control entirely covered, even after Customise
-// makes it taller. In landscape on a phone it fits the viewport and scrolls
-// inside. Closing it doesn't scroll the page, and it slides out before it
-// leaves the document. Its section takes focus when the keyboard opens it.
-// Under forced colours the section draws an outline only while it holds
-// focus (#159), and in normal colours it draws none, not even the browser's.
+// Shift+Tab leave it in DOM order. It sits where the guideline puts it
+// (#195): below `md:` it stretches across the window, 18px from its left,
+// right and bottom edges, and from `md:` up it's 500px wide in the
+// bottom-left corner, 24px from the left and bottom edges. Its action row
+// still stacks below `sm:`, and with a toast shown on desktop, a click on
+// each of its buttons reaches that button. While it's shown, it pads the
+// page's scroll area and `<body>` by its height and bottom gap, on a phone
+// and on desktop, so tabbing through a phone's page never leaves a focused
+// control's whole height behind it, even after Customise makes it taller. In
+// landscape on a phone and in a short desktop window it stays above its
+// bottom gap and scrolls inside. Closing it doesn't scroll the page, and it
+// slides out before it leaves the document. Its section takes focus when the
+// keyboard opens it. Under forced colours the section draws an outline only
+// while it holds focus (#159), and in normal colours it draws none, not even
+// the browser's.
 //
 // The page is cookie-banner.page.jsx: the React components themselves,
 // bundled with esbuild, on the stylesheet the Tailwind import compiles for
@@ -153,9 +160,9 @@ function readPadding() {
   };
 }
 
-// Whether both paddings are what the banner needs, rounded up to a whole
-// pixel
-const matches = ({ needed, scrollPadding, bodyPadding }) =>
+// Whether both paddings are the banner's height plus its bottom gap, rounded
+// up to a whole pixel
+const paddingsMatchBanner = ({ needed, scrollPadding, bodyPadding }) =>
   needed > 0 &&
   [scrollPadding, bodyPadding].every(
     (padding) => padding >= needed && padding - needed < 1,
@@ -219,11 +226,11 @@ function readPlacement() {
   };
 }
 
-// The banner's placement at each of `viewports`, as `[label, viewport,
-// expected]`, keeping only the measures each expects
-async function readPlacements(viewports) {
+// The banner's placement in each of `cases`, `[label, viewport, expected]`,
+// keeping only the measures each expects
+async function readPlacements(cases) {
   const actual = {};
-  for (const [label, viewport, expected] of viewports) {
+  for (const [label, viewport, expected] of cases) {
     const placement = await withPage(viewport, (page) =>
       page.evaluate(readPlacement),
     );
@@ -234,13 +241,12 @@ async function readPlacements(viewports) {
   return actual;
 }
 
-// Each row is `[label, viewport, expected]`
-const assertPlacements = async (viewports) =>
+// Checks the banner's placement in each of `cases`, `[label, viewport,
+// expected]`
+const assertPlacements = async (cases) =>
   assert.deepEqual(
-    await readPlacements(viewports),
-    Object.fromEntries(
-      viewports.map(([label, , expected]) => [label, expected]),
-    ),
+    await readPlacements(cases),
+    Object.fromEntries(cases.map(([label, , expected]) => [label, expected])),
   );
 
 test("below `md:`, the banner stretches across the window, 18px from its left, right and bottom edges, with 18px padding", () =>
@@ -394,8 +400,11 @@ for (const [name, viewport] of [
       await frames(page);
       const afterCustomise = await page.evaluate(readPadding);
       assert.ok(afterCustomise.needed > before.needed, "Customise is taller");
-      assert.ok(matches(before), JSON.stringify(before));
-      assert.ok(matches(afterCustomise), JSON.stringify(afterCustomise));
+      assert.ok(paddingsMatchBanner(before), JSON.stringify(before));
+      assert.ok(
+        paddingsMatchBanner(afterCustomise),
+        JSON.stringify(afterCustomise),
+      );
     }));
 
 // The Customise view in a short window: whether the banner's top is in the

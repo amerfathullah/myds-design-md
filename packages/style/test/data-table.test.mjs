@@ -7,8 +7,8 @@
 // pointer leaves its header. On a touch-only screen, where `(hover: hover)`
 // doesn't match, a tap sorts or widens. In Chromium's accessibility tree,
 // each column header is named by its text alone, not by the buttons and
-// tooltip trigger inside it, and the ids those names use don't repeat across
-// two tables on one page.
+// tooltip trigger inside it. No id repeats on a page with two tables that
+// share column ids, so neither do the ids those names use.
 //
 // The page is data-table.page.jsx: the React components themselves, bundled
 // with esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -434,10 +434,20 @@ test("a column header that renders no text isn't named by the buttons and toolti
   });
 });
 
-test("with two DataTables on one page, no id their names use repeats", async () => {
+test("with two DataTables on one page, no id repeats, and each id their names use is their own", async () => {
   await withPage(1280, async (page) => {
-    // The ids each table's names refer to. TanStack's header and cell ids
-    // repeat across tables (#181), but no name refers to them.
+    // The page's tables share column ids, such as `name` and `position`, and
+    // row ids, but their header and body cells render no id (#181)
+    const ids = await page.evaluate(() =>
+      [...document.querySelectorAll("[id]")].map((element) => element.id),
+    );
+    assert.ok(ids.length > 0, "the page has no id");
+    assert.deepEqual(
+      [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))],
+      [],
+      "an id repeats on the page",
+    );
+    // The ids each table's names refer to
     const [first, second] = await page.evaluate((tables) => {
       const attributes = ["aria-labelledby", "aria-describedby"];
       return tables.map((table) =>

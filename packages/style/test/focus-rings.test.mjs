@@ -63,7 +63,10 @@ const otpSlot = (test) =>
 const radioWrapper = (row) =>
   `[data-test=data-table] tbody tr:nth-child(${row}) div:has(> input[type=radio])`;
 const tableCell = (row, column) => `[data-cell="${row}-${column}"]`;
-const dataTableCell = (id) => `[data-test=data-table] [id="${id}"]`;
+// The DataTable's body cell in row `row` and column `column`, both counted
+// from 1
+const dataTableCell = (row, column) =>
+  `[data-test=data-table] tbody tr:nth-child(${row}) > td:nth-child(${column})`;
 
 /**
  * Each control, in the page's tab order:
@@ -201,8 +204,10 @@ const controls = [
     },
     {
       name: `TableCell in DataTable, ${where}`,
-      // DataTable's first column is its radio column
-      focus: dataTableCell(`r${row + 1}_${["_radio", "role", "unit"][column]}`),
+      // DataTable's columns are radio, name, role and unit. Its first
+      // column is its radio column, and its middle and last are role and
+      // unit.
+      focus: dataTableCell(row + 1, [1, 3, 4][column]),
       reach: "script",
       inset: true,
       pixels: true,

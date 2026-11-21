@@ -146,6 +146,12 @@ const firstColumn = (within: ParentNode) =>
     (cell) => cell.textContent,
   );
 
+// The ids more than one element in `within` has, each listed once
+const repeatedIds = (within: ParentNode) => {
+  const ids = [...within.querySelectorAll("[id]")].map((element) => element.id);
+  return [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
+};
+
 // The button in `within` whose accessible name is `name`
 function buttonNamed(within: ParentNode, name: string) {
   const button = [...within.querySelectorAll("button")].find(
@@ -355,7 +361,7 @@ describe.each(modes)("Each row's control in %s selection", (mode, controls) => {
       selection: { id_by: "id", mode },
     });
     expect(rowTexts(page)).toEqual(["Chong", "Aminah", "Badrul"]);
-    await click(page.querySelector('thead th[id="name"] button')!);
+    await click(buttonNamed(page, "Sort by Name"));
     expect(rowTexts(page)).toEqual(["Aminah", "Badrul", "Chong"]);
     expect(namesOf(page, controls)).toEqual([
       "Select row 1",
@@ -643,6 +649,180 @@ describe("Server rendering a radio DataTable", () => {
       hydrated: served,
       recovered: [],
     });
+  });
+
+  test("repeats no id, in the server HTML or once hydrated, and hydrates with nothing logged", async () => {
+    const html = renderToString(twoTables());
+    // The server HTML, parsed off the page
+    const served = document.createElement("div");
+    served.innerHTML = html;
+    const container = document.body.appendChild(document.createElement("div"));
+    container.innerHTML = html;
+    const recovered: unknown[] = [];
+    const root = await act(async () =>
+      hydrateRoot(container, twoTables(), {
+        onRecoverableError: (error) => recovered.push(error),
+      }),
+    );
+    unmountAfterTest(root, container);
+    expect(served.querySelectorAll("[id]").length).toBeGreaterThan(0);
+    expect({
+      served: repeatedIds(served),
+      hydrated: repeatedIds(container),
+      recovered,
+    }).toEqual({ served: [], hydrated: [], recovered: [] });
+  });
+});
+
+describe("DataTables on one page", () => {
+  type Contact = {
+    id: string;
+    name: string;
+    email: string;
+    children?: Contact[];
+  };
+
+  // Two rows with one sub-row each, which only a `nest` table shows
+  const contacts: Contact[] = [
+    {
+      id: "a",
+      name: "Aminah",
+      email: "aminah@example.gov.my",
+      children: [{ id: "a1", name: "Ali", email: "ali@example.gov.my" }],
+    },
+    {
+      id: "b",
+      name: "Badrul",
+      email: "badrul@example.gov.my",
+      children: [{ id: "b1", name: "Bala", email: "bala@example.gov.my" }],
+    },
+  ];
+
+  // The `name` and `email` columns every table here has. In a `nest` table,
+  // the name column's cells hold the nested-row toggle.
+  const contactColumns = (nest = false): ColumnDef<Contact>[] => [
+    {
+      id: "name",
+      accessorKey: "name",
+      header: "Name",
+      ...(nest && { cell: Cell.Expand }),
+    },
+    { id: "email", accessorKey: "email", header: "Email" },
+  ];
+
+  // Each kind of table, by the props it adds
+  const kinds: Partial<ComponentProps<typeof DataTable<Contact>>>[] = [
+    {},
+    { selection: { id_by: "id", mode: "radio" } },
+    { selection: { id_by: "id", mode: "checkbox" } },
+    {
+      columns: contactColumns(true),
+      nest: { id_by: "children" },
+      selection: { id_by: "id", mode: "checkbox" },
+    },
+  ];
+
+  // Mounts two DataTables of each kind, then `after`, and expands every
+  // nested row. Returns the page.
+  async function twoOfEachKind(...after: ReactElement[]) {
+    const page = await mount(
+      createElement(
+        "div",
+        null,
+        ...kinds.flatMap((props, kind) =>
+          [1, 2].map((copy) =>
+            createElement(DataTable<Contact>, {
+              key: `${kind}-${copy}`,
+              columns: contactColumns(),
+              data: contacts,
+              ...props,
+            }),
+          ),
+        ),
+        ...after,
+      ),
+    );
+    for (const toggle of page.querySelectorAll(toggles)) await click(toggle);
+    return page;
+  }
+
+  test("repeat no id, with two of each kind sharing column ids", async () => {
+    const page = await twoOfEachKind();
+    expect(page.querySelectorAll("table")).toHaveLength(8);
+    // The nested rows are expanded, in both `nest` tables
+    expect(rowTexts(page).filter((text) => text?.includes("Ali"))).toHaveLength(
+      2,
+    );
+    expect(page.querySelectorAll("[id]").length).toBeGreaterThan(0);
+    expect(repeatedIds(document)).toEqual([]);
+  });
+
+  test("put no `id` on a header or body cell", async () => {
+    const page = await twoOfEachKind(
+      createElement(DataTable<Contact>, {
+        key: "loading",
+        columns: contactColumns(),
+        data: contacts,
+        loading: true,
+      }),
+      createElement(DataTable<Contact>, {
+        key: "empty",
+        columns: contactColumns(),
+        data: [],
+      }),
+      createElement(DataTable<Contact>, {
+        key: "pinned",
+        columns: contactColumns(),
+        data: contacts,
+        pin: { left: ["_radio", "name"], right: ["email"] },
+        selection: { id_by: "id", mode: "radio" },
+      }),
+      // A grouped header over the two columns, and a placeholder above the
+      // selection column
+      createElement(DataTable<Contact>, {
+        key: "grouped",
+        columns: [
+          { id: "contact", header: "Contact", columns: contactColumns() },
+        ],
+        data: contacts,
+        selection: { id_by: "id", mode: "checkbox" },
+      }),
+    );
+    const cells = [...page.querySelectorAll("th, td")];
+    expect(page.querySelectorAll("table")).toHaveLength(12);
+    expect(page.querySelectorAll("thead tr").length).toBeGreaterThan(12);
+    expect(
+      cells
+        .filter((cell) => cell.hasAttribute("id"))
+        .map((cell) => cell.outerHTML),
+    ).toEqual([]);
+  });
+
+  test("leave an app's own ids, such as `name` and `email`, to the app", async () => {
+    const page = await mount(
+      createElement(
+        "div",
+        null,
+        createElement(DataTable<Contact>, {
+          columns: contactColumns(),
+          data: contacts,
+        }),
+        createElement("label", { htmlFor: "email" }, "E-mel"),
+        createElement("input", { id: "email" }),
+        createElement(
+          "section",
+          { "aria-labelledby": "name" },
+          createElement("h2", { id: "name" }, "Maklumat pemohon"),
+        ),
+      ),
+    );
+    const input = page.querySelector("input");
+    expect(document.getElementById("email")).toBe(input);
+    expect(page.querySelector("label")!.control).toBe(input);
+    expect(document.getElementById("name")).toBe(page.querySelector("h2"));
+    expect(computeAccessibleName(page.querySelector("section")!)).toBe(
+      "Maklumat pemohon",
+    );
   });
 });
 

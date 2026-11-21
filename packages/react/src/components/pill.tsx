@@ -65,6 +65,7 @@ export const Pill: ForwardRefExoticComponent<PillProps> = React.forwardRef(
         <Slottable>{children}</Slottable>
         {onDismiss && !disabled && (
           <Button
+            type="button"
             variant="default-ghost"
             size="small"
             className="p-0"

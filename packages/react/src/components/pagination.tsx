@@ -2,6 +2,8 @@ import React, {
   ComponentProps,
   forwardRef,
   ForwardRefExoticComponent,
+  isValidElement,
+  MouseEvent,
   ReactNode,
   useContext,
 } from "react";
@@ -13,6 +15,8 @@ import { ChevronRightIcon } from "../icons/chevron-right";
 import { Slot } from "@radix-ui/react-slot";
 import { usePagination } from "../hooks/use-pagination";
 import { sharedContext } from "../utils/registry";
+import { isButton } from "../utils/button-mark";
+import { composeEventHandlers } from "../utils/compose-event-handlers";
 
 // The English default names. The parts set them, and AutoPagination sets
 // them again where it passes a label prop through to a part.
@@ -121,82 +125,121 @@ const PaginationItem: ForwardRefExoticComponent<ComponentProps<"li">> =
   ));
 PaginationItem.displayName = "PaginationItem";
 
-const PaginationPrevious: ForwardRefExoticComponent<
-  ComponentProps<"button"> & { asChild?: boolean }
-> = forwardRef(({ asChild, children, ...props }, ref) => {
-  const { page, onPageChange } = useContext(PaginationContext);
-  const disabled = page <= 1;
-  const handlePreviousPage = () => {
-    if (page > 1) {
-      onPageChange(page - 1);
-    }
-  };
+type PaginationStepProps = ComponentProps<"button"> & { asChild?: boolean };
 
-  if (asChild)
+// What PaginationPrevious and PaginationNext do on a click, with `asChild`
+// or without: go to page `to`, or, at their end of the range, where they're
+// `disabled`, prevent the click, so a link child doesn't navigate, and
+// change no page. The author's `onClick` runs first, and calling
+// `preventDefault()` there skips it. With `asChild`, Slot runs the child's
+// own `onClick` before both.
+const stepTo = (
+  onClick: PaginationStepProps["onClick"],
+  disabled: boolean,
+  to: number,
+  onPageChange: (page: number) => void,
+) =>
+  composeEventHandlers(onClick, (event: MouseEvent<HTMLButtonElement>) => {
+    if (disabled) event.preventDefault();
+    else onPageChange(to);
+  });
+
+// The disabled state an `asChild` PaginationPrevious or PaginationNext gives
+// `child` at its end of the range: native `disabled` when the child renders
+// a <button>, which is a <button> or a MYDS Button that isn't itself
+// `asChild`, and `aria-disabled` on any other child, such as a link, which
+// `disabled` isn't valid on. Set before the props, so the author's own
+// `disabled` or `aria-disabled` wins, and the child's own wins over both.
+const disabledStateOf = (disabled: boolean, child: ReactNode) => {
+  if (!disabled) return {};
+  const rendersButton =
+    isValidElement<{ asChild?: unknown }>(child) &&
+    (child.type === "button" || (isButton(child.type) && !child.props.asChild));
+  return rendersButton ? { disabled } : { "aria-disabled": disabled };
+};
+
+const PaginationPrevious: ForwardRefExoticComponent<PaginationStepProps> =
+  forwardRef(({ asChild, children, onClick, ...props }, ref) => {
+    const { page, onPageChange } = useContext(PaginationContext);
+    const disabled = page <= 1;
+    const handleClick = stepTo(onClick, disabled, page - 1, onPageChange);
+
+    // The child keeps the page change and the disabled state. It gets no
+    // name and no classes: name and style your own element.
+    if (asChild)
+      return (
+        <Slot
+          ref={ref}
+          {...disabledStateOf(disabled, children)}
+          {...props}
+          onClick={handleClick}
+        >
+          {children}
+        </Slot>
+      );
+
     return (
-      <Slot ref={ref} {...props}>
+      <Button
+        ref={ref}
+        variant={"default-outline"}
+        size={"medium"}
+        disabled={disabled}
+        className={clx(disabled && "shadow-transparent")}
+        // Children name the button. With none, it shows only the chevron.
+        aria-label={children ? undefined : PREVIOUS_LABEL}
+        {...props}
+        onClick={handleClick}
+      >
+        <ButtonIcon>
+          <ChevronLeftIcon />
+        </ButtonIcon>
         {children}
-      </Slot>
+      </Button>
     );
-
-  return (
-    <Button
-      ref={ref}
-      variant={"default-outline"}
-      size={"medium"}
-      disabled={disabled}
-      className={clx(disabled && "shadow-transparent")}
-      onClick={handlePreviousPage}
-      // Children name the button. With none, it shows only the chevron.
-      aria-label={children ? undefined : PREVIOUS_LABEL}
-      {...props}
-    >
-      <ButtonIcon>
-        <ChevronLeftIcon />
-      </ButtonIcon>
-      {children}
-    </Button>
-  );
-});
+  });
 
 PaginationPrevious.displayName = "PaginationPrevious";
 
-const PaginationNext: ForwardRefExoticComponent<
-  ComponentProps<"button"> & { asChild?: boolean }
-> = forwardRef(({ asChild, children, ...props }, ref) => {
-  const { page, totalPages, onPageChange } = useContext(PaginationContext);
-  const disabled = page === totalPages;
-  const handleNextPage = () => {
-    if (page < totalPages) {
-      onPageChange(page + 1);
-    }
-  };
-  if (asChild)
-    return (
-      <Slot ref={ref} {...props}>
-        {children}
-      </Slot>
-    );
+const PaginationNext: ForwardRefExoticComponent<PaginationStepProps> =
+  forwardRef(({ asChild, children, onClick, ...props }, ref) => {
+    const { page, totalPages, onPageChange } = useContext(PaginationContext);
+    // The last page, or past it, as page 1 is with no pages
+    const disabled = page >= totalPages;
+    const handleClick = stepTo(onClick, disabled, page + 1, onPageChange);
 
-  return (
-    <Button
-      ref={ref}
-      variant={"default-outline"}
-      size={"medium"}
-      disabled={disabled}
-      className={clx(disabled && "shadow-transparent")}
-      onClick={handleNextPage}
-      // Children name the button. With none, it shows only the chevron.
-      aria-label={children ? undefined : NEXT_LABEL}
-      {...props}
-    >
-      {children}
-      <ButtonIcon>
-        <ChevronRightIcon />
-      </ButtonIcon>
-    </Button>
-  );
-});
+    // The child keeps the page change and the disabled state. It gets no
+    // name and no classes: name and style your own element.
+    if (asChild)
+      return (
+        <Slot
+          ref={ref}
+          {...disabledStateOf(disabled, children)}
+          {...props}
+          onClick={handleClick}
+        >
+          {children}
+        </Slot>
+      );
+
+    return (
+      <Button
+        ref={ref}
+        variant={"default-outline"}
+        size={"medium"}
+        disabled={disabled}
+        className={clx(disabled && "shadow-transparent")}
+        // Children name the button. With none, it shows only the chevron.
+        aria-label={children ? undefined : NEXT_LABEL}
+        {...props}
+        onClick={handleClick}
+      >
+        {children}
+        <ButtonIcon>
+          <ChevronRightIcon />
+        </ButtonIcon>
+      </Button>
+    );
+  });
 
 PaginationNext.displayName = "PaginationNext";
 

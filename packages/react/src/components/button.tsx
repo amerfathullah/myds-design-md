@@ -10,6 +10,7 @@ import { clx } from "../utils";
 import { cva, VariantProps } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
 import { sharedContext } from "../utils/registry";
+import { markButton } from "../utils/button-mark";
 
 /*========================================================================================================================*/
 
@@ -146,6 +147,9 @@ const Button: ForwardRefExoticComponent<ButtonProps> = forwardRef(
   },
 );
 Button.displayName = "Button";
+// So that PaginationPrevious and PaginationNext, given a Button from either
+// build as their `asChild` child, know it renders a <button>
+markButton(Button);
 
 /*========================================================================================================================*/
 

@@ -629,10 +629,12 @@ describe("Server rendering a radio DataTable", () => {
     expect(html).toContain('type="radio"');
   });
 
-  test("hydrates with nothing logged, and the radios keep the names the server gave them", async () => {
+  test("repeats no id, in the server HTML or once hydrated, hydrates with nothing logged, and the radios keep the names the server gave them", async () => {
     const container = document.body.appendChild(document.createElement("div"));
     container.innerHTML = renderToString(twoTables());
     const served = radioNames(container);
+    const servedIds = container.querySelectorAll("[id]").length;
+    const servedRepeats = repeatedIds(container);
     const recovered: unknown[] = [];
     const root = await act(async () =>
       hydrateRoot(container, twoTables(), {
@@ -645,32 +647,16 @@ describe("Server rendering a radio DataTable", () => {
     expect(second).toBeTruthy();
     expect(served).toEqual([first, first, first, second, second, second]);
     expect(second).not.toBe(first);
-    expect({ hydrated: radioNames(container), recovered }).toEqual({
+    expect(servedIds).toBeGreaterThan(0);
+    expect({
+      hydrated: radioNames(container),
+      repeated: { served: servedRepeats, hydrated: repeatedIds(container) },
+      recovered,
+    }).toEqual({
       hydrated: served,
+      repeated: { served: [], hydrated: [] },
       recovered: [],
     });
-  });
-
-  test("repeats no id, in the server HTML or once hydrated, and hydrates with nothing logged", async () => {
-    const html = renderToString(twoTables());
-    // The server HTML, parsed off the page
-    const served = document.createElement("div");
-    served.innerHTML = html;
-    const container = document.body.appendChild(document.createElement("div"));
-    container.innerHTML = html;
-    const recovered: unknown[] = [];
-    const root = await act(async () =>
-      hydrateRoot(container, twoTables(), {
-        onRecoverableError: (error) => recovered.push(error),
-      }),
-    );
-    unmountAfterTest(root, container);
-    expect(served.querySelectorAll("[id]").length).toBeGreaterThan(0);
-    expect({
-      served: repeatedIds(served),
-      hydrated: repeatedIds(container),
-      recovered,
-    }).toEqual({ served: [], hydrated: [], recovered: [] });
   });
 });
 

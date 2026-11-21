@@ -204,9 +204,8 @@ const controls = [
     },
     {
       name: `TableCell in DataTable, ${where}`,
-      // DataTable's columns are radio, name, role and unit. Its first
-      // column is its radio column, and its middle and last are role and
-      // unit.
+      // DataTable's columns are radio, name, role and unit, so its first,
+      // interior and last columns here are radio, role and unit
       focus: dataTableCell(row + 1, [1, 3, 4][column]),
       reach: "script",
       inset: true,

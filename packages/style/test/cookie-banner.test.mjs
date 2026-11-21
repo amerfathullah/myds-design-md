@@ -10,7 +10,7 @@
 // page's scroll area and `<body>` by its height and bottom gap, on a phone
 // and on desktop, so tabbing through a phone's page never leaves a focused
 // control's whole height behind it, even after Customise makes it taller. In
-// landscape on a phone and in a short desktop window it stays above its
+// landscape on a phone and in short desktop windows it stays above its
 // bottom gap and scrolls inside. Closing it doesn't scroll the page, and it
 // slides out before it leaves the document. Its section takes focus when the
 // keyboard opens it. Under forced colours the section draws an outline only
@@ -427,16 +427,26 @@ const readCappedCustomise = (viewport) =>
     });
   });
 
-test("in landscape on a phone and in a short desktop window, the Customise view fits the window above the banner's bottom gap, and its content scrolls inside it", async () => {
+test("in landscape on a phone and in short desktop windows, the Customise view fits the window above the banner's bottom gap, and its content scrolls inside it once it reaches the cap", async () => {
   const capped = { topInWindow: true, overflows: true, scrolled: true };
+  // The page loads no web fonts. At 1024×400 the Customise view is about as
+  // tall as the cap, so whether it overflows depends on the fonts installed:
+  // it does in Inter and doesn't in DejaVu Sans. Only its top and bottom gap
+  // are compared there. At 1024×300 it overflows in either.
+  const { topInWindow, bottomGap } = await readCappedCustomise({
+    width: 1024,
+    height: 400,
+  });
   assert.deepEqual(
     {
       landscape: await readCappedCustomise(landscape),
-      "1024×400": await readCappedCustomise({ width: 1024, height: 400 }),
+      "1024×400": { topInWindow, bottomGap },
+      "1024×300": await readCappedCustomise({ width: 1024, height: 300 }),
     },
     {
       landscape: { ...capped, bottomGap: 18 },
-      "1024×400": { ...capped, bottomGap: 24 },
+      "1024×400": { topInWindow: true, bottomGap: 24 },
+      "1024×300": { ...capped, bottomGap: 24 },
     },
   );
 });

@@ -49,6 +49,7 @@ import {
   ThemeContext,
   ThemeProvider,
   useTheme,
+  useToast,
 } from "@amerfathullah/myds-react/hooks";
 import {
   ChevronDownIcon,
@@ -113,6 +114,7 @@ import {
   ToastRoot,
   ToastTitle,
   ToastViewport,
+  type ToastEvent,
 } from "@amerfathullah/myds-react/toast";
 import {
   Toggle,
@@ -1130,6 +1132,51 @@ export const ToastParts = () => {
       </ToastRoot>
       <ToastViewport />
     </ToastProvider>
+  );
+};
+
+// `type` sets how urgently screen readers announce a toast (#198). `toast()`
+// takes it, as do a hand-composed ToastRoot and AutoToast, which sets it for
+// every toast. It is Radix's `"foreground"` or `"background"`, or undefined.
+export const ToastUrgency = () => {
+  const { toast } = useToast();
+  const later: ToastEvent = {
+    variant: "error",
+    title: "Ralat: Fail tidak dimuat naik",
+    type: "background",
+  };
+  return (
+    <>
+      <button
+        onClick={() =>
+          toast({ variant: "info", title: "x", type: "background" })
+        }
+      />
+      <button onClick={() => toast(later)} />
+      <button
+        onClick={() => toast({ variant: "info", title: "x", type: undefined })}
+      />
+      <button
+        onClick={() =>
+          // @ts-expect-error `type` is "foreground" or "background"
+          toast({ variant: "info", title: "x", type: "urgent" })
+        }
+      />
+      <AutoToast type="foreground" />
+      <ToastProvider>
+        <ToastRoot variant="warning" type="foreground">
+          <ToastTitle>Amaran: Sesi anda akan tamat</ToastTitle>
+        </ToastRoot>
+        <ToastRoot variant="error" type={undefined}>
+          <ToastTitle>Ralat: Borang tidak dihantar</ToastTitle>
+        </ToastRoot>
+        {/* @ts-expect-error `type` is "foreground" or "background" */}
+        <ToastRoot variant="error" type="urgent" />
+        <ToastViewport />
+      </ToastProvider>
+      {/* @ts-expect-error `type` is "foreground" or "background" */}
+      <AutoToast type="urgent" />
+    </>
   );
 };
 

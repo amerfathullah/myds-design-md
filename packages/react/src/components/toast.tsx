@@ -24,6 +24,15 @@ export type ToastEvent = {
     | undefined;
   title: ReactNode;
   description?: ReactNode;
+  /**
+   * How urgently screen readers announce the toast: `"foreground"`
+   * interrupts what they're reading, and `"background"` waits for a pause.
+   * It isn't the design guideline's Type, which is `variant`.
+   *
+   * An `error` toast defaults to `"foreground"`, and every other Variant to
+   * `"background"`. It wins over a `type` passed to AutoToast.
+   */
+  type?: "foreground" | "background" | undefined;
 };
 
 /*========================================================================================================================*/
@@ -72,6 +81,16 @@ interface ToastRootProps
   extends React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>,
     VariantProps<typeof toast_cva> {
   variant: "message" | "success" | "info" | "warning" | "error";
+  /**
+   * How urgently screen readers announce the toast: `"foreground"`
+   * interrupts what they're reading, and `"background"` waits for a pause.
+   * It isn't the design guideline's Type, which is `variant`.
+   *
+   * An `error` toast defaults to `"foreground"`, and every other Variant to
+   * `"background"`, unlike Radix, whose default is `"foreground"` for every
+   * toast. A `type` of `undefined` gets the Variant's default.
+   */
+  type?: "foreground" | "background" | undefined;
 }
 
 const toast_cva = cva([
@@ -87,21 +106,33 @@ const toast_cva = cva([
 const ToastRoot = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   ToastRootProps
->(({ className, variant = "message", duration = 5000, ...props }, ref) => {
-  const [isHover, setIsHover] = React.useState(false);
-  return (
-    <ToastContext.Provider value={{ variant, isHover, duration }}>
-      <ToastPrimitives.Root
-        ref={ref}
-        className={toast_cva({ className })}
-        onPause={() => setIsHover(true)}
-        onResume={() => setIsHover(false)}
-        duration={duration}
-        {...props}
-      />
-    </ToastContext.Provider>
-  );
-});
+>(
+  (
+    {
+      className,
+      variant = "message",
+      duration = 5000,
+      type = variant === "error" ? "foreground" : "background",
+      ...props
+    },
+    ref,
+  ) => {
+    const [isHover, setIsHover] = React.useState(false);
+    return (
+      <ToastContext.Provider value={{ variant, isHover, duration }}>
+        <ToastPrimitives.Root
+          ref={ref}
+          className={toast_cva({ className })}
+          onPause={() => setIsHover(true)}
+          onResume={() => setIsHover(false)}
+          duration={duration}
+          type={type}
+          {...props}
+        />
+      </ToastContext.Provider>
+    );
+  },
+);
 ToastRoot.displayName = ToastPrimitives.Root.displayName;
 
 /*========================================================================================================================*/
@@ -337,12 +368,23 @@ interface AutoToastProps
    * @default "Notification"
    */
   announceLabel?: string;
+  /**
+   * How urgently screen readers announce each toast: `"foreground"`
+   * interrupts what they're reading, and `"background"` waits for a pause.
+   * It isn't the design guideline's Type, which is `variant`.
+   *
+   * It sets every toast's `type`, but a toast's own `type`, passed to
+   * `toast()`, wins. Without either, an `error` toast defaults to
+   * `"foreground"`, and every other Variant to `"background"`.
+   */
+  type?: "foreground" | "background" | undefined;
 }
 
 const AutoToast: FunctionComponent<AutoToastProps> = ({
   closeLabel = "Close",
   viewportLabel = "Notifications ({hotkey})",
   announceLabel = "Notification",
+  type,
   ...props
 }) => {
   const { toasts, subscribe, unsubscribe } = useToast();
@@ -360,6 +402,11 @@ const AutoToast: FunctionComponent<AutoToastProps> = ({
         <ToastRoot
           key={props.id || index}
           variant={toast.variant || "message"}
+          // AutoToast's other props apply to every toast, over what it sets
+          // for each. `type` is the one where a toast's own value wins: it
+          // sets how urgently that toast is announced. With neither,
+          // ToastRoot picks it by Variant (ADR-0014).
+          type={toast.type ?? type}
           {...props}
         >
           <ToastIcon />

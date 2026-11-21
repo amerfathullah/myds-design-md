@@ -344,13 +344,15 @@ Jika halaman tidak memaparkan tajuk untuk jadual itu, namakannya dengan `aria-la
 <DataTable aria-label="Senarai pemohon" columns={columns} data={applicants} />
 ```
 
-### Mengembangkan Lajur
+### Melebarkan Lajur
 
-Anda boleh mengembangkan saiz sel dalam lajur dengan menetapkan sifat `expandable` kepada `true` dalam objek `meta` definisi lajur.
+Tetapkan sifat `expandable` kepada `true` dalam objek `meta` definisi lajur untuk menjadikan lajur itu boleh dilebarkan. Tajuknya mendapat butang lebarkan, dan selagi lajur itu belum dilebarkan, selnya memotong teks pada setiap lebar skrin: satu baris, dengan elipsis jika kandungan sel ialah teks. Melebarkan lajur itu memaparkan semua teksnya. Lajur boleh dilebarkan tidak kira bagaimana ia ditakrifkan: dengan `id`, dengan `accessorKey` sahaja, di dalam tajuk berkumpulan, atau ditambah selepas jadual mula dipaparkan. `expandable` pada kumpulan lajur tidak memberikannya butang lebarkan.
 
-Untuk menunjukkan ini, kami telah menetapkan sifat `expandable` kepada `true` untuk lajur `Nama` dan `Jawatan`. Anda boleh mengklik ikon pengembangan untuk melihat kandungan penuh sel.
+Selagi ia belum dilebarkan, lajur yang boleh dilebarkan sekurang-kurangnya 230px lebar, atau selebar teksnya jika teks itu lebih pendek, dan mengambil bahagiannya daripada ruang lebihan: had 230px itu mengehadkan teksnya, bukan lajur. Setiap lajur lain membalut teksnya, pada setiap lebar skrin, jadi teksnya sentiasa dipaparkan sepenuhnya. Lajur yang telah dilebarkan kekal pada satu baris dari titik henti `md:` (768px) ke atas, dan membalut teksnya di bawah titik henti itu. Dalam jadual dengan lajur tersangkut, lajur panjang yang tidak boleh dilebarkan boleh dihimpit hingga selebar perkataan terpanjangnya, jadi berikan ia `size`.
 
-Butang pengembangan sentiasa dipaparkan pada tajuk lajur, pada setiap lebar skrin, supaya pengguna papan kekunci dan skrin sentuh juga boleh mencapainya. Pembaca skrin menyebutnya sebagai "Widen" diikuti teks yang dipaparkan oleh tajuk lajur, contohnya "Widen Name", atau sebagai "Widen column" jika tajuk tidak memaparkan teks. `aria-pressed` butang itu memberitahu sama ada lajur itu dikembangkan. Tetapkan `widenLabel` dalam objek `meta` yang sama untuk menamakannya dalam bahasa laman anda, contohnya `meta: { expandable: true, widenLabel: "Lebarkan Nama" }`.
+Untuk menunjukkan ini, kami telah menetapkan sifat `expandable` kepada `true` untuk lajur `Nama` dan `Jawatan`. Tekan butang lebarkan pada tajuk lajur untuk melihat kandungan penuh selnya.
+
+Butang lebarkan sentiasa dipaparkan pada tajuk lajur, pada setiap lebar skrin, supaya pengguna papan kekunci dan skrin sentuh juga boleh mencapainya. Pembaca skrin menyebutnya sebagai "Widen" diikuti teks yang dipaparkan oleh tajuk lajur, contohnya "Widen Name", atau sebagai "Widen column" jika tajuk tidak memaparkan teks. `aria-pressed` butang itu memberitahu sama ada lajur itu dilebarkan. Tetapkan `widenLabel` dalam objek `meta` yang sama untuk menamakannya dalam bahasa laman anda, contohnya `meta: { expandable: true, widenLabel: "Lebarkan Nama" }`.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
@@ -1776,7 +1778,8 @@ Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **Colu
       type: "(context) => ReactNode",
     },
     "meta.expandable": {
-      description: "Lajur boleh dikembangkan",
+      description:
+        "Lajur boleh dilebarkan: tajuknya mendapat butang lebarkan, dan selnya memotong teks selagi ia belum dilebarkan. Tiada kesan pada kumpulan lajur.",
       type: "boolean",
     },
     "meta.sortable": {
@@ -1801,7 +1804,7 @@ Anda boleh menambah kaki per lajur dengan menetapkan `footer` dalam objek **Colu
     },
     "meta.widenLabel": {
       description:
-        "Nama boleh capai butang pengembangan lajur. Ia menggantikan seluruh nama lalai, dengan {header} ialah teks yang dipaparkan oleh tajuk. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
+        "Nama boleh capai butang lebarkan lajur. Ia menggantikan seluruh nama lalai, dengan {header} ialah teks yang dipaparkan oleh tajuk. Pembaca skrin menyebutnya; ia tidak dipaparkan.",
       type: "string",
       default: "Widen {header}",
     },

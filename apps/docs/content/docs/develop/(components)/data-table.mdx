@@ -344,13 +344,15 @@ Where the page shows no title for the table, name it with `aria-label`:
 <DataTable aria-label="Senarai pemohon" columns={columns} data={applicants} />
 ```
 
-### Expanding Columns
+### Widening Columns
 
-You can expand the size of the cells in a column by setting the `expandable` property to `true` in the `meta` object of the column definition.
+Set `expandable` to `true` in the `meta` object of a column definition to make the column widenable. Its header gets a widen button, and until the column is widened, its cells truncate their text at every screen width: one line, with an ellipsis where a cell's content is text. Widening the column shows all of its text. A column is widenable however it's defined: with an `id`, with `accessorKey` alone, inside a grouped header, or added after the table first renders. A column group's `expandable` gives it no widen button.
 
-To demonstrate this, we have set the `expandable` property to `true` for the `Name` and `Position` columns. You can click on the expand icon to view the full content of the cell.
+While it's collapsed, a widenable column is at least 230px wide, or as wide as its text if that's shorter, and takes its share of any spare width: the 230px caps its text, not the column. Every other column wraps its text, at every screen width, so its text always shows in full. A widened column stays on one line from the `md:` breakpoint (768px) up, and wraps below it. In a table with pinned columns, a long column that can't be widened can be squeezed to the width of its longest word, so give it a `size`.
 
-The expand button always shows in the column's header, at every screen width, so keyboard and touch users can reach it too. Screen readers announce it as "Widen" followed by the text the column's header renders, for example "Widen Name", or as "Widen column" if the header renders no text. Its `aria-pressed` tells them whether the column is widened. Set `widenLabel` in the same `meta` object to name it in your site's language, for example `meta: { expandable: true, widenLabel: "Lebarkan Nama" }`.
+To demonstrate this, we have set the `expandable` property to `true` for the `Name` and `Position` columns. Press the widen button in a column's header to see the full content of its cells.
+
+The widen button always shows in the column's header, at every screen width, so keyboard and touch users can reach it too. Screen readers announce it as "Widen" followed by the text the column's header renders, for example "Widen Name", or as "Widen column" if the header renders no text. Its `aria-pressed` tells them whether the column is widened. Set `widenLabel` in the same `meta` object to name it in your site's language, for example `meta: { expandable: true, widenLabel: "Lebarkan Nama" }`.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
@@ -1776,7 +1778,8 @@ You can add footer per column by setting the `footer` in **ColumnDef** object of
       type: "(context) => ReactNode",
     },
     "meta.expandable": {
-      description: "Expandable column",
+      description:
+        "Widenable column: its header gets a widen button, and its cells truncate their text until it's widened. It has no effect on a column group.",
       type: "boolean",
     },
     "meta.sortable": {
@@ -1801,7 +1804,7 @@ You can add footer per column by setting the `footer` in **ColumnDef** object of
     },
     "meta.widenLabel": {
       description:
-        "Accessible name of the column's expand button. It replaces the whole default name, where {header} is the text the header renders. Screen readers announce it; it is not shown.",
+        "Accessible name of the column's widen button. It replaces the whole default name, where {header} is the text the header renders. Screen readers announce it; it is not shown.",
       type: "string",
       default: "Widen {header}",
     },

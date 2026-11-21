@@ -721,77 +721,77 @@ export const PinnedColumns: Story = createStory({
       },
     },
     {
-      id: "action",
+      id: "action-1",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-2",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-3",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-4",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-5",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-6",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-7",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-8",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-9",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-10",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;
       },
     },
     {
-      id: "action",
+      id: "action-11",
       header: "Action",
       cell: () => {
         return <Button variant="default-outline">Edit</Button>;

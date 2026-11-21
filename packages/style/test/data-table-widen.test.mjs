@@ -164,13 +164,11 @@ const widenButton = (page, table, name) =>
     .locator(`[data-test=${table}] thead`)
     .getByRole("button", { name: `Widen ${name}`, exact: true });
 
-// Runs in the page: whether `cell`'s content overflows it
-const clippedSource = `(cell) => cell.scrollWidth > cell.clientWidth`;
-
-// Runs in the page: the cells of the leaf column headed `name` in the table
-// `table`, each as its `data-expanded` (null without one): its header cell,
-// its body cells and its footer cell, null in a table with no footer. Also
-// whether each body cell's content overflows it.
+// Runs in the page: the leaf column headed `name` in the table `table`. Its
+// header cell's, body cells' and footer cell's `data-expanded` (null without
+// one, and a null footer in a table with no footer), and for each body cell,
+// whether its content overflows it, how many lines its text renders on, and
+// its `text-overflow`.
 function readColumn({ table, name }) {
   const root = document.querySelector(`[data-test=${table}] table`);
   // The last header row holds every leaf column's header, and the first
@@ -184,14 +182,31 @@ function readColumn({ table, name }) {
     (row) => row.children[index],
   );
   const footer = root.querySelector("tfoot tr")?.children[index] ?? null;
-  const expanded = (cell) => cell?.getAttribute("data-expanded") ?? null;
+  const dataExpanded = (cell) => cell?.getAttribute("data-expanded") ?? null;
+  // Each line box the cell's text renders has its own top
+  const lineCount = (cell) => {
+    const range = document.createRange();
+    range.selectNodeContents(cell);
+    const tops = [...range.getClientRects()]
+      .filter((rect) => rect.width > 0)
+      .map((rect) => Math.round(rect.top));
+    return new Set(tops).size;
+  };
   return {
-    header: expanded(leafHeaders[index]),
-    body: body.map(expanded),
-    footer: expanded(footer),
-    clipped: body.map((cell) => cell.scrollWidth > cell.clientWidth),
+    header: dataExpanded(leafHeaders[index]),
+    body: body.map(dataExpanded),
+    footer: dataExpanded(footer),
+    cells: body.map((cell) => ({
+      clipped: cell.scrollWidth > cell.clientWidth,
+      lines: lineCount(cell),
+      textOverflow: getComputedStyle(cell).textOverflow,
+    })),
   };
 }
+
+// `readColumn` for `page`
+const column = (page, table, name) =>
+  page.evaluate(readColumn, { table, name });
 
 // The four kinds of widenable column in the `kinds` table, by header
 const kinds = ["With id", "Accessor key", "Leaf", "Added"];
@@ -209,7 +224,10 @@ test("each kind of widenable column truncates at rest, its first widen press rev
     await withPage(width, async (page) => {
       await addColumn(page);
       for (const name of kinds) {
-        const read = () => page.evaluate(readColumn, { table: "kinds", name });
+        const read = async () => {
+          const { cells, ...states } = await column(page, "kinds", name);
+          return { ...states, clipped: cells.map(({ clipped }) => clipped) };
+        };
         const steps = [await read()];
         for (let press = 0; press < 2; press++) {
           await widenButton(page, "kinds", name).click();
@@ -296,11 +314,8 @@ test("group and placeholder cells never carry `data-expanded`, even where a grou
     // The groups table's columns that can't be widened, among them Status,
     // which shares its id with its group, carry no `data-expanded` either
     for (const name of ["Age", "Status", "Action"]) {
-      const { clipped, ...cells } = await page.evaluate(readColumn, {
-        table: "groups",
-        name,
-      });
-      actual[`groups, ${name}`] = cells;
+      const { cells, ...states } = await column(page, "groups", name);
+      actual[`groups, ${name}`] = states;
     }
     actual["groups, widen buttons"] = (
       await headerButtonNames(page, "groups")
@@ -319,65 +334,24 @@ test("group and placeholder cells never carry `data-expanded`, even where a grou
   });
 });
 
-// Runs in the page: how many lines `cell`'s text renders on
-function lineCount(cell) {
-  const range = document.createRange();
-  range.selectNodeContents(cell);
-  const tops = [...range.getClientRects()]
-    .filter((rect) => rect.width > 0)
-    .map((rect) => Math.round(rect.top));
-  return new Set(tops).size;
-}
-
-// Runs in the page: each body cell of the column headed `name` in the table
-// `table`, as its `data-expanded` (null without one), whether its content
-// overflows it, the lines its text renders on, and its `text-overflow`
-function readBodyCells({ table, name, lineCountSource }) {
-  const lines = new Function(`return ${lineCountSource}`)();
-  const root = document.querySelector(`[data-test=${table}] table`);
-  const headers = [...[...root.querySelectorAll("thead tr")].at(-1).children];
-  const index = headers.findIndex((header) => header.textContent === name);
-  if (index < 0) throw new Error(`${table} has no column headed ${name}`);
-  return [...root.querySelectorAll("tbody tr")].map((row) => {
-    const cell = row.children[index];
-    return {
-      expanded: cell.getAttribute("data-expanded"),
-      clipped: cell.scrollWidth > cell.clientWidth,
-      lines: lines(cell),
-      textOverflow: getComputedStyle(cell).textOverflow,
-    };
-  });
-}
-
-// `readBodyCells` for `page`
-const bodyCells = (page, table, name) =>
-  page.evaluate(readBodyCells, {
-    table,
-    name,
-    lineCountSource: lineCount.toString(),
-  });
-
 test("a column that can't be widened carries no `data-expanded` and wraps its text in full, at 390px, 768px and 1280px", async () => {
   const actual = {};
   const expected = {};
   for (const width of [390, 768, 1280])
     await withPage(width, async (page) => {
-      const header = await page
-        .locator("[data-test=remark] thead tr:last-child th")
-        .last()
-        .getAttribute("data-expanded");
-      const cells = await bodyCells(page, "remark", "Remark");
+      const { cells, ...states } = await column(page, "remark", "Remark");
       actual[`${width}px`] = {
-        header,
-        cells: cells.map(({ expanded, clipped, lines }) => ({
-          expanded,
+        ...states,
+        cells: cells.map(({ clipped, lines }) => ({
           clipped,
           wraps: lines > 1,
         })),
       };
       expected[`${width}px`] = {
         header: null,
-        cells: Array(5).fill({ expanded: null, clipped: false, wraps: true }),
+        body: Array(5).fill(null),
+        footer: null,
+        cells: Array(5).fill({ clipped: false, wraps: true }),
       };
     });
   assert.deepEqual(actual, expected);
@@ -386,15 +360,15 @@ test("a column that can't be widened carries no `data-expanded` and wraps its te
 test("on a phone, a collapsed column's text is one line cut with an ellipsis, and a tap on its widen button shows all of it, wrapped; from 1280px, widening puts it on one line", async () => {
   // Each body cell of the `kinds` table's Accessor key column, a widenable
   // column whose cells render plain text from its accessor
-  const read = async (page) =>
-    (await bodyCells(page, "kinds", "Accessor key")).map(
-      ({ expanded, clipped, lines, textOverflow }) => ({
-        expanded,
-        clipped,
-        lines: lines === 1 ? "one" : "several",
-        textOverflow,
-      }),
-    );
+  const read = async (page) => {
+    const { body, cells } = await column(page, "kinds", "Accessor key");
+    return cells.map(({ clipped, lines, textOverflow }, row) => ({
+      expanded: body[row],
+      clipped,
+      lines: lines === 1 ? "one" : "several",
+      textOverflow,
+    }));
+  };
   const actual = {};
   await withPage(
     390,
@@ -442,41 +416,28 @@ test("at 768px, a long column that can't be widened wraps, so the docs' columns 
           table: table.getBoundingClientRect().width <= wrapper.clientWidth,
         };
       });
-    const remarks = await bodyCells(page, "long", "Remark");
+    const { cells } = await column(page, "long", "Remark");
     assert.deepEqual(
-      { ...fit, wraps: remarks.map(({ lines }) => lines > 1) },
+      { ...fit, wraps: cells.map(({ lines }) => lines > 1) },
       { wrapper: 736, scrolls: false, table: true, wraps: Array(5).fill(true) },
     );
   });
 });
 
-// The colour of the page's pixel at each point, as [r, g, b]
-async function sample(page, points) {
-  const xs = points.map(({ x }) => x);
-  const ys = points.map(({ y }) => y);
-  const clip = {
-    x: Math.min(...xs),
-    y: Math.min(...ys),
-    width: Math.max(...xs) - Math.min(...xs) + 1,
-    height: Math.max(...ys) - Math.min(...ys) + 1,
-  };
-  const png = await page.screenshot({ clip });
+// The colour of the page's pixel at `point`, as [r, g, b]
+async function pixel(page, { x, y }) {
+  const png = await page.screenshot({ clip: { x, y, width: 1, height: 1 } });
   return page.evaluate(
-    async ({ src, points }) => {
+    async (src) => {
       const image = new Image();
       image.src = src;
       await image.decode();
-      const canvas = new OffscreenCanvas(image.width, image.height);
+      const canvas = new OffscreenCanvas(1, 1);
       const context = canvas.getContext("2d");
       context.drawImage(image, 0, 0);
-      return points.map(({ x, y }) => [
-        ...context.getImageData(x, y, 1, 1).data.slice(0, 3),
-      ]);
+      return [...context.getImageData(0, 0, 1, 1).data.slice(0, 3)];
     },
-    {
-      src: `data:image/png;base64,${png.toString("base64")}`,
-      points: points.map(({ x, y }) => ({ x: x - clip.x, y: y - clip.y })),
-    },
+    `data:image/png;base64,${png.toString("base64")}`,
   );
 }
 
@@ -496,9 +457,9 @@ test("in the docs' Data & Columns table at 1280px, a focused Edit button's ring 
         const { left, top, height } = element.getBoundingClientRect();
         return { x: Math.floor(left - 1.5), y: Math.floor(top + height / 2) };
       });
-      const [resting] = await sample(page, [point]);
+      const resting = await pixel(page, point);
       await button.focus();
-      const [focused] = await sample(page, [point]);
+      const focused = await pixel(page, point);
       await button.blur();
       // Within 8 of the ring's colour in each channel; the ring is opaque
       actual.push({

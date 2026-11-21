@@ -40,12 +40,12 @@ const docsData = [
   { age: 28, id: 5, name: "Charlie", position: "Data Scientist" },
 ];
 
-const status = () => (
+const statusTag = () => (
   <Tag variant="success" size={"small"} mode="pill">
     Success
   </Tag>
 );
-const edit = () => <Button variant="default-outline">Edit</Button>;
+const editButton = () => <Button variant="default-outline">Edit</Button>;
 
 const docsColumns = [
   {
@@ -70,8 +70,8 @@ const docsColumns = [
       tooltip: "Position of the employee",
     },
   },
-  { cell: status, header: "Status", id: "status" },
-  { cell: edit, header: "Action", id: "action" },
+  { cell: statusTag, header: "Status", id: "status" },
+  { cell: editButton, header: "Action", id: "action" },
 ];
 
 const docsGroupedColumns = [
@@ -104,21 +104,21 @@ const docsGroupedColumns = [
     id: "status",
     header: "Application",
     columns: [
-      { id: "status", header: "Status", cell: status },
-      { id: "action", header: "Action", cell: edit },
+      { id: "status", header: "Status", cell: statusTag },
+      { id: "action", header: "Action", cell: editButton },
     ],
   },
 ];
 
 // About 300 characters of text that wraps at its spaces, `label` first
-const long = (label) =>
+const longText = (label) =>
   `${label}: permohonan lesen perniagaan ini telah diterima oleh unit pelesenan dan sedang disemak bersama dokumen sokongan yang dikemukakan oleh pemohon melalui portal rasmi agensi, dan pegawai akan menghubungi pemohon sekiranya maklumat tambahan diperlukan sebelum keputusan dimuktamadkan dalam tempoh empat belas hari bekerja.`;
 
 const kindsData = ["Satu", "Dua"].map((row) => ({
-  withId: long(`${row} with id`),
-  accessor: long(`${row} accessor key`),
-  leaf: long(`${row} leaf`),
-  added: long(`${row} added`),
+  withId: longText(`${row} with id`),
+  accessor: longText(`${row} accessor key`),
+  leaf: longText(`${row} leaf`),
+  added: longText(`${row} added`),
 }));
 
 const kindsColumns = (added) => [
@@ -162,11 +162,6 @@ const kindsColumns = (added) => [
     : []),
 ];
 
-const groupsData = docsData.map((row) => ({
-  ...row,
-  remark: long(`Remark ${row.id}`),
-}));
-
 const groupsColumns = [
   ...docsGroupedColumns,
   {
@@ -192,17 +187,15 @@ const remarkColumns = [
   { id: "remark", accessorKey: "remark", header: "Remark" },
 ];
 
-// About 380 characters of text that wraps at its spaces
-const longer = (label) =>
-  `${long(label)} Salinan keputusan akan dihantar melalui emel dan boleh dimuat turun dari portal rasmi agensi.`;
-
+// The docs' data, each row with a remark of about 300 characters, and of
+// about 380
 const remarkData = docsData.map((row) => ({
   ...row,
-  remark: long(`Remark ${row.id}`),
+  remark: longText(`Remark ${row.id}`),
 }));
 const longData = docsData.map((row) => ({
   ...row,
-  remark: longer(`Remark ${row.id}`),
+  remark: `${longText(`Remark ${row.id}`)} Salinan keputusan akan dihantar melalui emel rasmi.`,
 }));
 
 function Page() {
@@ -234,7 +227,7 @@ function Page() {
       <div data-test="groups">
         <DataTable
           aria-label="Groups"
-          data={groupsData}
+          data={remarkData}
           columns={groupsColumns}
         />
       </div>

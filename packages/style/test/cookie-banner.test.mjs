@@ -71,12 +71,12 @@ const still =
 
 // Opens the page at `viewport` and runs `use` on it, once React has rendered
 // it and the banner is open. With `animate`, the banner's animations run.
-// `forcedColors` is Playwright's option, "active" for forced colours.
-// Nothing logs an error or a warning.
+// With `toast`, the page shows a toast too. `forcedColors` is Playwright's
+// option, "active" for forced colours. Nothing logs an error or a warning.
 async function withPage(
   viewport,
   use,
-  { animate = false, forcedColors = "none" } = {},
+  { animate = false, toast = false, forcedColors = "none" } = {},
 ) {
   // Reduced motion, so the page's smooth scrolling doesn't delay a scroll
   const context = await browser.newContext({
@@ -92,13 +92,14 @@ async function withPage(
       if (["error", "warning"].includes(message.type()))
         errors.push(message.text());
     });
-    await page.route(pageUrl, (route) =>
+    const url = toast ? `${pageUrl}?toast` : pageUrl;
+    await page.route(url, (route) =>
       route.fulfill({
         contentType: "text/html; charset=utf-8",
         body: `<!doctype html><html><head><style>${css}</style>${animate ? "" : `<style>${still}</style>`}</head><body class="bg-bg-white"><div id="root"></div><script>${script}</script></body></html>`,
       }),
     );
-    await page.goto(pageUrl);
+    await page.goto(url);
     await page.waitForFunction(
       () =>
         window.ready.length === 1 &&
@@ -137,22 +138,28 @@ const bannerState = (page) =>
     openChanges: window.openChanges,
   }));
 
-// Runs in the page: the banner's rendered height plus its bottom offset, and
-// the padding it set on `<html>`'s scroll area and on `<body>`
+// Runs in the page: the banner's rendered height plus its bottom gap, and the
+// inline padding it set on `<html>`'s scroll area and on `<body>`
 function readPadding() {
   const banner = document.querySelector("section").getBoundingClientRect();
   return {
     needed: banner.height + (window.innerHeight - banner.bottom),
     scrollPadding: parseFloat(
-      getComputedStyle(document.documentElement).scrollPaddingBottom,
+      document.documentElement.style.getPropertyValue("scroll-padding-bottom"),
     ),
-    bodyPadding: parseFloat(getComputedStyle(document.body).paddingBottom),
+    bodyPadding: parseFloat(
+      document.body.style.getPropertyValue("padding-bottom"),
+    ),
   };
 }
 
-// Whether the padding covers the banner
-const covers = ({ needed, scrollPadding, bodyPadding }) =>
-  scrollPadding >= needed && bodyPadding >= needed && needed > 0;
+// Whether both paddings are what the banner needs, rounded up to a whole
+// pixel
+const matches = ({ needed, scrollPadding, bodyPadding }) =>
+  needed > 0 &&
+  [scrollPadding, bodyPadding].every(
+    (padding) => padding >= needed && padding - needed < 1,
+  );
 
 test("the first click outside the banner reaches its target, and the banner stays open", () =>
   withPage(desktop, async (page) => {
@@ -187,13 +194,172 @@ test("Tab from the banner's last control moves to the next element on the page, 
     );
   }));
 
-test("on a phone, tabbing through the page never leaves a focused control entirely covered by the banner", () =>
+// Runs in the page: the banner's gaps to the window's left, right and bottom
+// edges, its width, and its padding, one number when it's the same on all
+// four sides
+function readPlacement() {
+  const section = document.querySelector("section");
+  const box = section.getBoundingClientRect();
+  const style = getComputedStyle(section);
+  const paddings = [
+    style.paddingTop,
+    style.paddingRight,
+    style.paddingBottom,
+    style.paddingLeft,
+  ].map(parseFloat);
+  const round = (value) => Math.round(value * 100) / 100;
+  return {
+    left: round(box.left),
+    right: round(document.documentElement.clientWidth - box.right),
+    bottom: round(window.innerHeight - box.bottom),
+    width: round(box.width),
+    padding: paddings.every((padding) => padding === paddings[0])
+      ? paddings[0]
+      : paddings,
+  };
+}
+
+// The banner's placement at each of `viewports`, as `[label, viewport,
+// expected]`, keeping only the measures each expects
+async function readPlacements(viewports) {
+  const actual = {};
+  for (const [label, viewport, expected] of viewports) {
+    const placement = await withPage(viewport, (page) =>
+      page.evaluate(readPlacement),
+    );
+    actual[label] = Object.fromEntries(
+      Object.keys(expected).map((key) => [key, placement[key]]),
+    );
+  }
+  return actual;
+}
+
+// Each row is `[label, viewport, expected]`
+const assertPlacements = async (viewports) =>
+  assert.deepEqual(
+    await readPlacements(viewports),
+    Object.fromEntries(
+      viewports.map(([label, , expected]) => [label, expected]),
+    ),
+  );
+
+test("below `md:`, the banner stretches across the window, 18px from its left, right and bottom edges, with 18px padding", () =>
+  assertPlacements([
+    [
+      "375×667",
+      phone,
+      { left: 18, right: 18, bottom: 18, width: 339, padding: 18 },
+    ],
+    // The widest window below `md:`, where nothing caps it at 500px
+    [
+      "767×1024",
+      { width: 767, height: 1024 },
+      { left: 18, right: 18, bottom: 18, width: 731, padding: 18 },
+    ],
+  ]));
+
+test("from `md:` up, the banner is 500px wide in the bottom-left corner, 24px from the left and bottom edges", () =>
+  assertPlacements([
+    [
+      "768×1024",
+      { width: 768, height: 1024 },
+      { left: 24, bottom: 24, width: 500, padding: 24 },
+    ],
+    ["1024×768", desktop, { left: 24, bottom: 24, width: 500 }],
+    [
+      "1440×900",
+      { width: 1440, height: 900 },
+      { left: 24, bottom: 24, width: 500 },
+    ],
+  ]));
+
+// Runs in the page: how the default view's buttons lie in their row,
+// "stacked" when each is the row's full width and below the one before,
+// "row" when they share a line and none is the row's full width, else their
+// boxes
+function readActionRow() {
+  const buttons = ["Accept all", "Reject all", "Customise"].map((name) =>
+    [...document.querySelectorAll("section button")].find(
+      (button) => button.textContent.trim() === name,
+    ),
+  );
+  const row = buttons[0].parentElement.getBoundingClientRect();
+  const boxes = buttons.map((button) => button.getBoundingClientRect());
+  if (
+    boxes.every(
+      (box, index) =>
+        box.left === row.left &&
+        box.width === row.width &&
+        (index === 0 || box.top >= boxes[index - 1].bottom),
+    )
+  )
+    return "stacked";
+  if (boxes.every((box) => box.top === boxes[0].top && box.width < row.width))
+    return "row";
+  return boxes.map(({ left, top, width }) => ({ left, top, width }));
+}
+
+test("the default view's buttons stack full width below `sm:` and sit in a row from `sm:` up, below `md:` too", async () => {
+  const rows = {};
+  for (const [label, viewport] of [
+    ["375×667", phone],
+    ["639×900", { width: 639, height: 900 }],
+    ["640×900", { width: 640, height: 900 }],
+    ["1024×768", desktop],
+  ])
+    rows[label] = await withPage(viewport, (page) =>
+      page.evaluate(readActionRow),
+    );
+  assert.deepEqual(rows, {
+    "375×667": "stacked",
+    "639×900": "stacked",
+    "640×900": "row",
+    "1024×768": "row",
+  });
+});
+
+test("with a toast shown on desktop, a click at the centre of each of the default view's buttons reaches that button", () =>
+  withPage(
+    desktop,
+    async (page) => {
+      await page.waitForSelector("ol > li[data-state=open]");
+      // Each click is recorded and stopped before React sees it, so the
+      // banner stays open in its default view
+      await page.evaluate(() => {
+        window.reached = [];
+        window.addEventListener(
+          "click",
+          (event) => {
+            const button = event.target.closest("button");
+            window.reached.push(
+              button ? button.textContent.trim() : event.target.tagName,
+            );
+            event.stopPropagation();
+          },
+          true,
+        );
+      });
+      const names = ["Accept all", "Reject all", "Customise"];
+      for (const name of names) {
+        const box = await page.getByRole("button", { name }).boundingBox();
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      }
+      assert.deepEqual(await page.evaluate(() => window.reached), names);
+    },
+    { toast: true },
+  ));
+
+test("on a phone, tabbing through the page never leaves a focused control's whole height behind the banner", () =>
   withPage(phone, async (page) => {
     await page.focus("#settings");
     const covered = [];
     const visited = [];
     for (let presses = 0; presses < 40; presses++) {
       await page.keyboard.press("Tab");
+      // The page's controls run its full width, so their ends show in the
+      // banner's 18px side margins. Only their tops and bottoms are compared:
+      // a control is covered when the banner overlaps it and spans its whole
+      // height.
       const { id, hidden } = await page.evaluate(() => {
         const element = document.activeElement;
         const banner = document.querySelector("section");
@@ -203,10 +369,10 @@ test("on a phone, tabbing through the page never leaves a focused control entire
           id: element.id,
           hidden:
             !banner.contains(element) &&
+            box.left < over.right &&
+            box.right > over.left &&
             box.top >= over.top &&
-            box.bottom <= over.bottom &&
-            box.left >= over.left &&
-            box.right <= over.right,
+            box.bottom <= over.bottom,
         };
       });
       if (!id.startsWith("control-")) break;
@@ -217,33 +383,54 @@ test("on a phone, tabbing through the page never leaves a focused control entire
     assert.deepEqual(covered, []);
   }));
 
-test("on a phone, the page's scroll padding and `<body>`'s padding are at least the banner's height plus its bottom offset, before and after Customise makes it taller", () =>
-  withPage(phone, async (page) => {
-    const before = await page.evaluate(readPadding);
-    await page.getByRole("button", { name: "Customise" }).click();
-    await frames(page);
-    const afterCustomise = await page.evaluate(readPadding);
-    assert.ok(afterCustomise.needed > before.needed, "Customise is taller");
-    assert.ok(covers(before), JSON.stringify(before));
-    assert.ok(covers(afterCustomise), JSON.stringify(afterCustomise));
-  }));
+for (const [name, viewport] of [
+  ["on a phone", phone],
+  ["on desktop", desktop],
+])
+  test(`${name}, the page's inline scroll padding and \`<body>\`'s inline padding are the banner's height plus its bottom gap, before and after Customise makes it taller`, () =>
+    withPage(viewport, async (page) => {
+      const before = await page.evaluate(readPadding);
+      await page.getByRole("button", { name: "Customise" }).click();
+      await frames(page);
+      const afterCustomise = await page.evaluate(readPadding);
+      assert.ok(afterCustomise.needed > before.needed, "Customise is taller");
+      assert.ok(matches(before), JSON.stringify(before));
+      assert.ok(matches(afterCustomise), JSON.stringify(afterCustomise));
+    }));
 
-test("in landscape on a phone, the banner fits the viewport and its content scrolls inside it", () =>
-  withPage(landscape, async (page) => {
+// The Customise view in a short window: whether the banner's top is in the
+// window, its bottom gap, and whether its content overflows it and scrolls
+// inside it
+const readCappedCustomise = (viewport) =>
+  withPage(viewport, async (page) => {
     await page.getByRole("button", { name: "Customise" }).click();
     await frames(page);
-    const banner = await page.evaluate(() => {
+    return page.evaluate(() => {
       const section = document.querySelector("section");
       const { top, bottom } = section.getBoundingClientRect();
       section.scrollTop = 100;
       return {
-        fits: top >= 0 && bottom <= window.innerHeight,
+        topInWindow: top >= 0,
+        bottomGap: Math.round((window.innerHeight - bottom) * 100) / 100,
         overflows: section.scrollHeight > section.clientHeight,
         scrolled: section.scrollTop > 0,
       };
     });
-    assert.deepEqual(banner, { fits: true, overflows: true, scrolled: true });
-  }));
+  });
+
+test("in landscape on a phone and in a short desktop window, the Customise view fits the window above the banner's bottom gap, and its content scrolls inside it", async () => {
+  const capped = { topInWindow: true, overflows: true, scrolled: true };
+  assert.deepEqual(
+    {
+      landscape: await readCappedCustomise(landscape),
+      "1024×400": await readCappedCustomise({ width: 1024, height: 400 }),
+    },
+    {
+      landscape: { ...capped, bottomGap: 18 },
+      "1024×400": { ...capped, bottomGap: 24 },
+    },
+  );
+});
 
 test("after the page is scrolled down, clicking Accept all closes the banner without scrolling the page", () =>
   withPage(desktop, async (page) => {
@@ -261,7 +448,7 @@ test("after the page is scrolled down, clicking Accept all closes the banner wit
     );
   }));
 
-test("a close control leaves the banner in the document with `data-state=\"closed\"` until its exit animation ends", () =>
+test('a close control leaves the banner in the document with `data-state="closed"` until its exit animation ends', () =>
   withPage(
     desktop,
     async (page) => {

@@ -377,10 +377,12 @@ function Page() {
         </div>
       </div>
 
-      {/* Fixed below those, clear of every other control. While it's shown,
-          the banner pads the page's bottom by its height, which would make
-          the page taller than the viewport, so that focus could scroll it.
-          Nothing here sits under the banner, so the padding is undone. */}
+      {/* Fixed below those, clear of every other control: from `md:` the
+          banner sits bottom-left, over the main column, so its `md:` classes
+          are overridden to put it on the right. While it's shown, the banner
+          pads the page's bottom by its height, which would make the page
+          taller than the viewport, so that focus could scroll it. Nothing
+          here sits under the banner, so the padding is undone. */}
       <style>
         {
           "html{scroll-padding-bottom:0!important}body{padding-bottom:0!important}"
@@ -389,7 +391,7 @@ function Page() {
       <CookieBanner
         defaultOpen
         closeLabel="Close cookie banner"
-        className="top-[440px] bottom-auto"
+        className="top-[440px] bottom-auto md:right-0 md:left-auto"
         data-test="cookie-banner"
       >
         <CookieBannerTitle>Cookies</CookieBannerTitle>

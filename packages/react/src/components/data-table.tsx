@@ -463,7 +463,6 @@ const DataTableHead: FunctionComponent<{
 
   return (
     <TableHead
-      id={header.id}
       colSpan={header.colSpan}
       aria-labelledby={
         isSelection || !header.isPlaceholder ? labelId : undefined
@@ -587,7 +586,6 @@ const DataTableBody: FunctionComponent = () => {
               {row.getVisibleCells().map((cell) => {
                 return (
                   <TableCell
-                    id={cell.id}
                     key={cell.id}
                     data-expanded={expandableColumns[cell.column.id]}
                     data-pinned={getPinnedSide(cell.column)}

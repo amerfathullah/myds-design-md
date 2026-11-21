@@ -26,8 +26,6 @@ const applicants: Applicant[] = [
   { id: "3", name: "Tan Mei Ling", reference: "PMH-0144", status: "Ditolak" },
 ];
 
-// DataTable makes its header and body cells' ids from the column ids, so the
-// tables on one page need column ids of their own
 const columns: ColumnDef<Applicant>[] = [
   { id: "applicant-name", accessorKey: "name", header: "Nama" },
   {

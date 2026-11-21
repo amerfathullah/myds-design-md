@@ -83,9 +83,10 @@ const pills = (dismissed: string[]) =>
     ),
   );
 
-// A form holding the pills, then a `Button` with no `type`, as the login
-// template's "Log in" button is. The form records each submit by its
-// submitter's name, or null with no submitter, and cancels it.
+// A form holding the pills, then a `Button` with no `type`, as the docs' login
+// page's "Log in" button is (`apps/docs/templates/login.tsx`). The form
+// records each submit by its submitter's name, or null with no submitter,
+// and cancels it.
 async function tagsForm() {
   const dismissed: string[] = [];
   const submits: (string | null)[] = [];
@@ -120,10 +121,10 @@ describe("Pill's remove button", () => {
           property: button.type,
         };
       });
-    const button = { attribute: "button", property: "button" };
+    const typeButton = { attribute: "button", property: "button" };
     expect({ outside: types(outside), inside: types(inside) }).toEqual({
-      outside: [button, button],
-      inside: [button, button],
+      outside: [typeButton, typeButton],
+      inside: [typeButton, typeButton],
     });
   });
 

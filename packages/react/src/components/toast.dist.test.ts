@@ -136,7 +136,7 @@ function declarations(condition: Condition) {
   };
   // The JSDoc of `type` on ToastEvent, ToastRoot's props and AutoToast's
   // props, as a consumer's editor shows it
-  const typeJsdoc = {
+  const typePropJsdoc = {
     ToastEvent: docOf(
       checker
         .getDeclaredTypeOfSymbol(targets.get("ToastEvent")!)
@@ -145,7 +145,7 @@ function declarations(condition: Condition) {
     ToastRoot: docOf(propsOf("ToastRoot").getProperty("type")),
     AutoToast: docOf(propsOf("AutoToast").getProperty("type")),
   };
-  return { file, jsdoc, typeJsdoc };
+  return { file, jsdoc, typePropJsdoc };
 }
 
 describe.each(conditions)(
@@ -183,8 +183,8 @@ describe.each(conditions)(
     // `type` sets how urgently screen readers announce a toast, and only an
     // error toast interrupts by default (ADR-0014)
     test("documents `type` on ToastEvent, ToastRoot and AutoToast: what it does, that it isn't the guideline's Type, and its default by Variant", () => {
-      const { typeJsdoc } = declarations(condition);
-      for (const doc of Object.values(typeJsdoc)) {
+      const { typePropJsdoc } = declarations(condition);
+      for (const doc of Object.values(typePropJsdoc)) {
         expect(doc).toMatch(/^How urgently screen readers announce/);
         expect(doc).toContain(
           "It isn't the design guideline's Type, which is `variant`.",
@@ -193,10 +193,10 @@ describe.each(conditions)(
           /an `error` toast defaults to `"foreground"`, and every other Variant to `"background"`/i,
         );
       }
-      expect(typeJsdoc.ToastRoot).toContain(
+      expect(typePropJsdoc.ToastRoot).toContain(
         'unlike Radix, whose default is `"foreground"` for every toast',
       );
-      expect(typeJsdoc.AutoToast).toContain(
+      expect(typePropJsdoc.AutoToast).toContain(
         "a toast's own `type`, passed to `toast()`, wins",
       );
     });

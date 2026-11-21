@@ -379,6 +379,31 @@ const markupOf = (root: Element) =>
     return parts.join(" ");
   });
 
+// Fires `event`, titled "Disimpan", through the library's toast hook, as an
+// app fires one, under an AutoToast with `props`. Returns the toast's root.
+async function autoToast(
+  event: Omit<ToastEvent, "title">,
+  props: ComponentProps<typeof AutoToast> = {},
+) {
+  let toast: (event: ToastEvent) => void = () => {};
+  const Fire = () => {
+    toast = useToast().toast;
+    return null;
+  };
+  const page = await mount(
+    createElement(
+      "div",
+      null,
+      createElement(AutoToast, props),
+      createElement(Fire),
+    ),
+  );
+  await act(async () => toast({ ...event, title: "Disimpan" }));
+  const [root, ...others] = page.querySelectorAll("li");
+  expect(others).toEqual([]);
+  return root!;
+}
+
 // How urgently screen readers announce a toast (ADR-0014). Radix announces
 // each toast in a visually hidden `role="status"` span of its own, portalled
 // to `<body>`, whose `aria-live` follows ToastRoot's `type`: `assertive` for
@@ -387,39 +412,25 @@ const markupOf = (root: Element) =>
 // default; a toast's own `type` wins over AutoToast's, which wins over the
 // Variant default.
 describe("how urgently a toast is announced", () => {
-  // The `aria-live` of the one announcement on the page, holding `text`.
+  // The `aria-live` of the one announcement on the page, which holds the
+  // toast's title, "Disimpan".
   // Radix fills it in two animation frames after the toast mounts and
   // removes it a second after, so it's read 100ms after the toast fires.
-  async function urgency(text = "Disimpan") {
+  async function urgency() {
     await act(() => new Promise((resolve) => setTimeout(resolve, 100)));
     const [status, ...others] = document.querySelectorAll('[role="status"]');
     expect(others).toEqual([]);
-    expect(status!.textContent).toBe(`Notification ${text}`);
+    expect(status!.textContent).toBe("Notification Disimpan");
     return status!.getAttribute("aria-live");
   }
 
-  // Fires `event`, titled "Disimpan", through the library's toast hook, as
-  // an app fires one, under an AutoToast with `props`. Returns the
-  // `aria-live` of its announcement.
-  async function fired(
+  // The `aria-live` of the announcement of a toast fired as `autoToast` fires
+  // one
+  async function urgencyOfFired(
     event: Omit<ToastEvent, "title">,
     props: ComponentProps<typeof AutoToast> = {},
   ) {
-    let toast: (event: ToastEvent) => void = () => {};
-    const Fire = () => {
-      toast = useToast().toast;
-      return null;
-    };
-    const page = await mount(
-      createElement(
-        "div",
-        null,
-        createElement(AutoToast, props),
-        createElement(Fire),
-      ),
-    );
-    await act(async () => toast({ ...event, title: "Disimpan" }));
-    expect(page.querySelectorAll("li")).toHaveLength(1);
+    await autoToast(event, props);
     return urgency();
   }
 
@@ -433,38 +444,38 @@ describe("how urgently a toast is announced", () => {
       [undefined, "polite"],
       [null, "polite"],
     ] as const)("a %s toast is %s", async (variant, live) => {
-      expect(await fired({ variant })).toBe(live);
+      expect(await urgencyOfFired({ variant })).toBe(live);
     });
 
     test('a message toast fired with `type: "foreground"` is assertive', async () => {
-      expect(await fired({ variant: "message", type: "foreground" })).toBe(
-        "assertive",
-      );
+      expect(
+        await urgencyOfFired({ variant: "message", type: "foreground" }),
+      ).toBe("assertive");
     });
 
     test('an error toast fired with `type: "background"` is polite', async () => {
-      expect(await fired({ variant: "error", type: "background" })).toBe(
-        "polite",
-      );
+      expect(
+        await urgencyOfFired({ variant: "error", type: "background" }),
+      ).toBe("polite");
     });
   });
 
   describe("under an AutoToast with a `type`", () => {
     test('a success toast is assertive under `type="foreground"`', async () => {
-      expect(await fired({ variant: "success" }, { type: "foreground" })).toBe(
-        "assertive",
-      );
+      expect(
+        await urgencyOfFired({ variant: "success" }, { type: "foreground" }),
+      ).toBe("assertive");
     });
 
     test('an error toast is polite under `type="background"`', async () => {
-      expect(await fired({ variant: "error" }, { type: "background" })).toBe(
-        "polite",
-      );
+      expect(
+        await urgencyOfFired({ variant: "error" }, { type: "background" }),
+      ).toBe("polite");
     });
 
     test('a toast fired with `type: "background"` is polite under `type="foreground"`', async () => {
       expect(
-        await fired(
+        await urgencyOfFired(
           { variant: "error", type: "background" },
           { type: "foreground" },
         ),
@@ -473,7 +484,7 @@ describe("how urgently a toast is announced", () => {
 
     test('a toast fired with `type: "foreground"` is assertive under `type="background"`', async () => {
       expect(
-        await fired(
+        await urgencyOfFired(
           { variant: "message", type: "foreground" },
           { type: "background" },
         ),
@@ -482,7 +493,7 @@ describe("how urgently a toast is announced", () => {
 
     test('a toast fired with no `type` is assertive under `type="foreground"`', async () => {
       expect(
-        await fired(
+        await urgencyOfFired(
           { variant: "message", type: undefined },
           { type: "foreground" },
         ),
@@ -491,9 +502,9 @@ describe("how urgently a toast is announced", () => {
   });
 
   describe("composed by hand", () => {
-    // A toast composed by hand, as in `composed`, with `rootProps`. Returns
-    // the `aria-live` of its announcement.
-    async function handComposed(rootProps: RootProps) {
+    // The `aria-live` of the announcement of a toast composed by hand, as
+    // `composed` composes one, with `rootProps`
+    async function urgencyOfComposed(rootProps: RootProps) {
       await composed(rootProps);
       return urgency();
     }
@@ -505,19 +516,19 @@ describe("how urgently a toast is announced", () => {
       ["info", "polite"],
       ["warning", "polite"],
     ] as const)("a %s ToastRoot is %s", async (variant, live) => {
-      expect(await handComposed({ variant })).toBe(live);
+      expect(await urgencyOfComposed({ variant })).toBe(live);
     });
 
     test('a message ToastRoot with `type="foreground"` is assertive', async () => {
       expect(
-        await handComposed({ variant: "message", type: "foreground" }),
+        await urgencyOfComposed({ variant: "message", type: "foreground" }),
       ).toBe("assertive");
     });
 
     test('an error ToastRoot with `type="background"` is polite', async () => {
-      expect(await handComposed({ variant: "error", type: "background" })).toBe(
-        "polite",
-      );
+      expect(
+        await urgencyOfComposed({ variant: "error", type: "background" }),
+      ).toBe("polite");
     });
 
     test.each([
@@ -526,45 +537,15 @@ describe("how urgently a toast is announced", () => {
     ] as const)(
       "a %s ToastRoot with `type={undefined}` gets its Variant's default, %s",
       async (variant, live) => {
-        expect(await handComposed({ variant, type: undefined })).toBe(live);
+        expect(await urgencyOfComposed({ variant, type: undefined })).toBe(
+          live,
+        );
       },
     );
   });
 });
 
 describe("AutoToast", () => {
-  // An AutoToast with `props` showing one toast of `variant`, titled
-  // "Disimpan", fired through the library's toast hook as an app fires one.
-  // Returns the toast's root.
-  async function autoToast(
-    variant: (typeof variants)[number],
-    props: { duration?: number },
-  ) {
-    let toast: (event: ToastEvent) => void = () => {};
-    const Fire = () => {
-      toast = useToast().toast;
-      return null;
-    };
-    const page = await mount(
-      createElement(
-        "div",
-        null,
-        createElement(AutoToast, props),
-        createElement(Fire),
-      ),
-    );
-    await act(async () =>
-      toast({
-        variant,
-        title: "Disimpan",
-        description: "Perubahan anda disimpan.",
-      }),
-    );
-    const [root, ...others] = page.querySelectorAll("li");
-    expect(others).toEqual([]);
-    return root!;
-  }
-
   const variants = ["message", "success", "info", "warning", "error"] as const;
   // The icon each variant showed on main, by what it draws
   const mainIcons: Record<(typeof variants)[number], Icon | undefined> = {
@@ -582,7 +563,10 @@ describe("AutoToast", () => {
     test.each(variants)(
       "renders a %s toast as it did on main",
       async (variant) => {
-        const root = await autoToast(variant, props);
+        const root = await autoToast(
+          { variant, description: "Perubahan anda disimpan." },
+          props,
+        );
         expect(markupOf(root)).toEqual(mainMarkup(duration)[variant]);
         const [status, ...others] = [...root.querySelectorAll("svg")].filter(
           (svg) => !isIcon(svg, CrossIcon),

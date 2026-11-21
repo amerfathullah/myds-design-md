@@ -85,7 +85,7 @@ async function withPage(use) {
 // holds its text, and returns each `status` node in Chromium's accessibility
 // tree: the text its children hold, and its `live`. The tree is read at
 // once, as Radix removes the announcement a second after it mounts.
-async function announcements(page, variant, title) {
+async function fireAndReadAnnouncements(page, variant, title) {
   const client = await page.context().newCDPSession(page);
   try {
     await page.evaluate((event) => window.fire(event.variant, event.title), {
@@ -118,7 +118,7 @@ async function announcements(page, variant, title) {
 test("an error toast's announcement is an assertive live region, which interrupts the screen reader", () =>
   withPage(async (page) => {
     const title = "Ralat: Borang tidak dihantar";
-    assert.deepEqual(await announcements(page, "error", title), [
+    assert.deepEqual(await fireAndReadAnnouncements(page, "error", title), [
       { text: `Notification ${title}`, live: "assertive" },
     ]);
   }));
@@ -126,7 +126,7 @@ test("an error toast's announcement is an assertive live region, which interrupt
 test("a success toast's announcement is a polite live region, announced at the next pause", () =>
   withPage(async (page) => {
     const title = "Berjaya: Data disimpan";
-    assert.deepEqual(await announcements(page, "success", title), [
+    assert.deepEqual(await fireAndReadAnnouncements(page, "success", title), [
       { text: `Notification ${title}`, live: "polite" },
     ]);
   }));

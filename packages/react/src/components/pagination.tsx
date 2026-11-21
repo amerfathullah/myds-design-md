@@ -125,7 +125,7 @@ const PaginationItem: ForwardRefExoticComponent<ComponentProps<"li">> =
   ));
 PaginationItem.displayName = "PaginationItem";
 
-type PaginationStepProps = ComponentProps<"button"> & { asChild?: boolean };
+type PreviousNextProps = ComponentProps<"button"> & { asChild?: boolean };
 
 // What PaginationPrevious and PaginationNext do on a click, with `asChild`
 // or without: go to page `to`, or, at their end of the range, where they're
@@ -133,8 +133,8 @@ type PaginationStepProps = ComponentProps<"button"> & { asChild?: boolean };
 // change no page. The author's `onClick` runs first, and calling
 // `preventDefault()` there skips it. With `asChild`, Slot runs the child's
 // own `onClick` before both.
-const stepTo = (
-  onClick: PaginationStepProps["onClick"],
+const onClickTo = (
+  onClick: PreviousNextProps["onClick"],
   disabled: boolean,
   to: number,
   onPageChange: (page: number) => void,
@@ -158,11 +158,11 @@ const disabledStateOf = (disabled: boolean, child: ReactNode) => {
   return rendersButton ? { disabled } : { "aria-disabled": disabled };
 };
 
-const PaginationPrevious: ForwardRefExoticComponent<PaginationStepProps> =
+const PaginationPrevious: ForwardRefExoticComponent<PreviousNextProps> =
   forwardRef(({ asChild, children, onClick, ...props }, ref) => {
     const { page, onPageChange } = useContext(PaginationContext);
     const disabled = page <= 1;
-    const handleClick = stepTo(onClick, disabled, page - 1, onPageChange);
+    const handleClick = onClickTo(onClick, disabled, page - 1, onPageChange);
 
     // The child keeps the page change and the disabled state. It gets no
     // name and no classes: name and style your own element.
@@ -200,12 +200,12 @@ const PaginationPrevious: ForwardRefExoticComponent<PaginationStepProps> =
 
 PaginationPrevious.displayName = "PaginationPrevious";
 
-const PaginationNext: ForwardRefExoticComponent<PaginationStepProps> =
-  forwardRef(({ asChild, children, onClick, ...props }, ref) => {
+const PaginationNext: ForwardRefExoticComponent<PreviousNextProps> = forwardRef(
+  ({ asChild, children, onClick, ...props }, ref) => {
     const { page, totalPages, onPageChange } = useContext(PaginationContext);
     // The last page, or past it, as page 1 is with no pages
     const disabled = page >= totalPages;
-    const handleClick = stepTo(onClick, disabled, page + 1, onPageChange);
+    const handleClick = onClickTo(onClick, disabled, page + 1, onPageChange);
 
     // The child keeps the page change and the disabled state. It gets no
     // name and no classes: name and style your own element.
@@ -239,7 +239,8 @@ const PaginationNext: ForwardRefExoticComponent<PaginationStepProps> =
         </ButtonIcon>
       </Button>
     );
-  });
+  },
+);
 
 PaginationNext.displayName = "PaginationNext";
 

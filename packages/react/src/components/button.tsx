@@ -147,8 +147,8 @@ const Button: ForwardRefExoticComponent<ButtonProps> = forwardRef(
   },
 );
 Button.displayName = "Button";
-// So that PaginationPrevious and PaginationNext, given a Button from either
-// build as their `asChild` child, know it renders a <button>
+// So that a component given a Button from either build as its child can
+// tell, with `isButton`, that it renders a <button> unless it's `asChild`
 markButton(Button);
 
 /*========================================================================================================================*/

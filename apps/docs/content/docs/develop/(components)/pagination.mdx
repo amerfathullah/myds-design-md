@@ -157,6 +157,46 @@ Children name `PaginationPrevious` and `PaginationNext` in place of the default,
 </Pagination>
 ```
 
+A click on `PaginationPrevious` calls `onPageChange` with `page - 1`, and one on `PaginationNext` with `page + 1`. `PaginationPrevious` is disabled on the first page, and `PaginationNext` on the last page, or when there are no pages. An `onClick` you pass either part runs first, and then the page changes, so don't call `onPageChange` from it, or it's called twice. Call `event.preventDefault()` in it to stay on the page.
+
+With `asChild`, your own element replaces the button and keeps all of this:
+
+- **The page change.** A click on your element changes the page. Your element's own `onClick` runs first, then the part's, and calling `event.preventDefault()` in either keeps the page.
+- **The disabled state.** On the first page for `PaginationPrevious`, or the last for `PaginationNext`, a `<button>`, or a MYDS `Button` without `asChild`, gets `disabled`. Any other element, such as a link or a router's `Link`, gets `aria-disabled="true"`, and a click on it is prevented, so it doesn't navigate. A `disabled` or `aria-disabled` you pass the part, or set on your element, replaces it.
+- **No name or classes.** `asChild` adds no name and no classes, so name and style your own element.
+
+```tsx copy title="asChild"
+import { Button } from "@amerfathullah/myds-react/button";
+
+<Pagination
+  count={180}
+  limit={10}
+  page={4}
+  onPageChange={(page) => console.log(page)}
+>
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious asChild>
+        <Button variant="primary-outline">Sebelumnya</Button>
+      </PaginationPrevious>
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationNext asChild>
+        <Button variant="primary-outline">Seterusnya</Button>
+      </PaginationNext>
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>;
+```
+
+A disabled link is only marked `aria-disabled`, and its click prevented. Middle-click, "open in new tab" and "copy link" still use its `href`, so on the first and last page, point the `href` somewhere sensible, such as the current page, or leave it out. On the other pages, a click on a link calls `onPageChange` and also follows its `href`.
+
+```tsx copy title="asChild with links"
+<PaginationPrevious asChild>
+  <a href={`?page=${Math.max(page - 1, 1)}`}>Sebelumnya</a>
+</PaginationPrevious>
+```
+
 ## Examples
 
 ### AutoPagination Types
@@ -276,7 +316,7 @@ Opting into using `AutoPagination` or manual assembly of pagination subcomponent
     >
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious onClick={() => pageFn(page - 1)} />
+          <PaginationPrevious />
         </PaginationItem>
 
         {visiblePages.map((pageNum, index) => (
@@ -290,7 +330,7 @@ Opting into using `AutoPagination` or manual assembly of pagination subcomponent
         ))}
 
         <PaginationItem>
-          <PaginationNext onClick={() => pageFn(page + 1)} />
+          <PaginationNext />
         </PaginationItem>
       </PaginationContent>
     </Pagination>
@@ -425,15 +465,15 @@ A wrapper component rendered as a list item `li` that contains individual pagina
 
 ### PaginationNext
 
-A button component that handles navigaton to the next page. The underlying component can be substituted by using the `asChild` props.
+A button that goes to the next page. It is disabled on the last page, or when there are no pages. An `onClick` you pass runs before the page changes; call `event.preventDefault()` in it to stay on the page. With `asChild`, your own element replaces the button and keeps the page change and the disabled state: `disabled` on a `<button>` or a MYDS `Button`, and `aria-disabled="true"` on any other element, such as a link. See [Advanced Usage](#advanced-usage).
 
-With no children, it shows only a chevron and its accessible name is "next page". Pass an `aria-label` to replace it, for example `aria-label="Halaman seterusnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name: name your own element.
+With no children, it shows only a chevron and its accessible name is "next page". Pass an `aria-label` to replace it, for example `aria-label="Halaman seterusnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name and no classes: name and style your own element.
 
 ### PaginationPrevious
 
-A button component that handles navigaton to the previous page. The underlying component can be substituted by using the `asChild` props.
+A button that goes to the previous page. It is disabled on the first page. An `onClick` you pass runs before the page changes; call `event.preventDefault()` in it to stay on the page. With `asChild`, your own element replaces the button and keeps the page change and the disabled state: `disabled` on a `<button>` or a MYDS `Button`, and `aria-disabled="true"` on any other element, such as a link. See [Advanced Usage](#advanced-usage).
 
-With no children, it shows only a chevron and its accessible name is "previous page". Pass an `aria-label` to replace it, for example `aria-label="Halaman sebelumnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name: name your own element.
+With no children, it shows only a chevron and its accessible name is "previous page". Pass an `aria-label` to replace it, for example `aria-label="Halaman sebelumnya"`. Children replace that name, so children with no text, such as an icon alone, need an `aria-label`. With `asChild` it adds no name and no classes: name and style your own element.
 
 ### PaginationLabel
 

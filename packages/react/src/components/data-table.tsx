@@ -53,7 +53,7 @@ import {
 } from "react";
 import { ColumnCollapseIcon } from "../icons/column-collapse";
 import { ColumnExpandIcon } from "../icons/column-expand";
-import { clx, pick } from "../utils";
+import { clx } from "../utils";
 import { Button, ButtonIcon } from "./button";
 import {
   ChevronRightIcon,
@@ -273,8 +273,13 @@ const th_cva = cva(
   },
 );
 
+// A cell wraps at every width. A widenable column's cell carries
+// `data-expanded`: while it's widened, its text stays on one line from `md:`
+// up, and while it's collapsed, its text truncates at every width, capped at
+// 230px.
 const cell_cva = cva([
-  "md:whitespace-nowrap whitespace-normal break-words",
+  "whitespace-normal break-words",
+  "md:data-[expanded=true]:whitespace-nowrap",
   "data-[expanded=false]:truncate data-[expanded=false]:max-w-[230px]",
 ]);
 
@@ -285,7 +290,11 @@ interface DataTableContextProps {
    * and DataTable's props untyped.
    */
   table: ReactTable<DataTableFeatures, any> | null;
-  expandableColumns: Record<string, any>;
+  /**
+   * Each widenable column, a leaf column with `meta.expandable`, by its id,
+   * mapped to whether it is widened. No other column has an entry.
+   */
+  expandableColumns: Record<string, boolean>;
   toggleColumnWidth: (columnId: string) => void;
   loading?: DataTableProps<any>["loading"];
   emptyState?: DataTableProps<any>["emptyState"];
@@ -323,16 +332,16 @@ const DataTableProvider = <TData extends Record<string, any>>({
 }: DataTableProviderProps<TData>) => {
   const { columns, data, selection, pin, nest } = props;
   const tableId = useId();
-  const [expandableColumns, setExpandableColumns] = useState(
-    pick(columns, "id", () => false),
-  );
+  // The user's widen presses: whether each column they pressed is widened,
+  // by its id
+  const [widened, setWidened] = useState<Record<string, boolean>>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [expandedSelection, setExpandedSelection] = useState<ExpandedState>({});
 
   const toggleColumnWidth = (columnId: string) => {
-    setExpandableColumns((prev) => ({
+    setWidened((prev) => ({
       ...prev,
-      [columnId]: !prev[columnId],
+      [columnId]: prev[columnId] !== true,
     }));
   };
 
@@ -372,6 +381,18 @@ const DataTableProvider = <TData extends Record<string, any>>({
     debugTable: false,
     debugHeaders: false,
   });
+
+  // A column is widenable when it's a leaf column with `meta.expandable`,
+  // however it's defined: with an `id`, with `accessorKey` alone, inside a
+  // grouped header, or added after mount. So they're worked out on every
+  // render, keyed by the id TanStack resolves, and each maps to whether it's
+  // widened. The map has no prototype, so no column, such as one with the id
+  // `toString`, reads a value it doesn't have.
+  const expandableColumns: Record<string, boolean> = Object.create(null);
+  for (const column of table.getAllLeafColumns()) {
+    if (column.columnDef.meta?.expandable)
+      expandableColumns[column.id] = widened[column.id] === true;
+  }
 
   useEffect(() => {
     if (!selection) return;
@@ -436,8 +457,12 @@ const DataTableHead: FunctionComponent<{
 }> = ({ header }) => {
   const { expandableColumns, toggleColumnWidth, selection } =
     useContext(DataTableContext);
-  const { tooltip, tooltipLabel, expandable, sortable, sortLabel, widenLabel } =
+  const { tooltip, tooltipLabel, sortable, sortLabel, widenLabel } =
     header.column.columnDef.meta || {};
+  // Only a widenable column's header has a widen button. A leaf header's id
+  // is its column's; a group or placeholder header's id is its own, so it
+  // reads nothing, even where its column shares an id with a leaf.
+  const widenable = header.id in expandableColumns;
 
   // A selection column is headed by its visually hidden label, and any other
   // by the text its header renders. The header is named by that text alone,
@@ -473,7 +498,7 @@ const DataTableHead: FunctionComponent<{
       data-expanded={expandableColumns[header.id]}
       data-pinned={getPinnedSide(header.column)}
       className={clx(
-        th_cva({ expandable, sortable }),
+        th_cva({ expandable: widenable, sortable }),
         pin_cva({
           pin_direction: getPinnedSide(header.column),
           pin_last: header.column.getIsLastColumn(header.column.getIsPinned()),
@@ -498,8 +523,8 @@ const DataTableHead: FunctionComponent<{
           </span>
 
           <div className="flex justify-end gap-1">
-            {/* Expand */}
-            {expandable && (
+            {/* Widen */}
+            {widenable && (
               <Button
                 type="button"
                 size="small"
@@ -642,7 +667,9 @@ const DataTableFooter: FunctionComponent = () => {
             <TableCell
               key={header.id}
               colSpan={header.colSpan}
-              data-expanded={expandableColumns[header.column.id]}
+              // By the header's own id, as its header cell reads it, so a
+              // group or placeholder footer never reads a leaf's
+              data-expanded={expandableColumns[header.id]}
               data-pinned={getPinnedSide(header.column)}
               className={clx(
                 cell_cva(),

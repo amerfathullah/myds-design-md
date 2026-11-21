@@ -134,7 +134,11 @@ export default function Toaster() {
   return (
     <ToastProvider>
       {toasts.map((event, index) => (
-        <ToastRoot key={index} variant={event.variant || "message"}>
+        <ToastRoot
+          key={index}
+          variant={event.variant || "message"}
+          type={event.type}
+        >
           <ToastIcon />
           <div className="space-y-1">
             <ToastTitle>{event.title}</ToastTitle>
@@ -209,10 +213,54 @@ const { toast } = useToast();
   </Tab>
 </Tabs>
 
+### Pembaca skrin [#screen-readers]
+
+Secara lalai, hanya toast `error` yang memotong bacaan pembaca skrin. Toast bagi setiap varian lain disebut pada jeda seterusnya, seperti di hujung ayat yang sedang dibaca oleh pembaca skrin.
+
+`type` sesuatu toast menetapkan perkara ini: `"foreground"` memotong bacaan, dan `"background"` menunggu jeda. Tanpa `type`, toast `error` ialah `"foreground"`, dan setiap varian lain ialah `"background"`. `type` bukan Jenis dalam garis panduan reka bentuk; Jenis ialah `variant`.
+
+Apabila toast bagi varian lain mesti didengar serta-merta, hantar `type: "foreground"` kepada `toast()`. Untuk ralat yang boleh menunggu, hantar `type: "background"`.
+
+```tsx copy title="Amaran yang mesti didengar serta-merta"
+"use client";
+
+import { useEffect } from "react";
+import { useToast } from "@amerfathullah/myds-react/hooks";
+
+// Memberi amaran kepada pengguna seminit sebelum sesi tamat. endsAt ialah cap
+// masa dalam milisaat, seperti yang dipulangkan oleh Date.now().
+export default function SessionWarning({ endsAt }: { endsAt: number }) {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () =>
+        toast({
+          variant: "warning",
+          title: "Amaran: Sesi anda akan tamat",
+          description:
+            "Simpan kerja anda. Anda akan dilog keluar dalam seminit.",
+          type: "foreground",
+        }),
+      endsAt - Date.now() - 60 * 1000,
+    );
+    return () => clearTimeout(timer);
+  }, [endsAt]);
+
+  return null;
+}
+```
+
+`AutoToast` juga menerima `type`, dan menetapkannya untuk setiap toast, tanpa mengira variannya. `type` toast itu sendiri, yang dihantar kepada `toast()`, diutamakan. Sebaiknya tetapkan `type` pada toast yang memerlukannya sahaja: dengan `<AutoToast type="foreground" />`, setiap toast memotong bacaan, dan toast yang dipaparkan serentak boleh memotong sebutan satu sama lain.
+
+`ToastRoot` turut menerima `type`, contohnya `<ToastRoot variant="warning" type="foreground">`. Dalam toaster yang anda susun sendiri, hantar `type` setiap peristiwa kepada `ToastRoot`nya, seperti toaster dalam [Penggunaan Lanjutan](#penggunaan-lanjutan). Jika tidak, `type` yang dihantar kepada `toast()` tidak memberi kesan.
+
+Elakkan memaparkan dua toast `error` serentak: setiap satu boleh memotong sebutan yang lain.
+
 ## Props
 
 ### AutoToast
-`AutoToast` menghantar prop selain `closeLabel`, `viewportLabel` dan `announceLabel` kepada `ToastRoot` setiap toast.
+`AutoToast` menghantar prop selain `closeLabel`, `viewportLabel` dan `announceLabel` kepada `ToastRoot` setiap toast. `type`nya hanya digunakan untuk toast yang tidak menetapkan `type` sendiri.
 <TypeTable
   type={{
     closeLabel: {
@@ -232,6 +280,13 @@ const { toast } = useToast();
         "Perkataan yang disebut oleh pembaca skrin sebelum teks setiap toast. Ia tidak dipaparkan. Jangan hantar nilai kosong: Radix akan mencatat ralat.",
       type: "string",
       default: "Notification",
+    },
+    type: {
+      description:
+        "Sama ada pembaca skrin memotong bacaannya untuk menyebut setiap toast (foreground) atau menunggu jeda (background). Ia menetapkan type setiap toast, tetapi type toast itu sendiri, yang dihantar kepada toast(), diutamakan. Ia bukan Jenis dalam garis panduan reka bentuk; Jenis ialah variant.",
+      type: "enum",
+      typeDescription: "foreground | background",
+      default: "foreground untuk error, background untuk yang lain",
     },
   }}
 />
@@ -261,6 +316,13 @@ Prop `label` pada `ToastViewport` menamakan kawasan yang memuatkan toast, iaitu 
       description: "Time (ms) before toast disappears",
       type: "number",
       default: "5000"
+    },
+    type: {
+      description:
+        "Sama ada pembaca skrin memotong bacaannya untuk menyebut toast ini (foreground) atau menunggu jeda (background). Nilai lalainya bergantung pada varian, berbeza daripada nilai lalai Radix, iaitu foreground bagi setiap toast. type yang bernilai undefined juga mendapat nilai lalai ini. Ia bukan Jenis dalam garis panduan reka bentuk; Jenis ialah variant.",
+      type: "enum",
+      typeDescription: "foreground | background",
+      default: "foreground untuk error, background untuk yang lain",
     },
   }}
 />

@@ -157,6 +157,46 @@ Setiap subkomponen mempunyai nama dalam bahasa Inggeris untuk pembaca skrin, dan
 </Pagination>
 ```
 
+Klik pada `PaginationPrevious` memanggil `onPageChange` dengan `page - 1`, dan klik pada `PaginationNext` dengan `page + 1`. `PaginationPrevious` dilumpuhkan pada halaman pertama, dan `PaginationNext` pada halaman terakhir, atau apabila tiada halaman. `onClick` yang anda hantar kepada mana-mana subkomponen ini dijalankan dahulu, kemudian halaman ditukar, jadi jangan panggil `onPageChange` daripadanya, atau ia dipanggil dua kali. Panggil `event.preventDefault()` di dalamnya untuk kekal pada halaman itu.
+
+Dengan `asChild`, elemen anda sendiri menggantikan butang dan mengekalkan semua ini:
+
+- **Pertukaran halaman.** Klik pada elemen anda menukar halaman. `onClick` elemen anda sendiri dijalankan dahulu, kemudian `onClick` subkomponen, dan memanggil `event.preventDefault()` dalam mana-mana satu mengekalkan halaman.
+- **Keadaan dilumpuhkan.** Pada halaman pertama bagi `PaginationPrevious`, atau halaman terakhir bagi `PaginationNext`, `<button>`, atau `Button` MYDS tanpa `asChild`, mendapat `disabled`. Elemen lain, seperti pautan atau `Link` penghala, mendapat `aria-disabled="true"`, dan klik padanya dihalang, jadi ia tidak menavigasi. `disabled` atau `aria-disabled` yang anda hantar kepada subkomponen, atau tetapkan pada elemen anda, menggantikannya.
+- **Tiada nama atau kelas.** `asChild` tidak menambah nama dan kelas, jadi namakan dan gayakan elemen anda sendiri.
+
+```tsx copy title="asChild"
+import { Button } from "@amerfathullah/myds-react/button";
+
+<Pagination
+  count={180}
+  limit={10}
+  page={4}
+  onPageChange={(page) => console.log(page)}
+>
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious asChild>
+        <Button variant="primary-outline">Sebelumnya</Button>
+      </PaginationPrevious>
+    </PaginationItem>
+    <PaginationItem>
+      <PaginationNext asChild>
+        <Button variant="primary-outline">Seterusnya</Button>
+      </PaginationNext>
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>;
+```
+
+Pautan yang dilumpuhkan hanya ditanda `aria-disabled`, dan kliknya dihalang. Klik tengah, "buka dalam tab baharu" dan "salin pautan" masih menggunakan `href`nya, jadi pada halaman pertama dan terakhir, halakan `href` ke tempat yang munasabah, seperti halaman semasa, atau buangkannya. Pada halaman lain, klik pada pautan memanggil `onPageChange` dan juga mengikut `href`nya.
+
+```tsx copy title="asChild dengan pautan"
+<PaginationPrevious asChild>
+  <a href={`?page=${Math.max(page - 1, 1)}`}>Sebelumnya</a>
+</PaginationPrevious>
+```
+
 ## Contoh
 
 ### Jenis AutoPagination
@@ -276,7 +316,7 @@ Penggunaan `AutoPagination` atau pemasangan manual subkomponen paginasi memerluk
     >
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious onClick={() => pageFn(page - 1)} />
+          <PaginationPrevious />
         </PaginationItem>
 
         {visiblePages.map((pageNum, index) => (
@@ -290,7 +330,7 @@ Penggunaan `AutoPagination` atau pemasangan manual subkomponen paginasi memerluk
         ))}
 
         <PaginationItem>
-          <PaginationNext onClick={() => pageFn(page + 1)} />
+          <PaginationNext />
         </PaginationItem>
       </PaginationContent>
     </Pagination>
@@ -426,15 +466,15 @@ Komponen yang dirender sebagai elemen `li` yang mengandungi elemen seperti `Pagi
 
 ### PaginationNext
 
-Komponen `button` yang mengendalikan navigasi ke halaman seterusnya. Komponen lalai tersebut boleh digantikan dengan menggunakan props `asChild`.
+Komponen `button` yang pergi ke halaman seterusnya. Ia dilumpuhkan pada halaman terakhir, atau apabila tiada halaman. `onClick` yang anda hantar dijalankan sebelum halaman ditukar; panggil `event.preventDefault()` di dalamnya untuk kekal pada halaman itu. Dengan `asChild`, elemen anda sendiri menggantikan butang dan mengekalkan pertukaran halaman dan keadaan dilumpuhkan: `disabled` pada `<button>`, atau `Button` MYDS tanpa `asChild`, dan `aria-disabled="true"` pada elemen lain, seperti pautan. Lihat [Penggunaan Lanjutan](#penggunaan-lanjutan).
 
-Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "next page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman seterusnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama: namakan elemen anda sendiri.
+Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "next page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman seterusnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama dan kelas: namakan dan gayakan elemen anda sendiri.
 
 ### PaginationPrevious
 
-Komponen `button` yang mengendalikan navigasi ke halaman sebelumnya. Komponen lalai tersebut boleh digantikan dengan menggunakan props `asChild`.
+Komponen `button` yang pergi ke halaman sebelumnya. Ia dilumpuhkan pada halaman pertama. `onClick` yang anda hantar dijalankan sebelum halaman ditukar; panggil `event.preventDefault()` di dalamnya untuk kekal pada halaman itu. Dengan `asChild`, elemen anda sendiri menggantikan butang dan mengekalkan pertukaran halaman dan keadaan dilumpuhkan: `disabled` pada `<button>`, atau `Button` MYDS tanpa `asChild`, dan `aria-disabled="true"` pada elemen lain, seperti pautan. Lihat [Penggunaan Lanjutan](#penggunaan-lanjutan).
 
-Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "previous page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman sebelumnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama: namakan elemen anda sendiri.
+Tanpa `children`, ia hanya memaparkan ikon anak panah dan nama boleh capainya ialah "previous page". Hantar `aria-label` untuk menggantikannya, contohnya `aria-label="Halaman sebelumnya"`. `children` menggantikan nama itu, jadi `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`. Dengan `asChild`, ia tidak menambah nama dan kelas: namakan dan gayakan elemen anda sendiri.
 
 ### PaginationLabel
 

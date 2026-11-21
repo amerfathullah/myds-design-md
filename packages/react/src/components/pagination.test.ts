@@ -10,6 +10,7 @@ import { createRoot } from "react-dom/client";
 import { computeAccessibleName, isInaccessible } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { Button } from "./button";
 import {
   AutoPagination,
   Pagination,
@@ -679,5 +680,326 @@ describe("The current page", () => {
       expect(marked.getAttribute("aria-current")).toBe("page");
       expect(marked.className).toBe(other.className);
     });
+  });
+});
+
+describe("Previous and next", () => {
+  // Clicks `element` as a user would. Returns the click event, which says
+  // whether a handler prevented its default action, such as following a link.
+  async function click(element: Element) {
+    const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+    await act(async () => {
+      element.dispatchEvent(event);
+    });
+    return event;
+  }
+
+  // Mounts `part` on `page` of a Pagination of 50 items, 10 a page, so pages
+  // 1 to 5. Returns the element the part renders and the `onPageChange` the
+  // Pagination was given.
+  async function render(
+    page: number,
+    part: ReactElement,
+    { count = 50, onPageChange = vi.fn() } = {},
+  ) {
+    const container = await mount(
+      createElement(
+        Pagination,
+        { count, limit: 10, page, onPageChange },
+        createElement(
+          PaginationContent,
+          null,
+          createElement(PaginationItem, null, part),
+        ),
+      ),
+    );
+    const [element, ...others] = container.querySelectorAll("li > *");
+    expect(others).toEqual([]);
+    return { element: element!, onPageChange };
+  }
+
+  // The children an author passes an `asChild` part
+  const button = () => createElement("button", { type: "button" }, "Pergi");
+  const mydsButton = () => createElement(Button, null, "Pergi");
+  const link = () => createElement("a", { href: "#halaman" }, "Pergi");
+
+  // Each part, the page at its end of the range, where it's disabled, and
+  // the page it goes to from page 3
+  describe.each([
+    ["previous", PaginationPrevious, 1, 2],
+    ["next", PaginationNext, 5, 4],
+  ] as const)("The %s part", (_, Part, end, target) => {
+    // The part with `props`, around `child` when one is given
+    const part = (props: Record<string, unknown> = {}, child?: ReactElement) =>
+      createElement(Part, props, child);
+
+    describe("without `asChild`", () => {
+      test(`is disabled on page ${end}, and a click changes no page`, async () => {
+        const { element, onPageChange } = await render(end, part());
+        expect((element as HTMLButtonElement).disabled).toBe(true);
+        await click(element);
+        expect(onPageChange).not.toHaveBeenCalled();
+      });
+
+      test(`goes to page ${target} from page 3`, async () => {
+        const { element, onPageChange } = await render(3, part());
+        expect((element as HTMLButtonElement).disabled).toBe(false);
+        await click(element);
+        expect(onPageChange.mock.calls).toEqual([[target]]);
+      });
+    });
+
+    describe.each([
+      ["a <button>", button],
+      ["a MYDS Button", mydsButton],
+    ] as const)("with `asChild` around %s", (_, child) => {
+      test(`is natively disabled on page ${end}, with no aria-disabled, and a click changes no page`, async () => {
+        const { element, onPageChange } = await render(
+          end,
+          part({ asChild: true }, child()),
+        );
+        expect(element).toBeInstanceOf(HTMLButtonElement);
+        expect((element as HTMLButtonElement).disabled).toBe(true);
+        expect(element.hasAttribute("aria-disabled")).toBe(false);
+        await click(element);
+        expect(onPageChange).not.toHaveBeenCalled();
+      });
+
+      test(`is enabled on page 3, and a click goes to page ${target}`, async () => {
+        const { element, onPageChange } = await render(
+          3,
+          part({ asChild: true }, child()),
+        );
+        expect((element as HTMLButtonElement).disabled).toBe(false);
+        expect(element.hasAttribute("aria-disabled")).toBe(false);
+        await click(element);
+        expect(onPageChange.mock.calls).toEqual([[target]]);
+      });
+    });
+
+    // `disabled` isn't valid on a link, nor on whatever a component renders
+    describe.each([
+      ["a link", link],
+      [
+        "a MYDS Button that is itself `asChild`, around a link",
+        () => createElement(Button, { asChild: true }, link()),
+      ],
+    ] as const)("with `asChild` around %s", (_, child) => {
+      test(`is aria-disabled on page ${end}, and a click neither follows the link nor changes the page`, async () => {
+        const { element, onPageChange } = await render(
+          end,
+          part({ asChild: true }, child()),
+        );
+        expect(element).toBeInstanceOf(HTMLAnchorElement);
+        expect(element.getAttribute("aria-disabled")).toBe("true");
+        expect(element.hasAttribute("disabled")).toBe(false);
+        expect((await click(element)).defaultPrevented).toBe(true);
+        expect(onPageChange).not.toHaveBeenCalled();
+      });
+
+      test(`isn't aria-disabled on page 3, and a click follows the link and goes to page ${target}`, async () => {
+        const { element, onPageChange } = await render(
+          3,
+          part({ asChild: true }, child()),
+        );
+        expect(element.hasAttribute("aria-disabled")).toBe(false);
+        expect(element.hasAttribute("disabled")).toBe(false);
+        expect((await click(element)).defaultPrevented).toBe(false);
+        expect(onPageChange.mock.calls).toEqual([[target]]);
+      });
+    });
+
+    // The default branch's `shadow-transparent` stays on its own Button
+    test(`adds no classes to its child with \`asChild\`, on page ${end} or 3`, async () => {
+      for (const page of [end, 3]) {
+        const { element } = await render(page, part({ asChild: true }, link()));
+        expect(element.hasAttribute("class")).toBe(false);
+      }
+    });
+
+    describe("an `onClick`", () => {
+      // Each call, in order, from the handlers and `onPageChange`
+      let calls: string[];
+      const onPageChange = vi.fn((page: number) => calls.push(`page ${page}`));
+      beforeEach(() => {
+        calls = [];
+      });
+      // A handler that logs `name` when called, and calls `preventDefault()`
+      // when `prevent` is set
+      const handler =
+        (name: string, prevent = false) =>
+        (event: { preventDefault(): void }) => {
+          calls.push(name);
+          if (prevent) event.preventDefault();
+        };
+
+      test("on the child runs before the page changes", async () => {
+        const { element } = await render(
+          3,
+          part(
+            { asChild: true },
+            createElement("a", { href: "#h", onClick: handler("child") }, "P"),
+          ),
+          { onPageChange },
+        );
+        await click(element);
+        expect(calls).toEqual(["child", `page ${target}`]);
+      });
+
+      test("on the child that calls `preventDefault()` keeps the page", async () => {
+        const { element } = await render(
+          3,
+          part(
+            { asChild: true },
+            createElement(
+              "button",
+              { type: "button", onClick: handler("child", true) },
+              "P",
+            ),
+          ),
+          { onPageChange },
+        );
+        await click(element);
+        expect(calls).toEqual(["child"]);
+      });
+
+      describe.each([
+        ["without `asChild`", {}, undefined],
+        ["with `asChild`", { asChild: true }, link()],
+      ] as const)("on the part %s", (_, props, child) => {
+        test("runs, and then the page changes once", async () => {
+          const { element } = await render(
+            3,
+            part({ ...props, onClick: handler("part") }, child),
+            { onPageChange },
+          );
+          await click(element);
+          expect(calls).toEqual(["part", `page ${target}`]);
+        });
+
+        test("that calls `preventDefault()` keeps the page", async () => {
+          const { element } = await render(
+            3,
+            part({ ...props, onClick: handler("part", true) }, child),
+            { onPageChange },
+          );
+          await click(element);
+          expect(calls).toEqual(["part"]);
+        });
+      });
+
+      test("on the child runs before one on an `asChild` part", async () => {
+        const { element } = await render(
+          3,
+          part(
+            { asChild: true, onClick: handler("part") },
+            createElement("a", { href: "#h", onClick: handler("child") }, "P"),
+          ),
+          { onPageChange },
+        );
+        await click(element);
+        expect(calls).toEqual(["child", "part", `page ${target}`]);
+      });
+    });
+
+    describe("lets the author's own disabled state win", () => {
+      test(`as \`disabled={false}\` on the part, on page ${end}`, async () => {
+        for (const [props, child] of [
+          [{}, undefined],
+          [{ asChild: true }, button()],
+        ] as const) {
+          const { element, onPageChange } = await render(
+            end,
+            part({ ...props, disabled: false }, child),
+          );
+          expect((element as HTMLButtonElement).disabled).toBe(false);
+          // It still doesn't leave the range
+          expect((await click(element)).defaultPrevented).toBe(true);
+          expect(onPageChange).not.toHaveBeenCalled();
+        }
+      });
+
+      test("as `disabled` on the part, on page 3", async () => {
+        const { element } = await render(
+          3,
+          part({ asChild: true, disabled: true }, button()),
+        );
+        expect((element as HTMLButtonElement).disabled).toBe(true);
+      });
+
+      test(`as \`aria-disabled={false}\` on the part, on page ${end}`, async () => {
+        const { element } = await render(
+          end,
+          part({ asChild: true, "aria-disabled": false }, link()),
+        );
+        expect(element.getAttribute("aria-disabled")).toBe("false");
+      });
+
+      test("as `aria-disabled` on the part, on page 3", async () => {
+        const { element } = await render(
+          3,
+          part({ asChild: true, "aria-disabled": true }, link()),
+        );
+        expect(element.getAttribute("aria-disabled")).toBe("true");
+      });
+
+      test(`as \`aria-disabled="false"\` on the child, on page ${end}`, async () => {
+        const { element } = await render(
+          end,
+          part(
+            { asChild: true },
+            createElement("a", { href: "#h", "aria-disabled": "false" }, "P"),
+          ),
+        );
+        expect(element.getAttribute("aria-disabled")).toBe("false");
+      });
+    });
+
+    test("is disabled in a Pagination with no pages", async () => {
+      for (const [props, child] of [
+        [{}, undefined],
+        [{ asChild: true }, button()],
+      ] as const) {
+        const { element, onPageChange } = await render(1, part(props, child), {
+          count: 0,
+        });
+        expect((element as HTMLButtonElement).disabled).toBe(true);
+        await click(element);
+        expect(onPageChange).not.toHaveBeenCalled();
+      }
+    });
+  });
+
+  // As the CustomizedButtonAndLabel story passes them, on page 1 of 15
+  test("disables an `asChild` previous part around a MYDS Button in AutoPagination, and lets the next part's go to page 2", async () => {
+    const onPageChange = vi.fn();
+    const container = await mount(
+      createElement(AutoPagination, {
+        type: "full",
+        page: 1,
+        limit: 4,
+        count: 60,
+        maxDisplay: 2,
+        onPageChange,
+        previous: createElement(
+          PaginationPrevious,
+          { asChild: true },
+          createElement(Button, { variant: "danger-fill" }, "Stop"),
+        ),
+        next: createElement(
+          PaginationNext,
+          { asChild: true },
+          createElement(Button, { variant: "primary-fill" }, "Go"),
+        ),
+      }),
+    );
+    const [stop, go, ...others] = container.querySelectorAll("button");
+    expect(others).toEqual([]);
+    expect([stop!.textContent, go!.textContent]).toEqual(["Stop", "Go"]);
+    expect(stop!.disabled).toBe(true);
+    expect(go!.disabled).toBe(false);
+    await click(stop!);
+    await click(go!);
+    expect(onPageChange.mock.calls).toEqual([[2]]);
   });
 });

@@ -839,7 +839,7 @@ export const SelfPagination = ({ count = 200, limit = 10, page = 1 }) => {
     >
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious onClick={() => pageFn(page - 1)} />
+          <PaginationPrevious />
         </PaginationItem>
 
         {visiblePages.map((pageNum, index) => (
@@ -853,7 +853,7 @@ export const SelfPagination = ({ count = 200, limit = 10, page = 1 }) => {
         ))}
 
         <PaginationItem>
-          <PaginationNext onClick={() => pageFn(page + 1)} />
+          <PaginationNext />
         </PaginationItem>
       </PaginationContent>
     </Pagination>

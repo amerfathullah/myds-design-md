@@ -19,7 +19,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
   <Callout>
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutContent>
         <span>A description to explain the success, warning, info or error event</span>
       </CalloutContent>
@@ -33,7 +33,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Callout, CalloutAction, CalloutTitle, CalloutContent } from "@amerfathullah/myds-react/callout";
 
 <Callout>
-    <CalloutTitle>Title</CalloutTitle>
+    <CalloutTitle>Information: Application under review</CalloutTitle>
     <CalloutContent>
       A description to explain the success, warning, info or error event
     </CalloutContent>
@@ -87,7 +87,7 @@ Use the `variant` prop to change the callout style!
   <Tab value="Preview">
   <div className="space-y-2 not-prose">
   <Callout>
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutContent>
         <span>A description to explain the success, warning, info or error event</span>
       </CalloutContent>
@@ -96,7 +96,7 @@ Use the `variant` prop to change the callout style!
       </CalloutAction>
   </Callout>
   <Callout variant="success">
-    <CalloutTitle>Title</CalloutTitle>
+    <CalloutTitle>Success: Data saved</CalloutTitle>
     <CalloutContent>
       <span>A description to explain the success, warning, info or error event</span>
     </CalloutContent>
@@ -105,7 +105,7 @@ Use the `variant` prop to change the callout style!
     </CalloutAction>
   </Callout>
   <Callout variant="warning">
-    <CalloutTitle>Title</CalloutTitle>
+    <CalloutTitle>Warning: Session ends soon</CalloutTitle>
     <CalloutContent>
       <span>A description to explain the success, warning, info or error event</span>
     </CalloutContent>
@@ -114,7 +114,7 @@ Use the `variant` prop to change the callout style!
     </CalloutAction>
   </Callout>
   <Callout variant="danger">
-    <CalloutTitle>Title</CalloutTitle>
+    <CalloutTitle>Error: Form not sent</CalloutTitle>
     <CalloutContent>
       <span>A description to explain the success, warning, info or error event</span>
     </CalloutContent>
@@ -129,7 +129,7 @@ Use the `variant` prop to change the callout style!
 /** Variant: Info **/
 
 <Callout variant="info">
-  <CalloutTitle>Title</CalloutTitle>
+  <CalloutTitle>Information: Application under review</CalloutTitle>
   <CalloutContent>
     A description to explain the success, warning, info or error event
   </CalloutContent>
@@ -141,7 +141,7 @@ Use the `variant` prop to change the callout style!
 /** Variant: Success **/
 
 <Callout variant="success">
-  <CalloutTitle>Title</CalloutTitle>
+  <CalloutTitle>Success: Data saved</CalloutTitle>
   <CalloutContent>
     A description to explain the success, warning, info or error event
   </CalloutContent>
@@ -153,7 +153,7 @@ Use the `variant` prop to change the callout style!
 /** Variant: Warning **/
 
 <Callout variant="warning">
-  <CalloutTitle>Title</CalloutTitle>
+  <CalloutTitle>Warning: Session ends soon</CalloutTitle>
   <CalloutContent>
     A description to explain the success, warning, info or error event
   </CalloutContent>
@@ -165,7 +165,7 @@ Use the `variant` prop to change the callout style!
 /** Variant: Danger **/
 
 <Callout variant="danger">
-  <CalloutTitle>Title</CalloutTitle>
+  <CalloutTitle>Error: Form not sent</CalloutTitle>
   <CalloutContent>
     A description to explain the success, warning, info or error event
   </CalloutContent>
@@ -186,13 +186,13 @@ while callouts with all three elements (**title**, **content** & **action**) wil
   <Tab value="Preview">
   <div className="space-y-2 not-prose">
   <Callout>
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutAction>
         <Button variant="default-outline">Call to Action</Button>
       </CalloutAction>
   </Callout>
   <Callout>
-    <CalloutTitle>Title</CalloutTitle>
+    <CalloutTitle>Information: Application under review</CalloutTitle>
     <CalloutContent>
       <span>A description to explain the success, warning, info or error event</span>
     </CalloutContent>
@@ -207,7 +207,7 @@ while callouts with all three elements (**title**, **content** & **action**) wil
 /** Layout: Inline **/
 
 <Callout variant="info">
-  <CalloutTitle>Title</CalloutTitle>
+  <CalloutTitle>Information: Application under review</CalloutTitle>
   <CalloutAction>
     <Button variant="default-outline">Call to Action</Button>
   </CalloutAction>
@@ -216,7 +216,7 @@ while callouts with all three elements (**title**, **content** & **action**) wil
 /** Layout: Stacked **/
 
 <Callout variant="success">
-  <CalloutTitle>Title</CalloutTitle>
+  <CalloutTitle>Success: Data saved</CalloutTitle>
   <CalloutContent>
     A description to explain the success, warning, info or error event
   </CalloutContent>
@@ -242,12 +242,12 @@ To dismiss the callout via event listener, simply wrap the target element with `
     <div className="not-prose space-y-2">
       <DismissibleCalloutExample
         type="basic"
-        title="Basic - Uncontrolled Dismiss State"
+        title="Information: Basic - Uncontrolled Dismiss State"
         description="You may capture the dismiss event using the onDismiss prop. Check the console for the dismiss event."
       />
       <DismissibleCalloutExample
         type="action"
-        title="Action - Dismiss Callout via CalloutClose"
+        title="Information: Action - Dismiss Callout via CalloutClose"
         description="You can attach closing functionality of the Callout by wrapping the target element"
       />
     </div>
@@ -261,7 +261,7 @@ To dismiss the callout via event listener, simply wrap the target element with `
         console.log("MYDS: Dismissed event captured!");
       }}
     >
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutContent>
         A description to explain the success, warning, info or error event
       </CalloutContent>
@@ -278,7 +278,7 @@ To dismiss the callout via event listener, simply wrap the target element with `
         console.log("MYDS: Dismissed event captured!");
       }}
     >
-      <CalloutTitle>Title</CalloutTitle>
+      <CalloutTitle>Information: Application under review</CalloutTitle>
       <CalloutContent>
         A description to explain the success, warning, info or error event
       </CalloutContent>
@@ -335,6 +335,31 @@ export default function ApplicationForm() {
 }
 ```
 
+The icon and the colour show the Variant, but neither reaches screen readers: Callout hides the icon from them. So the title's words must say the Variant, in your site's language. Either:
+
+- word the title so it says it, as "Your application wasn't sent" does in the example above, or
+- start the title with the Variant's name: Information (`info`), Success (`success`), Warning (`warning`) or Error (`danger`). For example `<CalloutTitle>Error: Form not sent</CalloutTitle>`, or `<CalloutTitle>Ralat: Borang tidak dihantar</CalloutTitle>` on a Malay page.
+
+If the design can't show that word, put it in visually hidden text at the start of the title instead: `<span className="sr-only">Error: </span>`. Use it in place of a visible name, never as well as one, or screen readers read the Variant twice.
+
+```tsx copy title="A title that says the Variant"
+// The Variant's name, shown
+<Callout variant="danger">
+  <CalloutTitle>Error: Form not sent</CalloutTitle>
+  <CalloutContent>Check your details and try again.</CalloutContent>
+</Callout>
+
+// The Variant's name, visually hidden, where the design can't show it
+<Callout variant="danger">
+  <CalloutTitle>
+    <span className="sr-only">Error: </span>Form not sent
+  </CalloutTitle>
+  <CalloutContent>Check your details and try again.</CalloutContent>
+</Callout>
+```
+
+This matters most with `role="alert"`. A screen reader reads the callout's text the moment it appears, and a title that doesn't say the Variant leaves the user guessing whether it's an error.
+
 ## Props
 
 ### Callout
@@ -342,7 +367,8 @@ export default function ApplicationForm() {
 <TypeTable
   type={{
     variant: {
-      description: "Style variant of the callout",
+      description:
+        'Colour and icon of the callout. Screen readers get neither, so the title must say the Variant, e.g. "Error: Form not sent".',
       type: "enum",
       typeDescription: "info | success | warning | danger",
       default: "info",

@@ -3,6 +3,7 @@ import {
   addYears,
   format,
   FormatOptions,
+  getDaysInMonth,
   isDate,
   isSameMonth,
   isSameYear,
@@ -73,6 +74,17 @@ const Calendar: FC<CalendarProps> = ({
 
   const thisYear = _month?.getFullYear() ?? today.getFullYear();
   const [year, setYear] = useState<number>(thisYear);
+
+  // The year view's years: `minYear` to `maxYear`, counting down for
+  // `yearOrder="desc"`, in rows of three with the short row last
+  const years = Array.from(
+    { length: Math.max(0, maxYear - minYear + 1) },
+    (_, i) => (yearOrder === "asc" ? minYear + i : maxYear - i),
+  );
+  const yearRows = Array.from(
+    { length: Math.ceil(years.length / 3) },
+    (_, row_index) => years.slice(row_index * 3, row_index * 3 + 3),
+  );
 
   const yearRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -200,19 +212,18 @@ const Calendar: FC<CalendarProps> = ({
                 {[0, 1, 2, 3].map((row_index) => (
                   <tr key={row_index}>
                     {[0, 1, 2].map((col_index) => {
-                      const date = new Date();
-                      date.setHours(0, 0, 0, 0);
-
-                      let selected_date = date;
-                      if (props.mode !== undefined)
-                        selected_date = getSelectedDate(
-                          props.selected,
-                          props.daterange,
-                        );
+                      const selected_date =
+                        props.mode !== undefined
+                          ? getSelectedDate(props.selected, props.daterange)
+                          : new Date();
 
                       const i = row_index * 3 + col_index;
 
-                      date.setFullYear(year, i, selected_date.getDate());
+                      const date = clampedDate(
+                        year,
+                        i,
+                        selected_date.getDate(),
+                      );
 
                       const isSelected =
                         month.getMonth() === i && month.getFullYear() === year;
@@ -278,93 +289,86 @@ const Calendar: FC<CalendarProps> = ({
                 className="w-full"
               >
                 <tbody>
-                  {Array(Math.ceil((maxYear - minYear) / 3))
-                    .fill(null)
-                    .map((_, row_index) => (
-                      <tr key={row_index}>
-                        {[0, 1, 2].map((col_index) => {
-                          const i = row_index * 3 + col_index;
+                  {yearRows.map((row, row_index) => (
+                    <tr key={row_index}>
+                      {row.map((displayYear, col_index) => {
+                        const isSelected = month.getFullYear() === displayYear;
 
-                          const displayYear =
-                            yearOrder === "asc" ? minYear + i : maxYear - i;
-                          const isSelected =
-                            month.getFullYear() === displayYear;
+                        const selected_date =
+                          props.mode !== undefined
+                            ? getSelectedDate(props.selected, props.daterange)
+                            : new Date();
 
-                          const date = new Date();
-                          date.setHours(0, 0, 0, 0);
+                        const date = clampedDate(
+                          displayYear,
+                          selected_date.getMonth(),
+                          selected_date.getDate(),
+                        );
 
-                          let selected_date = date;
+                        return (
+                          <td key={col_index} role="gridcell">
+                            <Button
+                              ref={isSelected ? yearRef : null}
+                              data-selected-date={date}
+                              data-selected={isSelected}
+                              variant={
+                                isSelected ? "primary-fill" : "default-ghost"
+                              }
+                              className="h-full min-h-11 w-full justify-center disabled:data-[selected=false]:bg-transparent"
+                              disabled={
+                                props.disabled
+                                  ? dateMatchers("year", date, props.disabled)
+                                  : false
+                              }
+                              onClick={(e) => {
+                                setYear(displayYear);
+                                // A new Date, cut to the month's length:
+                                // `month` can be the author's own Date
+                                setMonth(
+                                  addYears(
+                                    month,
+                                    displayYear - month.getFullYear(),
+                                  ),
+                                );
+                                setView("month");
 
-                          if (props.mode !== undefined)
-                            selected_date = getSelectedDate(
-                              props.selected,
-                              props.daterange,
-                            );
-
-                          date.setFullYear(
-                            displayYear,
-                            selected_date.getMonth(),
-                            selected_date.getDate(),
-                          );
-
-                          return (
-                            <td key={col_index} role="gridcell">
-                              <Button
-                                ref={isSelected ? yearRef : null}
-                                data-selected-date={date}
-                                data-selected={isSelected}
-                                variant={
-                                  isSelected ? "primary-fill" : "default-ghost"
-                                }
-                                className="h-full min-h-11 w-full justify-center disabled:data-[selected=false]:bg-transparent"
-                                disabled={
-                                  props.disabled
-                                    ? dateMatchers("year", date, props.disabled)
-                                    : false
-                                }
-                                onClick={(e) => {
-                                  setYear(displayYear);
-                                  month.setFullYear(displayYear);
-                                  setMonth(month);
-                                  setView("month");
-
-                                  if (
-                                    props.mode !== undefined &&
-                                    props.onSelect
-                                  ) {
-                                    if (props.mode === "single")
-                                      props.onSelect(date, date, {}, e);
-                                    if (props.mode === "range") {
-                                      if (props.selected) {
-                                        const { from, to } = props.selected;
-                                        props.onSelect(
-                                          props.daterange === "from"
-                                            ? { from: date, to }
-                                            : { from, to: date },
-                                          date,
-                                          {},
-                                          e,
-                                        );
-                                      } else
-                                        props.onSelect(
-                                          props.daterange === "from"
-                                            ? { from: date, to: undefined }
-                                            : { from: undefined, to: date },
-                                          date,
-                                          {},
-                                          e,
-                                        );
-                                    }
+                                if (
+                                  props.mode !== undefined &&
+                                  props.onSelect
+                                ) {
+                                  if (props.mode === "single")
+                                    props.onSelect(date, date, {}, e);
+                                  if (props.mode === "range") {
+                                    if (props.selected) {
+                                      const { from, to } = props.selected;
+                                      props.onSelect(
+                                        props.daterange === "from"
+                                          ? { from: date, to }
+                                          : { from, to: date },
+                                        date,
+                                        {},
+                                        e,
+                                      );
+                                    } else
+                                      props.onSelect(
+                                        props.daterange === "from"
+                                          ? { from: date, to: undefined }
+                                          : { from: undefined, to: date },
+                                        date,
+                                        {},
+                                        e,
+                                      );
                                   }
-                                }}
-                              >
-                                {displayYear}
-                              </Button>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
+                                }
+                              }}
+                            >
+                              {displayYear}
+                            </Button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -519,5 +523,19 @@ function getSelectedDate(
     return date;
   }
   if (selected.length > 0 && selected[0]) return selected[0];
+  return date;
+}
+
+// Day `day` of month `monthIndex` in `year`, at local midnight. A month
+// shorter than `day` gives its last day, so the 31st in February gives the
+// 28th or 29th rather than rolling into March. Years below 100 stay as they
+// are, which `new Date(year, monthIndex, day)` would move into the 1900s.
+// The time is reset on the day itself, last: where daylight-saving time
+// starts at 00:00 on the 1st, a reset there would give every day 01:00.
+function clampedDate(year: number, monthIndex: number, day: number): Date {
+  const date = new Date(0);
+  date.setFullYear(year, monthIndex, 1);
+  date.setFullYear(year, monthIndex, Math.min(day, getDaysInMonth(date)));
+  date.setHours(0, 0, 0, 0);
   return date;
 }

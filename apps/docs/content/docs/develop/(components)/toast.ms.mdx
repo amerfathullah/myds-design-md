@@ -221,34 +221,25 @@ Secara lalai, hanya toast `error` yang memotong bacaan pembaca skrin. Toast bagi
 
 Apabila toast bagi varian lain mesti didengar serta-merta, hantar `type: "foreground"` kepada `toast()`. Untuk ralat yang boleh menunggu, hantar `type: "background"`.
 
-```tsx copy title="Amaran yang mesti didengar serta-merta"
-"use client";
-
-import { useEffect } from "react";
+```tsx copy title="Memilih cara toast disebut"
 import { useToast } from "@amerfathullah/myds-react/hooks";
 
-// Memberi amaran kepada pengguna seminit sebelum sesi tamat. endsAt ialah cap
-// masa dalam milisaat, seperti yang dipulangkan oleh Date.now().
-export default function SessionWarning({ endsAt }: { endsAt: number }) {
-  const { toast } = useToast();
+//... dalam komponen anda
+const { toast } = useToast();
 
-  useEffect(() => {
-    const timer = setTimeout(
-      () =>
-        toast({
-          variant: "warning",
-          title: "Amaran: Sesi anda akan tamat",
-          description:
-            "Simpan kerja anda. Anda akan dilog keluar dalam seminit.",
-          type: "foreground",
-        }),
-      endsAt - Date.now() - 60 * 1000,
-    );
-    return () => clearTimeout(timer);
-  }, [endsAt]);
+// Amaran yang mesti didengar serta-merta
+toast({
+  variant: "warning",
+  title: "Amaran: Sesi anda akan tamat",
+  type: "foreground",
+});
 
-  return null;
-}
+// Ralat yang boleh menunggu
+toast({
+  variant: "error",
+  title: "Ralat: Draf anda tidak disimpan",
+  type: "background",
+});
 ```
 
 `AutoToast` juga menerima `type`, dan menetapkannya untuk setiap toast, tanpa mengira variannya. `type` toast itu sendiri, yang dihantar kepada `toast()`, diutamakan. Sebaiknya tetapkan `type` pada toast yang memerlukannya sahaja: dengan `<AutoToast type="foreground" />`, setiap toast memotong bacaan, dan toast yang dipaparkan serentak boleh memotong sebutan satu sama lain.

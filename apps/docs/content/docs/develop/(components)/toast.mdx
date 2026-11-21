@@ -221,33 +221,25 @@ A toast's `type` sets this: `"foreground"` interrupts, and `"background"` waits 
 
 When a toast of another Variant must be heard at once, pass `type: "foreground"` to `toast()`. For an error that can wait, pass `type: "background"`.
 
-```tsx copy title="Warning that must be heard at once"
-"use client";
-
-import { useEffect } from "react";
+```tsx copy title="Choosing how a toast is announced"
 import { useToast } from "@amerfathullah/myds-react/hooks";
 
-// Warns the user a minute before the session ends. endsAt is a timestamp in
-// milliseconds, like the one Date.now() returns.
-export default function SessionWarning({ endsAt }: { endsAt: number }) {
-  const { toast } = useToast();
+//... inside your component
+const { toast } = useToast();
 
-  useEffect(() => {
-    const timer = setTimeout(
-      () =>
-        toast({
-          variant: "warning",
-          title: "Warning: Your session is about to end",
-          description: "Save your work. You'll be signed out in a minute.",
-          type: "foreground",
-        }),
-      endsAt - Date.now() - 60 * 1000,
-    );
-    return () => clearTimeout(timer);
-  }, [endsAt]);
+// A warning that must be heard at once
+toast({
+  variant: "warning",
+  title: "Warning: Your session is about to end",
+  type: "foreground",
+});
 
-  return null;
-}
+// An error that can wait
+toast({
+  variant: "error",
+  title: "Error: Your draft wasn't saved",
+  type: "background",
+});
 ```
 
 `AutoToast` takes `type` too, and sets it for every toast, whatever its Variant. A toast's own `type`, passed to `toast()`, wins. Prefer setting `type` on the one toast that needs it: with `<AutoToast type="foreground" />`, every toast interrupts, and toasts shown together can interrupt each other.

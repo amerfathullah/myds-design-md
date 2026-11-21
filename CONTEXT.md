@@ -82,6 +82,10 @@ _Avoid_: Type (the design guideline's word for it), style, kind
 A condition a component passes through at runtime rather than one the author picks: hover, focus, pressed, active, checked, disabled, invalid.
 _Avoid_: Variant, mode
 
+**Widen**:
+To reveal the rest of a data table column's truncated text with the widen button in its header. Only a column the author marks as widenable can be widened, and until it is, its text is truncated.
+_Avoid_: Expand (a column); expanding is what a nested row does
+
 ### Code vs guideline
 
 **Divergence**:

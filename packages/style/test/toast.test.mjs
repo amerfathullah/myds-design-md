@@ -3,13 +3,13 @@
 // `role="status"` span of its own, portalled to `<body>`, that fills with
 // "Notification" and the toast's text two animation frames after it mounts,
 // and is removed a second after. Its `aria-live` follows ToastRoot's `type`,
-// which ToastRoot sets by Variant. So under a default AutoToast, an `error`
-// toast's announcement is an assertive live region, which interrupts the
-// screen reader, and a `success` toast's is a polite one, announced at the
-// next pause. Each title names its Variant, e.g. "Ralat: Borang tidak
-// dihantar". `ariaSnapshot()` doesn't show `live`, so the test reads the full
-// tree through the Chrome DevTools Protocol. The unit tests check the same,
-// and every Variant, by the span's `aria-live`.
+// which ToastRoot defaults by Variant when none is given. So under a default
+// AutoToast, an `error` toast's announcement is an assertive live region,
+// which interrupts the screen reader, and a `success` toast's is a polite
+// one, announced at the next pause. Each title names its Variant, e.g.
+// "Ralat: Borang tidak dihantar". `ariaSnapshot()` doesn't show `live`, so the
+// test reads the full tree through the Chrome DevTools Protocol. The unit
+// tests check the same, and every Variant, by the span's `aria-live`.
 //
 // The page is toast.page.jsx: the React components themselves, bundled with
 // esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -88,10 +88,10 @@ async function withPage(use) {
 async function announcements(page, variant, title) {
   const client = await page.context().newCDPSession(page);
   try {
-    await page.evaluate(
-      ([variant, title]) => window.fire(variant, title),
-      [variant, title],
-    );
+    await page.evaluate((event) => window.fire(event.variant, event.title), {
+      variant,
+      title,
+    });
     await page.waitForFunction(
       (text) =>
         [...document.querySelectorAll('[role="status"]')].some(

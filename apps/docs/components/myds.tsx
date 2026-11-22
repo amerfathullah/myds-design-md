@@ -151,36 +151,68 @@ export const ToastTriggerButton: FunctionComponent<ToastTriggerButtonProps> = (
 };
 
 interface DismissibleCalloutExampleProps {
+  /**
+   * Which Dismissible sample the preview shows. In `basic`, the action button
+   * is a plain button and only the cross dismisses. In `action`, the action
+   * button is wrapped in CalloutClose, so it dismisses too, and `onDismiss`
+   * alerts first.
+   */
   type: "basic" | "action";
   title?: string;
   description?: string;
+  /** The action button's text, in the page's language */
+  actionText?: string;
+  /** The text of the button that brings the callout back, in the page's language */
+  showText?: string;
+  /**
+   * The close cross's accessible name, passed on as Callout's `closeLabel`, in
+   * the page's language. Left out, it is Callout's default, "Close".
+   */
+  closeLabel?: string;
+  /** The text `onDismiss` alerts in the `action` preview, in the page's language */
+  alertText?: string;
+  /** The message `onDismiss` logs to the console, in the page's language */
+  logText?: string;
 }
 
 export const DismissibleCalloutExample: FunctionComponent<
   DismissibleCalloutExampleProps
-> = ({ type, title, description }) => {
+> = ({
+  type,
+  title,
+  description,
+  actionText = "Call to Action",
+  showText = `Show Callout: ${type}`,
+  closeLabel,
+  alertText = "Action taken before callout gets dismissed",
+  logText = "MYDS: Dismissed event captured!",
+}) => {
   const [show, setShow] = useState(true);
+  const actionButton = <Button variant="default-outline">{actionText}</Button>;
 
   return show ? (
     <Callout
       dismissible
+      closeLabel={closeLabel}
       onDismiss={() => {
-        alert("Action taken before callout gets dismissed");
+        if (type === "action") alert(alertText);
         setShow(false);
-        console.log("MYDS: Dismissed event captured!");
+        console.log(logText);
       }}
     >
       <CalloutTitle>{title}</CalloutTitle>
       <CalloutContent>{description}</CalloutContent>
       <CalloutAction>
-        <CalloutClose>
-          <Button variant="default-outline">Call to Action</Button>
-        </CalloutClose>
+        {type === "action" ? (
+          <CalloutClose>{actionButton}</CalloutClose>
+        ) : (
+          actionButton
+        )}
       </CalloutAction>
     </Callout>
   ) : (
-    <Button variant={"default-outline"} onClick={() => setShow(true)}>
-      Show Callout: {type}
+    <Button variant="default-outline" onClick={() => setShow(true)}>
+      {showText}
     </Button>
   );
 };

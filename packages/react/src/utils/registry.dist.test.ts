@@ -54,6 +54,7 @@ const sharedNames = [
   "RadioContext",
   "RadioItemContext",
   "SearchBarContext",
+  "SearchBarResultsContext",
   "SelectContext",
   "TabsContext",
   "ThemeContext",
@@ -390,12 +391,12 @@ describe.each(conditions)(
     });
 
     // A place made a context twice when two bundled copies of its module ran
-    test("makes 18 React contexts, each in a different place in src", async () => {
+    test("makes 19 React contexts, each in a different place in src", async () => {
       const { contexts } = await census();
       expect({
         made: contexts.length,
         again: contexts.filter((place, i) => contexts.indexOf(place) !== i),
-      }).toEqual({ made: 18, again: [] });
+      }).toEqual({ made: 19, again: [] });
     });
 
     test("makes one toast emitter", async () => {

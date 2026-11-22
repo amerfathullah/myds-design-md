@@ -577,13 +577,13 @@ describe("the modules the build ships", () => {
     expect(found.violations.require).toEqual([]);
   });
 
-  test("make 18 contexts and 1 emitter through the registry", () => {
+  test("make 19 contexts and 1 emitter through the registry", () => {
     const count = (kind: Made["kind"]) =>
       found.made.filter((made) => made.kind === kind).length;
     expect(
       { contexts: count("context"), emitters: count("emitter") },
       "every context and the toast emitter, made through the registry (#119)",
-    ).toEqual({ contexts: 18, emitters: 1 });
+    ).toEqual({ contexts: 19, emitters: 1 });
   });
 
   // A change here is a change to what every copy of the major shares
@@ -689,6 +689,13 @@ describe("the modules the build ships", () => {
           "default": {
             "setGivenResultsId": "() => {}",
             "size": "'medium'",
+          },
+          "file": "components/search-bar.tsx",
+          "kind": "context",
+        },
+        "SearchBarResultsContext": {
+          "default": {
+            "open": "true",
           },
           "file": "components/search-bar.tsx",
           "kind": "context",

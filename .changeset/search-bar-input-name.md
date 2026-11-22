@@ -10,7 +10,7 @@ SearchBarInput is now named by its own `aria-labelledby`, then its own `aria-lab
 - **There is no default name.** ADR-0008's Scope gives a form control the author names no default. With none of the three, the input has no accessible name, and its placeholder doesn't name it either, so name every search input, for example `aria-label="Cari nama"`.
 - **A visible Label takes an `id`, not `htmlFor`.** cmdk owns the input's `id` and finds the input by it, so an `id` you pass SearchBarInput doesn't reach the `<input>`, and a Label's `htmlFor` names nothing. Give the Label an `id` and pass it to SearchBarInput's `aria-labelledby`, as for the date pickers: `<Label id="search-by-name">Search by name</Label>` with `<SearchBarInput aria-labelledby="search-by-name" />`. Clicking the Label doesn't focus the input.
 - **SearchBarInput takes no `asChild` (#206).** It always renders its own `<input>` through cmdk's `asChild`, so `asChild` is no longer in its props type. An untyped `asChild={false}` used to crash the render, and is now ignored.
-- **Nothing else changes.** Typing, ArrowDown, ArrowUp, Enter calling a result's `onSelect`, `aria-controls`, `aria-describedby` and refs work as before, and server-rendered HTML carries the name before the page hydrates. Nothing changes visually.
+- **Nothing else changes here.** Typing, ArrowDown, ArrowUp, Enter calling a result's `onSelect`, `aria-describedby` and refs work as before, and server-rendered HTML carries the name before the page hydrates. Nothing changes visually. The input's `aria-controls` and `aria-expanded` change in the entry for #204 and #369.
 
 **If you upgrade:**
 

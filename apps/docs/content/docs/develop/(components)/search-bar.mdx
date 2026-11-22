@@ -657,7 +657,7 @@ type={{
   },
   id: {
     description:
-      "The results panel's id. The search bar's input points its `aria-controls` at it. A unique id is generated if you leave it out.",
+      "The results panel's id. The search bar's input points its `aria-controls` at it only while no `SearchBarResultsList` is mounted; while one is, it points at the list. A unique id is generated if you leave it out.",
     type: "string",
   },
 }}

@@ -40,7 +40,7 @@ const CalloutDemo = (props: ComponentProps<typeof Callout>) => {
  *
  * ### Usage
  * ```tsx
- * import { Callout, CalloutTitle, CalloutDescription } from "@amerfathullah/myds-react/callout";
+ * import { Callout, CalloutTitle, CalloutContent, CalloutAction } from "@amerfathullah/myds-react/callout";
  * import { Button } from "@amerfathullah/myds-react/button";
  *
  * <Callout>

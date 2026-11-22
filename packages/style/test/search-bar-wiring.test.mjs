@@ -1,9 +1,14 @@
 // SearchBarInput's `aria-expanded` and `aria-controls` in Chromium, after
 // hydration (#204, #369). Server HTML renders each input collapsed, naming
 // nothing, and hydration matches it: no recoverable error, nothing logged,
-// and the server's inputs, panels and listboxes kept. Then each input is
-// expanded only while a listbox is displayed, and its `aria-controls` names
-// its own bar's listbox while one is mounted, else its panel, else nothing.
+// and the server's inputs, panels and listboxes kept. So are the nodes inside
+// <Suspense> boundaries in the bar, with or without an `id` on its panel, and
+// no fallback shows, even for a boundary that stays pending in the browser:
+// React 18.3 client-renders a boundary that gets an update before it has
+// hydrated, as a change to SearchBar's context value would be. Then, before
+// the browser paints, each input is expanded only while a listbox is
+// displayed, and its `aria-controls` names its own bar's listbox while one is
+// mounted, else its panel, else nothing.
 // axe-core 4.10.2 then finds no `aria-valid-attr-value`, `aria-required-attr`
 // or `scrollable-region-focusable` violation, with no panel, a closed panel
 // with a list, an open panel whose list scrolls, an open panel showing only
@@ -171,7 +176,14 @@ async function withPage(name, use) {
     await page.setContent(
       `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SearchBar</title><style>${css}</style></head><body class="bg-bg-white"><main><h1>SearchBar</h1><div id="root">${html}</div></main><script>${script}</script><script>searchBarWiring.hydrate(${JSON.stringify(name)})</script></body></html>`,
     );
-    await page.waitForFunction(() => window.ready.length === 1);
+    // Once React has committed the page, and hydrated each boundary that can
+    await page.waitForFunction(
+      (name) =>
+        window.ready.length === 1 &&
+        window.hydrated.length ===
+          (window.searchBarWiring.boundaries[name]?.length ?? 0),
+      name,
+    );
     return await use(page, logged);
   } finally {
     await context.close();
@@ -223,8 +235,15 @@ const wired = {
     header: { expanded: "true", controls: "listbox" },
     main: { expanded: "true", controls: "listbox" },
   },
+  "list, no panel": { search: { expanded: "true", controls: "listbox" } },
+  "given id": { search: { expanded: "false", controls: "panel" } },
+  suspense: { search: { expanded: "false", controls: "listbox" } },
+  "suspense, given id": { search: { expanded: "false", controls: "listbox" } },
   docs: { docs: { expanded: "false", controls: "panel" } },
 };
+// The compositions with <Suspense> boundaries, whose lists hydrate after the
+// bar does
+const suspended = ["suspense", "suspense, given id"];
 const names = Object.keys(wired);
 
 // `wired` with each bar's wiring replaced by `each`
@@ -249,7 +268,9 @@ function load(name) {
           version: window.searchBarWiring.version,
           server: window.serverWiring,
           recoverable: window.recoverableErrors,
+          fallbacks: window.fallbacks,
           kept: window.serverNodes.every((node) => node.isConnected),
+          painted: window.painted,
           wiring: window.searchBarWiring.wiring(),
           duplicates: window.searchBarWiring.duplicateIds(),
         }));
@@ -288,12 +309,13 @@ test("server HTML renders each input collapsed, naming nothing", async () => {
   );
 });
 
-test("hydration raises no recoverable error, logs nothing, and keeps the server's inputs, panels and listboxes", async () => {
-  const clean = { recoverable: [], logged: [], kept: true };
+test("hydration raises no recoverable error, logs nothing, shows no fallback, and keeps the server's inputs, panels, listboxes and boundaries' nodes", async () => {
+  const clean = { recoverable: [], logged: [], fallbacks: [], kept: true };
   assert.deepEqual(
-    await loadAll(({ recoverable, logged, kept }) => ({
+    await loadAll(({ recoverable, logged, fallbacks, kept }) => ({
       recoverable,
       logged,
+      fallbacks,
       kept,
     })),
     Object.fromEntries(names.map((name) => [name, clean])),
@@ -302,6 +324,20 @@ test("hydration raises no recoverable error, logs nothing, and keeps the server'
 
 test("once hydrated, each input is expanded only while a listbox is displayed, and names its own bar's listbox, else its panel, else nothing", async () => {
   assert.deepEqual(await loadAll(({ wiring }) => wiring), wired);
+});
+
+// A bar's <Suspense> boundaries hydrate in a later commit than the bar, so
+// until its list's does, the input names the panel
+test("each input has its wiring before the browser paints the hydrated page", async () => {
+  assert.deepEqual(await loadAll(({ painted }) => painted), {
+    ...wired,
+    ...Object.fromEntries(
+      suspended.map((name) => [
+        name,
+        { search: { expanded: "false", controls: "panel" } },
+      ]),
+    ),
+  });
 });
 
 test("no composition renders a duplicate id", async () => {

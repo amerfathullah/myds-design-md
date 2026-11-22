@@ -10,15 +10,23 @@
 // - "no results": an open panel showing only "No results found";
 // - "two bars": a header search beside a page search, each with an open
 //   panel and a list;
+// - "list, no panel": a list with no SearchBarResults around it;
+// - "given id": an open panel given an `id`, with no list;
+// - "suspense" and "suspense, given id": a closed panel, without and with an
+//   `id`, and three <Suspense> boundaries: one around an icon in the input
+//   container, one around the list in the panel, and one in the panel that
+//   suspends in the browser and never resolves, so it stays server HTML;
 // - "docs": the docs' Controlled Component example, the panel open while the
 //   input has focus and a query, the list mounted while the query matches.
 // search-bar-wiring.server.jsx renders a composition to HTML in Node, and
 // `hydrate` hydrates that HTML here, keeping what it read before in
 // `window.serverWiring` and `window.serverNodes`. React's recoverable errors
-// go to `window.recoverableErrors`, and the composition's name to
-// `window.ready` once React has committed it. The test bundles this file
-// with esbuild, for the browser as `searchBarWiring`.
-import { useEffect, useState, version } from "react";
+// go to `window.recoverableErrors`, any fallback React inserts to
+// `window.fallbacks`, the wiring as it stood before the browser could paint
+// to `window.painted`, each boundary that hydrates to `window.hydrated`, and
+// the composition's name to `window.ready` once React has committed it. The
+// test bundles this file with esbuild, for the browser as `searchBarWiring`.
+import { Suspense, useEffect, useLayoutEffect, useState, version } from "react";
 import { hydrateRoot } from "react-dom/client";
 
 import { Pill } from "../../react/src/components/pill";
@@ -33,9 +41,14 @@ import {
   SearchBarResultsList,
   SearchBarSearchButton,
 } from "../../react/src/components/search-bar";
-import { ChevronRightIcon, UserIcon } from "../../react/src/icons";
+import { ChevronRightIcon, SearchIcon, UserIcon } from "../../react/src/icons";
 
 export { version };
+
+const inBrowser = typeof window !== "undefined";
+// Layout effects run only in the browser, and React 18 warns of one on the
+// server, so the server gets useEffect, as the components do
+const useBeforePaint = inBrowser ? useLayoutEffect : useEffect;
 
 // The first of the docs' notable Malaysians: more than the docs' 400px show
 const people = [
@@ -70,16 +83,73 @@ const Result = ({ name, note }) => (
   </SearchBarResultsItem>
 );
 
-// An uncontrolled SearchBar named `bar`, its input labelled `label`
-const Bar = ({ bar, label = "Search by name", children }) => (
+// An uncontrolled SearchBar named `bar`, its input labelled `label`, with
+// `icon` before the input
+const Bar = ({ bar, label = "Search by name", icon = null, children }) => (
   <SearchBar data-bar={bar} size="large">
     <SearchBarInputContainer>
+      {icon}
       <SearchBarInput aria-label={label} placeholder={label} />
       <SearchBarSearchButton />
     </SearchBarInputContainer>
     {children}
   </SearchBar>
 );
+
+// A list of the first three people
+const ShortList = () => (
+  <SearchBarResultsList>
+    {people.slice(0, 3).map((person) => (
+      <Result key={person.name} {...person} />
+    ))}
+  </SearchBarResultsList>
+);
+
+// Says once its <Suspense> boundary has hydrated
+function Hydrated({ name }) {
+  useBeforePaint(() => void window.hydrated.push(name), [name]);
+  return null;
+}
+
+// Renders on the server, and suspends in the browser for good, so its
+// boundary stays server HTML
+const never = new Promise(() => {});
+function Pending() {
+  if (inBrowser) throw never;
+  return <p data-suspense="pending">Recent searches</p>;
+}
+
+// A closed panel given `id`, if any, holding a <Suspense> boundary around
+// its list and one that stays pending, in a bar with one around an icon
+const Suspended = ({ id }) => (
+  <Bar
+    bar="search"
+    icon={
+      <Suspense fallback={<span data-fallback="icon">…</span>}>
+        <span data-suspense="icon">
+          <SearchIcon />
+        </span>
+        <Hydrated name="icon" />
+      </Suspense>
+    }
+  >
+    <SearchBarResults data-panel="" open={false} id={id}>
+      <Suspense fallback={<p data-fallback="list">Loading…</p>}>
+        <ShortList />
+        <Hydrated name="list" />
+      </Suspense>
+      <Suspense fallback={<p data-fallback="pending">Loading…</p>}>
+        <Pending />
+      </Suspense>
+    </SearchBarResults>
+  </Bar>
+);
+
+// The boundaries each composition holds that hydrate in the browser
+export const boundaries = {
+  suspense: ["icon", "list"],
+  "suspense, given id": ["icon", "list"],
+};
 
 // The docs' Controlled Component example
 function Docs() {
@@ -183,8 +253,33 @@ export const compositions = {
       ))}
     </div>
   ),
+  "list, no panel": () => (
+    <Bar bar="search">
+      <ShortList />
+    </Bar>
+  ),
+  "given id": () => (
+    <Bar bar="search">
+      <SearchBarResults data-panel="" open id="search-results">
+        <p className="text-txt-black-900 text-center">No results found</p>
+      </SearchBarResults>
+    </Bar>
+  ),
+  suspense: () => <Suspended />,
+  "suspense, given id": () => <Suspended id="search-results" />,
   docs: Docs,
 };
+
+// Rendered after the composition, so its layout effect runs after the bars'
+// in the commit that hydrates them. It reads their wiring in a microtask
+// queued from there: after the updates their layout effects schedule, which
+// React renders before it gives the browser back, so before any paint.
+function Probe() {
+  useBeforePaint(() => {
+    queueMicrotask(() => (window.painted = wiring()));
+  }, []);
+  return null;
+}
 
 // The composition `name`, which says once React has committed it
 export function Page({ name }) {
@@ -193,6 +288,7 @@ export function Page({ name }) {
   return (
     <div className="p-4">
       <Composition />
+      <Probe />
     </div>
   );
 }
@@ -256,14 +352,27 @@ export function duplicateIds() {
  */
 export function hydrate(name) {
   window.ready = [];
+  window.hydrated = [];
   window.recoverableErrors = [];
+  window.fallbacks = [];
   const root = document.getElementById("root");
   window.serverWiring = wiring();
-  // The server's inputs, panels and listboxes, so the test can tell that
-  // hydration kept them
+  // The server's inputs, panels, listboxes and what its <Suspense> boundaries
+  // hold, so the test can tell that hydration kept them
   window.serverNodes = [
-    ...root.querySelectorAll('input, [data-panel], [role="listbox"]'),
+    ...root.querySelectorAll(
+      'input, [data-panel], [role="listbox"], [data-suspense]',
+    ),
   ];
+  // Any fallback React shows, however briefly
+  new MutationObserver((records) => {
+    for (const { addedNodes } of records)
+      for (const node of addedNodes)
+        if (node.nodeType === Node.ELEMENT_NODE)
+          for (const fallback of [node, ...node.querySelectorAll("*")])
+            if (fallback.matches("[data-fallback]"))
+              window.fallbacks.push(fallback.dataset.fallback);
+  }).observe(root, { childList: true, subtree: true });
   hydrateRoot(root, <Page name={name} />, {
     onRecoverableError: (error) => window.recoverableErrors.push(String(error)),
   });

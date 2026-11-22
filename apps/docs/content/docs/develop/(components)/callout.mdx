@@ -10,7 +10,6 @@ import {
   CalloutAction,
   CalloutContent,
   CalloutTitle,
-  CalloutClose,
   DismissibleCalloutExample,
 } from "@/components/myds";
 import { TypeTable } from "fumadocs-ui/components/type-table";
@@ -24,12 +23,13 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
         <span>A description to explain the success, warning, info or error event</span>
       </CalloutContent>
       <CalloutAction>
-        <Button variant="default-outline">Primary Button</Button>
+        <Button variant="default-outline">Call to Action</Button>
       </CalloutAction>
   </Callout>
   </Tab>
   <Tab value="Code">
   ```tsx 
+import { Button } from "@amerfathullah/myds-react/button";
 import { Callout, CalloutAction, CalloutTitle, CalloutContent } from "@amerfathullah/myds-react/callout";
 
 <Callout>
@@ -57,11 +57,13 @@ import { Callout, CalloutAction, CalloutTitle, CalloutContent } from "@amerfathu
 ## Usage
 
 ```ts copy title="Import"
+import { Button } from "@amerfathullah/myds-react/button";
 import {
   Callout,
   CalloutAction,
-  CalloutTitle,
+  CalloutClose,
   CalloutContent,
+  CalloutTitle,
 } from "@amerfathullah/myds-react/callout";
 ```
 
@@ -179,8 +181,8 @@ Use the `variant` prop to change the callout style!
 
 ### Layout
 
-A basic callout consisting of **title** and **action** will be displayed an **inline** manner,
-while callouts with all three elements (**title**, **content** & **action**) will be displayed in a **stacked** manner.
+A callout with a **title** and an **action** is laid out **inline**, on one line.
+A callout with **content** (`CalloutContent`) is **stacked**, with its parts one below the other, whether or not it has an action.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
@@ -191,8 +193,8 @@ while callouts with all three elements (**title**, **content** & **action**) wil
         <Button variant="default-outline">Call to Action</Button>
       </CalloutAction>
   </Callout>
-  <Callout>
-    <CalloutTitle>Information: Application under review</CalloutTitle>
+  <Callout variant="success">
+    <CalloutTitle>Success: Data saved</CalloutTitle>
     <CalloutContent>
       <span>A description to explain the success, warning, info or error event</span>
     </CalloutContent>
@@ -270,7 +272,7 @@ To dismiss the callout via event listener, simply wrap the target element with `
       </CalloutAction>
     </Callout>
 
-    // Action - Dismiss Callout via CalloutAction Render Prop
+    // Action - Dismiss Callout via CalloutClose
     <Callout
       dismissible
       onDismiss={() => {

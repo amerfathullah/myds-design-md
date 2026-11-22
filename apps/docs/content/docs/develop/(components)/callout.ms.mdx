@@ -23,12 +23,13 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
         <span>Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat</span>
       </CalloutContent>
       <CalloutAction>
-        <Button variant="default-outline">Butang Utama</Button>
+        <Button variant="default-outline">Panggilan untuk Bertindak</Button>
       </CalloutAction>
   </Callout>
   </Tab>
   <Tab value="Kod">
   ```tsx 
+import { Button } from "@amerfathullah/myds-react/button";
 import { Callout, CalloutAction, CalloutTitle, CalloutContent } from "@amerfathullah/myds-react/callout";
 
 <Callout>
@@ -56,11 +57,13 @@ import { Callout, CalloutAction, CalloutTitle, CalloutContent } from "@amerfathu
 ## Penggunaan
 
 ```ts copy title="Import"
+import { Button } from "@amerfathullah/myds-react/button";
 import {
   Callout,
   CalloutAction,
-  CalloutTitle,
+  CalloutClose,
   CalloutContent,
+  CalloutTitle,
 } from "@amerfathullah/myds-react/callout";
 ```
 
@@ -69,7 +72,9 @@ export default () => (
   <Callout>
     <CalloutTitle />
     <CalloutContent />
-    <CalloutAction />
+    <CalloutAction>
+      <CalloutClose />
+    </CalloutAction>
   </Callout>
 );
 ```
@@ -123,7 +128,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
   </Tab>
   <Tab value="Kod">
 ```tsx 
-/** Varian: info **/
+/** Varian: Info **/
 
 <Callout variant="info">
   <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
@@ -135,7 +140,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
   </CalloutAction>
 </Callout>
 
-/** Varian: success **/
+/** Varian: Success **/
 
 <Callout variant="success">
   <CalloutTitle>Berjaya: Data disimpan</CalloutTitle>
@@ -147,7 +152,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
   </CalloutAction>
 </Callout>
 
-/** Varian: warning **/
+/** Varian: Warning **/
 
 <Callout variant="warning">
   <CalloutTitle>Amaran: Sesi akan tamat</CalloutTitle>
@@ -159,7 +164,7 @@ Gunakan prop `variant` untuk menukar gaya callout!
   </CalloutAction>
 </Callout>
 
-/** Varian: danger **/
+/** Varian: Danger **/
 
 <Callout variant="danger">
   <CalloutTitle>Ralat: Borang tidak dihantar</CalloutTitle>
@@ -171,13 +176,63 @@ Gunakan prop `variant` untuk menukar gaya callout!
   </CalloutAction>
 </Callout>
 ```
+  </Tab>
+</Tabs>
 
+### Susun Atur
+
+Callout yang mempunyai **tajuk** dan **tindakan** disusun secara **sebaris**, dalam satu baris.
+Callout yang mempunyai **kandungan** (`CalloutContent`) disusun secara **bertindan**, dengan bahagiannya satu di bawah yang lain, sama ada ia mempunyai tindakan atau tidak.
+
+<Tabs items={["Pratonton", "Kod"]}>
+  <Tab value="Pratonton">
+  <div className="space-y-2 not-prose">
+  <Callout>
+      <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
+      <CalloutAction>
+        <Button variant="default-outline">Panggilan untuk Bertindak</Button>
+      </CalloutAction>
+  </Callout>
+  <Callout variant="success">
+    <CalloutTitle>Berjaya: Data disimpan</CalloutTitle>
+    <CalloutContent>
+      <span>Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat</span>
+    </CalloutContent>
+    <CalloutAction>
+      <Button variant="default-outline">Panggilan untuk Bertindak</Button>
+    </CalloutAction>
+  </Callout>
+  </div>
+  </Tab>
+  <Tab value="Kod">
+```tsx 
+/** Susun Atur: Sebaris **/
+
+<Callout variant="info">
+  <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
+  <CalloutAction>
+    <Button variant="default-outline">Panggilan untuk Bertindak</Button>
+  </CalloutAction>
+</Callout>
+
+/** Susun Atur: Bertindan **/
+
+<Callout variant="success">
+  <CalloutTitle>Berjaya: Data disimpan</CalloutTitle>
+  <CalloutContent>
+    Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
+  </CalloutContent>
+  <CalloutAction>
+    <Button variant="default-outline">Panggilan untuk Bertindak</Button>
+  </CalloutAction>
+</Callout>
+```
   </Tab>
 </Tabs>
 
 ### Boleh Dihapuskan
 
-Jika panggilan keluar boleh dihapuskan, anda boleh memaparkan **butang tutup** di sudut kanan atas panggilan keluar dengan mengisytiharkan prop `dismissible`.
+Jika callout boleh dihapuskan, anda boleh memaparkan **butang tutup** di sudut kanan atas callout dengan mengisytiharkan prop `dismissible`.
 Untuk menangkap peristiwa hapus, anda boleh menggunakan prop `onDismiss`.
 
 Pembaca skrin menyebut butang tutup sebagai "Close". Tetapkan `closeLabel` untuk menamakannya dalam bahasa laman anda, contohnya `closeLabel="Tutup"`.
@@ -191,11 +246,21 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
         type="basic"
         title="Maklumat: Asas - Keadaan Hapus Tidak Terkawal"
         description="Anda boleh menangkap peristiwa hapus menggunakan prop onDismiss. Semak konsol untuk peristiwa hapus."
+        actionText="Panggilan untuk Bertindak"
+        showText="Papar Callout: asas"
+        closeLabel="Tutup"
+        alertText="Tindakan diambil sebelum callout dihapuskan"
+        logText="MYDS: Peristiwa hapus ditangkap!"
       />
       <DismissibleCalloutExample
         type="action"
-        title="Maklumat: Tindakan - Hapus Callout melalui Prop Render CalloutAction"
-        description="Anda boleh memanggil peristiwa hapus secara programatik melalui mana-mana pendengar peristiwa di dalam anak CalloutAction"
+        title="Maklumat: Tindakan - Hapus Callout melalui CalloutClose"
+        description="Anda boleh menambah fungsi menutup Callout dengan membalut elemen sasaran dengan CalloutClose"
+        actionText="Panggilan untuk Bertindak"
+        showText="Papar Callout: tindakan"
+        closeLabel="Tutup"
+        alertText="Tindakan diambil sebelum callout dihapuskan"
+        logText="MYDS: Peristiwa hapus ditangkap!"
       />
     </div>
   </Tab>
@@ -204,35 +269,32 @@ Untuk menghapuskan callout melalui pendengar acara, balut elemen sasaran dengan 
     // Asas - Keadaan Hapus Tidak Terkawal
     <Callout
       dismissible
+      closeLabel="Tutup"
       onDismiss={() => {
         console.log("MYDS: Peristiwa hapus ditangkap!");
       }}
     >
       <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
       <CalloutContent>
-        <span>
-          Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
-        </span>
+        Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
       </CalloutContent>
       <CalloutAction>
-        <CalloutClose>
         <Button variant="default-outline">Panggilan untuk Bertindak</Button>
-        </CalloutClose>
       </CalloutAction>
     </Callout>
 
-    // Tindakan - Hapus Callout melalui Prop Render CalloutAction
+    // Tindakan - Hapus Callout melalui CalloutClose
     <Callout
       dismissible
+      closeLabel="Tutup"
       onDismiss={() => {
+        alert("Tindakan diambil sebelum callout dihapuskan");
         console.log("MYDS: Peristiwa hapus ditangkap!");
       }}
     >
       <CalloutTitle>Maklumat: Permohonan sedang disemak</CalloutTitle>
       <CalloutContent>
-        <span>
-          Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
-        </span>
+        Penerangan untuk menjelaskan kejayaan, amaran, maklumat atau peristiwa ralat
       </CalloutContent>
       <CalloutAction>
         <CalloutClose>

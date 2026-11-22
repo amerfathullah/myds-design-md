@@ -58,7 +58,7 @@ const axeSource = fs.readFileSync(
   createRequire(import.meta.url).resolve("axe-core/axe.min.js"),
   "utf8",
 );
-// The rules the brief holds the wiring to (#204)
+// The rules #204 holds the wiring to
 const rules = [
   "aria-valid-attr-value",
   "aria-required-attr",
@@ -237,6 +237,7 @@ const wired = {
   },
   "list, no panel": { search: { expanded: "true", controls: "listbox" } },
   "given id": { search: { expanded: "false", controls: "panel" } },
+  "author values": { search: { expanded: "false", controls: "panel" } },
   suspense: { search: { expanded: "false", controls: "listbox" } },
   "suspense, given id": { search: { expanded: "false", controls: "listbox" } },
   docs: { docs: { expanded: "false", controls: "panel" } },
@@ -302,11 +303,11 @@ test(`the server and the browser run React ${reactVersion}, from ${reactModules}
   );
 });
 
-test("server HTML renders each input collapsed, naming nothing", async () => {
-  assert.deepEqual(
-    await loadAll(({ server }) => server),
-    eachBar({ expanded: "false", controls: "nothing" }),
-  );
+test("server HTML renders each input collapsed, naming nothing, unless its author's values say otherwise", async () => {
+  assert.deepEqual(await loadAll(({ server }) => server), {
+    ...eachBar({ expanded: "false", controls: "nothing" }),
+    "author values": wired["author values"],
+  });
 });
 
 test("hydration raises no recoverable error, logs nothing, shows no fallback, and keeps the server's inputs, panels, listboxes and boundaries' nodes", async () => {

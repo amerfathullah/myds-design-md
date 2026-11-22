@@ -1,5 +1,5 @@
 ---
-"@amerfathullah/myds-react": patch
+"@amerfathullah/myds-react": minor
 "@govtechmy/myds-docs": patch
 ---
 

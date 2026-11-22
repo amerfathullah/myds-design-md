@@ -12,6 +12,9 @@
 //   panel and a list;
 // - "list, no panel": a list with no SearchBarResults around it;
 // - "given id": an open panel given an `id`, with no list;
+// - "author values": an open panel given an `id`, with a list, and an input
+//   whose own `aria-controls` names the panel and whose `aria-expanded` is
+//   false;
 // - "suspense" and "suspense, given id": a closed panel, without and with an
 //   `id`, and three <Suspense> boundaries: one around an icon in the input
 //   container, one around the list in the panel, and one in the panel that
@@ -83,13 +86,19 @@ const Result = ({ name, note }) => (
   </SearchBarResultsItem>
 );
 
-// An uncontrolled SearchBar named `bar`, its input labelled `label`, with
-// `icon` before the input
-const Bar = ({ bar, label = "Search by name", icon = null, children }) => (
+// An uncontrolled SearchBar named `bar`, its input labelled `label` and
+// taking `input`, with `icon` before the input
+const Bar = ({
+  bar,
+  label = "Search by name",
+  input = {},
+  icon = null,
+  children,
+}) => (
   <SearchBar data-bar={bar} size="large">
     <SearchBarInputContainer>
       {icon}
-      <SearchBarInput aria-label={label} placeholder={label} />
+      <SearchBarInput aria-label={label} placeholder={label} {...input} />
       <SearchBarSearchButton />
     </SearchBarInputContainer>
     {children}
@@ -207,11 +216,7 @@ export const compositions = {
   "closed list": () => (
     <Bar bar="search">
       <SearchBarResults data-panel="" open={false}>
-        <SearchBarResultsList>
-          {people.slice(0, 3).map((person) => (
-            <Result key={person.name} {...person} />
-          ))}
-        </SearchBarResultsList>
+        <ShortList />
       </SearchBarResults>
     </Bar>
   ),
@@ -242,11 +247,7 @@ export const compositions = {
         <div key={bar} className="flex-1">
           <Bar bar={bar} label={label}>
             <SearchBarResults data-panel="" open>
-              <SearchBarResultsList>
-                {people.slice(0, 3).map((person) => (
-                  <Result key={person.name} {...person} />
-                ))}
-              </SearchBarResultsList>
+              <ShortList />
             </SearchBarResults>
           </Bar>
         </div>
@@ -262,6 +263,16 @@ export const compositions = {
     <Bar bar="search">
       <SearchBarResults data-panel="" open id="search-results">
         <p className="text-txt-black-900 text-center">No results found</p>
+      </SearchBarResults>
+    </Bar>
+  ),
+  "author values": () => (
+    <Bar
+      bar="search"
+      input={{ "aria-controls": "search-results", "aria-expanded": false }}
+    >
+      <SearchBarResults data-panel="" open id="search-results">
+        <ShortList />
       </SearchBarResults>
     </Bar>
   ),

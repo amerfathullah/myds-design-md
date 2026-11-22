@@ -170,7 +170,11 @@ type ResultsProps = Partial<Parameters<typeof SearchBarResults>[0]>;
 // open unless they say otherwise, or null for no SearchBarResults. `list`
 // mounts a SearchBarResultsList: in the panel, or in its place when there's
 // none.
-type Parts = { results?: ResultsProps | null; list?: boolean };
+type Holding = { results?: ResultsProps | null; list?: boolean };
+
+// SearchBarResults' props, with the `data-panel` that `parts` finds it by
+const panel = (props: ResultsProps & { open: boolean }) =>
+  ({ "data-panel": "", ...props }) as ResultsProps & { open: boolean };
 
 // A SearchBar named `name`, with an input taking `input`, and the results
 // parts `parts` asks for. The list holds one result. It leaves out the
@@ -183,7 +187,7 @@ const searchBar = (
     results = {},
     list = true,
     withInput = true,
-  }: Parts & { input?: InputProps; withInput?: boolean } = {},
+  }: Holding & { input?: InputProps; withInput?: boolean } = {},
 ): ReactElement => {
   const resultsList =
     list &&
@@ -210,9 +214,7 @@ const searchBar = (
       ? resultsList
       : createElement(
           SearchBarResults,
-          { open: true, "data-panel": "", ...results } as ResultsProps & {
-            open: boolean;
-          },
+          panel({ open: true, ...results }),
           resultsList,
         ),
   );
@@ -279,7 +281,7 @@ type Wiring = ReturnType<typeof wiring>;
 // Each state in #204's table: the results parts a SearchBar holds, and how
 // its input is wired when the author passes no `aria-controls` or
 // `aria-expanded`
-const states: (Parts & { state: string; wired: Wiring })[] = [
+const states: (Holding & { state: string; wired: Wiring })[] = [
   {
     state: "nothing",
     results: null,
@@ -435,7 +437,7 @@ describe("moving between states", () => {
   test("each step of a list mounting and unmounting in an opening panel", async () => {
     const { container, paint } = await painted();
     const read = () => wiring(container, "bar");
-    const steps: [Parts, Wiring][] = [
+    const steps: [Holding, Wiring][] = [
       [
         { results: null, list: false },
         { expanded: "false", controls: "nothing" },
@@ -616,22 +618,25 @@ describe("two SearchBars on one page", () => {
   test("each bar changes on its own", async () => {
     const { container, paint } = await painted();
     const read = () => [wiring(container, "header"), wiring(container, "main")];
-    const [nothing, , , closedWithList, openWithList] = states;
+    const state = (name: string) => states.find(({ state }) => state === name)!;
+    const nothing = state("nothing");
+    const closedWithList = state("a closed panel with a list");
+    const openWithList = state("an open panel with a list");
     expect(await paint(page(nothing, openWithList), read)).toEqual([
-      nothing!.wired,
-      openWithList!.wired,
+      nothing.wired,
+      openWithList.wired,
     ]);
     expect(await paint(page(openWithList, openWithList), read)).toEqual([
-      openWithList!.wired,
-      openWithList!.wired,
+      openWithList.wired,
+      openWithList.wired,
     ]);
     expect(await paint(page(openWithList, closedWithList), read)).toEqual([
-      openWithList!.wired,
-      closedWithList!.wired,
+      openWithList.wired,
+      closedWithList.wired,
     ]);
     expect(await paint(page(nothing, closedWithList), read)).toEqual([
-      nothing!.wired,
-      closedWithList!.wired,
+      nothing.wired,
+      closedWithList.wired,
     ]);
   });
 });
@@ -689,9 +694,7 @@ describe("in an older copy's SearchBar", () => {
       }),
       createElement(
         SearchBarResults,
-        { open: false, "data-panel": "", ...results } as ResultsProps & {
-          open: boolean;
-        },
+        panel({ open: false, ...results }),
         createElement(
           SearchBarResultsList,
           null,
@@ -770,9 +773,7 @@ function DocsSearch({
     ),
     createElement(
       SearchBarResults,
-      { open: hasQuery && hasFocus, "data-panel": "" } as ResultsProps & {
-        open: boolean;
-      },
+      panel({ open: hasQuery && hasFocus }),
       hasQuery &&
         !results.length &&
         createElement("p", null, "No results found"),
@@ -947,9 +948,7 @@ describe("Suspense boundaries in a server-rendered SearchBar", () => {
       ),
       createElement(
         SearchBarResults,
-        { open: false, "data-panel": "", ...results } as ResultsProps & {
-          open: boolean;
-        },
+        panel({ open: false, ...results }),
         createElement(
           Suspense,
           { fallback: createElement("i", null, "list fallback") },
@@ -1000,7 +999,7 @@ describe("Suspense boundaries in a server-rendered SearchBar", () => {
 // composition built from cmdk's own parts, which is what SearchBar rendered
 // before #204 apart from #89's given-id registration
 describe("commits", () => {
-  type Step = Parts & { value?: string };
+  type Step = Holding & { value?: string };
 
   const ours = ({ results = {}, list = true, value = "a" }: Step) =>
     searchBar("bar", { results, list, input: { value } });

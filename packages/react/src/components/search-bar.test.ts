@@ -2,15 +2,27 @@
 import {
   act,
   createElement,
+  Fragment,
+  Profiler,
+  StrictMode,
+  Suspense,
+  useId,
+  useLayoutEffect,
+  useMemo,
   useState,
   type ComponentProps,
+  type Dispatch,
   type ReactElement,
+  type ReactNode,
+  type SetStateAction,
 } from "react";
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { createRoot, hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
+import { Command } from "cmdk";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { sharedContext } from "../utils/registry";
 import { Label } from "./label";
 import {
   SearchBar,
@@ -69,6 +81,69 @@ async function hydrate(container: HTMLElement, tree: ReactElement) {
   return recoverable;
 }
 
+// Lets the tasks React's scheduler queued outside act() run: renders,
+// passive effects, and the updates those schedule
+const settle = async () => {
+  for (let i = 0; i < 5; i++) await new Promise((done) => setTimeout(done, 0));
+};
+
+// Calls `onCommit` from a layout effect each time it's rendered
+function Probe({ onCommit }: { onCommit: () => void }) {
+  useLayoutEffect(onCommit);
+  return null;
+}
+
+// Where the server renders the probe, so ids from useId() match
+const ServerProbe = () => null;
+
+// `element`, followed by `probe`
+const probed = (element: ReactElement, probe: ReactElement) =>
+  createElement(Fragment, null, element, probe);
+
+// Renders outside act(), as the browser runs React, and reads the page
+// before the browser could paint. `paint(element, read)` renders `element`
+// and returns what `read` reads in a microtask queued from the commit's
+// layout effects. That's after the updates layout effects schedule, which
+// React renders before it gives the browser back, and before passive effects
+// run. Given `server`, the container starts with its server HTML, and the
+// first `paint` hydrates it.
+async function painted({ server }: { server?: ReactElement } = {}) {
+  const container = document.body.appendChild(document.createElement("div"));
+  if (server)
+    container.innerHTML = renderToString(
+      probed(server, createElement(ServerProbe)),
+    );
+  globalThis.IS_REACT_ACT_ENVIRONMENT = false;
+  let root: Root | undefined;
+  const recoverable: unknown[] = [];
+  let onCommit = () => {};
+  const tree = (element: ReactElement) =>
+    probed(element, createElement(Probe, { onCommit: () => onCommit() }));
+  unmounts.push(async () => {
+    root?.unmount();
+    await settle();
+    container.remove();
+    globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  });
+  const paint = <T>(element: ReactElement, read: () => T) =>
+    new Promise<T>((resolve) => {
+      onCommit = () => {
+        onCommit = () => {};
+        queueMicrotask(() => resolve(read()));
+      };
+      if (root) root.render(tree(element));
+      else if (server)
+        root = hydrateRoot(container, tree(element), {
+          onRecoverableError: (error) => void recoverable.push(error),
+        });
+      else (root = createRoot(container)).render(tree(element));
+    }).then(async (read) => {
+      await settle();
+      return read;
+    });
+  return { container, recoverable, paint };
+}
+
 const consoleMethods = ["error", "warn", "log", "info"] as const;
 
 beforeEach(() => {
@@ -91,39 +166,57 @@ afterEach(async () => {
 type InputProps = Parameters<typeof SearchBarInput>[0];
 type ResultsProps = Partial<Parameters<typeof SearchBarResults>[0]>;
 
-// A SearchBar named `name`, with an input and an open results panel listing
-// one result. It leaves out the search and clear buttons: their icons repeat
-// ids of their own, which this file doesn't test.
+// The results parts a SearchBar holds. `results` is SearchBarResults' props,
+// open unless they say otherwise, or null for no SearchBarResults. `list`
+// mounts a SearchBarResultsList: in the panel, or in its place when there's
+// none.
+type Parts = { results?: ResultsProps | null; list?: boolean };
+
+// A SearchBar named `name`, with an input taking `input`, and the results
+// parts `parts` asks for. The list holds one result. It leaves out the
+// search and clear buttons: their icons repeat ids of their own, which this
+// file doesn't test.
 const searchBar = (
   name: string,
   {
     input = {},
     results = {},
-  }: { input?: InputProps; results?: ResultsProps } = {},
-): ReactElement =>
-  createElement(
+    list = true,
+    withInput = true,
+  }: Parts & { input?: InputProps; withInput?: boolean } = {},
+): ReactElement => {
+  const resultsList =
+    list &&
+    createElement(
+      SearchBarResultsList,
+      null,
+      createElement(SearchBarResultsItem, { value: name }, name),
+    );
+  return createElement(
     SearchBar,
     { "data-bar": name } as ComponentProps<typeof SearchBar>,
     createElement(
       SearchBarInputContainer,
       null,
-      createElement(SearchBarInput, {
-        placeholder: `Search ${name}`,
-        value: name,
-        onValueChange: () => {},
-        ...input,
-      }),
+      withInput &&
+        createElement(SearchBarInput, {
+          placeholder: `Search ${name}`,
+          value: name,
+          onValueChange: () => {},
+          ...input,
+        }),
     ),
-    createElement(
-      SearchBarResults,
-      { open: true, ...results },
-      createElement(
-        SearchBarResultsList,
-        null,
-        createElement(SearchBarResultsItem, { value: name }, name),
-      ),
-    ),
+    results === null
+      ? resultsList
+      : createElement(
+          SearchBarResults,
+          { open: true, "data-panel": "", ...results } as ResultsProps & {
+            open: boolean;
+          },
+          resultsList,
+        ),
   );
+};
 
 // Two SearchBars on one page, as a header search beside a page search
 const page = (
@@ -137,18 +230,17 @@ const page = (
     searchBar("main", main),
   );
 
-// The bar named `name` in `within`: its <input>, and its results panel, the
-// SearchBarResults wrapper that holds cmdk's listbox
+// The bar named `name` in `within`: its <input>, its results panel if it has
+// one, and cmdk's listbox if it has one
 function parts(within: ParentNode, name: string) {
   const bar = within.querySelector<HTMLElement>(`[data-bar="${name}"]`);
   expect(bar).not.toBeNull();
   const inputs = bar!.querySelectorAll("input");
   expect(inputs).toHaveLength(1);
+  const panel = bar!.querySelector<HTMLElement>("[data-panel]");
+  if (panel) expect(panel.parentElement).toBe(bar);
   const listbox = bar!.querySelector<HTMLElement>('[role="listbox"]');
-  expect(listbox).not.toBeNull();
-  const panel = listbox!.parentElement!;
-  expect(panel.parentElement).toBe(bar);
-  return { input: inputs[0]!, panel, listbox: listbox! };
+  return { bar: bar!, input: inputs[0]!, panel, listbox };
 }
 
 // Every id in `within` that more than one element has
@@ -162,156 +254,492 @@ function duplicateIds(within: ParentNode) {
 const controlled = (input: HTMLInputElement) =>
   document.getElementById(input.getAttribute("aria-controls") ?? "");
 
+// How the bar named `name` wires its input: its `aria-expanded`, and what
+// its `aria-controls` names. That's "nothing" when it has none, "panel" or
+// "listbox" when it names that bar's panel or listbox, else `#` and the id.
+function wiring(within: ParentNode, name: string) {
+  const { input, panel, listbox } = parts(within, name);
+  const id = input.getAttribute("aria-controls");
+  const target = controlled(input);
+  return {
+    expanded: input.getAttribute("aria-expanded"),
+    controls:
+      id === null
+        ? "nothing"
+        : target && target === panel
+          ? "panel"
+          : target && target === listbox
+            ? "listbox"
+            : `#${id}`,
+  };
+}
+
+type Wiring = ReturnType<typeof wiring>;
+
+// Each state in #204's table: the results parts a SearchBar holds, and how
+// its input is wired when the author passes no `aria-controls` or
+// `aria-expanded`
+const states: (Parts & { state: string; wired: Wiring })[] = [
+  {
+    state: "nothing",
+    results: null,
+    list: false,
+    wired: { expanded: "false", controls: "nothing" },
+  },
+  {
+    state: "a closed panel",
+    results: { open: false },
+    list: false,
+    wired: { expanded: "false", controls: "panel" },
+  },
+  {
+    state: "an open panel",
+    results: { open: true },
+    list: false,
+    wired: { expanded: "false", controls: "panel" },
+  },
+  {
+    state: "a closed panel with a list",
+    results: { open: false },
+    list: true,
+    wired: { expanded: "false", controls: "listbox" },
+  },
+  {
+    state: "an open panel with a list",
+    results: { open: true },
+    list: true,
+    wired: { expanded: "true", controls: "listbox" },
+  },
+  {
+    state: "a list with no panel",
+    results: null,
+    list: true,
+    wired: { expanded: "true", controls: "listbox" },
+  },
+];
+
+// What an author passes SearchBarInput, and how that changes the wiring
+const authors: [string, InputProps, (wired: Wiring) => Wiring][] = [
+  ["nothing", {}, (wired) => wired],
+  [
+    "an `aria-controls`",
+    { "aria-controls": "elsewhere" },
+    (wired) => ({ ...wired, controls: "#elsewhere" }),
+  ],
+  [
+    "`aria-expanded={true}`",
+    { "aria-expanded": true },
+    (wired) => ({ ...wired, expanded: "true" }),
+  ],
+  [
+    "`aria-expanded={false}`",
+    { "aria-expanded": false },
+    (wired) => ({ ...wired, expanded: "false" }),
+  ],
+];
+
+describe.each(authors)("with %s on SearchBarInput", (_, input, expected) => {
+  test.each(states)(
+    "the input holding $state is wired before paint",
+    async ({ results, list, wired }) => {
+      const { container, paint } = await painted();
+      const read = () => wiring(container, "bar");
+      expect(
+        await paint(searchBar("bar", { input, results, list }), read),
+      ).toEqual(expected(wired));
+      // and stays so
+      expect(read()).toEqual(expected(wired));
+    },
+  );
+
+  test.each(states)(
+    "the server HTML holding $state is collapsed, with no generated aria-controls",
+    ({ results, list }) => {
+      const container = serverRender(
+        searchBar("bar", { input, results, list }),
+      );
+      expect(wiring(container, "bar")).toEqual(
+        expected({ expanded: "false", controls: "nothing" }),
+      );
+    },
+  );
+
+  test.each(states)(
+    "the server HTML holding $state hydrates without a warning, and is wired before paint",
+    async ({ results, list, wired }) => {
+      const tree = searchBar("bar", { input, results, list });
+      const { container, recoverable, paint } = await painted({
+        server: tree,
+      });
+      const read = () => wiring(container, "bar");
+      expect(await paint(tree, read)).toEqual(expected(wired));
+      expect(read()).toEqual(expected(wired));
+      expect(recoverable).toEqual([]);
+    },
+  );
+});
+
+describe("moving between states", () => {
+  const pairs = states.flatMap((from) =>
+    states
+      .filter((to) => to !== from)
+      .map((to) => ({ from: from.state, to: to.state, start: from, end: to })),
+  );
+
+  test.each(pairs)(
+    "from $from to $to rewires the input before paint",
+    async ({ start, end }) => {
+      const { container, paint } = await painted();
+      const read = () => wiring(container, "bar");
+      expect(await paint(searchBar("bar", start), read)).toEqual(start.wired);
+      expect(await paint(searchBar("bar", end), read)).toEqual(end.wired);
+      expect(read()).toEqual(end.wired);
+    },
+  );
+
+  // StrictMode mounts each part's effects twice, so a part counted twice
+  // would leave the input wired to it once it's gone
+  test.each(pairs)(
+    "from $from to $to under StrictMode counts each part once",
+    async ({ start, end }) => {
+      const { container, paint } = await painted();
+      const read = () => wiring(container, "bar");
+      const strict = (element: ReactElement) =>
+        createElement(StrictMode, null, element);
+      expect(await paint(strict(searchBar("bar", start)), read)).toEqual(
+        start.wired,
+      );
+      expect(read()).toEqual(start.wired);
+      expect(await paint(strict(searchBar("bar", end)), read)).toEqual(
+        end.wired,
+      );
+      expect(read()).toEqual(end.wired);
+    },
+  );
+
+  test.each(states)(
+    "an input mounted after the bar holds $state is wired before paint",
+    async ({ results, list, wired }) => {
+      const { container, paint } = await painted();
+      const read = () => wiring(container, "bar");
+      await paint(
+        searchBar("bar", { results, list, withInput: false }),
+        () => {},
+      );
+      expect(await paint(searchBar("bar", { results, list }), read)).toEqual(
+        wired,
+      );
+    },
+  );
+
+  test("each step of a list mounting and unmounting in an opening panel", async () => {
+    const { container, paint } = await painted();
+    const read = () => wiring(container, "bar");
+    const steps: [Parts, Wiring][] = [
+      [
+        { results: null, list: false },
+        { expanded: "false", controls: "nothing" },
+      ],
+      [
+        { results: { open: false }, list: false },
+        { expanded: "false", controls: "panel" },
+      ],
+      [
+        { results: { open: false }, list: true },
+        { expanded: "false", controls: "listbox" },
+      ],
+      [
+        { results: { open: true }, list: true },
+        { expanded: "true", controls: "listbox" },
+      ],
+      [
+        { results: { open: true }, list: false },
+        { expanded: "false", controls: "panel" },
+      ],
+      [
+        { results: { open: true }, list: true },
+        { expanded: "true", controls: "listbox" },
+      ],
+      [
+        { results: null, list: true },
+        { expanded: "true", controls: "listbox" },
+      ],
+      [
+        { results: { open: false }, list: true },
+        { expanded: "false", controls: "listbox" },
+      ],
+      [
+        { results: null, list: false },
+        { expanded: "false", controls: "nothing" },
+      ],
+    ];
+    for (const [step, wired] of steps)
+      expect(await paint(searchBar("bar", step), read)).toEqual(wired);
+  });
+});
+
+describe("an id on SearchBarResults", () => {
+  test("is rendered, and the input follows it before paint while no list is mounted", async () => {
+    const { container, paint } = await painted();
+    const read = () => {
+      const { input, panel } = parts(container, "bar");
+      return [panel!.id, input.getAttribute("aria-controls")];
+    };
+    expect(
+      await paint(
+        searchBar("bar", { results: { id: "x" }, list: false }),
+        read,
+      ),
+    ).toEqual(["x", "x"]);
+  });
+
+  test("gives way to the listbox while a list is mounted, and comes back after it unmounts", async () => {
+    const { container, paint } = await painted();
+    const read = () => wiring(container, "bar");
+    const bar = (list: boolean) =>
+      searchBar("bar", { results: { id: "x", open: false }, list });
+    expect(await paint(bar(false), read)).toEqual({
+      expanded: "false",
+      controls: "panel",
+    });
+    expect(await paint(bar(true), read)).toEqual({
+      expanded: "false",
+      controls: "listbox",
+    });
+    expect(await paint(bar(false), read)).toEqual({
+      expanded: "false",
+      controls: "panel",
+    });
+    expect(parts(container, "bar").input.getAttribute("aria-controls")).toBe(
+      "x",
+    );
+  });
+
+  test("can be added, changed and removed across renders, before paint", async () => {
+    const { container, paint } = await painted();
+    const read = () => {
+      const { input, panel } = parts(container, "header");
+      const main = parts(container, "main");
+      return {
+        id: panel!.id,
+        controls: input.getAttribute("aria-controls"),
+        named: controlled(input) === panel,
+        main: controlled(main.input) === main.panel,
+      };
+    };
+    const withId = (id?: string) =>
+      page({ results: { id }, list: false }, { list: false });
+    const generated = (await paint(withId(), read)).id;
+    expect(generated).toBeTruthy();
+    for (const id of ["x", "y", undefined, "x", undefined])
+      expect(await paint(withId(id), read)).toEqual({
+        id: id ?? generated,
+        controls: id ?? generated,
+        named: true,
+        main: true,
+      });
+  });
+
+  test("is let go when the results panel unmounts", async () => {
+    const { container, rerender } = await mount(
+      createElement(
+        "div",
+        null,
+        searchBar("header", { results: { id: "x" }, list: false }),
+      ),
+    );
+    expect(wiring(container, "header").controls).toBe("panel");
+    await rerender(
+      createElement(
+        "div",
+        null,
+        searchBar("header", { results: null, list: false }),
+      ),
+    );
+    expect(wiring(container, "header")).toEqual({
+      expanded: "false",
+      controls: "nothing",
+    });
+  });
+
+  test("an aria-controls on SearchBarInput wins over it", async () => {
+    const { container } = await mount(
+      page({
+        input: { "aria-controls": "y" },
+        results: { id: "x" },
+        list: false,
+      }),
+    );
+    const { input, panel } = parts(container, "header");
+    expect(input.getAttribute("aria-controls")).toBe("y");
+    expect(panel!.id).toBe("x");
+  });
+
+  test("server HTML hydrates without a warning, and the input follows it", async () => {
+    const tree = page({ results: { id: "x" }, list: false });
+    const container = serverRender(tree);
+    expect(await hydrate(container, tree)).toEqual([]);
+    const { input, panel } = parts(container, "header");
+    expect(panel!.id).toBe("x");
+    expect(input.getAttribute("aria-controls")).toBe("x");
+  });
+});
+
 describe("two SearchBars on one page", () => {
   test("render no duplicate ids", async () => {
     const { container } = await mount(page());
     expect(duplicateIds(container)).toEqual([]);
   });
 
-  test("each input controls its own SearchBar's results panel", async () => {
-    const { container } = await mount(page());
-    for (const name of ["header", "main"]) {
-      const { input, panel } = parts(container, name);
-      expect(input.getAttribute("aria-controls")).toBeTruthy();
-      expect(controlled(input)).toBe(panel);
-    }
+  // Each state in one bar beside each state in the other
+  const sideBySide = states.flatMap((header) =>
+    states.map((main) => ({ header, main })),
+  );
+
+  test.each(sideBySide)(
+    "a header holding $header.state beside a main holding $main.state name only their own parts",
+    async ({ header, main }) => {
+      const { container } = await mount(page(header, main));
+      expect(duplicateIds(container)).toEqual([]);
+      for (const [name, state] of [
+        ["header", header],
+        ["main", main],
+      ] as const) {
+        expect(wiring(container, name)).toEqual(state.wired);
+        const { bar, input } = parts(container, name);
+        const target = controlled(input);
+        if (target) expect(bar.contains(target)).toBe(true);
+      }
+    },
+  );
+
+  test("each bar changes on its own", async () => {
+    const { container, paint } = await painted();
+    const read = () => [wiring(container, "header"), wiring(container, "main")];
+    const [nothing, , , closedWithList, openWithList] = states;
+    expect(await paint(page(nothing, openWithList), read)).toEqual([
+      nothing!.wired,
+      openWithList!.wired,
+    ]);
+    expect(await paint(page(openWithList, openWithList), read)).toEqual([
+      openWithList!.wired,
+      openWithList!.wired,
+    ]);
+    expect(await paint(page(openWithList, closedWithList), read)).toEqual([
+      openWithList!.wired,
+      closedWithList!.wired,
+    ]);
+    expect(await paint(page(nothing, closedWithList), read)).toEqual([
+      nothing!.wired,
+      closedWithList!.wired,
+    ]);
+  });
+});
+
+// A SearchBar as a copy of the library from before #204 makes it, sharing
+// SearchBarContext through the registry: its context has no parts, and it
+// registers an id given to SearchBarResults by setting its own state
+type OlderContext = {
+  size: "small" | "medium" | "large";
+  generatedResultsId?: string;
+  resultsId?: string;
+  setGivenResultsId: Dispatch<SetStateAction<string | undefined>>;
+};
+const SearchBarContext = sharedContext<OlderContext>("SearchBarContext", {
+  size: "medium",
+  setGivenResultsId: () => {},
+});
+function OlderSearchBar({
+  children,
+  ...props
+}: { children?: ReactNode } & Record<`data-${string}`, string>) {
+  const generatedResultsId = useId();
+  const [givenResultsId, setGivenResultsId] = useState<string>();
+  const context = useMemo(
+    () => ({
+      size: "medium" as const,
+      generatedResultsId,
+      resultsId: givenResultsId ?? generatedResultsId,
+      setGivenResultsId,
+    }),
+    [generatedResultsId, givenResultsId],
+  );
+  return createElement(
+    SearchBarContext.Provider,
+    { value: context },
+    createElement(Command, { shouldFilter: false, ...props }, children),
+  );
+}
+
+describe("in an older copy's SearchBar", () => {
+  const olderBar = ({
+    input = {},
+    results = {},
+  }: {
+    input?: InputProps;
+    results?: ResultsProps;
+  }) =>
+    createElement(
+      OlderSearchBar,
+      { "data-bar": "older" },
+      createElement(SearchBarInput, {
+        value: "",
+        onValueChange: () => {},
+        ...input,
+      }),
+      createElement(
+        SearchBarResults,
+        { open: false, "data-panel": "", ...results } as ResultsProps & {
+          open: boolean;
+        },
+        createElement(
+          SearchBarResultsList,
+          null,
+          createElement(SearchBarResultsItem, { value: "a" }, "a"),
+        ),
+      ),
+    );
+
+  test("the input keeps today's wiring: the panel, and cmdk's aria-expanded", async () => {
+    const { container } = await mount(olderBar({}));
+    expect(wiring(container, "older")).toEqual({
+      expanded: "true",
+      controls: "panel",
+    });
   });
 
-  test("each input controls its panel while the panel is closed", async () => {
+  test("the input follows an id given to SearchBarResults", async () => {
+    const { container } = await mount(olderBar({ results: { id: "x" } }));
+    expect(wiring(container, "older")).toEqual({
+      expanded: "true",
+      controls: "panel",
+    });
+    expect(parts(container, "older").input.getAttribute("aria-controls")).toBe(
+      "x",
+    );
+  });
+
+  test("an author's aria-controls and aria-expanded still win", async () => {
     const { container } = await mount(
-      page({ results: { open: false } }, { results: { open: false } }),
+      olderBar({
+        input: { "aria-controls": "elsewhere", "aria-expanded": false },
+      }),
     );
-    for (const name of ["header", "main"]) {
-      const { input, panel } = parts(container, name);
-      expect(panel.classList.contains("hidden")).toBe(true);
-      expect(controlled(input)).toBe(panel);
-    }
-  });
-});
-
-describe("an id on SearchBarResults", () => {
-  test("is rendered, and that bar's input controls it", async () => {
-    const { container } = await mount(page({ results: { id: "x" } }));
-    const header = parts(container, "header");
-    expect(header.panel.id).toBe("x");
-    expect(header.input.getAttribute("aria-controls")).toBe("x");
-    // The other bar keeps its own wiring
-    const main = parts(container, "main");
-    expect(main.panel.id).not.toBe("x");
-    expect(controlled(main.input)).toBe(main.panel);
-    expect(duplicateIds(container)).toEqual([]);
-  });
-
-  test("can be added, changed and removed across renders", async () => {
-    const { container, rerender } = await mount(page());
-    const generated = parts(container, "header").panel.id;
-    expect(generated).toBeTruthy();
-
-    for (const id of ["x", "y", undefined, "x", undefined]) {
-      await rerender(page({ results: { id } }));
-      const { input, panel } = parts(container, "header");
-      expect(panel.id).toBe(id ?? generated);
-      expect(input.getAttribute("aria-controls")).toBe(id ?? generated);
-      expect(controlled(input)).toBe(panel);
-      const main = parts(container, "main");
-      expect(controlled(main.input)).toBe(main.panel);
-    }
-  });
-
-  test("is let go when the results panel unmounts", async () => {
-    const withoutResults = createElement(
-      SearchBar,
-      { "data-bar": "header" } as ComponentProps<typeof SearchBar>,
-      createElement(SearchBarInput, { value: "", onValueChange: () => {} }),
-    );
-    const { container, rerender } = await mount(
-      createElement("div", null, searchBar("header", { results: { id: "x" } })),
-    );
-    expect(
-      container.querySelector("input")!.getAttribute("aria-controls"),
-    ).toBe("x");
-    await rerender(createElement("div", null, withoutResults));
-    expect(
-      container.querySelector("input")!.getAttribute("aria-controls"),
-    ).not.toBe("x");
-  });
-});
-
-describe("an aria-controls on SearchBarInput", () => {
-  test("is rendered on the <input>", async () => {
-    const { container } = await mount(
-      page({ input: { "aria-controls": "y" } }),
-    );
-    expect(parts(container, "header").input.getAttribute("aria-controls")).toBe(
-      "y",
-    );
-  });
-
-  test("wins over an id on SearchBarResults", async () => {
-    const { container } = await mount(
-      page({ input: { "aria-controls": "y" }, results: { id: "x" } }),
-    );
-    const { input, panel } = parts(container, "header");
-    expect(input.getAttribute("aria-controls")).toBe("y");
-    expect(panel.id).toBe("x");
-  });
-});
-
-describe("the input", () => {
-  test("controls the results panel, not cmdk's listbox", async () => {
-    const { container } = await mount(page());
-    const { input, panel, listbox } = parts(container, "header");
-    expect(input.getAttribute("role")).toBe("combobox");
-    expect(controlled(input)).toBe(panel);
-    expect(controlled(input)).not.toBe(listbox);
-  });
-});
-
-describe("server rendering", () => {
-  test("wires each input to its own panel in the server HTML", () => {
-    const container = serverRender(page());
-    expect(duplicateIds(container)).toEqual([]);
-    for (const name of ["header", "main"]) {
-      const { input, panel } = parts(container, name);
-      expect(controlled(input)).toBe(panel);
-    }
-  });
-
-  test("server HTML hydrates without a warning, and keeps its wiring", async () => {
-    const tree = page();
-    const container = serverRender(tree);
-    // Each bar's wiring as the server rendered it. cmdk selects an item after
-    // mounting, so the rest of the markup changes.
-    const wiring = () =>
-      ["header", "main"].map((name) => {
-        const { input, panel } = parts(container, name);
-        return [input.getAttribute("aria-controls"), panel.id];
-      });
-    const serverWiring = wiring();
-    expect(await hydrate(container, tree)).toEqual([]);
-    expect(wiring()).toEqual(serverWiring);
-    for (const name of ["header", "main"]) {
-      const { input, panel } = parts(container, name);
-      expect(controlled(input)).toBe(panel);
-    }
-  });
-
-  test("an id on SearchBarResults hydrates without a warning, and the input follows it", async () => {
-    const tree = page({ results: { id: "x" } });
-    const container = serverRender(tree);
-    expect(await hydrate(container, tree)).toEqual([]);
-    const { input, panel } = parts(container, "header");
-    expect(panel.id).toBe("x");
-    expect(input.getAttribute("aria-controls")).toBe("x");
+    expect(wiring(container, "older")).toEqual({
+      expanded: "false",
+      controls: "#elsewhere",
+    });
   });
 });
 
 // The people the docs' search lists. "tu" matches every one.
 const people = ["Tunku Abdul Rahman", "Tun Abdul Razak", "Tun Hussein Onn"];
 
-// A SearchBar composed as the docs compose it: its results list is mounted
-// only while there's a query. Its input takes `input`, and choosing a result
-// calls `onSelect` with that result's name.
+// A SearchBar composed as the docs' controlled example composes it: its
+// results open while there's a query and the input has focus, and its list
+// is mounted only while the query matches someone; otherwise the panel says
+// "No results found". Its input takes `input`, and choosing a result calls
+// `onSelect` with that result's name.
 function DocsSearch({
   input = {},
   onSelect = () => {},
@@ -320,10 +748,14 @@ function DocsSearch({
   onSelect?: (name: string) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [hasFocus, setHasFocus] = useState(false);
   const hasQuery = query.length > 0;
+  const results = people.filter((name) =>
+    name.toLowerCase().includes(query.toLowerCase()),
+  );
   return createElement(
     SearchBar,
-    null,
+    { "data-bar": "docs" } as ComponentProps<typeof SearchBar>,
     createElement(
       SearchBarInputContainer,
       null,
@@ -331,17 +763,25 @@ function DocsSearch({
         placeholder: "Search by name",
         value: query,
         onValueChange: setQuery,
+        onFocus: () => setHasFocus(true),
+        onBlur: () => setHasFocus(false),
         ...input,
       }),
     ),
     createElement(
       SearchBarResults,
-      { open: hasQuery },
+      { open: hasQuery && hasFocus, "data-panel": "" } as ResultsProps & {
+        open: boolean;
+      },
       hasQuery &&
+        !results.length &&
+        createElement("p", null, "No results found"),
+      hasQuery &&
+        results.length > 0 &&
         createElement(
           SearchBarResultsList,
           null,
-          people.map((name) =>
+          results.map((name) =>
             createElement(
               SearchBarResultsItem,
               { key: name, value: name, onSelect: () => onSelect(name) },
@@ -366,6 +806,16 @@ async function type(input: HTMLInputElement, text: string) {
     });
 }
 
+// Empties `input`, as a user selecting its text and deleting it does
+const clear = (input: HTMLInputElement) =>
+  act(async () => {
+    Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!.call(input, "");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+
 // Presses `key` on whatever has focus
 const press = (key: string) =>
   act(async () => {
@@ -377,6 +827,275 @@ const press = (key: string) =>
 // The text of the result cmdk has selected, if any
 const selected = (within: ParentNode) =>
   within.querySelector('[cmdk-item][aria-selected="true"]')?.textContent;
+
+describe("the keyboard, in the docs' controlled composition", () => {
+  // The option the input's `aria-activedescendant` names, if it's inside
+  // the element its `aria-controls` names
+  const activeOption = (input: HTMLInputElement) => {
+    const active = document.getElementById(
+      input.getAttribute("aria-activedescendant") ?? "",
+    );
+    const target = controlled(input);
+    return active?.getAttribute("role") === "option" && target?.contains(active)
+      ? active
+      : null;
+  };
+
+  // cmdk sets `aria-activedescendant` once its selection moves, so after
+  // typing the input may have none
+  const noneOrInside = (input: HTMLInputElement) =>
+    !input.hasAttribute("aria-activedescendant") || !!activeOption(input);
+
+  test("leaves aria-activedescendant inside the element aria-controls names", async () => {
+    const { container } = await mount(createElement(DocsSearch));
+    const input = container.querySelector("input")!;
+    expect(wiring(container, "docs")).toEqual({
+      expanded: "false",
+      controls: "panel",
+    });
+    await act(async () => input.focus());
+    await type(input, "tu");
+    expect(wiring(container, "docs")).toEqual({
+      expanded: "true",
+      controls: "listbox",
+    });
+    expect(noneOrInside(input)).toBe(true);
+    for (const key of ["ArrowDown", "ArrowDown", "ArrowUp", "ArrowUp"]) {
+      await press(key);
+      expect(activeOption(input), key).not.toBeNull();
+    }
+    expect(activeOption(input)!.textContent).toBe(selected(container));
+  });
+
+  test("a query with no matches leaves the input collapsed, with no aria-activedescendant", async () => {
+    const { container } = await mount(createElement(DocsSearch));
+    const input = container.querySelector("input")!;
+    await act(async () => input.focus());
+    await type(input, "tu");
+    await press("ArrowDown");
+    await type(input, "zz");
+    expect(container.textContent).toContain("No results found");
+    expect(wiring(container, "docs")).toEqual({
+      expanded: "false",
+      controls: "panel",
+    });
+    expect(input.hasAttribute("aria-activedescendant")).toBe(false);
+    await clear(input);
+    await type(input, "tun");
+    expect(wiring(container, "docs")).toEqual({
+      expanded: "true",
+      controls: "listbox",
+    });
+    expect(noneOrInside(input)).toBe(true);
+    await press("ArrowDown");
+    expect(activeOption(input)).not.toBeNull();
+  });
+
+  test("blurring the input closes the panel and collapses the input", async () => {
+    const { container } = await mount(createElement(DocsSearch));
+    const input = container.querySelector("input")!;
+    await act(async () => input.focus());
+    await type(input, "tu");
+    await act(async () => input.blur());
+    expect(wiring(container, "docs")).toEqual({
+      expanded: "false",
+      controls: "listbox",
+    });
+  });
+});
+
+// A server-rendered SearchBar with <Suspense> boundaries inside it. React
+// 18.3 client-renders a boundary that gets an update before it hydrates, as
+// when SearchBar's context value changes, and so drops its server DOM or
+// shows its fallback (#204). React 19 doesn't. Run these on React 18.3 too.
+describe("Suspense boundaries in a server-rendered SearchBar", () => {
+  // Suspends in the browser until the test ends, so its boundary stays
+  // server HTML. It renders its text on the server.
+  let inBrowser = false;
+  const never = new Promise<never>(() => {});
+  function Pending() {
+    if (inBrowser) throw never;
+    return createElement(
+      "span",
+      { "data-pending": "" },
+      "Loaded on the server",
+    );
+  }
+
+  const tree = (results: ResultsProps) =>
+    createElement(
+      SearchBar,
+      { "data-bar": "bar" } as ComponentProps<typeof SearchBar>,
+      createElement(
+        SearchBarInputContainer,
+        null,
+        createElement(SearchBarInput, {
+          "aria-label": "Search",
+          value: "",
+          onValueChange: () => {},
+        }),
+        createElement(
+          Suspense,
+          { fallback: createElement("i", null, "icon fallback") },
+          createElement("b", { "data-icon": "" }, "icon"),
+        ),
+        createElement(
+          Suspense,
+          { fallback: createElement("i", null, "pending fallback") },
+          createElement(Pending),
+        ),
+      ),
+      createElement(
+        SearchBarResults,
+        { open: false, "data-panel": "", ...results } as ResultsProps & {
+          open: boolean;
+        },
+        createElement(
+          Suspense,
+          { fallback: createElement("i", null, "list fallback") },
+          createElement(
+            SearchBarResultsList,
+            null,
+            createElement(SearchBarResultsItem, { value: "a" }, "a"),
+          ),
+        ),
+      ),
+    );
+
+  test.each([
+    ["with no id", {}],
+    ["with an id", { id: "x" }],
+  ])(
+    "hydrate their server DOM and keep it, with SearchBarResults %s",
+    async (_, results) => {
+      inBrowser = false;
+      const container = serverRender(tree(results));
+      const server = {
+        icon: container.querySelector("[data-icon]"),
+        pending: container.querySelector("[data-pending]"),
+        listbox: container.querySelector('[role="listbox"]'),
+      };
+      expect(Object.values(server)).not.toContain(null);
+      inBrowser = true;
+      try {
+        expect(await hydrate(container, tree(results))).toEqual([]);
+        expect(container.querySelector("[data-icon]")).toBe(server.icon);
+        expect(container.querySelector('[role="listbox"]')).toBe(
+          server.listbox,
+        );
+        expect(container.querySelector("[data-pending]")).toBe(server.pending);
+        expect(container.textContent).not.toContain("fallback");
+        expect(wiring(container, "bar")).toEqual({
+          expanded: "false",
+          controls: "listbox",
+        });
+      } finally {
+        inBrowser = false;
+      }
+    },
+  );
+});
+
+// The commits React makes for a SearchBar, beside the commits for the same
+// composition built from cmdk's own parts, which is what SearchBar rendered
+// before #204 apart from #89's given-id registration
+describe("commits", () => {
+  type Step = Parts & { value?: string };
+
+  const ours = ({ results = {}, list = true, value = "a" }: Step) =>
+    searchBar("bar", { results, list, input: { value } });
+
+  const cmdkList = () =>
+    createElement(
+      Command.List,
+      null,
+      createElement(Command.Item, { className: "hidden" }, "--"),
+      createElement(Command.Item, { value: "bar" }, "bar"),
+    );
+  const cmdks = ({ results = {}, list = true, value = "a" }: Step) =>
+    createElement(
+      Command,
+      { shouldFilter: false },
+      createElement(
+        "div",
+        null,
+        createElement(Command.Input, { value, onValueChange: () => {} }),
+      ),
+      results === null
+        ? list && cmdkList()
+        : createElement(
+            "div",
+            {
+              id: results.id,
+              className: results.open === false ? "hidden" : undefined,
+            },
+            list && cmdkList(),
+          ),
+    );
+
+  // The commits each step of `steps` takes, rendered by `render`
+  async function commits(render: (step: Step) => ReactElement, steps: Step[]) {
+    let count = 0;
+    const { rerender } = await mount(createElement("div"));
+    const counts: number[] = [];
+    for (const step of steps) {
+      count = 0;
+      await rerender(
+        createElement(
+          Profiler,
+          { id: "bar", onRender: () => void count++ },
+          render(step),
+        ),
+      );
+      counts.push(count);
+    }
+    return counts;
+  }
+
+  const scenarios: [string, Step[]][] = [
+    ["mounting with a panel and a list", [{}]],
+    ["mounting with a panel with an id and a list", [{ results: { id: "x" } }]],
+    ["mounting with nothing", [{ results: null, list: false }]],
+    ["mounting with a panel", [{ list: false }]],
+    ["mounting with a list", [{ results: null }]],
+    ["closing and opening the panel", [{}, { results: { open: false } }, {}]],
+    ["unmounting and mounting the list", [{}, { list: false }, {}]],
+    [
+      "unmounting and mounting the panel",
+      [{}, { results: null, list: false }, {}],
+    ],
+    [
+      "giving the panel an id and taking it away",
+      [{}, { results: { id: "x" } }, {}],
+    ],
+    [
+      "opening a panel, then mounting its list",
+      [
+        { results: { open: false }, list: false },
+        { results: { open: true }, list: false },
+        {},
+      ],
+    ],
+  ];
+
+  test.each(scenarios)(
+    "%s takes at most one more commit per step than cmdk's parts",
+    async (_, steps) => {
+      const control = await commits(cmdks, steps);
+      const counts = await commits(ours, steps);
+      counts.forEach((count, step) =>
+        expect(count, `step ${step}`).toBeLessThanOrEqual(control[step]! + 1),
+      );
+    },
+  );
+
+  test("typing that mounts or unmounts nothing takes no more commits than cmdk's parts", async () => {
+    const steps = [{ value: "a" }, { value: "ab" }, { value: "abc" }];
+    const control = await commits(cmdks, steps);
+    const counts = await commits(ours, steps);
+    expect(counts.slice(1)).toEqual(control.slice(1));
+  });
+});
 
 // cmdk finds its <input> by the id it generates, so an author's `id` never
 // reaches it: with one there, cmdk would move focus to the listbox whenever

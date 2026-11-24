@@ -1425,7 +1425,144 @@ describe("in an older copy's SearchBar (#398)", () => {
     expect(active(container, "older")).toEqual({ input: "A", listbox: "A" });
     await press("ArrowDown");
     expect(active(container, "older")).toEqual({ input: "B", listbox: "B" });
+    // Home and End keep cmdk's behaviour there (#399): it cancels them
+    expect(await press("Home")).toBe(false);
+    expect(await press("End")).toBe(false);
   });
+});
+
+// Home and End with any modifiers or none, and Meta+ArrowUp and
+// Meta+ArrowDown with any other modifiers or none: the keys #399 leaves to
+// the browser in every state, as `[key, modifiers]`
+const caretKeys: [string, Modifiers][] = [
+  ...["Home", "End"].flatMap((key): [string, Modifiers][] => [
+    [key, {}],
+    [key, { shiftKey: true }],
+    [key, { ctrlKey: true }],
+    [key, { altKey: true }],
+    [key, { metaKey: true }],
+    [key, { ctrlKey: true, shiftKey: true }],
+  ]),
+  ...["ArrowUp", "ArrowDown"].flatMap((key): [string, Modifiers][] => [
+    [key, { metaKey: true }],
+    [key, { metaKey: true, shiftKey: true }],
+    [key, { metaKey: true, ctrlKey: true }],
+    [key, { metaKey: true, altKey: true }],
+  ]),
+];
+const withModifiers = ([key, modifiers]: [string, Modifiers]) =>
+  [
+    modifiers.metaKey && "Meta",
+    modifiers.ctrlKey && "Ctrl",
+    modifiers.altKey && "Alt",
+    modifiers.shiftKey && "Shift",
+    key,
+  ]
+    .filter(Boolean)
+    .join("+");
+
+describe("Home, End and the Meta arrows (#399)", () => {
+  test.each(states)(
+    "with $state, aren't cancelled, and leave the highlight and aria-activedescendant where they were",
+    async ({ results, list }) => {
+      const { container } = await focused(keysBar({ results, list }));
+      const steps = list && results?.open !== false ? ["", "ArrowDown"] : [""];
+      for (const step of steps) {
+        // From rest, then from a highlighted result
+        if (step) expect(await press(step)).toBe(false);
+        const before = {
+          selected: selected(container) ?? null,
+          active: active(container, "keys"),
+        };
+        if (step) expect(before.active.input).toBe("A");
+        for (const key of caretKeys) {
+          expect(await press(...key), withModifiers(key)).toBe(true);
+          expect(
+            {
+              selected: selected(container) ?? null,
+              active: active(container, "keys"),
+            },
+            withModifiers(key),
+          ).toEqual(before);
+        }
+      }
+    },
+  );
+
+  test("Enter after Home chooses the highlighted result, and at rest chooses nothing", async () => {
+    const chosen: string[] = [];
+    const { container } = await focused(
+      keysBar({ onSelect: (name) => void chosen.push(name) }),
+    );
+    await press("Home");
+    expect(await press("Enter")).toBe(false);
+    expect(chosen).toEqual([]);
+    await press("ArrowDown");
+    await press("ArrowDown");
+    await press("Home");
+    await press("End");
+    expect(selected(container)).toBe("B");
+    await press("Enter");
+    expect(chosen).toEqual(["B"]);
+  });
+
+  test.each(states)(
+    "with $state, an author's onKeyDown on SearchBar runs once for each, with SearchBar's root as currentTarget, and its preventDefault cancels it",
+    async ({ results, list }) => {
+      const seen: string[] = [];
+      let cancel = false;
+      const { container } = await focused(
+        keysBar({
+          results,
+          list,
+          bar: {
+            onKeyDown: (event) => {
+              expect(event.currentTarget.hasAttribute("cmdk-root")).toBe(true);
+              seen.push(event.key);
+              if (cancel) event.preventDefault();
+            },
+          },
+        }),
+      );
+      for (const key of caretKeys) expect(await press(...key)).toBe(true);
+      cancel = true;
+      const before = selected(container);
+      for (const key of caretKeys) expect(await press(...key)).toBe(false);
+      expect(selected(container)).toBe(before);
+      expect(seen).toEqual([...caretKeys, ...caretKeys].map(([key]) => key));
+    },
+  );
+
+  test.each([
+    ["on", true],
+    ["off", false],
+  ])(
+    "with vimBindings %s, the other keys still move the highlight while a list is displayed",
+    async (_, vimBindings) => {
+      const { container } = await focused(keysBar({ bar: { vimBindings } }));
+      const walk: [string, Modifiers][] = [
+        ["ArrowDown", {}],
+        ["ArrowDown", {}],
+        ["ArrowUp", {}],
+        ["ArrowDown", { altKey: true }],
+        ["ArrowUp", { altKey: true }],
+        ["n", { ctrlKey: true }],
+        ["j", { ctrlKey: true }],
+        ["p", { ctrlKey: true }],
+        ["k", { ctrlKey: true }],
+      ];
+      const highlights: (string | null | undefined)[] = [];
+      for (const key of walk) {
+        await press(...key);
+        highlights.push(selected(container));
+      }
+      expect(highlights).toEqual(
+        vimBindings
+          ? ["A", "B", "A", "B", "A", "B", "C", "B", "A"]
+          : ["A", "B", "A", "B", "A", "A", "A", "A", "A"],
+      );
+    },
+  );
 });
 
 // A server-rendered SearchBar with <Suspense> boundaries inside it. React

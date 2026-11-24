@@ -281,6 +281,14 @@ const inInput = (event: KeyboardEvent<HTMLDivElement>) => {
   );
 };
 
+// Whether `event` is a key that edits the text in every state (#399): Home
+// and End with any modifiers, and Meta+ArrowUp and Meta+ArrowDown with any
+// others. cmdk 1.1.1 moves to the first or last option on each.
+const editsText = ({ key, metaKey }: KeyboardEvent) =>
+  key === "Home" ||
+  key === "End" ||
+  (metaKey && (key === "ArrowUp" || key === "ArrowDown"));
+
 interface SearchBarProps extends ComponentProps<typeof Command> {
   size?: SearchBarSize;
 }
@@ -289,8 +297,9 @@ interface SearchBarProps extends ComponentProps<typeof Command> {
  * Uses cmdk's Command API. cmdk's keys act on the results only while a
  * SearchBarResultsList is displayed, and only when pressed in the input.
  * Otherwise the browser acts on them, as in a plain text field: Enter submits
- * a surrounding form, and Home and End move the caret. Your `onKeyDown` runs
- * first, once per key, and its `preventDefault` stops both.
+ * a surrounding form. Home, End, Meta+ArrowUp and Meta+ArrowDown always edit
+ * the text, and never move through the results. Your `onKeyDown` runs first,
+ * once per key, and its `preventDefault` stops both.
  * @see https://github.com/pacocoursey/cmdk#command-cmdk-root
  */
 const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
@@ -319,11 +328,12 @@ const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
           onKeyDown={(event) => {
             onKeyDown?.(event);
             if (!cmdkActsOn(event, props.vimBindings ?? true)) return;
-            // Keep the key from cmdk while no list is displayed, and when
-            // it's pressed outside the input, such as on the clear button.
-            // cmdk skips a key whose React event reads as cancelled, and
-            // this cancels only that, so the browser still acts on it (#398).
-            if (!inInput(event) || !parts.wiring().expanded)
+            // Keep the key from cmdk while no list is displayed, when it's
+            // pressed outside the input, such as on the clear button (#398),
+            // and when it edits the text (#399). cmdk skips a key whose React
+            // event reads as cancelled, and this cancels only that, so the
+            // browser still acts on it.
+            if (!inInput(event) || !parts.wiring().expanded || editsText(event))
               event.defaultPrevented = true;
           }}
         >

@@ -48,9 +48,11 @@ import { Button } from "@amerfathullah/myds-react/button";
 import { SwapIcon } from "@amerfathullah/myds-react/icon";
 
 <SummaryList>
-  <SummaryListHeader>Government Subsidy Application</SummaryListHeader>
+  <SummaryListHeader id="subsidy-application">
+    Government Subsidy Application
+  </SummaryListHeader>
 
-  <SummaryListBody>
+  <SummaryListBody aria-labelledby="subsidy-application">
     <SummaryListRow>
       <SummaryListTerm>Application ID</SummaryListTerm>
       <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -198,9 +200,11 @@ To give the title the heading level your page needs, pass `asChild` and your own
       <h2>Government Subsidy Application</h2>
       <SummaryList>
         <SummaryListHeader asChild>
-          <h3>Applicant Details</h3>
+          <h3 id="applicant-details">Applicant Details</h3>
         </SummaryListHeader>
-        <SummaryListBody>{/* … */}</SummaryListBody>
+        <SummaryListBody aria-labelledby="applicant-details">
+          {/* … */}
+        </SummaryListBody>
       </SummaryList>
     </section>
     ```
@@ -213,11 +217,22 @@ To restyle the title, pass `className` to `SummaryListHeader`, not to your headi
 
 The SummaryListBody is a wrapper for the tabular data within the SummaryList. Main wrapper for multiple or single SummaryListRow.
 
+Its `<table>` has no name of its own, and the `SummaryListHeader` above it doesn't name it. Give each table a name, so screen reader users can tell the tables on a page apart when they move between them or list them.
+
+- **With a visible title:** give `SummaryListHeader` an `id`, and pass the same id to `aria-labelledby` on `SummaryListBody`, as the example at the top of this page does. Screen readers announce the table by the header's text. With `asChild`, put the `id` on your own heading, e.g. `<SummaryListHeader asChild><h3 id="applicant-details">…</h3></SummaryListHeader>`, as the `asChild` example above does.
+- **With no visible title:** pass `aria-label`, e.g. `aria-label="Ringkasan permohonan"`, as the example below does. It isn't shown, so use it only when no visible title names the table, and set it in your site's language.
+
+Pass one or the other: if you pass both, `aria-labelledby` wins. Both go to the `<table>`, not the `<tbody>` inside it.
+
+Ids must be unique on the page. A component that renders a summary list more than once makes each id with `useId()`.
+
+Don't put a `<caption>` in `SummaryListBody`. Its children go in the `<tbody>`, where a caption doesn't name the table, and React warns that a `<caption>` can't be a child of a `<tbody>`.
+
 **Example**:
 
 <Tabs items={["Preview", "Code"]} className="not-prose">
   <Tab value="Preview">
-    <SummaryListBody>
+    <SummaryListBody aria-label="Ringkasan permohonan">
         <SummaryListRow>
             <SummaryListTerm>Application ID</SummaryListTerm>
             <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -232,7 +247,7 @@ The SummaryListBody is a wrapper for the tabular data within the SummaryList. Ma
   <Tab value="Code">
     
 ```tsx
-<SummaryListBody>
+<SummaryListBody aria-label="Ringkasan permohonan">
     <SummaryListRow>
         <SummaryListTerm>Application ID</SummaryListTerm>
         <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -409,6 +424,16 @@ Each part forwards its `ref` to the element it renders. `SummaryListBody`'s ref 
 
 <TypeTable
   type={{
+    "aria-labelledby": {
+      description:
+        "The id of a visible element, usually the `SummaryListHeader` above the table, whose text names the table. The id must be unique on the page. It wins over `aria-label`. There is no default name.",
+      type: "string",
+    },
+    "aria-label": {
+      description:
+        "Accessible name of the table. Screen readers announce it; it is not shown. Use it only when no visible title names the table. `aria-labelledby` wins over it. There is no default name.",
+      type: "string",
+    },
     className: {
       description: "Additional styles for the body container.",
       type: "string",

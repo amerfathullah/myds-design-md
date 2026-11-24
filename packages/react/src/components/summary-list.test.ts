@@ -363,11 +363,55 @@ describe("an author's props on SummaryListTerm and SummaryListAction", () => {
           dangerouslySetInnerHTML: { __html: "" },
         }),
       ],
+      // What a Trusted Types policy returns for "": an object, which React
+      // sets as its string
+      [
+        createElement(SummaryListAction, {
+          dangerouslySetInnerHTML: {
+            __html: { toString: () => "" } as unknown as TrustedHTML,
+          },
+        }),
+      ],
     );
     const read = (within: ParentNode) =>
       [...within.querySelectorAll("td")].map((cell) => cell.matches(":empty"));
-    const expected = [true, true, true, true, true, true, true];
+    const expected = [true, true, true, true, true, true, true, true];
     expect(read(serverRender(list))).toEqual(expected);
     expect(read(await mount(list))).toEqual(expected);
+  });
+
+  // React renders an iterator's items, as on main, though it warns that
+  // iterators as children are unsupported, since one can be read only once.
+  // So deciding whether the action is empty mustn't read it first.
+  test("an action given its buttons as an iterator, such as `map.values()`, renders them, in server markup too", async () => {
+    // A list whose action holds a fresh iterator over two buttons
+    const list = () =>
+      body([
+        createElement(
+          SummaryListAction,
+          null,
+          new Map([
+            ["edit", createElement("button", { key: "edit" }, "Edit")],
+            ["remove", createElement("button", { key: "remove" }, "Remove")],
+          ]).values(),
+        ),
+      ]);
+    const read = (within: ParentNode) =>
+      [...within.querySelectorAll("td button")].map(
+        (button) => button.textContent,
+      );
+    expect(read(serverRender(list()))).toEqual(["Edit", "Remove"]);
+    expect(read(await mount(list()))).toEqual(["Edit", "Remove"]);
+    // React's warning is all that's logged
+    const errors = vi
+      .mocked(console.error)
+      .mock.calls.map(([message]) => String(message));
+    expect(
+      errors.filter(
+        (message) =>
+          !message.startsWith("Using Iterators as children is unsupported"),
+      ),
+    ).toEqual([]);
+    vi.mocked(console.error).mockClear();
   });
 });

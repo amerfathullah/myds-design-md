@@ -1,10 +1,10 @@
 import {
-  Children,
   ComponentProps,
   ComponentPropsWithoutRef,
   forwardRef,
   ForwardRefExoticComponent,
   FunctionComponent,
+  ReactNode,
   RefAttributes,
 } from "react";
 import { Slot } from "@radix-ui/react-slot";
@@ -124,12 +124,22 @@ const SummaryListDetail: FunctionComponent<ComponentProps<"td">> = ({
   </td>
 );
 
+// Whether React renders `node` as nothing: `null`, `undefined`, a boolean,
+// `""`, or an array of those. It reads nothing else, since an iterator such
+// as `map.values()` can be read only once, and React has to read it.
+const rendersNothing = (node: ReactNode): boolean =>
+  node == null ||
+  typeof node === "boolean" ||
+  node === "" ||
+  (Array.isArray(node) && node.every(rendersNothing));
+
 /**
  * The row's actions, in a `<td>` on the row's baseline. Its children sit in
  * a row inside it, against its end edge. `className` and the other props go
  * on the `<td>`, so flex classes such as `gap-2` don't reach the children:
- * put those on your own wrapper. With no children, or only ones React
- * renders as nothing, such as `null`, `false` or `""`, it's an empty cell.
+ * put those on your own wrapper. With no children, or only `null`,
+ * `undefined`, booleans or `""`, it's an empty cell; a component that renders
+ * nothing, or an empty fragment, still leaves the wrapper in it.
  */
 const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   children,
@@ -138,12 +148,11 @@ const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   ...props
 }) => {
   // With nothing to show, it renders no wrapper, so CSS's `:empty` matches
-  // it, as it did when the action was the flex box. `Children.toArray` drops
-  // `null`, `undefined` and booleans, but keeps `""`, which React renders as
-  // nothing too. A child component that renders nothing can't be seen here.
+  // it, as it did when the action was the flex box. React sets `__html` as a
+  // string, and a child component that renders nothing can't be seen here.
+  const html = dangerouslySetInnerHTML?.__html;
   const isEmpty =
-    !dangerouslySetInnerHTML?.__html &&
-    Children.toArray(children).every((child) => child === "");
+    (html == null || String(html) === "") && rendersNothing(children);
   return (
     <td
       className={clx("py-1.5 pr-3 text-right align-baseline", className)}

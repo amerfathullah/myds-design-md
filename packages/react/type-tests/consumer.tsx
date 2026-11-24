@@ -10,6 +10,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@amerfathullah/myds-react/alert-dialog";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@amerfathullah/myds-react/breadcrumb";
+import type { ButtonProps } from "@amerfathullah/myds-react/button";
 import { Callout, CalloutTitle } from "@amerfathullah/myds-react/callout";
 import {
   CookieBanner,
@@ -59,14 +66,27 @@ import {
 import { Input, InputAddon, InputIcon } from "@amerfathullah/myds-react/input";
 import { Label } from "@amerfathullah/myds-react/label";
 import {
+  Masthead,
+  MastheadContent,
+  MastheadHeader,
+  MastheadSection,
+  MastheadTitle,
+  MastheadTrigger,
+} from "@amerfathullah/myds-react/masthead";
+import {
   Navbar,
+  NavbarAction,
+  NavbarLogo,
   NavbarMenu,
   NavbarMenuItem,
 } from "@amerfathullah/myds-react/navbar";
 import {
   AutoPagination,
   Pagination,
+  PaginationContent,
   PaginationContext,
+  PaginationEllipsis,
+  PaginationItem,
   PaginationLabel,
   PaginationPrevious,
   type AutoPaginationProps,
@@ -82,9 +102,12 @@ import {
 import {
   SearchBar,
   SearchBarClearButton,
+  SearchBarHint,
   SearchBarInput,
   SearchBarInputContainer,
   SearchBarResults,
+  SearchBarResultsGroup,
+  SearchBarResultsItem,
   SearchBarResultsList,
   SearchBarSearchButton,
 } from "@amerfathullah/myds-react/search-bar";
@@ -107,6 +130,7 @@ import {
   SummaryListRow,
   SummaryListTerm,
 } from "@amerfathullah/myds-react/summary-list";
+import { Spinner } from "@amerfathullah/myds-react/spinner";
 import { TableTooltip } from "@amerfathullah/myds-react/table";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
@@ -1169,6 +1193,262 @@ export const SummaryListPartTypes: [
   SummaryListDetail,
   SummaryListAction,
   SummaryListAddition,
+];
+
+// The parts of Masthead, Navbar, DateField, TimeField, Spinner, Breadcrumb,
+// Pagination, Radio and SearchBar forward their refs to the element they
+// render (#212), so a ref works on React 18 too. Each ref is typed as that
+// element's, and a ref of another element's type is refused.
+export const MastheadRefs = () => {
+  const masthead = useRef<HTMLDivElement>(null);
+  const header = createRef<HTMLDivElement>();
+  const title = useRef<HTMLParagraphElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const content = createRef<HTMLDivElement>();
+  const section = useRef<HTMLDivElement>(null);
+  return (
+    <Masthead ref={masthead}>
+      <MastheadHeader ref={header}>
+        <MastheadTitle ref={title}>
+          Laman Web Rasmi Kerajaan Malaysia
+        </MastheadTitle>
+        <MastheadTrigger ref={trigger}>
+          Ini cara anda mengetahuinya
+        </MastheadTrigger>
+      </MastheadHeader>
+      <MastheadContent ref={content}>
+        <MastheadSection
+          ref={section}
+          icon={<ChevronDownIcon />}
+          title="Laman web rasmi berakhir dengan .gov.my"
+        >
+          Jika pautan tidak berakhir dengan .gov.my, keluar segera.
+        </MastheadSection>
+        <MastheadSection
+          ref={(node: HTMLDivElement | null) => void node}
+          icon={<ChevronDownIcon />}
+          title="Laman web selamat menggunakan HTTPS"
+        >
+          Cari ikon kunci atau https://.
+        </MastheadSection>
+      </MastheadContent>
+    </Masthead>
+  );
+};
+
+export const NavbarRefs = () => {
+  const header = useRef<HTMLElement>(null);
+  const logo = createRef<HTMLAnchorElement>();
+  const item = useRef<HTMLLIElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <Navbar ref={header}>
+        <NavbarLogo ref={logo} src="/jata-negara.png" alt="Jata Negara">
+          Kementerian Digital
+        </NavbarLogo>
+        <NavbarMenu>
+          <NavbarMenuItem ref={item} href="/perkhidmatan">
+            Perkhidmatan
+          </NavbarMenuItem>
+          <NavbarMenuItem
+            ref={(node: HTMLLIElement | null) => void node}
+            href="/hubungi"
+          >
+            Hubungi
+          </NavbarMenuItem>
+        </NavbarMenu>
+        <NavbarAction ref={toggle} />
+      </Navbar>
+      {/* @ts-expect-error The navbar's ref is its `<header>`, not an `<svg>` */}
+      <Navbar ref={createRef<SVGSVGElement>()} />
+    </>
+  );
+};
+
+export const FieldRefs = () => {
+  const date = useRef<HTMLInputElement>(null);
+  const spinner = createRef<HTMLDivElement>();
+  return (
+    <>
+      <DateField ref={date} />
+      <TimeField ref={(input: HTMLInputElement | null) => input?.focus()} />
+      <Spinner ref={spinner} show={false} />
+      {/* @ts-expect-error The field's ref is its `<input>`, not a `<table>` */}
+      <DateField ref={createRef<HTMLTableElement>()} />
+    </>
+  );
+};
+
+export const BreadcrumbAndPaginationRefs = () => {
+  const separator = useRef<HTMLLIElement>(null);
+  const ellipsis = createRef<HTMLSpanElement>();
+  return (
+    <>
+      <Breadcrumb>
+        <BreadcrumbItem>
+          <BreadcrumbPage>Utama</BreadcrumbPage>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator ref={separator} />
+        <BreadcrumbSeparator ref={(node: HTMLLIElement | null) => void node} />
+      </Breadcrumb>
+      <Pagination {...paging}>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationEllipsis ref={ellipsis} />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </>
+  );
+};
+
+export const RadioRefs = () => {
+  const item = useRef<HTMLDivElement>(null);
+  const label = createRef<HTMLLabelElement>();
+  const hint = useRef<HTMLDivElement>(null);
+  return (
+    <Radio>
+      <RadioItem ref={item}>
+        <RadioButton value="email" id="email" />
+        <RadioLabel ref={label} htmlFor="email">
+          E-mel
+        </RadioLabel>
+        <RadioHintText ref={hint}>Kami akan menghantar e-mel.</RadioHintText>
+      </RadioItem>
+      <RadioItem ref={(node: HTMLDivElement | null) => void node}>
+        {/* @ts-expect-error The label's ref is its `<label>`, not a `<table>` */}
+        <RadioLabel ref={createRef<HTMLTableElement>()}>SMS</RadioLabel>
+      </RadioItem>
+    </Radio>
+  );
+};
+
+export const SearchBarRefs = () => {
+  const root = useRef<HTMLDivElement>(null);
+  const container = createRef<HTMLDivElement>();
+  const input = useRef<HTMLInputElement>(null);
+  const hint = useRef<HTMLDivElement>(null);
+  const clear = createRef<HTMLButtonElement>();
+  const search = useRef<HTMLButtonElement>(null);
+  const results = useRef<HTMLDivElement>(null);
+  const list = createRef<HTMLDivElement>();
+  const group = useRef<HTMLDivElement>(null);
+  const item = useRef<HTMLDivElement>(null);
+  return (
+    <SearchBar ref={root}>
+      <SearchBarInputContainer ref={container}>
+        <SearchBarInput ref={input} aria-label="Cari nama" />
+        <SearchBarHint ref={hint}>Tekan / untuk mencari</SearchBarHint>
+        <SearchBarClearButton ref={clear} />
+        <SearchBarSearchButton ref={search} />
+      </SearchBarInputContainer>
+      <SearchBarResults ref={results} open>
+        <SearchBarResultsList ref={list}>
+          <SearchBarResultsGroup ref={group} heading="Tokoh">
+            <SearchBarResultsItem ref={item} value="Tunku Abdul Rahman">
+              Tunku Abdul Rahman
+            </SearchBarResultsItem>
+            <SearchBarResultsItem
+              ref={(node: HTMLDivElement | null) => void node}
+              value="Tun Abdul Razak"
+            >
+              Tun Abdul Razak
+            </SearchBarResultsItem>
+          </SearchBarResultsGroup>
+        </SearchBarResultsList>
+      </SearchBarResults>
+    </SearchBar>
+  );
+};
+
+// Their props types don't change, so each part's old component type still
+// holds it
+export const ForwardingPartsAsTheirOldTypes: [
+  FunctionComponent<ComponentProps<"div">>,
+  FunctionComponent<ComponentProps<"div">>,
+  FunctionComponent<ComponentProps<"p">>,
+  FunctionComponent<ComponentProps<"button">>,
+  FunctionComponent<ComponentProps<typeof MastheadContent>>,
+  FunctionComponent<ComponentProps<typeof MastheadSection>>,
+  FunctionComponent<ComponentProps<"header">>,
+  FunctionComponent<ComponentProps<typeof NavbarLogo>>,
+  FunctionComponent<ComponentProps<typeof NavbarMenuItem>>,
+  FunctionComponent<ComponentProps<typeof NavbarAction>>,
+  FunctionComponent<ComponentProps<typeof DateField>>,
+  FunctionComponent<ComponentProps<typeof TimeField>>,
+  FunctionComponent<ComponentProps<typeof Spinner>>,
+  FunctionComponent<ComponentProps<"li">>,
+  FunctionComponent<ComponentProps<"span">>,
+  FunctionComponent<ComponentProps<"div"> & { disabled?: boolean }>,
+  FunctionComponent<ComponentProps<"label">>,
+  FunctionComponent<ComponentProps<typeof RadioHintText>>,
+  FunctionComponent<ComponentProps<typeof SearchBar>>,
+  FunctionComponent<ComponentProps<"div">>,
+  FunctionComponent<ComponentProps<typeof SearchBarInput>>,
+  FunctionComponent<ButtonProps>,
+  FunctionComponent<ButtonProps>,
+  FunctionComponent<ComponentProps<"div">>,
+  FunctionComponent<ComponentProps<"div"> & { open: boolean }>,
+  FunctionComponent<ComponentProps<typeof SearchBarResultsList>>,
+  FunctionComponent<ComponentProps<typeof SearchBarResultsGroup>>,
+  FunctionComponent<ComponentProps<typeof SearchBarResultsItem>>,
+] = [
+  Masthead,
+  MastheadHeader,
+  MastheadTitle,
+  MastheadTrigger,
+  MastheadContent,
+  MastheadSection,
+  Navbar,
+  NavbarLogo,
+  NavbarMenuItem,
+  NavbarAction,
+  DateField,
+  TimeField,
+  Spinner,
+  BreadcrumbSeparator,
+  PaginationEllipsis,
+  RadioItem,
+  RadioLabel,
+  RadioHintText,
+  SearchBar,
+  SearchBarInputContainer,
+  SearchBarInput,
+  SearchBarSearchButton,
+  SearchBarClearButton,
+  SearchBarHint,
+  SearchBarResults,
+  SearchBarResultsList,
+  SearchBarResultsGroup,
+  SearchBarResultsItem,
+];
+
+// Each part's type as it's built: its props, ref included
+export const ForwardingPartTypes: [
+  ForwardRefExoticComponent<ComponentProps<"div">>,
+  ForwardRefExoticComponent<ComponentProps<"p">>,
+  ForwardRefExoticComponent<ComponentProps<"button">>,
+  ForwardRefExoticComponent<ComponentProps<"header">>,
+  ForwardRefExoticComponent<ComponentProps<"li">>,
+  ForwardRefExoticComponent<ComponentProps<"span">>,
+  ForwardRefExoticComponent<ComponentProps<"label">>,
+  ForwardRefExoticComponent<ButtonProps>,
+  ForwardRefExoticComponent<ButtonProps>,
+  ForwardRefExoticComponent<ComponentProps<"div">>,
+  ForwardRefExoticComponent<ComponentProps<"div"> & { open: boolean }>,
+] = [
+  MastheadHeader,
+  MastheadTitle,
+  MastheadTrigger,
+  Navbar,
+  BreadcrumbSeparator,
+  PaginationEllipsis,
+  RadioLabel,
+  SearchBarSearchButton,
+  SearchBarClearButton,
+  SearchBarHint,
+  SearchBarResults,
 ];
 
 // ToastIcon and ToastProgress are exported for a toast composed by hand

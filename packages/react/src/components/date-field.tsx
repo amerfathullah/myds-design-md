@@ -1,4 +1,4 @@
-import { ComponentProps, FunctionComponent } from "react";
+import { ComponentProps, forwardRef, ForwardRefExoticComponent } from "react";
 import { CalendarIcon } from "../icons/calendar";
 import { cva, VariantProps } from "class-variance-authority";
 
@@ -75,29 +75,31 @@ type DateFieldProps = Omit<ComponentProps<"input">, "type" | "size"> &
     invalid?: boolean | null;
   };
 
-const DateField: FunctionComponent<DateFieldProps> = ({
-  className,
-  size,
-  invalid,
-  ...props
-}) => {
-  return (
-    <div
-      className={datefield_container_cva({
-        size,
-        className,
-      })}
-    >
-      <CalendarIcon className={icon_cva({ size })} aria-hidden />
-      <input
-        type="date"
-        className={datefield_cva()}
-        aria-invalid={invalid ?? undefined}
-        {...props}
-      />
-    </div>
-  );
-};
+/**
+ * Native date input, in a frame with a calendar icon. Its ref is the
+ * `<input>`, which gets the props; `className` goes on the frame.
+ */
+const DateField: ForwardRefExoticComponent<DateFieldProps> = forwardRef(
+  ({ className, size, invalid, ...props }, ref) => {
+    return (
+      <div
+        className={datefield_container_cva({
+          size,
+          className,
+        })}
+      >
+        <CalendarIcon className={icon_cva({ size })} aria-hidden />
+        <input
+          ref={ref}
+          type="date"
+          className={datefield_cva()}
+          aria-invalid={invalid ?? undefined}
+          {...props}
+        />
+      </div>
+    );
+  },
+);
 DateField.displayName = "DateField";
 
 export { DateField };

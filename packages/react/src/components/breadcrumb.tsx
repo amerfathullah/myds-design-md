@@ -22,8 +22,7 @@ const breadcrumb_cva = cva(
 );
 
 interface BreadcrumbProps
-  extends ComponentProps<"nav">,
-    VariantProps<typeof breadcrumb_cva> {}
+  extends ComponentProps<"nav">, VariantProps<typeof breadcrumb_cva> {}
 
 const Breadcrumb: ForwardRefExoticComponent<BreadcrumbProps> = forwardRef(
   ({ variant = "default", className, children, ...props }, ref) => (
@@ -85,20 +84,18 @@ const BreadcrumbPage: ForwardRefExoticComponent<ComponentProps<"span">> =
   ));
 BreadcrumbPage.displayName = "BreadcrumbPage";
 
-const BreadcrumbSeparator = ({
-  children,
-  className,
-  ...props
-}: ComponentProps<"li">) => (
-  <li
-    role="presentation"
-    aria-hidden="true"
-    className={clx("[&>svg]:text-bg-black-400 [&>svg]:size-6", className)}
-    {...props}
-  >
-    {children || <ChevronRightIcon />}
-  </li>
-);
+const BreadcrumbSeparator: ForwardRefExoticComponent<ComponentProps<"li">> =
+  forwardRef(({ children, className, ...props }, ref) => (
+    <li
+      ref={ref}
+      role="presentation"
+      aria-hidden="true"
+      className={clx("[&>svg]:text-bg-black-400 [&>svg]:size-6", className)}
+      {...props}
+    >
+      {children || <ChevronRightIcon />}
+    </li>
+  ));
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
 
 export {

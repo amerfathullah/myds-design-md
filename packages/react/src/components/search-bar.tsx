@@ -2,16 +2,19 @@ import React, {
   FunctionComponent,
   ComponentProps,
   Dispatch,
+  KeyboardEvent,
+  RefObject,
   SetStateAction,
   useContext,
   useEffect,
   useId,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   forwardRef,
 } from "react";
-import { Command } from "cmdk";
+import { Command, useCommandState } from "cmdk";
 import { Button, ButtonProps } from "./button";
 import { CrossIcon, SearchIcon } from "../icons";
 import { clx } from "../utils";
@@ -23,11 +26,16 @@ const DEFAULT_SIZE: SearchBarSize = "medium";
 
 /**
  * A results part mounted in a SearchBar: a SearchBarResults panel and the id
- * given to it, or a SearchBarResultsList and whether it's displayed
+ * given to it, or a SearchBarResultsList, whether it's displayed, and its
+ * hidden `--` option
  */
 type Part =
   | { kind: "panel"; id: string | undefined }
-  | { kind: "list"; displayed: boolean };
+  | {
+      kind: "list";
+      displayed: boolean;
+      placeholder: RefObject<HTMLElement | null>;
+    };
 
 /** How SearchBarInput wires its <input>, from the parts mounted */
 type Wiring = {
@@ -101,6 +109,14 @@ function createParts() {
       return () => void listeners.delete(listener);
     },
     wiring: () => wiring,
+    /** The hidden `--` options of the lists displayed */
+    displayedPlaceholders: () => {
+      const placeholders: Element[] = [];
+      for (const part of parts)
+        if (part.kind === "list" && part.displayed && part.placeholder.current)
+          placeholders.push(part.placeholder.current);
+      return placeholders;
+    },
   };
 }
 
@@ -162,16 +178,123 @@ function useWiring(parts: Parts | undefined) {
   return wiring;
 }
 
+// The marker on SearchBarResultsList's hidden `--` option
+const NOTHING = "data-nothing-highlighted";
+
+// The <input>s this copy's SearchBarInput renders. cmdk's own
+// `aria-activedescendant` never reaches them, so `nameHighlighted` names
+// their active option; it leaves other inputs to cmdk.
+const ownInputs = new WeakSet<Element>();
+
+// Sets `element`'s `aria-activedescendant` to `id`, or removes it for none
+function setActive(element: Element, id: string | undefined) {
+  if (id === undefined) element.removeAttribute("aria-activedescendant");
+  else if (element.getAttribute("aria-activedescendant") !== id)
+    element.setAttribute("aria-activedescendant", id);
+}
+
+/**
+ * Points the `aria-activedescendant` of this copy's inputs and listboxes in
+ * the SearchBar whose cmdk root is `root` at the highlighted result: the
+ * option cmdk marks selected, in a list that's displayed, other than the
+ * hidden `--`. With none, they name nothing. In an older copy's SearchBar,
+ * which has no `parts`, every list counts as displayed.
+ *
+ * cmdk 1.1.1 works out its own id only when its selection changes, and before
+ * the options re-render, so it can name a result that's no longer selected,
+ * the hidden `--`, or an option that's gone (#398, #205). It puts that id on
+ * the listbox after the props it spreads, so this sets it on the element,
+ * after each commit that could change it.
+ */
+function nameHighlighted(root: Element, parts: Parts | undefined) {
+  const placeholders = parts
+    ? parts.displayedPlaceholders()
+    : [...root.querySelectorAll(`[cmdk-item][${NOTHING}]`)];
+  let highlighted: Element | undefined;
+  for (const placeholder of placeholders) {
+    const listbox = placeholder.closest("[cmdk-list]");
+    const option = listbox?.querySelector(
+      `[cmdk-item][aria-selected="true"]:not([${NOTHING}])`,
+    );
+    if (option && option.closest("[cmdk-list]") === listbox) {
+      highlighted = option;
+      break;
+    }
+  }
+  const owned = (element: Element) => element.closest("[cmdk-root]") === root;
+  for (const input of root.querySelectorAll("[cmdk-input]"))
+    if (ownInputs.has(input) && owned(input)) setActive(input, highlighted?.id);
+  for (const placeholder of root.querySelectorAll(`[cmdk-item][${NOTHING}]`)) {
+    const listbox = placeholder.closest("[cmdk-list]");
+    if (listbox && owned(listbox))
+      setActive(
+        listbox,
+        highlighted && listbox.contains(highlighted)
+          ? highlighted.id
+          : undefined,
+      );
+  }
+}
+
+// Re-renders the component calling it when cmdk's selection, or the id cmdk
+// works out for it, changes, in the same commit as cmdk's own parts
+function useSelection() {
+  useCommandState((state) => state.value);
+  useCommandState((state) => state.selectedItemId);
+}
+
+/**
+ * Whether cmdk 1.1.1's root acts on `event`: ArrowDown, ArrowUp, Home, End
+ * and Enter, and with `vimBindings` Ctrl+N, J, P and K. It skips a key sent
+ * during an IME composition, and one whose React event reads as cancelled.
+ */
+function cmdkActsOn(event: KeyboardEvent, vimBindings: boolean) {
+  if (
+    event.defaultPrevented ||
+    event.nativeEvent.isComposing ||
+    event.keyCode === 229
+  )
+    return false;
+  switch (event.key) {
+    case "ArrowDown":
+    case "ArrowUp":
+    case "Home":
+    case "End":
+    case "Enter":
+      return true;
+    case "n":
+    case "j":
+    case "p":
+    case "k":
+      return vimBindings && event.ctrlKey;
+    default:
+      return false;
+  }
+}
+
+// Whether `event` was pressed in the cmdk input of the root it reached
+const inInput = (event: KeyboardEvent<HTMLDivElement>) => {
+  const target = event.target as Partial<Element>;
+  return (
+    !!target.hasAttribute?.("cmdk-input") &&
+    target.closest?.("[cmdk-root]") === event.currentTarget
+  );
+};
+
 interface SearchBarProps extends ComponentProps<typeof Command> {
   size?: SearchBarSize;
 }
 
 /**
- * Uses cmdk's Command API.
+ * Uses cmdk's Command API. cmdk's keys act on the results only while a
+ * SearchBarResultsList is displayed, and only when pressed in the input.
+ * Otherwise the browser acts on them, as in a plain text field: Enter submits
+ * a surrounding form, and Home and End move the caret. Your `onKeyDown` runs
+ * first, once per key, and its `preventDefault` stops both.
  * @see https://github.com/pacocoursey/cmdk#command-cmdk-root
  */
 const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
-  ({ children, className, size = DEFAULT_SIZE, ...props }, ref) => {
+  ({ children, className, size = DEFAULT_SIZE, onKeyDown, ...props }, ref) => {
     // One id per SearchBar, so two on a page don't share their results' id
     const generatedResultsId = useId();
     const [parts] = useState(createParts);
@@ -192,6 +315,17 @@ const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
           className={clx("relative z-0", className)}
           shouldFilter={false}
           {...props}
+          // cmdk calls this before it handles the key
+          onKeyDown={(event) => {
+            onKeyDown?.(event);
+            if (!cmdkActsOn(event, props.vimBindings ?? true)) return;
+            // Keep the key from cmdk while no list is displayed, and when
+            // it's pressed outside the input, such as on the clear button.
+            // cmdk skips a key whose React event reads as cancelled, and
+            // this cancels only that, so the browser still acts on it (#398).
+            if (!inInput(event) || !parts.wiring().expanded)
+              event.defaultPrevented = true;
+          }}
         >
           {children}
         </Command>
@@ -263,6 +397,16 @@ export const SearchBarInput: FunctionComponent<
     const { resultsId, generatedResultsId, parts } =
       useContext(SearchBarContext);
     const wiring = useWiring(parts);
+    const input = useRef<HTMLInputElement>(null);
+    useSelection();
+    // After every commit that changes the wiring or cmdk's selection, name
+    // the highlighted result
+    useBeforePaint(() => {
+      const root = input.current?.closest("[cmdk-root]");
+      if (!root) return;
+      ownInputs.add(input.current!);
+      nameHighlighted(root, parts);
+    });
     // In an older copy's SearchBar, which has no parts, the input keeps that
     // copy's wiring: its results id, and cmdk's `aria-expanded`
     const controls =
@@ -316,8 +460,15 @@ export const SearchBarInput: FunctionComponent<
         HTML is collapsed and names nothing, as the parts register only once
         the page hydrates. The wiring and the name sit on this child because
         a key it sets wins over cmdk's, even an `undefined` one, and cmdk
-        sets its own after spreading ours. */}
-        <input {...controls} {...expanded} {...labelledBy} />
+        sets its own after spreading ours. cmdk's `aria-activedescendant` is
+        erased the same way: `nameHighlighted` sets it. */}
+        <input
+          ref={input}
+          {...controls}
+          {...expanded}
+          {...labelledBy}
+          aria-activedescendant={undefined}
+        />
       </Command.Input>
     );
   },
@@ -462,18 +613,39 @@ export const SearchBarResultsList: FunctionComponent<
 > = ({ children, "aria-label": ariaLabel, label, ...props }) => {
   const { parts } = useContext(SearchBarContext);
   const { open } = useContext(SearchBarResultsContext);
-  // Count this list, and whether it's displayed, from before the browser
-  // paints until it unmounts
+  const placeholder = useRef<HTMLDivElement>(null);
+  // Count this list, whether it's displayed, and its hidden `--` option, from
+  // before the browser paints until it unmounts
   useBeforePaint(
-    () => parts?.add({ kind: "list", displayed: open }),
+    () => parts?.add({ kind: "list", displayed: open, placeholder }),
     [parts, open],
   );
+  useSelection();
+  // After every commit that changes this list or cmdk's selection, name the
+  // highlighted result, and again once the list has gone
+  useBeforePaint(() => {
+    const root = placeholder.current?.closest("[cmdk-root]");
+    if (root) nameHighlighted(root, parts);
+  });
+  useBeforePaint(() => {
+    const root = placeholder.current?.closest("[cmdk-root]");
+    if (root) return () => queueMicrotask(() => nameHighlighted(root, parts));
+  }, [parts]);
   return (
     // cmdk names the listbox from `label`, after the props it spreads, so an
     // `aria-label` reaches the listbox only through `label`
     <Command.List label={ariaLabel ?? label ?? "Suggestions"} {...props}>
-      {/* We include a hidden item to prevent cmdk from focusing on the first item automatically. */}
-      <Command.Item className="hidden">--</Command.Item>
+      {/* The hidden `--` option. cmdk 1.1.1 selects the first option it
+      finds, at rest and after each query change, so nothing is highlighted
+      until the person moves into the results. SearchBar recognises it by
+      its marker, and never names it in `aria-activedescendant`. */}
+      <Command.Item
+        ref={placeholder}
+        className="hidden"
+        data-nothing-highlighted=""
+      >
+        --
+      </Command.Item>
       {children}
     </Command.List>
   );

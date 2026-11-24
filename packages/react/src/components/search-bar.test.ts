@@ -26,11 +26,14 @@ import { sharedContext } from "../utils/registry";
 import { Label } from "./label";
 import {
   SearchBar,
+  SearchBarClearButton,
   SearchBarInput,
   SearchBarInputContainer,
   SearchBarResults,
+  SearchBarResultsGroup,
   SearchBarResultsItem,
   SearchBarResultsList,
+  SearchBarSearchButton,
 } from "./search-bar";
 
 declare global {
@@ -817,17 +820,55 @@ const clear = (input: HTMLInputElement) =>
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
 
-// Presses `key` on whatever has focus
-const press = (key: string) =>
-  act(async () => {
-    document.activeElement!.dispatchEvent(
-      new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+type Modifiers = Pick<
+  KeyboardEventInit,
+  "altKey" | "ctrlKey" | "metaKey" | "shiftKey"
+>;
+
+// Presses `key`, with `modifiers`, on whatever has focus, and returns
+// whether the browser would still act on it: false once a handler cancels it
+async function press(key: string, modifiers: Modifiers = {}) {
+  let uncancelled = true;
+  await act(async () => {
+    uncancelled = document.activeElement!.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key,
+        bubbles: true,
+        cancelable: true,
+        ...modifiers,
+      }),
     );
   });
+  return uncancelled;
+}
 
-// The text of the result cmdk has selected, if any
+// The text of the result cmdk has selected, if any. While nothing is
+// highlighted, that's the hidden `--` option's.
 const selected = (within: ParentNode) =>
   within.querySelector('[cmdk-item][aria-selected="true"]')?.textContent;
+
+// The marker on SearchBarResultsList's hidden `--` option (#398)
+const NOTHING = "data-nothing-highlighted";
+
+// The option the input and the listbox of the bar named `name` each name in
+// `aria-activedescendant`, by its text, or null where there's none. A name
+// must be an option in the page that's selected and isn't the hidden `--`.
+function active(within: ParentNode, name: string) {
+  const { input, listbox } = parts(within, name);
+  const named = (element: HTMLElement | null) => {
+    const id = element?.getAttribute("aria-activedescendant");
+    if (id == null) return null;
+    const option = document.getElementById(id);
+    expect(option, `#${id} is in the page`).not.toBeNull();
+    expect(option!.getAttribute("role")).toBe("option");
+    expect(option!.getAttribute("aria-selected")).toBe("true");
+    expect(option!.hasAttribute(NOTHING), `#${id} isn't the hidden --`).toBe(
+      false,
+    );
+    return option!.textContent;
+  };
+  return { input: named(input), listbox: named(listbox) };
+}
 
 describe("the keyboard, in the docs' controlled composition", () => {
   // The option the input's `aria-activedescendant` names, if it's inside
@@ -861,11 +902,19 @@ describe("the keyboard, in the docs' controlled composition", () => {
       controls: "listbox",
     });
     expect(noneOrInside(input)).toBe(true);
-    for (const key of ["ArrowDown", "ArrowDown", "ArrowUp", "ArrowUp"]) {
+    for (const key of ["ArrowDown", "ArrowDown", "ArrowUp"]) {
       await press(key);
       expect(activeOption(input), key).not.toBeNull();
+      expect(active(container, "docs"), key).toEqual({
+        input: selected(container),
+        listbox: selected(container),
+      });
     }
-    expect(activeOption(input)!.textContent).toBe(selected(container));
+    // ArrowUp from the first result selects the hidden `--` until #205, so
+    // neither the input nor the listbox names an option
+    await press("ArrowUp");
+    expect(selected(container)).toBe("--");
+    expect(active(container, "docs")).toEqual({ input: null, listbox: null });
   });
 
   test("a query with no matches leaves the input collapsed, with no aria-activedescendant", async () => {
@@ -902,6 +951,480 @@ describe("the keyboard, in the docs' controlled composition", () => {
       expanded: "false",
       controls: "listbox",
     });
+  });
+});
+
+// The results the key tests' bars hold
+const abc = ["A", "B", "C"];
+
+type KeysBar = Holding & {
+  input?: InputProps;
+  bar?: Partial<ComponentProps<typeof SearchBar>>;
+  onSelect?: (name: string) => void;
+  grouped?: boolean;
+};
+
+// A SearchBar named "keys" holding the results parts `results` and `list`
+// ask for, as `searchBar` does, with a clear and a search button after its
+// input. Its list holds A, B and C, each calling `onSelect` with its name;
+// `grouped` puts A and B in one SearchBarResultsGroup and C in another.
+// `bar` is SearchBar's props, and `input` SearchBarInput's, which is
+// uncontrolled unless they say otherwise.
+function keysBar({
+  results = {},
+  list = true,
+  input = {},
+  bar = {},
+  onSelect = () => {},
+  grouped = false,
+}: KeysBar = {}) {
+  const items = abc.map((name) =>
+    createElement(
+      SearchBarResultsItem,
+      { key: name, value: name, onSelect: () => onSelect(name) },
+      name,
+    ),
+  );
+  const resultsList =
+    list &&
+    createElement(
+      SearchBarResultsList,
+      null,
+      grouped
+        ? [
+            createElement(
+              SearchBarResultsGroup,
+              { key: "AB", heading: "A and B" },
+              items.slice(0, 2),
+            ),
+            createElement(
+              SearchBarResultsGroup,
+              { key: "C", heading: "C" },
+              items.slice(2),
+            ),
+          ]
+        : items,
+    );
+  return createElement(
+    SearchBar,
+    { "data-bar": "keys", ...bar } as ComponentProps<typeof SearchBar>,
+    createElement(
+      SearchBarInputContainer,
+      null,
+      createElement(SearchBarInput, { "aria-label": "Search", ...input }),
+      createElement(SearchBarClearButton, {
+        "data-button": "clear",
+      } as ComponentProps<typeof SearchBarClearButton>),
+      createElement(SearchBarSearchButton, {
+        "data-button": "search",
+      } as ComponentProps<typeof SearchBarSearchButton>),
+    ),
+    results === null
+      ? resultsList
+      : createElement(
+          SearchBarResults,
+          panel({ open: true, ...results }),
+          resultsList,
+        ),
+  );
+}
+
+// Mounts `bar` and focuses its input
+async function focused(bar: ReactElement) {
+  const mounted = await mount(bar);
+  const input = mounted.container.querySelector("input")!;
+  await act(async () => input.focus());
+  return { ...mounted, input };
+}
+
+// The keys cmdk acts on, as `[key, modifiers]`: ArrowDown, ArrowUp, Home,
+// End, Enter, and with `vimBindings` (on by default) Ctrl+N, J, P and K
+const cmdkKeys: [string, Modifiers][] = [
+  ["ArrowDown", {}],
+  ["ArrowUp", {}],
+  ["Home", {}],
+  ["End", {}],
+  ["Enter", {}],
+  ["n", { ctrlKey: true }],
+  ["j", { ctrlKey: true }],
+  ["p", { ctrlKey: true }],
+  ["k", { ctrlKey: true }],
+];
+const keyName = ([key, { ctrlKey }]: [string, Modifiers]) =>
+  ctrlKey ? `Ctrl+${key.toUpperCase()}` : key;
+
+// The states #204 counts as no list displayed
+const undisplayed = states.filter(({ wired }) => wired.expanded === "false");
+// The states with a list displayed
+const displayed = states.filter(({ wired }) => wired.expanded === "true");
+
+describe("while no list is displayed (#398)", () => {
+  test.each(undisplayed)(
+    "with $state, cmdk's keys aren't cancelled, and choose nothing",
+    async ({ results, list }) => {
+      const chosen: string[] = [];
+      const { container } = await focused(
+        keysBar({ results, list, onSelect: (name) => void chosen.push(name) }),
+      );
+      for (const key of cmdkKeys) {
+        expect(await press(...key), keyName(key)).toBe(true);
+        expect(active(container, "keys")).toEqual({
+          input: null,
+          listbox: null,
+        });
+      }
+      expect(chosen).toEqual([]);
+      if (list) expect(selected(container)).toBe("--");
+    },
+  );
+
+  test("a closed panel keeps cmdk's selection where it was, names nothing, and Enter chooses nothing", async () => {
+    const chosen: string[] = [];
+    const bar = (open: boolean) =>
+      keysBar({
+        results: { open },
+        onSelect: (name) => void chosen.push(name),
+      });
+    const { container, rerender } = await focused(bar(true));
+    await press("ArrowDown");
+    await press("ArrowDown");
+    expect(selected(container)).toBe("B");
+    expect(active(container, "keys")).toEqual({ input: "B", listbox: "B" });
+    await rerender(bar(false));
+    expect(active(container, "keys")).toEqual({ input: null, listbox: null });
+    for (const key of cmdkKeys) {
+      expect(await press(...key), keyName(key)).toBe(true);
+      expect(selected(container), keyName(key)).toBe("B");
+      expect(active(container, "keys")).toEqual({
+        input: null,
+        listbox: null,
+      });
+    }
+    expect(chosen).toEqual([]);
+    // Reopening names the highlighted result again, and the keys work
+    await rerender(bar(true));
+    expect(active(container, "keys")).toEqual({ input: "B", listbox: "B" });
+    expect(await press("ArrowDown")).toBe(false);
+    expect(active(container, "keys")).toEqual({ input: "C", listbox: "C" });
+    expect(await press("Enter")).toBe(false);
+    expect(chosen).toEqual(["C"]);
+  });
+});
+
+describe("while a list is displayed (#398)", () => {
+  // Each key, and the result it highlights after the one before
+  const walk: [[string, Modifiers], string][] = [
+    [["ArrowDown", {}], "A"],
+    [["ArrowDown", {}], "B"],
+    [["ArrowUp", {}], "A"],
+    [["n", { ctrlKey: true }], "B"],
+    [["p", { ctrlKey: true }], "A"],
+    [["j", { ctrlKey: true }], "B"],
+    [["k", { ctrlKey: true }], "A"],
+    [["ArrowDown", { altKey: true }], "B"],
+    [["ArrowUp", { altKey: true }], "A"],
+  ];
+
+  test.each(displayed)(
+    "with $state, the arrow keys, Ctrl+N/J/P/K and Alt+arrows move the highlight, Enter chooses it, and the input and listbox name it",
+    async ({ results, list }) => {
+      const chosen: string[] = [];
+      const { container } = await focused(
+        keysBar({ results, list, onSelect: (name) => void chosen.push(name) }),
+      );
+      expect(selected(container)).toBe("--");
+      expect(active(container, "keys")).toEqual({
+        input: null,
+        listbox: null,
+      });
+      for (const [key, highlighted] of walk) {
+        expect(await press(...key), keyName(key)).toBe(false);
+        expect(selected(container), keyName(key)).toBe(highlighted);
+        expect(active(container, "keys")).toEqual({
+          input: highlighted,
+          listbox: highlighted,
+        });
+      }
+      expect(await press("Enter")).toBe(false);
+      expect(chosen).toEqual(["A"]);
+    },
+  );
+
+  test("without vimBindings, Ctrl+N/J/P/K aren't cmdk's, and aren't cancelled", async () => {
+    const { container } = await focused(
+      keysBar({ bar: { vimBindings: false } }),
+    );
+    await press("ArrowDown");
+    for (const key of ["n", "j", "p", "k"]) {
+      expect(await press(key, { ctrlKey: true }), key).toBe(true);
+      expect(selected(container)).toBe("A");
+    }
+  });
+
+  test("an author's `value` on SearchBar that selects a result is named", async () => {
+    const bar = (value: string) => keysBar({ bar: { value } });
+    const { container, rerender } = await focused(bar("B"));
+    expect(selected(container)).toBe("B");
+    expect(active(container, "keys")).toEqual({ input: "B", listbox: "B" });
+    await rerender(bar("C"));
+    expect(selected(container)).toBe("C");
+    expect(active(container, "keys")).toEqual({ input: "C", listbox: "C" });
+  });
+});
+
+describe("on the clear and search buttons (#398)", () => {
+  test.each(states)(
+    "with $state, cmdk's keys aren't cancelled, and choose nothing",
+    async ({ results, list }) => {
+      const chosen: string[] = [];
+      const { container } = await focused(
+        keysBar({ results, list, onSelect: (name) => void chosen.push(name) }),
+      );
+      if (list && results?.open !== false) await press("ArrowDown");
+      const before = selected(container);
+      for (const button of ["clear", "search"]) {
+        await act(async () =>
+          container
+            .querySelector<HTMLElement>(`[data-button="${button}"]`)!
+            .focus(),
+        );
+        for (const key of cmdkKeys)
+          expect(await press(...key), `${button}: ${keyName(key)}`).toBe(true);
+      }
+      expect(selected(container)).toBe(before);
+      expect(chosen).toEqual([]);
+    },
+  );
+});
+
+describe("the hidden `--` option (#398)", () => {
+  test("carries a marker, in server HTML and in the browser, and hydrates without a warning", async () => {
+    const tree = keysBar();
+    const container = serverRender(tree);
+    const marked = () =>
+      [...container.querySelectorAll(`[cmdk-item][${NOTHING}]`)].map(
+        (option) => option.textContent,
+      );
+    expect(marked()).toEqual(["--"]);
+    expect(await hydrate(container, tree)).toEqual([]);
+    expect(marked()).toEqual(["--"]);
+    expect(container.querySelector(`[${NOTHING}]`)).toBe(
+      container.querySelector("[cmdk-item]"),
+    );
+  });
+
+  test("is never named in server HTML, at rest, or after a query change", async () => {
+    const container = serverRender(keysBar());
+    expect(container.querySelector("[aria-activedescendant]")).toBeNull();
+    const { container: page } = await mount(createElement(DocsSearch));
+    const input = page.querySelector("input")!;
+    await act(async () => input.focus());
+    await type(input, "tu");
+    expect(selected(page)).toBe("--");
+    expect(active(page, "docs")).toEqual({ input: null, listbox: null });
+  });
+});
+
+// A SearchBar composed as the docs' controlled example, except that its list
+// is mounted only while its panel is open
+function OpenOnlySearch({ controlled = true }: { controlled?: boolean }) {
+  const [query, setQuery] = useState("");
+  const [hasFocus, setHasFocus] = useState(false);
+  const open = query.length > 0 && hasFocus;
+  const results = people.filter((name) =>
+    name.toLowerCase().includes(query.toLowerCase()),
+  );
+  return createElement(
+    SearchBar,
+    { "data-bar": "docs" } as ComponentProps<typeof SearchBar>,
+    createElement(
+      SearchBarInputContainer,
+      null,
+      createElement(SearchBarInput, {
+        "aria-label": "Search by name",
+        ...(controlled
+          ? { value: query, onValueChange: setQuery }
+          : { onValueChange: setQuery }),
+        onFocus: () => setHasFocus(true),
+        onBlur: () => setHasFocus(false),
+      }),
+    ),
+    createElement(
+      SearchBarResults,
+      panel({ open }),
+      open &&
+        results.length > 0 &&
+        createElement(
+          SearchBarResultsList,
+          null,
+          results.map((name) =>
+            createElement(
+              SearchBarResultsItem,
+              { key: name, value: name },
+              name,
+            ),
+          ),
+        ),
+    ),
+  );
+}
+
+describe("aria-activedescendant on the input and the listbox (#398)", () => {
+  test("after the list unmounts and mounts again, names a displayed result or nothing", async () => {
+    const { container } = await mount(createElement(OpenOnlySearch));
+    const input = container.querySelector("input")!;
+    await act(async () => input.focus());
+    await type(input, "tu");
+    await press("ArrowDown");
+    await press("ArrowDown");
+    expect(active(container, "docs")).toEqual({
+      input: people[1],
+      listbox: people[1],
+    });
+    await act(async () => input.blur());
+    expect(parts(container, "docs").listbox).toBeNull();
+    expect(active(container, "docs")).toEqual({ input: null, listbox: null });
+    await act(async () => input.focus());
+    const named = active(container, "docs");
+    expect(named.input).toBe(named.listbox);
+    if (named.input !== null) expect(named.input).toBe(selected(container));
+    expect(await press("ArrowDown")).toBe(false);
+    expect(active(container, "docs")).toEqual({
+      input: selected(container),
+      listbox: selected(container),
+    });
+  });
+
+  test.each([
+    ["a controlled", true],
+    ["an uncontrolled", false],
+  ])(
+    "with %s input, editing the query so the highlighted result stays shown names nothing",
+    async (_, controlled) => {
+      const { container } = await mount(
+        controlled
+          ? createElement(DocsSearch)
+          : createElement(OpenOnlySearch, { controlled: false }),
+      );
+      const input = container.querySelector("input")!;
+      await act(async () => input.focus());
+      await type(input, "tu");
+      await press("ArrowDown");
+      expect(active(container, "docs")).toEqual({
+        input: people[0],
+        listbox: people[0],
+      });
+      // Typing "n" leaves every result shown
+      await type(input, "n");
+      expect(selected(container)).toBe("--");
+      expect(active(container, "docs")).toEqual({ input: null, listbox: null });
+      expect(await press("Enter")).toBe(false);
+      // So does Backspace
+      await press("ArrowDown");
+      expect(active(container, "docs")).toEqual({
+        input: people[0],
+        listbox: people[0],
+      });
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          "value",
+        )!.set!.call(input, "tu");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      expect(selected(container)).toBe("--");
+      expect(active(container, "docs")).toEqual({ input: null, listbox: null });
+    },
+  );
+});
+
+describe("an author's onKeyDown on SearchBar (#398)", () => {
+  test.each(states)(
+    "with $state, runs once per key, before cmdk, with SearchBar's root as currentTarget, and its preventDefault stops cmdk",
+    async ({ results, list }) => {
+      const seen: [string, string | null, boolean][] = [];
+      let cancel = false;
+      const { container } = await focused(
+        keysBar({
+          results,
+          list,
+          bar: {
+            onKeyDown: (event) => {
+              seen.push([
+                event.key,
+                event.currentTarget.getAttribute("cmdk-root"),
+                event.defaultPrevented,
+              ]);
+              if (cancel) event.preventDefault();
+            },
+          },
+        }),
+      );
+      for (const key of cmdkKeys) await press(...key);
+      expect(seen).toEqual(cmdkKeys.map(([key]) => [key, "", false]));
+      const before = selected(container);
+      cancel = true;
+      for (const key of cmdkKeys) {
+        expect(await press(...key), keyName(key)).toBe(false);
+        expect(selected(container), keyName(key)).toBe(before);
+      }
+    },
+  );
+
+  test("other keys reach cmdk's root and bubble on uncancelled, and the keys kept from cmdk reach the document uncancelled", async () => {
+    const reached: [string, boolean][] = [];
+    const listener = (event: KeyboardEvent) =>
+      void reached.push([event.key, event.defaultPrevented]);
+    document.addEventListener("keydown", listener);
+    try {
+      await focused(keysBar({ results: { open: false } }));
+      for (const key of ["Escape", "Tab", "a", "Enter", "Home"])
+        await press(key);
+    } finally {
+      document.removeEventListener("keydown", listener);
+    }
+    expect(reached).toEqual([
+      ["Escape", false],
+      ["Tab", false],
+      ["a", false],
+      ["Enter", false],
+      ["Home", false],
+    ]);
+  });
+});
+
+describe("in an older copy's SearchBar (#398)", () => {
+  test("a list in a closed panel counts as displayed: the input and the listbox name the highlighted result, or nothing", async () => {
+    const { container } = await mount(
+      createElement(
+        OlderSearchBar,
+        { "data-bar": "older" },
+        createElement(SearchBarInput, { "aria-label": "Search" }),
+        createElement(
+          SearchBarResults,
+          panel({ open: false }),
+          createElement(
+            SearchBarResultsList,
+            null,
+            abc.map((name) =>
+              createElement(
+                SearchBarResultsItem,
+                { key: name, value: name },
+                name,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    const input = container.querySelector("input")!;
+    await act(async () => input.focus());
+    expect(selected(container)).toBe("--");
+    expect(active(container, "older")).toEqual({ input: null, listbox: null });
+    await press("ArrowDown");
+    expect(active(container, "older")).toEqual({ input: "A", listbox: "A" });
+    await press("ArrowDown");
+    expect(active(container, "older")).toEqual({ input: "B", listbox: "B" });
   });
 });
 

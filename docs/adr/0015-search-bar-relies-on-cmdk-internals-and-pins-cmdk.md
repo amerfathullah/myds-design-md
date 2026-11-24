@@ -16,7 +16,7 @@ SearchBar works around all four, so it relies on cmdk 1.1.1 behaviour that cmdk 
 - it hides the `--` option from cmdk's navigation for each move key;
 - it hands cmdk a controlled query only when the author changed it;
 - it keeps some of the keys cmdk acts on away from cmdk, without cancelling them in the browser, so the input acts as a text field:
-  - the keys cmdk acts on, while no list is displayed, and keys pressed on the Clear and Search buttons (#398);
+  - the keys cmdk acts on, while no list is displayed or when pressed on the Clear and Search buttons (#398);
   - Home and End, and Meta+ArrowUp and Meta+ArrowDown, with any modifiers, in every state (#399).
 
   Other keys, such as Escape, Tab and typed characters, reach cmdk's root and bubble on as today.
@@ -48,7 +48,7 @@ Because of that, `@amerfathullah/myds-react` depends on cmdk `1.1.1` exactly, no
   - On React 18.3, a query change the author makes, such as Clear, still reaches cmdk through its passive effect. Only typing is fixed.
 - **Keeping a key from cmdk without cancelling it has a cost either way.** #398 chooses the route, and #399 follows it.
   - **Stopping the key below cmdk's root:** listeners above that point, `document` and `window` included, don't see it on bubble; capture listeners still do. The author's SearchBar `onKeyDown` must then be called by SearchBar, and its `currentTarget` is where the key stopped, not the root `<div>` its type names.
-  - **Setting only the React event's `defaultPrevented`,** without cancelling the native event: the key bubbles as today, but React handlers above the input read it as cancelled, and it relies on React's event internals as well as cmdk's.
+  - **Setting only the React event's `defaultPrevented`,** without cancelling the native event: the key bubbles as today, but React handlers above SearchBar's root read it as cancelled, and it relies on React's event internals as well as cmdk's.
 
   Either way, the author's SearchBar `onKeyDown` runs once, before the browser acts, and its `preventDefault` is honoured.
 

@@ -5,11 +5,11 @@ description: Gunakan senarai ringkasan untuk menyajikan gambaran keseluruhan mak
 
 ![summary-list-anatomy.png](/design/summary-list-anatomy.png)
 
-Senarai ringkasan menggunakan elemen HTML `<dt>` untuk memaparkan pasangan kunci-nilai dalam format yang jelas, dengan gaya umum yang diambil dari komponen Jadual.
+Senarai ringkasan menggunakan elemen HTML `<table>` untuk memaparkan pasangan kunci-nilai dalam format yang jelas, satu baris bagi setiap pasangan, dengan gaya umum yang diambil dari komponen Jadual.
 
-1. **Kunci `<dt>`**: Lajur pertama memaparkan item atau atribut yang diterangkan, berfungsi sebagai label atau pengenal untuk nilai dalam lajur berikutnya.
-2. **Nilai `<dd>`**: Lajur kedua mengandungi data atau butiran yang sesuai bagi setiap kunci. Ini adalah maklumat utama yang ingin disorot oleh senarai ringkasan.
-3. **Tindakan (pilihan) `<dd>`**: Lajur ketiga, jika ada, menyediakan pilihan interaksi seperti sunting atau hapus, membolehkan pengguna mengambil tindakan pada item tertentu dalam senarai.
+1. **Kunci `<th scope="row">`**: Pengepala baris, dalam lajur pertama, memaparkan item atau atribut yang diterangkan, berfungsi sebagai label atau pengenal untuk nilai dalam lajur berikutnya.
+2. **Nilai `<td>`**: Sel dalam lajur kedua mengandungi data atau butiran yang sesuai bagi setiap kunci. Ini adalah maklumat utama yang ingin disorot oleh senarai ringkasan.
+3. **Tindakan (pilihan) `<td>`**: Sel dalam lajur ketiga, jika ada, menyediakan pilihan interaksi seperti sunting atau hapus, membolehkan pengguna mengambil tindakan pada item tertentu dalam senarai.
 
 ## Contoh Penggunaan
 

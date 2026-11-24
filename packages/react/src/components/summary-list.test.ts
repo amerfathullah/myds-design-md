@@ -64,15 +64,25 @@ function serverRender(element: ReactElement) {
   return template.content;
 }
 
+// A SummaryList part other than the header
+type Part =
+  | typeof SummaryList
+  | typeof SummaryListBody
+  | typeof SummaryListRow
+  | typeof SummaryListTerm
+  | typeof SummaryListDetail
+  | typeof SummaryListAction
+  | typeof SummaryListAddition;
+
 // A summary list composed as the docs compose one, with every part, titled by
 // `header`, and with `ref` on the part `refOn`, if given
 const summaryList = (
   header: ReactElement = createElement(SummaryListHeader, null, "Title"),
-  { refOn, ref }: { refOn?: unknown; ref?: Ref<Element> } = {},
+  { refOn, ref }: { refOn?: Part; ref?: Ref<Element> } = {},
 ) => {
   // `part`'s props: the ref, if it's the part to get it. Each part's ref is
   // typed as its element's; the type-tests check those types.
-  const props = (part: unknown) =>
+  const props = (part: Part) =>
     part === refOn ? { ref: ref as Ref<never> } : null;
   return createElement(
     SummaryList,
@@ -306,7 +316,8 @@ describe.each([
 
 // Forwarding refs changes no markup. This is a full summary list's server
 // markup as main (5afee22) rendered it, before its parts forwarded their refs,
-// recorded on React 18.3.1 and 19.3.1 alike.
+// recorded on React 18.3.1 and 19.3.1 alike. The test builds that list itself,
+// not with `summaryList`, so a change to the helper can't change what it covers.
 const mainMarkup = [
   '<div class="space-y-6" id="list">',
   '<h2 class="text-txt-black-900 text-xl font-semibold leading-[30px]">Title</h2>',

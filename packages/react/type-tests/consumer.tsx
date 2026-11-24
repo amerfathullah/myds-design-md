@@ -1103,17 +1103,15 @@ export const SummaryListTitleAsDivComponent: FunctionComponent<
 
 // Every other SummaryList part forwards its ref to the element it renders
 // (#209): the list's `<div>`, the body's `<table>` (not its `<tbody>`), the
-// row's `<tr>`, the term's `<th>` and the other cells' `<td>`. The cells keep
-// their `<td>` props, whose ref fits the term's `<th>` too, as both are table
-// cells. Each part's old component type still holds it.
+// row's `<tr>`, the term's `<th>` and the other cells' `<td>`. Each cell's ref,
+// the term's included, is an `HTMLTableCellElement`, as the term keeps its
+// `<td>` props. Each part's old component type still holds it.
 export const SummaryListRefs = () => {
   const list = useRef<HTMLDivElement>(null);
   const body = createRef<HTMLTableElement>();
   const row = useRef<HTMLTableRowElement>(null);
   const term = useRef<HTMLTableCellElement>(null);
-  const header = createRef<HTMLTableHeaderCellElement>();
   const detail = useRef<HTMLTableCellElement>(null);
-  const data = createRef<HTMLTableDataCellElement>();
   const action = useRef<HTMLTableCellElement>(null);
   const addition = useRef<HTMLTableCellElement>(null);
   const div = createRef<HTMLDivElement>();
@@ -1129,8 +1127,8 @@ export const SummaryListRefs = () => {
         <SummaryListRow
           ref={(element: HTMLTableRowElement | null) => void element}
         >
-          <SummaryListTerm ref={header}>Status</SummaryListTerm>
-          <SummaryListDetail ref={data}>Lulus</SummaryListDetail>
+          <SummaryListTerm>Status</SummaryListTerm>
+          <SummaryListDetail>Lulus</SummaryListDetail>
           <SummaryListAction
             ref={(cell: HTMLTableCellElement | null) => void cell}
           />

@@ -660,7 +660,10 @@ const SearchBarContext = sharedContext<OlderContext>("SearchBarContext", {
 function OlderSearchBar({
   children,
   ...props
-}: { children?: ReactNode } & Record<`data-${string}`, string>) {
+}: { children?: ReactNode; loop?: boolean } & Record<
+  `data-${string}`,
+  string
+>) {
   const generatedResultsId = useId();
   const [givenResultsId, setGivenResultsId] = useState<string>();
   const context = useMemo(
@@ -803,22 +806,26 @@ async function type(input: HTMLInputElement, text: string) {
     HTMLInputElement.prototype,
     "value",
   )!.set!;
-  for (const character of text)
+  for (const character of text) {
     await act(async () => {
       setValue.call(input, input.value + character);
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
+    checkNames();
+  }
 }
 
 // Empties `input`, as a user selecting its text and deleting it does
-const clear = (input: HTMLInputElement) =>
-  act(async () => {
+async function clear(input: HTMLInputElement) {
+  await act(async () => {
     Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       "value",
     )!.set!.call(input, "");
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
+  checkNames();
+}
 
 type Modifiers = Pick<
   KeyboardEventInit,
@@ -839,6 +846,7 @@ async function press(key: string, modifiers: Modifiers = {}) {
       }),
     );
   });
+  checkNames();
   return uncancelled;
 }
 
@@ -850,10 +858,53 @@ const selected = (within: ParentNode) =>
 // The marker on SearchBarResultsList's hidden `--` option (#398)
 const NOTHING = "data-nothing-highlighted";
 
+/**
+ * Checks every SearchBar on the page, as the keyboard helpers do after each
+ * step (#398). Where this copy's input, or a listbox holding a marked hidden
+ * `--`, has an `aria-activedescendant`, it names an option that's in the
+ * page and in that bar, selected, not the hidden `--`, and in a displayed
+ * list: the input reports itself expanded, as cmdk's own `aria-expanded`
+ * does in an older copy's SearchBar. The input and that option's listbox
+ * name the same option, and no other listbox names one.
+ */
+function checkNames() {
+  for (const root of document.querySelectorAll("[cmdk-root]")) {
+    const own = (element: Element) => element.closest("[cmdk-root]") === root;
+    const input = [...root.querySelectorAll("input[cmdk-input]")].find(own);
+    const listboxes = [...root.querySelectorAll("[cmdk-list]")].filter(
+      (listbox) => own(listbox) && listbox.querySelector(`[${NOTHING}]`),
+    );
+    const id = input?.getAttribute("aria-activedescendant") ?? null;
+    if (id !== null) {
+      const option = document.getElementById(id);
+      expect(option, `#${id} is in the page`).not.toBeNull();
+      expect(own(option!), `#${id} is in its bar`).toBe(true);
+      expect(option!.getAttribute("role")).toBe("option");
+      expect(option!.getAttribute("aria-selected")).toBe("true");
+      expect(option!.hasAttribute(NOTHING), `#${id} isn't the hidden --`).toBe(
+        false,
+      );
+      expect(input!.getAttribute("aria-expanded"), "a list is displayed").toBe(
+        "true",
+      );
+    }
+    for (const listbox of listboxes)
+      expect(
+        listbox.getAttribute("aria-activedescendant"),
+        "the listbox names what the input names",
+      ).toBe(
+        id !== null && listbox.contains(document.getElementById(id))
+          ? id
+          : null,
+      );
+  }
+}
+
 // The option the input and the listbox of the bar named `name` each name in
 // `aria-activedescendant`, by its text, or null where there's none. A name
 // must be an option in the page that's selected and isn't the hidden `--`.
 function active(within: ParentNode, name: string) {
+  checkNames();
   const { input, listbox } = parts(within, name);
   const named = (element: HTMLElement | null) => {
     const id = element?.getAttribute("aria-activedescendant");
@@ -1859,6 +1910,62 @@ describe("a controlled SearchBarInput (#205)", () => {
 });
 
 describe("in an older copy's SearchBar (#205)", () => {
+  // Each row of the table #205's amendment gives for the older copy, without
+  // and with `loop`: the keys, and what's highlighted after them, today (by
+  // cmdk alone) and as the table asks. "--" is nothing.
+  const down: [string, Modifiers] = ["ArrowDown", {}];
+  const upKeys: [string, Modifiers][] = [
+    ["ArrowUp", {}],
+    ["p", { ctrlKey: true }],
+    ["k", { ctrlKey: true }],
+    ["ArrowUp", { altKey: true }],
+  ];
+  const downKeys: [string, Modifiers][] = [
+    down,
+    ["n", { ctrlKey: true }],
+    ["j", { ctrlKey: true }],
+    ["ArrowDown", { altKey: true }],
+  ];
+  type OlderRow = {
+    row: string;
+    loop: boolean;
+    keys: [string, Modifiers][];
+    today: string;
+    table: string;
+  };
+  const olderRows: OlderRow[] = [false, true].flatMap((loop) => [
+    { row: "at rest", loop, keys: [], today: "--", table: "--" },
+    { row: "ArrowDown", loop, keys: [down], today: "A", table: "A" },
+    {
+      row: "ArrowDown, then ArrowUp",
+      loop,
+      keys: [down, ["ArrowUp", {}]],
+      today: "--",
+      table: loop ? "C" : "A",
+    },
+    ...upKeys.map((key) => ({
+      row: `${withModifiers(key)} from rest`,
+      loop,
+      keys: [key],
+      today: loop ? "C" : "--",
+      table: loop ? "C" : "--",
+    })),
+    ...upKeys.slice(1).map((key) => ({
+      row: `${withModifiers(key)} from A`,
+      loop,
+      keys: [down, key],
+      today: "--",
+      table: loop ? "C" : "A",
+    })),
+    ...(loop ? downKeys : [down]).map((key) => ({
+      row: `ArrowDown ×3, then ${withModifiers(key)}`,
+      loop,
+      keys: [down, down, down, key],
+      today: loop ? "--" : "C",
+      table: loop ? "A" : "C",
+    })),
+  ]);
+
   // A list from this copy, whose hidden `--` is marked, and one built from
   // cmdk's parts, as an older copy's, whose hidden `--` isn't
   const lists: [string, () => ReactElement][] = [
@@ -1892,7 +1999,7 @@ describe("in an older copy's SearchBar (#205)", () => {
   ];
 
   test.each(lists)(
-    "with %s, nothing is highlighted at rest, and each row gives today's result or the table's",
+    "with %s, nothing is highlighted at rest or after a query change",
     async (_, list) => {
       const { container, input } = await focused(
         createElement(
@@ -1905,16 +2012,28 @@ describe("in an older copy's SearchBar (#205)", () => {
       expect(selected(container)).toBe("--");
       await press("ArrowDown");
       expect(selected(container)).toBe("A");
-      await press("ArrowUp");
-      expect(["A", "--"]).toContain(selected(container));
-      await press("ArrowDown");
-      await press("ArrowDown");
-      await press("ArrowDown");
-      expect(selected(container)).toBe("C");
       await type(input, "x");
       expect(selected(container)).toBe("--");
     },
   );
+
+  describe.each(lists)("with %s", (_, list) => {
+    test.each(olderRows)(
+      "$row, loop $loop, gives today's result or the table's",
+      async ({ loop, keys, today, table }) => {
+        const { container } = await focused(
+          createElement(
+            OlderSearchBar,
+            { "data-bar": "older", loop },
+            createElement(SearchBarInput, { "aria-label": "Search" }),
+            list(),
+          ),
+        );
+        for (const key of keys) await press(...key);
+        expect([today, table]).toContain(selected(container));
+      },
+    );
+  });
 });
 
 // A server-rendered SearchBar with <Suspense> boundaries inside it. React

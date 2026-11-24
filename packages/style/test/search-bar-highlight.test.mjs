@@ -15,7 +15,9 @@
 //
 // With a controlled input, keys pressed straight after typing, with no
 // pause, as Playwright sends them, act on the query typed. React 18.3 used
-// to undo them (#205). In search-bar-names.page.jsx's composition, typing
+// to undo them (#205). React 19 never did, so on the components' React 19
+// these checks pass with or without #205's fix; run them on React 18.3 by
+// hand until CI has a React 18 runtime (#402). In search-bar-names.page.jsx's composition, typing
 // "tu" then ArrowDown highlights the first result, and two ArrowDowns the
 // second. In the docs' controlled example, "siti" then ArrowDown highlights
 // the first, and "iza" then two ArrowDowns the second: "iz" and "iza" match

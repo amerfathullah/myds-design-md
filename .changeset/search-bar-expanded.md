@@ -16,7 +16,7 @@ SearchBarInput's `aria-expanded` and `aria-controls` now follow the results part
 - **Server rendering.** Server-rendered HTML has the input collapsed, with no generated `aria-controls`, until the page hydrates; an `aria-controls` or `aria-expanded` you pass still renders. Hydration matches it without a warning, and the input then takes the values above before the browser paints.
 - **Re-renders.** The input follows each panel or list mounting, unmounting, opening and closing before the browser paints, at the cost of at most one extra React commit. Typing that doesn't mount or unmount the list costs none.
 
-Nothing changes visually: the same elements and classes render. The props and ref types are the same, and typing, ArrowDown, ArrowUp and Enter calling a result's `onSelect` work as before while a list is displayed. The keys change while no list is displayed in the entry for #398.
+Nothing changes visually: the same elements and classes render. The props and ref types are the same, and typing, ArrowDown, ArrowUp and Enter calling a result's `onSelect` work as before while a list is displayed. The keys change while no list is displayed in the entry for #398, Home and End in the entry for #399, and the keys that reached the hidden `--` option in the entry for #205.
 
 **If you upgrade:**
 

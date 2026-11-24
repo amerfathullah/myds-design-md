@@ -12,7 +12,7 @@
 
 Lists built as the docs build them look as before, in both themes. Each term's text starts at its cell's left edge, on the row's baseline, and an action's buttons end 12px in from its cell's right edge. In a right-to-left page, terms still start at the right and actions sit at the left. The term is still a `<th scope="row">`, and the accessibility tree doesn't change. No props or types change.
 
-**One look changes in ordinary lists:** a term long enough to wrap, as in a narrow list, now starts each line at its cell's left edge. Its lines used to be centred, because a `<th>` centres its text by default.
+**One look changes in ordinary lists:** a term that wraps now starts each line at its cell's left edge. Its lines used to be centred, because a `<th>` centres its text by default. The detail takes the rest of the list's width, so the term column stays at its 190px minimum and any term wider than that wraps, at any width of list.
 
 **If you pass flex classes to `SummaryListAction`:** its `className` still goes on the `<td>`, but its children now sit in a wrapper inside it, so flex classes such as `gap-2` or `justify-start` no longer reach them. Put them on your own wrapper, e.g. `<SummaryListAction><div className="flex gap-2">…</div></SummaryListAction>`. To move the buttons off the right edge, give your wrapper `flex-1` too, e.g. `<div className="flex flex-1 justify-start">`.
 

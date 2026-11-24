@@ -88,8 +88,8 @@ async function withPage(use) {
 }
 
 // Runs in the page: the list `name`'s rows, each as its cells in order. A
-// cell is its tag, its border box, its text's lines and first baseline, and
-// its buttons, each as its border box and baseline. A line is its left and
+// cell is its tag, its text content, its border box, its text's lines and
+// first baseline, and its buttons, each as its border box and baseline. A line is its left and
 // right edges. A box is its left,
 // right, top and bottom edges. Every length is to the hundredth of a pixel,
 // so edges on the table's grid compare equal.
@@ -148,6 +148,7 @@ function readRows(name) {
     (row) =>
       [...row.children].map((cell) => ({
         tag: cell.tagName.toLowerCase(),
+        content: cell.textContent.trim(),
         ...box(cell.getBoundingClientRect()),
         text: readText(cell),
         buttons: [...cell.querySelectorAll("button")].map((button) => ({
@@ -240,10 +241,12 @@ test("in the docs example, each term's text starts at its cell's left edge, on i
       termBaseline: term.text.baseline,
       buttonRights: action.buttons.map(({ right }) => right),
     }));
-    const expected = docs.map(([term, detail, action], index) => ({
+    const expected = docs.map(([term, detail, action]) => ({
       termTextLeft: term.left,
       termBaseline:
-        index === 4 ? action.buttons[0].baseline : detail.text.baseline,
+        term.content === "Status"
+          ? action.buttons[0].baseline
+          : detail.text.baseline,
       buttonRights: action.buttons.map(() => action.right - 12),
     }));
     assert.deepEqual(actual, expected);
@@ -291,52 +294,55 @@ test("in a right-to-left list, the term's text starts at its cell's right edge, 
 // Each list's accessibility snapshot: its title, then its table. Each row's
 // term is a `rowheader`, and its detail, action and addition are `cell`s,
 // whatever they span.
-const emptyAction = "      - cell";
-const row = (name, term, ...cells) =>
+const emptyActionSnapshot = "      - cell";
+const rowSnapshot = (name, term, ...cells) =>
   [`    - row "${name}":`, `      - rowheader "${term}"`, ...cells].join("\n");
-const cell = (name) => `      - cell "${name}"`;
-const buttons = (...names) =>
+const cellSnapshot = (name) => `      - cell "${name}"`;
+const actionSnapshot = (...names) =>
   [
     `      - cell "${names.join(" ")}":`,
     ...names.map((name) => `        - button "${name}"`),
   ].join("\n");
-const snapshot = (title, ...rows) =>
-  [`- heading "${title}" [level=2]`, "- table:", "  - rowgroup:", ...rows].join(
-    "\n",
-  );
-const applicationId = row(
+const listSnapshot = (title, ...rowSnapshots) =>
+  [
+    `- heading "${title}" [level=2]`,
+    "- table:",
+    "  - rowgroup:",
+    ...rowSnapshots,
+  ].join("\n");
+const applicationIdSnapshot = rowSnapshot(
   "Application ID SUB12345",
   "Application ID",
-  cell("SUB12345"),
-  emptyAction,
+  cellSnapshot("SUB12345"),
+  emptyActionSnapshot,
 );
 
 const snapshots = {
-  docs: snapshot(
+  docs: listSnapshot(
     "Government Subsidy Application",
-    applicationId,
-    row(
+    applicationIdSnapshot,
+    rowSnapshot(
       "Applicant Name Lee Ming Wei",
       "Applicant Name",
-      cell("Lee Ming Wei"),
-      emptyAction,
+      cellSnapshot("Lee Ming Wei"),
+      emptyActionSnapshot,
     ),
-    row(
+    rowSnapshot(
       "Submission Date 15/10/2024 17:35:00",
       "Submission Date",
-      cell("15/10/2024 17:35:00"),
-      emptyAction,
+      cellSnapshot("15/10/2024 17:35:00"),
+      emptyActionSnapshot,
     ),
-    row(
+    rowSnapshot(
       "Subsidy Type Petrol Subsidy",
       "Subsidy Type",
-      cell("Petrol Subsidy"),
-      emptyAction,
+      cellSnapshot("Petrol Subsidy"),
+      emptyActionSnapshot,
     ),
-    row(
+    rowSnapshot(
       "Status Pending Refresh",
       "Status",
-      cell("Pending"),
+      cellSnapshot("Pending"),
       [
         '      - cell "Refresh":',
         '        - button "Refresh":',
@@ -344,75 +350,77 @@ const snapshots = {
         "          - text: Refresh",
       ].join("\n"),
     ),
-    row(
+    rowSnapshot(
       "Document Submitted Proof Of Income ID Copy Add More",
       "Document Submitted",
-      cell("Proof Of Income ID Copy"),
-      buttons("Add More"),
+      cellSnapshot("Proof Of Income ID Copy"),
+      actionSnapshot("Add More"),
     ),
-    row(
+    rowSnapshot(
       "Expected Response Date 23/03/2023 17:35:00",
       "Expected Response Date",
-      cell("23/03/2023 17:35:00"),
-      emptyAction,
+      cellSnapshot("23/03/2023 17:35:00"),
+      emptyActionSnapshot,
     ),
   ),
-  "two-buttons": snapshot(
+  "two-buttons": listSnapshot(
     "Two buttons",
-    applicationId,
-    row(
+    applicationIdSnapshot,
+    rowSnapshot(
       "Applicant Name Lee Ming Wei Edit Remove",
       "Applicant Name",
-      cell("Lee Ming Wei"),
-      buttons("Edit", "Remove"),
+      cellSnapshot("Lee Ming Wei"),
+      actionSnapshot("Edit", "Remove"),
     ),
   ),
-  "action-colspan": snapshot(
+  "action-colspan": listSnapshot(
     "An action across two columns",
-    row(
+    rowSnapshot(
       "Application ID SUB12345 Change Additional information",
       "Application ID",
-      cell("SUB12345"),
-      buttons("Change"),
-      cell("Additional information"),
+      cellSnapshot("SUB12345"),
+      actionSnapshot("Change"),
+      cellSnapshot("Additional information"),
     ),
-    row(
+    rowSnapshot(
       "Applicant Name Lee Ming Wei Edit Name",
       "Applicant Name",
-      cell("Lee Ming Wei"),
-      buttons("Edit Name"),
+      cellSnapshot("Lee Ming Wei"),
+      actionSnapshot("Edit Name"),
     ),
   ),
-  "term-rowspan": snapshot(
+  "term-rowspan": listSnapshot(
     "A term across two rows",
-    applicationId,
-    row(
+    applicationIdSnapshot,
+    rowSnapshot(
       "Document Submitted Proof Of Income Change",
       "Document Submitted",
-      cell("Proof Of Income"),
-      buttons("Change"),
+      cellSnapshot("Proof Of Income"),
+      actionSnapshot("Change"),
     ),
     // The row the term spans into has no rowheader of its own
-    ['    - row "ID Copy Change":', cell("ID Copy"), buttons("Change")].join(
-      "\n",
-    ),
+    [
+      '    - row "ID Copy Change":',
+      cellSnapshot("ID Copy"),
+      actionSnapshot("Change"),
+    ].join("\n"),
   ),
-  "term-colspan": snapshot(
+  "term-colspan": listSnapshot(
     "A term across two columns",
-    applicationId,
-    row(
+    applicationIdSnapshot,
+    rowSnapshot(
       "Supporting documents Add More",
       "Supporting documents",
-      buttons("Add More"),
+      actionSnapshot("Add More"),
     ),
   ),
-  "no-detail": snapshot(
+  "no-detail": listSnapshot(
     "A row without a detail",
-    applicationId,
-    row(
+    applicationIdSnapshot,
+    rowSnapshot(
       "Supporting documents Add More",
       "Supporting documents",
-      buttons("Add More"),
+      actionSnapshot("Add More"),
     ),
   ),
 };

@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
 //
 // SummaryListHeader is the list's title. It renders an `<h2>` by default, so a
-// summary list doesn't add a second `<h1>` to a page that has its own.
+// summary list doesn't add a second `<h1>` to a page that has its own. An
+// author's props on SummaryListTerm and SummaryListAction land on their table
+// cells.
 import {
   act,
   createElement,
@@ -253,13 +255,13 @@ describe("an author's props on SummaryListTerm and SummaryListAction", () => {
       scope: spanning!.scope,
       colSpan: spanning!.colSpan,
       rowSpan: spanning!.rowSpan,
-      classes: [...spanning!.classList].includes("w-60"),
+      hasAuthorClass: spanning!.classList.contains("w-60"),
       authorScope: scoped!.scope,
     }).toEqual({
       scope: "row",
       colSpan: 2,
       rowSpan: 2,
-      classes: true,
+      hasAuthorClass: true,
       authorScope: "col",
     });
   });

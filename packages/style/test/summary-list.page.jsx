@@ -50,12 +50,15 @@ const List = ({ name, title, narrow = false, dir, children }) => (
   </div>
 );
 
-// A row with a term, a detail and an empty action
-const Row = ({ term, detail }) => (
+// A row with a term, a detail and an action: a button labelled `action`, or
+// empty without one
+const Row = ({ term, detail, action }) => (
   <SummaryListRow>
     <SummaryListTerm>{term}</SummaryListTerm>
     <SummaryListDetail>{detail}</SummaryListDetail>
-    <SummaryListAction></SummaryListAction>
+    <SummaryListAction>
+      {action && <ActionButton>{action}</ActionButton>}
+    </SummaryListAction>
   </SummaryListRow>
 );
 
@@ -100,26 +103,16 @@ function Page() {
       </List>
 
       <List name="wrapping-term" title="A term that wraps" narrow>
-        <SummaryListRow>
-          <SummaryListTerm>
-            Tarikh Jangkaan Maklum Balas Permohonan
-          </SummaryListTerm>
-          <SummaryListDetail>23/03/2023</SummaryListDetail>
-          <SummaryListAction>
-            <ActionButton>Ubah</ActionButton>
-          </SummaryListAction>
-        </SummaryListRow>
+        <Row
+          term="Tarikh Jangkaan Maklum Balas Permohonan"
+          detail="23/03/2023"
+          action="Ubah"
+        />
         <Row term="Status" detail="Lulus" />
       </List>
 
       <List name="rtl" title="Right to left" dir="rtl">
-        <SummaryListRow>
-          <SummaryListTerm>Application ID</SummaryListTerm>
-          <SummaryListDetail>SUB12345</SummaryListDetail>
-          <SummaryListAction>
-            <ActionButton>Change</ActionButton>
-          </SummaryListAction>
-        </SummaryListRow>
+        <Row term="Application ID" detail="SUB12345" action="Change" />
       </List>
 
       <List name="two-buttons" title="Two buttons">

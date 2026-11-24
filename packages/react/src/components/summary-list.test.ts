@@ -3,17 +3,22 @@
 // SummaryListHeader is the list's title. It renders an `<h2>` by default, so a
 // summary list doesn't add a second `<h1>` to a page that has its own. An
 // author's props on SummaryListTerm and SummaryListAction land on their table
-// cells. A ref on any part is the element it renders.
+// cells. A ref on any part is the element it renders. The header's `id` and
+// the body's `aria-labelledby` name the list's table, as the docs show.
 import {
   act,
   createElement,
   createRef,
+  Fragment,
+  useId,
+  type ComponentProps,
   type MouseEvent,
   type ReactElement,
   type Ref,
 } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
+import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
@@ -601,5 +606,168 @@ describe("an author's props on SummaryListTerm and SummaryListAction", () => {
       ),
     ).toEqual([]);
     vi.mocked(console.error).mockClear();
+  });
+});
+
+// SummaryListBody's `<table>` has no name of its own, and the header before it
+// doesn't name it (#211). The docs show authors how to: point the body's
+// `aria-labelledby` at the header's `id`, or pass an `aria-label` where no
+// visible title names the table. SummaryList needs no code of its own for
+// this, since the header passes `id` to its heading and the body passes
+// `aria-*` to its `<table>`. These keep that pattern working.
+describe("naming a summary list's table", () => {
+  // The attributes that can name the table
+  type Naming = Pick<ComponentProps<"table">, "aria-label" | "aria-labelledby">;
+
+  // A summary list titled by `header`, if given, whose body gets `naming`
+  const list = (header: ReactElement | null, naming: Naming = {}) =>
+    createElement(
+      SummaryList,
+      null,
+      header,
+      createElement(
+        SummaryListBody,
+        naming,
+        createElement(
+          SummaryListRow,
+          null,
+          createElement(SummaryListTerm, null, "Application ID"),
+          createElement(SummaryListDetail, null, "SUB12345"),
+        ),
+      ),
+    );
+
+  // A header with `id`, titled "Government Subsidy Application"
+  const header = (id?: string) =>
+    createElement(SummaryListHeader, { id }, "Government Subsidy Application");
+
+  // The accessible name of each table in `within`, in document order
+  const tableNames = (within: ParentNode) =>
+    [...within.querySelectorAll("table")].map((table) =>
+      computeAccessibleName(table),
+    );
+
+  test("the header's `id`, with the body's `aria-labelledby`, names the table by the header's text", async () => {
+    const container = await mount(
+      list(header("subsidy-application"), {
+        "aria-labelledby": "subsidy-application",
+      }),
+    );
+    expect(tableNames(container)).toEqual(["Government Subsidy Application"]);
+  });
+
+  test("the name is in the server markup, so it doesn't wait for hydration", async () => {
+    // The server's HTML, on the page as the browser shows it before React
+    // hydrates it
+    const container = document.body.appendChild(document.createElement("div"));
+    unmounts.push(async () => container.remove());
+    container.innerHTML = renderToStaticMarkup(
+      list(header("subsidy-application"), {
+        "aria-labelledby": "subsidy-application",
+      }),
+    );
+    expect(tableNames(container)).toEqual(["Government Subsidy Application"]);
+  });
+
+  test.each([
+    [
+      "an `<h3>` child's `id`",
+      createElement(
+        SummaryListHeader,
+        { asChild: true },
+        createElement("h3", { id: "tax-summary" }, "Tax summary"),
+      ),
+    ],
+    [
+      "an `id` on the header, around an `<h3>` child",
+      createElement(
+        SummaryListHeader,
+        { asChild: true, id: "tax-summary" },
+        createElement("h3", null, "Tax summary"),
+      ),
+    ],
+  ])(
+    "with `asChild`, %s names the table by the heading's text",
+    async (_, asChildHeader) => {
+      const container = await mount(
+        list(asChildHeader, { "aria-labelledby": "tax-summary" }),
+      );
+      expect(container.querySelector("h3")!.id).toBe("tax-summary");
+      expect(tableNames(container)).toEqual(["Tax summary"]);
+    },
+  );
+
+  test("an `aria-label` on the body names the table", async () => {
+    const container = await mount(
+      list(null, { "aria-label": "Ringkasan permohonan" }),
+    );
+    expect(tableNames(container)).toEqual(["Ringkasan permohonan"]);
+  });
+
+  test("`aria-labelledby` and `aria-label` go on the `<table>`, not its `<tbody>`", async () => {
+    const container = await mount(
+      list(header("subsidy-application"), {
+        "aria-labelledby": "subsidy-application",
+        "aria-label": "Ringkasan permohonan",
+      }),
+    );
+    const table = container.querySelector("table")!;
+    const tbody = table.querySelector("tbody")!;
+    expect({
+      table: [
+        table.getAttribute("aria-labelledby"),
+        table.getAttribute("aria-label"),
+      ],
+      tbody: [
+        tbody.getAttribute("aria-labelledby"),
+        tbody.getAttribute("aria-label"),
+      ],
+    }).toEqual({
+      table: ["subsidy-application", "Ringkasan permohonan"],
+      tbody: [null, null],
+    });
+  });
+
+  test("with both, `aria-labelledby` wins over `aria-label`", async () => {
+    const container = await mount(
+      list(header("subsidy-application"), {
+        "aria-labelledby": "subsidy-application",
+        "aria-label": "Ringkasan permohonan",
+      }),
+    );
+    expect(tableNames(container)).toEqual(["Government Subsidy Application"]);
+  });
+
+  test("with neither, the table has no name, though a header comes before it", async () => {
+    const container = await mount(list(header()));
+    const table = container.querySelector("table")!;
+    expect(computeAccessibleName(table)).toBe("");
+    expect(table.hasAttribute("aria-labelledby")).toBe(false);
+    expect(table.hasAttribute("aria-label")).toBe(false);
+  });
+
+  test("two lists on one page, each with its own id from `useId()`, are each named by their own header", async () => {
+    // A summary list named by its header, as a component that renders one
+    // more than once makes it
+    const Titled = ({ title }: { title: string }) => {
+      const id = useId();
+      return list(createElement(SummaryListHeader, { id }, title), {
+        "aria-labelledby": id,
+      });
+    };
+    const container = await mount(
+      createElement(
+        Fragment,
+        null,
+        createElement(Titled, { title: "Applicant Details" }),
+        createElement(Titled, { title: "Subsidy Details" }),
+      ),
+    );
+    const ids = [...container.querySelectorAll("h2")].map(({ id }) => id);
+    expect(new Set(ids).size).toBe(2);
+    expect(tableNames(container)).toEqual([
+      "Applicant Details",
+      "Subsidy Details",
+    ]);
   });
 });

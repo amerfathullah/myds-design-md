@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createStory } from "../utils";
 import {
@@ -34,14 +35,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const SummaryListCustom: Story = {
-  ...createStory({}),
-  render: () => (
+// Each story names its table from its header: the header's id goes to the
+// body's `aria-labelledby`. useId gives each story's header its own id. An id
+// built from the story's would repeat on the docs page, which shows the first
+// story twice
+const Custom = () => {
+  const titleId = useId();
+  return (
     <div className="w-[660px]">
       <SummaryList>
-        <SummaryListHeader>Government Subsidy Application</SummaryListHeader>
+        <SummaryListHeader id={titleId}>
+          Government Subsidy Application
+        </SummaryListHeader>
 
-        <SummaryListBody>
+        <SummaryListBody aria-labelledby={titleId}>
           <SummaryListRow>
             <SummaryListTerm>Application ID</SummaryListTerm>
             <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -114,17 +121,24 @@ export const SummaryListCustom: Story = {
         </SummaryListBody>
       </SummaryList>
     </div>
-  ),
+  );
 };
 
-export const SummaryListCustomDark: Story = {
-  ...createStory({}, "dark"),
-  render: () => (
+export const SummaryListCustom: Story = {
+  ...createStory({}),
+  render: Custom,
+};
+
+const CustomDark = () => {
+  const titleId = useId();
+  return (
     <div className="dark w-[660px]">
       <SummaryList>
-        <SummaryListHeader>Government Subsidy Application</SummaryListHeader>
+        <SummaryListHeader id={titleId}>
+          Government Subsidy Application
+        </SummaryListHeader>
 
-        <SummaryListBody>
+        <SummaryListBody aria-labelledby={titleId}>
           <SummaryListRow>
             <SummaryListTerm>Application ID</SummaryListTerm>
             <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -189,27 +203,27 @@ export const SummaryListCustomDark: Story = {
         </SummaryListBody>
       </SummaryList>
     </div>
-  ),
+  );
 };
 
-/**
- * `SummaryListHeader` is an `<h2>` by default. With `asChild` it renders your
- * own heading in its place, of the level your page needs: here an `<h3>`, for
- * a summary list in an `<h2>` section.
- */
-export const SummaryListHeaderAsChild: Story = {
-  ...createStory({}),
-  render: () => (
+export const SummaryListCustomDark: Story = {
+  ...createStory({}, "dark"),
+  render: CustomDark,
+};
+
+const HeaderAsChild = () => {
+  const titleId = useId();
+  return (
     <section className="w-[660px] space-y-6">
       <h2 className="text-txt-black-900 font-heading text-heading-sm font-semibold">
         Government Subsidy Application
       </h2>
       <SummaryList>
         <SummaryListHeader asChild>
-          <h3>Applicant Details</h3>
+          <h3 id={titleId}>Applicant Details</h3>
         </SummaryListHeader>
 
-        <SummaryListBody>
+        <SummaryListBody aria-labelledby={titleId}>
           <SummaryListRow>
             <SummaryListTerm>Applicant Name</SummaryListTerm>
             <SummaryListDetail>Lee Ming Wei</SummaryListDetail>
@@ -228,17 +242,29 @@ export const SummaryListHeaderAsChild: Story = {
         </SummaryListBody>
       </SummaryList>
     </section>
-  ),
+  );
 };
 
-export const SummaryListCustomWithAdditionalTab: Story = {
+/**
+ * `SummaryListHeader` is an `<h2>` by default. With `asChild` it renders your
+ * own heading in its place, of the level your page needs: here an `<h3>`, for
+ * a summary list in an `<h2>` section.
+ */
+export const SummaryListHeaderAsChild: Story = {
   ...createStory({}),
-  render: () => (
+  render: HeaderAsChild,
+};
+
+const CustomWithAdditionalTab = () => {
+  const titleId = useId();
+  return (
     <div className="w-[660px]">
       <SummaryList>
-        <SummaryListHeader>Government Subsidy Application</SummaryListHeader>
+        <SummaryListHeader id={titleId}>
+          Government Subsidy Application
+        </SummaryListHeader>
 
-        <SummaryListBody>
+        <SummaryListBody aria-labelledby={titleId}>
           <SummaryListRow>
             <SummaryListTerm>Application ID</SummaryListTerm>
             <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -314,5 +340,10 @@ export const SummaryListCustomWithAdditionalTab: Story = {
         </SummaryListBody>
       </SummaryList>
     </div>
-  ),
+  );
+};
+
+export const SummaryListCustomWithAdditionalTab: Story = {
+  ...createStory({}),
+  render: CustomWithAdditionalTab,
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import React, {
+  useId,
   useState,
   ComponentProps,
   FunctionComponent,
@@ -752,14 +753,17 @@ export const DataTableRadio = {
 type PreviewSummaryList = ComponentProps<typeof SummaryList>;
 
 export const PreviewSummaryList: FunctionComponent<PreviewSummaryList> = () => {
+  // The header names the table through `aria-labelledby`. `useId()` gives it
+  // an id of its own, so the page repeats no id wherever this renders.
+  const titleId = useId();
   return (
     <SummaryList>
       {/* `not-prose` keeps the docs' prose `h2` margins off the title */}
-      <SummaryListHeader className="not-prose">
+      <SummaryListHeader id={titleId} className="not-prose">
         Government Subsidy Application
       </SummaryListHeader>
 
-      <SummaryListBody>
+      <SummaryListBody aria-labelledby={titleId}>
         <SummaryListRow>
           <SummaryListTerm>Application ID</SummaryListTerm>
           <SummaryListDetail>SUB12345</SummaryListDetail>

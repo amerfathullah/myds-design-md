@@ -48,9 +48,11 @@ import { Button } from "@amerfathullah/myds-react/button";
 import { SwapIcon } from "@amerfathullah/myds-react/icon";
 
 <SummaryList>
-  <SummaryListHeader>Government Subsidy Application</SummaryListHeader>
+  <SummaryListHeader id="subsidy-application">
+    Government Subsidy Application
+  </SummaryListHeader>
 
-  <SummaryListBody>
+  <SummaryListBody aria-labelledby="subsidy-application">
     <SummaryListRow>
       <SummaryListTerm>Application ID</SummaryListTerm>
       <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -198,9 +200,11 @@ Untuk memberi tajuk itu aras tajuk yang diperlukan oleh halaman anda, hantar `as
       <h2>Government Subsidy Application</h2>
       <SummaryList>
         <SummaryListHeader asChild>
-          <h3>Applicant Details</h3>
+          <h3 id="applicant-details">Applicant Details</h3>
         </SummaryListHeader>
-        <SummaryListBody>{/* … */}</SummaryListBody>
+        <SummaryListBody aria-labelledby="applicant-details">
+          {/* … */}
+        </SummaryListBody>
       </SummaryList>
     </section>
     ```
@@ -213,11 +217,22 @@ Untuk menggayakan semula tajuk, hantar `className` kepada `SummaryListHeader`, b
 
 `SummaryListBody` adalah pembungkus untuk data berbentuk jadual dalam `SummaryList`. Ia berfungsi sebagai pembungkus utama untuk satu atau beberapa `SummaryListRow`.
 
+`<table>`nya tidak mempunyai nama sendiri, dan `SummaryListHeader` di atasnya tidak menamakannya. Berikan setiap jadual nama, supaya pengguna pembaca skrin dapat membezakan jadual pada sesebuah halaman apabila mereka beralih antara jadual atau menyenaraikannya.
+
+- **Dengan tajuk yang dipaparkan:** berikan `id` kepada `SummaryListHeader`, dan hantar id yang sama kepada `aria-labelledby` pada `SummaryListBody`, seperti contoh di bahagian atas halaman ini. Pembaca skrin menyebut jadual itu dengan teks header. Dengan `asChild`, letakkan `id` pada tajuk anda sendiri, contohnya `<SummaryListHeader asChild><h3 id="applicant-details">…</h3></SummaryListHeader>`, seperti contoh `asChild` di atas.
+- **Tanpa tajuk yang dipaparkan:** hantar `aria-label`, contohnya `aria-label="Ringkasan permohonan"`, seperti contoh di bawah. Ia tidak dipaparkan, jadi gunakannya hanya apabila tiada tajuk yang dipaparkan menamakan jadual itu, dan tetapkannya dalam bahasa laman anda.
+
+Hantar salah satu sahaja: jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan. Kedua-duanya sampai kepada `<table>`, bukan `<tbody>` di dalamnya.
+
+Id mesti unik pada halaman. Komponen yang memaparkan senarai ringkasan lebih daripada sekali menjana setiap id dengan `useId()`.
+
+Jangan letakkan `<caption>` dalam `SummaryListBody`. Anak-anaknya diletakkan dalam `<tbody>`, dan kapsyen di situ tidak menamakan jadual. React juga memberi amaran bahawa `<caption>` tidak boleh menjadi anak `<tbody>`.
+
 **Contoh**:
 
 <Tabs items={["Preview", "Code"]} className="not-prose">
   <Tab value="Preview">
-    <SummaryListBody>
+    <SummaryListBody aria-label="Ringkasan permohonan">
         <SummaryListRow>
             <SummaryListTerm>Application ID</SummaryListTerm>
             <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -232,7 +247,7 @@ Untuk menggayakan semula tajuk, hantar `className` kepada `SummaryListHeader`, b
   <Tab value="Code">
     
 ```tsx
-<SummaryListBody>
+<SummaryListBody aria-label="Ringkasan permohonan">
     <SummaryListRow>
         <SummaryListTerm>Application ID</SummaryListTerm>
         <SummaryListDetail>SUB12345</SummaryListDetail>
@@ -409,6 +424,16 @@ Setiap bahagian meneruskan `ref`nya kepada elemen yang dipaparkannya. Ref `Summa
 
 <TypeTable
   type={{
+    "aria-labelledby": {
+      description:
+        "Id elemen yang dipaparkan, biasanya `SummaryListHeader` di atas jadual, yang teksnya menamakan jadual. Id itu mesti unik pada halaman. Ia diutamakan berbanding `aria-label`. Tiada nama lalai.",
+      type: "string",
+    },
+    "aria-label": {
+      description:
+        "Nama boleh capai jadual. Pembaca skrin menyebutnya; ia tidak dipaparkan. Gunakannya hanya apabila tiada tajuk yang dipaparkan menamakan jadual itu. `aria-labelledby` diutamakan berbanding prop ini. Tiada nama lalai.",
+      type: "string",
+    },
     className: {
       description: "Gaya tambahan untuk kontena badan.",
       type: "string",

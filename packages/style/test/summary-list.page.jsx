@@ -4,6 +4,8 @@
 // - `docs`: the develop docs' example, row for row.
 // - `wrapping-term`: a list 340px wide, whose first term wraps onto two
 //   lines.
+// - `rich-terms`: terms holding more than text: an icon before the text, two
+//   blocks, and two spans.
 // - `rtl`: a right-to-left list.
 // - `two-buttons`: a row whose action holds two buttons.
 // - `action-colspan`: rows with a SummaryListAddition, and one whose action
@@ -109,6 +111,36 @@ function Page() {
           action="Ubah"
         />
         <Row term="Status" detail="Lulus" />
+      </List>
+
+      <List name="rich-terms" title="Terms with more than text">
+        <Row
+          term={
+            <>
+              <SwapIcon className="size-4" />
+              Status
+            </>
+          }
+          detail="Lulus"
+        />
+        <Row
+          term={
+            <>
+              <div>Alamat</div>
+              <div className="text-xs">Address</div>
+            </>
+          }
+          detail="Putrajaya"
+        />
+        <Row
+          term={
+            <>
+              <span>Nama</span>
+              <span>Name</span>
+            </>
+          }
+          detail="Lee Ming Wei"
+        />
       </List>
 
       <List name="rtl" title="Right to left" dir="rtl">

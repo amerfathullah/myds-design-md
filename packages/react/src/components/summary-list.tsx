@@ -74,12 +74,16 @@ const SummaryListRow: FunctionComponent<ComponentProps<"tr">> = ({
 // The term and the action stay table cells, with no `display` of their own,
 // so `colSpan` and `rowSpan` work on them and a row without a detail puts
 // its action in the next column. A flex cell isn't a table cell: the browser
-// wraps it in an anonymous cell, which ignores its spans.
+// wraps it in an anonymous cell, which ignores its spans. Each lays its
+// children out in a flex row inside it instead, as the cell itself once did.
 
 /**
- * The row's header, a `<th scope="row">`. Its text starts at its start edge
- * (`text-start`: the left in a left-to-right page), on the row's baseline,
- * and each line it wraps onto starts there too.
+ * The row's header, a `<th scope="row">` on the row's baseline. Its children
+ * sit in a row inside it, from its start edge. `className` and the other
+ * props go on the `<th>`, so flex classes such as `gap-2` don't reach the
+ * children: put those on your own wrapper. To widen its column, set its
+ * `min-width`, not its `width`: the detail takes all the width the columns'
+ * minimums leave.
  */
 const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
   children,
@@ -90,12 +94,12 @@ const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
     // scope equals row here to indicate the header relates to all the row it belongs to
     scope="row"
     className={clx(
-      "text-txt-black-500 min-w-[190px] py-3 pr-3 text-start align-baseline",
+      "text-txt-black-500 min-w-[190px] py-3 pr-3 align-baseline",
       className,
     )}
     {...props}
   >
-    {children}
+    <div className="flex items-start">{children}</div>
   </th>
 );
 
@@ -114,9 +118,9 @@ const SummaryListDetail: FunctionComponent<ComponentProps<"td">> = ({
 
 /**
  * The row's actions, in a `<td>` on the row's baseline. Its children sit in
- * a row inside it, at its right edge. `className` and the other props go on
- * the `<td>`, so flex classes such as `gap-2` don't reach the children: put
- * those on your own wrapper.
+ * a row inside it, against its end edge. `className` and the other props go
+ * on the `<td>`, so flex classes such as `gap-2` don't reach the children:
+ * put those on your own wrapper.
  */
 const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   children,

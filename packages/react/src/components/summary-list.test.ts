@@ -225,9 +225,9 @@ describe("SummaryListHeader with `asChild`", () => {
 });
 
 // SummaryListTerm and SummaryListAction are table cells with no `display` of
-// their own (#208), so `colSpan` and `rowSpan` work on them. The Chromium test
-// in the style package checks the layout; these check where an author's props
-// land.
+// their own (#208), so `colSpan` and `rowSpan` work on them. Each lays its
+// children out in a wrapper inside it. The Chromium test in the style package
+// checks the layout; these check where an author's props land.
 describe("an author's props on SummaryListTerm and SummaryListAction", () => {
   // A summary list's body holding `rows`, each given as its cells
   const body = (...rows: ReactElement[][]) =>
@@ -263,6 +263,33 @@ describe("an author's props on SummaryListTerm and SummaryListAction", () => {
       rowSpan: 2,
       hasAuthorClass: true,
       authorScope: "col",
+    });
+  });
+
+  test("the term's children sit in a wrapper inside its `<th>`, which its `className` doesn't reach", async () => {
+    const container = await mount(
+      body([
+        createElement(
+          SummaryListTerm,
+          { className: "gap-2" },
+          createElement("span", null, "Alamat"),
+          createElement("span", null, "Address"),
+        ),
+      ]),
+    );
+    const cell = container.querySelector("th")!;
+    const [malay, english] = cell.querySelectorAll("span");
+    const wrapper = malay!.parentElement!;
+    expect({
+      cellHasGap: cell.classList.contains("gap-2"),
+      sameWrapper: english!.parentElement === wrapper,
+      wrapperInCell: wrapper.parentElement === cell,
+      wrapperHasGap: wrapper.classList.contains("gap-2"),
+    }).toEqual({
+      cellHasGap: true,
+      sameWrapper: true,
+      wrapperInCell: true,
+      wrapperHasGap: false,
     });
   });
 

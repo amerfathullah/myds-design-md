@@ -4,16 +4,17 @@
 // SummaryListAddition, and a row without a detail puts its action in the
 // detail's column, beside its term. A cell with `display: flex` isn't a table
 // cell: Chromium wraps it in an anonymous cell, which ignores the part's
-// spans. Lists built as the docs build them look as they did: each term's
-// text starts at its cell's left edge, on the same baseline as its row's
-// first line, and an action's buttons sit side by side, the last ending 12px
-// (`pr-3`) from its cell's right edge. A term that wraps starts each line at
-// its cell's left edge: its lines used to be centred, as a `<th>` centres
-// its text by default. In a right-to-left list the term's text still starts
-// at its cell's right edge, inside its padding, and the action's buttons at
-// its left edge. Each list's accessibility tree is a table whose rows hold a
-// `rowheader` for the term and a `cell` for each other part. happy-dom has
-// no layout, so the unit tests can't check this.
+// spans. Each lays its children out in a flex row inside it, so lists look as
+// they did when the part itself was the flex box. Each term's text starts at
+// its cell's left edge, on the same baseline as its row's first line, and an
+// action's buttons sit side by side, the last ending 12px (`pr-3`) from its
+// cell's right edge. A term's children sit side by side too, and a term that
+// wraps centres its lines, as a `<th>` centres its text by default. In a
+// right-to-left list the term's text still starts at its cell's right edge,
+// inside its padding, and the action's buttons at its left edge. Each list's
+// accessibility tree is a table whose rows hold a `rowheader` for the term and
+// a `cell` for each other part. happy-dom has no layout, so the unit tests
+// can't check this.
 //
 // The page is summary-list.page.jsx: the React components themselves,
 // bundled with esbuild, on the stylesheet the Tailwind import compiles for
@@ -89,8 +90,8 @@ async function withPage(use) {
 
 // Runs in the page: the list `name`'s rows, each as its cells in order. A
 // cell is its tag, its text content, its border box, its text's lines and
-// first baseline, and its buttons, each as its border box and baseline. A line is its left and
-// right edges. A box is its left,
+// first baseline, its buttons, each as its border box and baseline, and its
+// content's boxes. A line is its left and right edges. A box is its left,
 // right, top and bottom edges. Every length is to the hundredth of a pixel,
 // so edges on the table's grid compare equal.
 function readRows(name) {
@@ -144,6 +145,32 @@ function readRows(name) {
       ? round(first.getBoundingClientRect().bottom)
       : readText(button).baseline;
   };
+  // The boxes of `cell`'s content, in order: each icon, and each text that
+  // isn't white space, however deep
+  const items = (cell) => {
+    const walker = document.createTreeWalker(
+      cell,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) =>
+          node instanceof SVGSVGElement ||
+          (node.nodeType === Node.TEXT_NODE && node.data.trim())
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_SKIP,
+      },
+    );
+    const boxes = [];
+    for (let node; (node = walker.nextNode());) {
+      if (node instanceof SVGSVGElement) {
+        boxes.push(box(node.getBoundingClientRect()));
+        continue;
+      }
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      boxes.push(box(range.getBoundingClientRect()));
+    }
+    return boxes;
+  };
   return [...document.querySelectorAll(`[data-test="${name}"] tbody > tr`)].map(
     (row) =>
       [...row.children].map((cell) => ({
@@ -155,6 +182,7 @@ function readRows(name) {
           ...box(button.getBoundingClientRect()),
           baseline: buttonBaseline(button),
         })),
+        items: items(cell),
       })),
   );
 }
@@ -270,12 +298,33 @@ test("two buttons in an action sit side by side on one line, the second ending 1
     );
   }));
 
-test("a term that wraps starts each line at its cell's left edge", () =>
+test("a term's children sit side by side on one line: an icon and its text, two blocks, and two spans", () =>
+  withPage(async (page) => {
+    const terms = (await rows(page, "rich-terms")).map(([term]) => term);
+    // Each item after the first starts where the one before it ends, above
+    // that one's bottom
+    const actual = terms.map(({ items }) =>
+      items.slice(1).map(({ left, top }, index) => ({
+        left,
+        onSameLine: top < items[index].bottom,
+      })),
+    );
+    const expected = terms.map(({ items }) =>
+      items.slice(1).map((_, index) => ({
+        left: items[index].right,
+        onSameLine: true,
+      })),
+    );
+    assert.deepEqual(actual, expected);
+  }));
+
+test("a term that wraps centres each line in its cell, inside its 12px right padding, as a `<th>` centres its text by default", () =>
   withPage(async (page) => {
     const [[term]] = await rows(page, "wrapping-term");
+    const centre = (left, right) => Math.round((left + right) / 2);
     assert.deepEqual(
-      term.text.lines.map(({ left }) => left),
-      [term.left, term.left],
+      term.text.lines.map(({ left, right }) => centre(left, right)),
+      [term, term].map(({ left, right }) => centre(left, right - 12)),
     );
   }));
 
@@ -387,6 +436,32 @@ const snapshots = {
       "Applicant Name",
       cellSnapshot("Lee Ming Wei"),
       actionSnapshot("Edit Name"),
+    ),
+  ),
+  // Each term's children are separate words in its name, as they were when
+  // the term itself was a flex box
+  "rich-terms": listSnapshot(
+    "Terms with more than text",
+    // The icon is an image in the rowheader, beside its text
+    [
+      '    - row "Status Lulus":',
+      '      - rowheader "Status":',
+      "        - img",
+      "        - text: Status",
+      cellSnapshot("Lulus"),
+      emptyActionSnapshot,
+    ].join("\n"),
+    rowSnapshot(
+      "Alamat Address Putrajaya",
+      "Alamat Address",
+      cellSnapshot("Putrajaya"),
+      emptyActionSnapshot,
+    ),
+    rowSnapshot(
+      "Nama Name Lee Ming Wei",
+      "Nama Name",
+      cellSnapshot("Lee Ming Wei"),
+      emptyActionSnapshot,
     ),
   ),
   "term-rowspan": listSnapshot(

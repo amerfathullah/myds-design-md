@@ -18,7 +18,7 @@ import {
 } from "react";
 import { createRoot, hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { Command } from "cmdk";
+import { Command, useCommandState } from "cmdk";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -902,7 +902,7 @@ describe("the keyboard, in the docs' controlled composition", () => {
       controls: "listbox",
     });
     expect(noneOrInside(input)).toBe(true);
-    for (const key of ["ArrowDown", "ArrowDown", "ArrowUp"]) {
+    for (const key of ["ArrowDown", "ArrowDown", "ArrowUp", "ArrowUp"]) {
       await press(key);
       expect(activeOption(input), key).not.toBeNull();
       expect(active(container, "docs"), key).toEqual({
@@ -910,11 +910,7 @@ describe("the keyboard, in the docs' controlled composition", () => {
         listbox: selected(container),
       });
     }
-    // ArrowUp from the first result selects the hidden `--` until #205, so
-    // neither the input nor the listbox names an option
-    await press("ArrowUp");
-    expect(selected(container)).toBe("--");
-    expect(active(container, "docs")).toEqual({ input: null, listbox: null });
+    expect(activeOption(input)!.textContent).toBe(selected(container));
   });
 
   test("a query with no matches leaves the input collapsed, with no aria-activedescendant", async () => {
@@ -1561,6 +1557,362 @@ describe("Home, End and the Meta arrows (#399)", () => {
           ? ["A", "B", "A", "B", "A", "B", "C", "B", "A"]
           : ["A", "B", "A", "B", "A", "A", "A", "A", "A"],
       );
+    },
+  );
+});
+
+// `keysBar`, with an input that's controlled when `controlled` says so. Its
+// list always holds A, B and C, whatever the query.
+function KeysSearch({
+  controlled,
+  onValueChange = () => {},
+  ...props
+}: KeysBar & {
+  controlled: boolean;
+  onValueChange?: (value: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const change = (value: string) => {
+    onValueChange(value);
+    setQuery(value);
+  };
+  return keysBar({
+    ...props,
+    input: controlled
+      ? { value: query, onValueChange: change }
+      : { onValueChange: change },
+  });
+}
+
+// Moves the highlight in `within` to `target` with ArrowDown and ArrowUp
+async function goTo(within: ParentNode, target: string) {
+  for (let i = 0; i < 2 * abc.length && selected(within) !== target; i++)
+    await press(
+      abc.indexOf(selected(within) ?? "") < abc.indexOf(target)
+        ? "ArrowDown"
+        : "ArrowUp",
+    );
+  expect(selected(within)).toBe(target);
+}
+
+describe("the keys never highlight the hidden `--` option (#205)", () => {
+  const down: [string, Modifiers] = ["ArrowDown", {}];
+  const up: [string, Modifiers] = ["ArrowUp", {}];
+  const upKeys: [string, Modifiers][] = [
+    up,
+    ["p", { ctrlKey: true }],
+    ["k", { ctrlKey: true }],
+    ["ArrowUp", { altKey: true }],
+  ];
+  const downKeys: [string, Modifiers][] = [
+    down,
+    ["n", { ctrlKey: true }],
+    ["j", { ctrlKey: true }],
+    ["ArrowDown", { altKey: true }],
+  ];
+
+  // Each row of #205's table: whether to type a character first, the keys,
+  // and what's highlighted after them without `loop` and with it. null is
+  // nothing.
+  type Row = {
+    row: string;
+    typeFirst?: boolean;
+    keys: [string, Modifiers][];
+    plain: string | null;
+    looped: string | null;
+  };
+  const rows: Row[] = [
+    { row: "at rest", keys: [], plain: null, looped: null },
+    {
+      row: "after a query change",
+      typeFirst: true,
+      keys: [],
+      plain: null,
+      looped: null,
+    },
+    { row: "ArrowDown", keys: [down], plain: "A", looped: "A" },
+    {
+      row: "ArrowDown, then ArrowUp",
+      keys: [down, up],
+      plain: "A",
+      looped: "C",
+    },
+    ...upKeys.map((key) => ({
+      row: `${withModifiers(key)} from rest`,
+      keys: [key],
+      plain: null,
+      looped: "C",
+    })),
+    ...upKeys.slice(1).map((key) => ({
+      row: `${withModifiers(key)} from A`,
+      keys: [down, key],
+      plain: "A",
+      looped: "C",
+    })),
+    // Without `loop`, a key down from the last result stays on it
+    ...downKeys.map((key) => ({
+      row: `ArrowDown ×3, then ${withModifiers(key)}`,
+      keys: [down, down, down, key],
+      plain: "C",
+      looped: "A",
+    })),
+  ];
+
+  // Each way to compose the bar: a controlled or an uncontrolled input, with
+  // or without `loop`, and the list directly in SearchBar or in an open
+  // SearchBarResults
+  const compositions = [true, false].flatMap((controlled) =>
+    [false, true].flatMap((loop) =>
+      [null, {}].map((results) => ({
+        composition: `${controlled ? "a controlled" : "an uncontrolled"} input${loop ? ", with loop" : ""}, ${results ? "in a panel" : "with no panel"}`,
+        controlled,
+        loop,
+        results,
+      })),
+    ),
+  );
+
+  describe.each(compositions)(
+    "with $composition",
+    ({ controlled, loop, results }) => {
+      test.each(rows)(
+        "$row highlights what the table says, and Enter chooses it",
+        async ({ typeFirst, keys, plain, looped }) => {
+          const chosen: string[] = [];
+          const { container, input } = await focused(
+            createElement(KeysSearch, {
+              controlled,
+              results,
+              bar: { loop },
+              onSelect: (name) => void chosen.push(name),
+            }),
+          );
+          if (typeFirst) {
+            // Into the results, then a query change
+            await press("ArrowDown");
+            await type(input, "x");
+          }
+          for (const key of keys) await press(...key);
+          const highlighted = loop ? looped : plain;
+          expect(selected(container)).toBe(highlighted ?? "--");
+          expect(active(container, "keys")).toEqual({
+            input: highlighted,
+            listbox: highlighted,
+          });
+          expect(await press("Enter")).toBe(false);
+          expect(chosen).toEqual(highlighted ? [highlighted] : []);
+        },
+      );
+    },
+  );
+
+  // Every arrow key and Ctrl+N/J/P/K, with each set of other modifiers
+  const subsets = (modifiers: (keyof Modifiers)[]): Modifiers[] =>
+    modifiers.reduce<Modifiers[]>(
+      (sets, modifier) => [
+        ...sets,
+        ...sets.map((set) => ({ ...set, [modifier]: true })),
+      ],
+      [{}],
+    );
+  const everyMove: [string, Modifiers][] = [
+    ...["ArrowUp", "ArrowDown"].flatMap((key) =>
+      subsets(["altKey", "ctrlKey", "metaKey", "shiftKey"]).map(
+        (modifiers): [string, Modifiers] => [key, modifiers],
+      ),
+    ),
+    ...["n", "j", "p", "k"].flatMap((key) =>
+      subsets(["altKey", "metaKey", "shiftKey"]).map(
+        (modifiers): [string, Modifiers] => [
+          key,
+          { ...modifiers, ctrlKey: true },
+        ],
+      ),
+    ),
+  ];
+
+  test.each([
+    { bar: "with no options", props: {} },
+    { bar: "with loop", props: { bar: { loop: true } } },
+    { bar: "grouped", props: { grouped: true } },
+    {
+      bar: "grouped, with loop",
+      props: { grouped: true, bar: { loop: true } },
+    },
+    { bar: "without vimBindings", props: { bar: { vimBindings: false } } },
+  ])(
+    "$bar, no key moves the highlight from a result back to nothing",
+    async ({ props }) => {
+      const { container } = await focused(keysBar(props));
+      for (const key of everyMove)
+        for (const start of abc) {
+          await goTo(container, start);
+          await press(...key);
+          expect(
+            selected(container),
+            `${withModifiers(key)} from ${start}`,
+          ).not.toBe("--");
+          expect(active(container, "keys").input).toBe(selected(container));
+        }
+    },
+  );
+
+  test("the hidden `--` option stays the first option, and isn't left disabled", async () => {
+    const { container } = await focused(keysBar());
+    for (const key of everyMove) await press(...key);
+    await new Promise((done) => setTimeout(done, 0));
+    const options = container.querySelectorAll("[cmdk-item]");
+    expect(options[0]!.hasAttribute(NOTHING)).toBe(true);
+    expect(options[0]!.getAttribute("aria-disabled")).toBe("false");
+  });
+});
+
+// Renders cmdk's query, as SearchBar's parts see it, in `data-search`
+function QueryProbe() {
+  const search = useCommandState((state) => state.search);
+  return createElement("output", { "data-search": search });
+}
+
+describe("a controlled SearchBarInput (#205)", () => {
+  // A bar whose input is controlled, which its clear button empties, and
+  // which records each `onValueChange`
+  function Cleared({ changes }: { changes: string[] }) {
+    const [query, setQuery] = useState("");
+    return createElement(
+      SearchBar,
+      { "data-bar": "keys" } as ComponentProps<typeof SearchBar>,
+      createElement(
+        SearchBarInputContainer,
+        null,
+        createElement(SearchBarInput, {
+          "aria-label": "Search",
+          value: query,
+          onValueChange: (value: string) => {
+            changes.push(value);
+            setQuery(value);
+          },
+        }),
+        createElement(SearchBarClearButton, {
+          "data-button": "clear",
+          onClick: () => setQuery(""),
+        } as ComponentProps<typeof SearchBarClearButton>),
+      ),
+      createElement(QueryProbe),
+      createElement(
+        SearchBarResultsList,
+        null,
+        abc.map((name) =>
+          createElement(SearchBarResultsItem, { key: name, value: name }, name),
+        ),
+      ),
+    );
+  }
+
+  test("hands cmdk each query typed, calls onValueChange once per keystroke, and a query set from outside still reaches cmdk", async () => {
+    const changes: string[] = [];
+    const { container, input } = await focused(
+      createElement(Cleared, { changes }),
+    );
+    const search = () =>
+      container.querySelector("[data-search]")!.getAttribute("data-search");
+    await type(input, "tu");
+    expect(changes).toEqual(["t", "tu"]);
+    expect(search()).toBe("tu");
+    expect(input.value).toBe("tu");
+    await press("ArrowDown");
+    expect(active(container, "keys")).toEqual({ input: "A", listbox: "A" });
+    await act(async () =>
+      container.querySelector<HTMLElement>('[data-button="clear"]')!.click(),
+    );
+    await act(settle);
+    expect(input.value).toBe("");
+    expect(search()).toBe("");
+    expect(selected(container)).toBe("--");
+    expect(active(container, "keys")).toEqual({ input: null, listbox: null });
+    expect(changes).toEqual(["t", "tu"]);
+    await type(input, "a");
+    expect(changes).toEqual(["t", "tu", "a"]);
+    expect(search()).toBe("a");
+  });
+
+  test("whose author keeps the old query, keeps cmdk's query too", async () => {
+    function Stubborn() {
+      return createElement(
+        SearchBar,
+        { "data-bar": "keys" } as ComponentProps<typeof SearchBar>,
+        createElement(SearchBarInput, {
+          "aria-label": "Search",
+          value: "tu",
+          onValueChange: () => {},
+        }),
+        createElement(QueryProbe),
+      );
+    }
+    const { container, input } = await focused(createElement(Stubborn));
+    await type(input, "n");
+    await act(settle);
+    expect(input.value).toBe("tu");
+    expect(
+      container.querySelector("[data-search]")!.getAttribute("data-search"),
+    ).toBe("tu");
+  });
+});
+
+describe("in an older copy's SearchBar (#205)", () => {
+  // A list from this copy, whose hidden `--` is marked, and one built from
+  // cmdk's parts, as an older copy's, whose hidden `--` isn't
+  const lists: [string, () => ReactElement][] = [
+    [
+      "this copy's list",
+      () =>
+        createElement(
+          SearchBarResultsList,
+          null,
+          abc.map((name) =>
+            createElement(
+              SearchBarResultsItem,
+              { key: name, value: name },
+              name,
+            ),
+          ),
+        ),
+    ],
+    [
+      "an unmarked list",
+      () =>
+        createElement(
+          Command.List,
+          null,
+          createElement(Command.Item, { className: "hidden" }, "--"),
+          abc.map((name) =>
+            createElement(Command.Item, { key: name, value: name }, name),
+          ),
+        ),
+    ],
+  ];
+
+  test.each(lists)(
+    "with %s, nothing is highlighted at rest, and each row gives today's result or the table's",
+    async (_, list) => {
+      const { container, input } = await focused(
+        createElement(
+          OlderSearchBar,
+          { "data-bar": "older" },
+          createElement(SearchBarInput, { "aria-label": "Search" }),
+          list(),
+        ),
+      );
+      expect(selected(container)).toBe("--");
+      await press("ArrowDown");
+      expect(selected(container)).toBe("A");
+      await press("ArrowUp");
+      expect(["A", "--"]).toContain(selected(container));
+      await press("ArrowDown");
+      await press("ArrowDown");
+      await press("ArrowDown");
+      expect(selected(container)).toBe("C");
+      await type(input, "x");
+      expect(selected(container)).toBe("--");
     },
   );
 });

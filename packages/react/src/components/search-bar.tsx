@@ -289,6 +289,32 @@ const editsText = ({ key, metaKey }: KeyboardEvent) =>
   key === "End" ||
   (metaKey && (key === "ArrowUp" || key === "ArrowDown"));
 
+/**
+ * Takes the hidden `--` options in `root` out of cmdk's navigation for the key
+ * being handled (#205). cmdk 1.1.1 moves through, and selects first from, the
+ * same options, `[cmdk-item]:not([aria-disabled="true"])`, and never checks
+ * whether they're shown. So this marks each `aria-disabled` while cmdk moves,
+ * and puts it back in a microtask, once the key's handlers have run: after a
+ * query change, cmdk's select-first still lands on it.
+ */
+function skipNothing(root: Element) {
+  const marked: [Element, string | null][] = [];
+  for (const option of root.querySelectorAll(`[cmdk-item][${NOTHING}]`))
+    if (
+      option.closest("[cmdk-root]") === root &&
+      option.getAttribute("aria-disabled") !== "true"
+    ) {
+      marked.push([option, option.getAttribute("aria-disabled")]);
+      option.setAttribute("aria-disabled", "true");
+    }
+  if (marked.length)
+    queueMicrotask(() => {
+      for (const [option, disabled] of marked)
+        if (disabled === null) option.removeAttribute("aria-disabled");
+        else option.setAttribute("aria-disabled", disabled);
+    });
+}
+
 interface SearchBarProps extends ComponentProps<typeof Command> {
   size?: SearchBarSize;
 }
@@ -335,6 +361,9 @@ const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
             // browser still acts on it.
             if (!inInput(event) || !parts.wiring().expanded || editsText(event))
               event.defaultPrevented = true;
+            // The other keys move cmdk's selection, except Enter, and never
+            // onto the hidden `--`
+            else if (event.key !== "Enter") skipNothing(event.currentTarget);
           }}
         >
           {children}
@@ -409,6 +438,16 @@ export const SearchBarInput: FunctionComponent<
     const wiring = useWiring(parts);
     const input = useRef<HTMLInputElement>(null);
     useSelection();
+    // A controlled value reaches cmdk only when it isn't cmdk's query
+    // already, as when the author sets it. Typing then leaves cmdk's input
+    // uncontrolled, so cmdk takes the query in its change handler, and
+    // selects first inside the keystroke. A controlled cmdk input takes it
+    // in an effect, which React 18.3 renders later: a key pressed in between
+    // was undone (#205).
+    const search = useCommandState((state) => state.search);
+    const controlled = props.value != null;
+    const toCmdk =
+      controlled && props.value !== search ? props.value : undefined;
     // After every commit that changes the wiring or cmdk's selection, name
     // the highlighted result
     useBeforePaint(() => {
@@ -457,6 +496,7 @@ export const SearchBarInput: FunctionComponent<
           className,
         )}
         {...props}
+        value={toCmdk}
         // After the props, so an untyped `asChild={false}` can't make cmdk
         // render a second <input> around this one (#206)
         asChild
@@ -471,9 +511,11 @@ export const SearchBarInput: FunctionComponent<
         the page hydrates. The wiring and the name sit on this child because
         a key it sets wins over cmdk's, even an `undefined` one, and cmdk
         sets its own after spreading ours. cmdk's `aria-activedescendant` is
-        erased the same way: `nameHighlighted` sets it. */}
+        erased the same way: `nameHighlighted` sets it. A controlled value
+        sits here too, so the <input> shows it while cmdk's isn't. */}
         <input
           ref={input}
+          {...(controlled ? { value: props.value } : {})}
           {...controls}
           {...expanded}
           {...labelledBy}
@@ -645,10 +687,15 @@ export const SearchBarResultsList: FunctionComponent<
     // cmdk names the listbox from `label`, after the props it spreads, so an
     // `aria-label` reaches the listbox only through `label`
     <Command.List label={ariaLabel ?? label ?? "Suggestions"} {...props}>
-      {/* The hidden `--` option. cmdk 1.1.1 selects the first option it
-      finds, at rest and after each query change, so nothing is highlighted
-      until the person moves into the results. SearchBar recognises it by
-      its marker, and never names it in `aria-activedescendant`. */}
+      {/* The hidden `--` option, which holds cmdk's selection while nothing
+      is highlighted. cmdk 1.1.1 selects the first option it finds, at rest,
+      after each query change, and when the highlighted result unmounts, so
+      this one keeps any result from being highlighted until the person moves
+      into the results. cmdk's navigation finds options the same way, so
+      SearchBar marks this one disabled for each key that moves (#205), and
+      never names it in `aria-activedescendant` (#398). It finds it by its
+      marker. Both rely on cmdk 1.1.1's internals, which is why cmdk is
+      pinned to exactly 1.1.1 (ADR-0015). */}
       <Command.Item
         ref={placeholder}
         className="hidden"

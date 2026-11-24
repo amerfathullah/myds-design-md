@@ -3,13 +3,14 @@
 // SummaryListHeader is the list's title. It renders an `<h2>` by default, so a
 // summary list doesn't add a second `<h1>` to a page that has its own. An
 // author's props on SummaryListTerm and SummaryListAction land on their table
-// cells.
+// cells. A ref on any part is the element it renders.
 import {
   act,
   createElement,
   createRef,
   type MouseEvent,
   type ReactElement,
+  type Ref,
 } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -64,29 +65,48 @@ function serverRender(element: ReactElement) {
 }
 
 // A summary list composed as the docs compose one, with every part, titled by
-// `header`
+// `header`, and with `ref` on the part `refOn`, if given
 const summaryList = (
   header: ReactElement = createElement(SummaryListHeader, null, "Title"),
-) =>
-  createElement(
+  { refOn, ref }: { refOn?: unknown; ref?: Ref<Element> } = {},
+) => {
+  // `part`'s props: the ref, if it's the part to get it. Each part's ref is
+  // typed as its element's; the type-tests check those types.
+  const props = (part: unknown) =>
+    part === refOn ? { ref: ref as Ref<never> } : null;
+  return createElement(
     SummaryList,
-    null,
+    props(SummaryList),
     header,
     createElement(
       SummaryListBody,
-      null,
+      props(SummaryListBody),
       createElement(
         SummaryListRow,
-        null,
-        createElement(SummaryListTerm, null, "Application ID"),
-        createElement(SummaryListDetail, null, "SUB12345"),
-        createElement(SummaryListAction, null, "Change"),
-        createElement(SummaryListAddition, null, "Additional information"),
+        props(SummaryListRow),
+        createElement(
+          SummaryListTerm,
+          props(SummaryListTerm),
+          "Application ID",
+        ),
+        createElement(SummaryListDetail, props(SummaryListDetail), "SUB12345"),
+        createElement(SummaryListAction, props(SummaryListAction), "Change"),
+        createElement(
+          SummaryListAddition,
+          props(SummaryListAddition),
+          "Additional information",
+        ),
       ),
     ),
   );
+};
 
 const unmounts: (() => Promise<void>)[] = [];
+
+// Unmounts everything `mount` mounted, and takes its containers off the page
+async function unmountAll() {
+  while (unmounts.length) await unmounts.pop()!();
+}
 
 // Mounts `element` in a container on the page, as an app would, and returns
 // the container
@@ -111,7 +131,7 @@ beforeEach(() => {
 // No test logs anything, React's warnings and errors included, and nothing
 // is left on the page
 afterEach(async () => {
-  while (unmounts.length) await unmounts.pop()!();
+  await unmountAll();
   const logged = consoleMethods.flatMap((method) =>
     vi.mocked(console[method]).mock.calls.map((args) => [method, ...args]),
   );
@@ -201,6 +221,163 @@ describe("a ref on SummaryListHeader", () => {
     expect(ref.current).toBeInstanceOf(HTMLHeadingElement);
     expect(ref.current).toBe(container.querySelector("h3"));
   });
+});
+
+// Every other part forwards its ref to the element it renders too, so a ref
+// works on React 18, which gives a plain function component none (#209). On
+// React 19, which these tests run on, a ref is a prop, and each part spreads
+// its props onto its element, so a ref arrives either way: each part is also
+// checked to be a forwardRef component.
+describe.each([
+  // Each part, the element its ref is, and how to find that element in the
+  // container a summary list is mounted in
+  [
+    "SummaryList",
+    SummaryList,
+    "`<div>`",
+    (container: Element) => container.firstElementChild,
+  ],
+  [
+    "SummaryListBody",
+    SummaryListBody,
+    "`<table>`, not its `<tbody>`",
+    (container: Element) => container.querySelector("table"),
+  ],
+  [
+    "SummaryListRow",
+    SummaryListRow,
+    "`<tr>`",
+    (container: Element) => container.querySelector("tr"),
+  ],
+  [
+    "SummaryListTerm",
+    SummaryListTerm,
+    '`<th scope="row">`',
+    (container: Element) => container.querySelector("th"),
+  ],
+  [
+    "SummaryListDetail",
+    SummaryListDetail,
+    "`<td>`",
+    (container: Element) => container.querySelector("tr")!.children[1],
+  ],
+  [
+    "SummaryListAction",
+    SummaryListAction,
+    "`<td>`",
+    (container: Element) => container.querySelector("tr")!.children[2],
+  ],
+  [
+    "SummaryListAddition",
+    SummaryListAddition,
+    "`<td>`",
+    (container: Element) => container.querySelector("tr")!.children[3],
+  ],
+] as const)("a ref on %s", (name, Part, element, find) => {
+  test(`is a forwardRef component, named "${name}" in React's tools`, () => {
+    expect({ type: Part.$$typeof, displayName: Part.displayName }).toEqual({
+      type: Symbol.for("react.forward_ref"),
+      displayName: name,
+    });
+  });
+
+  test(`as an object, is its ${element}`, async () => {
+    const ref = createRef<Element>();
+    const container = await mount(summaryList(undefined, { refOn: Part, ref }));
+    expect(ref.current).toBeInstanceOf(HTMLElement);
+    expect(ref.current).toBe(find(container));
+  });
+
+  test(`as a callback, gets its ${element} on mount and \`null\` on unmount`, async () => {
+    const calls: (Element | null)[] = [];
+    const ref = (node: Element | null) => {
+      calls.push(node);
+    };
+    const container = await mount(summaryList(undefined, { refOn: Part, ref }));
+    const rendered = find(container);
+    expect(rendered).toBeInstanceOf(HTMLElement);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toBe(rendered);
+    await unmountAll();
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toBeNull();
+  });
+});
+
+// Forwarding refs changes no markup. This is a full summary list's server
+// markup as main (5afee22) rendered it, before its parts forwarded their refs,
+// recorded on React 18.3.1 and 19.3.1 alike.
+const mainMarkup = [
+  '<div class="space-y-6" id="list">',
+  '<h2 class="text-txt-black-900 text-xl font-semibold leading-[30px]">Title</h2>',
+  '<table class="w-full text-sm font-medium min-h-[40px] relative mt-2"><tbody>',
+  '<tr class="border-otl-gray-200 border-b">',
+  '<th scope="row" class="text-txt-black-500 min-w-[190px] py-3 pr-3 align-baseline"><div class="flex items-start">Application ID</div></th>',
+  '<td class="text-txt-black-900 w-full py-3 pr-3">SUB12345</td>',
+  '<td class="py-1.5 pr-3 text-right align-baseline"><div class="flex flex-1 justify-end"><button>Change</button></div></td>',
+  '<td class="text-txt-black-900 min-w-36 py-2 pr-3">Additional information</td>',
+  "</tr>",
+  '<tr class="border-otl-gray-200 border-b" data-row="2">',
+  '<th scope="row" class="text-txt-black-500 min-w-[190px] py-3 pr-3 align-baseline" colSpan="2"><div class="flex items-start">Status</div></th>',
+  '<td class="py-1.5 pr-3 text-right align-baseline"></td>',
+  '<td class="text-txt-black-900 min-w-36 py-2 pr-3 w-40"></td>',
+  "</tr>",
+  "</tbody></table></div>",
+].join("");
+
+test("a full summary list, with a ref on every part, server-renders as on main", () => {
+  // Passed as JSX would pass them, which accepts any `data-*` attribute
+  const row = { "data-row": "2", ref: createRef<HTMLTableRowElement>() };
+  const list = createElement(
+    SummaryList,
+    { id: "list", ref: createRef<HTMLDivElement>() },
+    createElement(SummaryListHeader, { ref: createRef() }, "Title"),
+    createElement(
+      SummaryListBody,
+      { className: "mt-2", ref: createRef<HTMLTableElement>() },
+      createElement(
+        SummaryListRow,
+        { ref: createRef<HTMLTableRowElement>() },
+        createElement(
+          SummaryListTerm,
+          { ref: createRef<HTMLTableCellElement>() },
+          "Application ID",
+        ),
+        createElement(
+          SummaryListDetail,
+          { ref: createRef<HTMLTableCellElement>() },
+          "SUB12345",
+        ),
+        createElement(
+          SummaryListAction,
+          { ref: createRef<HTMLTableCellElement>() },
+          createElement("button", null, "Change"),
+        ),
+        createElement(
+          SummaryListAddition,
+          { ref: createRef<HTMLTableCellElement>() },
+          "Additional information",
+        ),
+      ),
+      createElement(
+        SummaryListRow,
+        row,
+        createElement(
+          SummaryListTerm,
+          { colSpan: 2, ref: createRef<HTMLTableCellElement>() },
+          "Status",
+        ),
+        createElement(SummaryListAction, {
+          ref: createRef<HTMLTableCellElement>(),
+        }),
+        createElement(SummaryListAddition, {
+          className: "w-40",
+          ref: createRef<HTMLTableCellElement>(),
+        }),
+      ),
+    ),
+  );
+  expect(renderToStaticMarkup(list)).toBe(mainMarkup);
 });
 
 describe("SummaryListHeader with `asChild`", () => {

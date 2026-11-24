@@ -99,7 +99,13 @@ import {
 } from "@amerfathullah/myds-react/select";
 import {
   SummaryList,
+  SummaryListAction,
+  SummaryListAddition,
+  SummaryListBody,
+  SummaryListDetail,
   SummaryListHeader,
+  SummaryListRow,
+  SummaryListTerm,
 } from "@amerfathullah/myds-react/summary-list";
 import { TableTooltip } from "@amerfathullah/myds-react/table";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
@@ -1094,6 +1100,78 @@ export const SummaryListTitleFromDivProps = (props: ComponentProps<"div">) => (
 export const SummaryListTitleAsDivComponent: FunctionComponent<
   ComponentProps<"div">
 > = SummaryListHeader;
+
+// Every other SummaryList part forwards its ref to the element it renders
+// (#209): the list's `<div>`, the body's `<table>` (not its `<tbody>`), the
+// row's `<tr>`, the term's `<th>` and the other cells' `<td>`. The cells keep
+// their `<td>` props, whose ref fits the term's `<th>` too, as both are table
+// cells. Each part's old component type still holds it.
+export const SummaryListRefs = () => {
+  const list = useRef<HTMLDivElement>(null);
+  const body = createRef<HTMLTableElement>();
+  const row = useRef<HTMLTableRowElement>(null);
+  const term = useRef<HTMLTableCellElement>(null);
+  const header = createRef<HTMLTableHeaderCellElement>();
+  const detail = useRef<HTMLTableCellElement>(null);
+  const data = createRef<HTMLTableDataCellElement>();
+  const action = useRef<HTMLTableCellElement>(null);
+  const addition = useRef<HTMLTableCellElement>(null);
+  const div = createRef<HTMLDivElement>();
+  return (
+    <SummaryList ref={list}>
+      <SummaryListBody ref={body}>
+        <SummaryListRow ref={row}>
+          <SummaryListTerm ref={term}>Nama</SummaryListTerm>
+          <SummaryListDetail ref={detail}>Aminah</SummaryListDetail>
+          <SummaryListAction ref={action}>Ubah</SummaryListAction>
+          <SummaryListAddition ref={addition}>Disahkan</SummaryListAddition>
+        </SummaryListRow>
+        <SummaryListRow
+          ref={(element: HTMLTableRowElement | null) => void element}
+        >
+          <SummaryListTerm ref={header}>Status</SummaryListTerm>
+          <SummaryListDetail ref={data}>Lulus</SummaryListDetail>
+          <SummaryListAction
+            ref={(cell: HTMLTableCellElement | null) => void cell}
+          />
+        </SummaryListRow>
+      </SummaryListBody>
+      {/* @ts-expect-error The body's ref is its `<table>`, not a `<div>` */}
+      <SummaryListBody ref={div} />
+    </SummaryList>
+  );
+};
+
+export const SummaryListPartsAsTheirOldTypes: [
+  FunctionComponent<ComponentProps<"div">>,
+  FunctionComponent<ComponentProps<"table">>,
+  FunctionComponent<ComponentProps<"tr">>,
+  ...FunctionComponent<ComponentProps<"td">>[],
+] = [
+  SummaryList,
+  SummaryListBody,
+  SummaryListRow,
+  SummaryListTerm,
+  SummaryListDetail,
+  SummaryListAction,
+  SummaryListAddition,
+];
+
+// Each part's type as it's built: its element's props, ref included
+export const SummaryListPartTypes: [
+  ForwardRefExoticComponent<ComponentProps<"div">>,
+  ForwardRefExoticComponent<ComponentProps<"table">>,
+  ForwardRefExoticComponent<ComponentProps<"tr">>,
+  ...ForwardRefExoticComponent<ComponentProps<"td">>[],
+] = [
+  SummaryList,
+  SummaryListBody,
+  SummaryListRow,
+  SummaryListTerm,
+  SummaryListDetail,
+  SummaryListAction,
+  SummaryListAddition,
+];
 
 // ToastIcon and ToastProgress are exported for a toast composed by hand
 // (#172). Each takes a `<div>`'s props but `children`, as each draws its own

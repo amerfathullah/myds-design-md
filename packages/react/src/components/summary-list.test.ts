@@ -348,20 +348,26 @@ describe("an author's props on SummaryListTerm and SummaryListAction", () => {
     expect(read(await mount(list))).toEqual(expected);
   });
 
-  // As in the docs' rows, whose action holds `{action && <Button>…}`
-  test("an action with nothing to show is an empty `<td>`, so `:empty` and `empty:hidden` still match it", async () => {
-    const container = await mount(
-      body(
-        [createElement(SummaryListAction)],
-        [createElement(SummaryListAction, null, undefined)],
-        [createElement(SummaryListAction, null, false)],
-        [createElement(SummaryListAction, null, null, false)],
-      ),
+  // As in the docs' rows, whose action holds `{action && <Button>…}`, where
+  // `action` may be an empty string
+  test("an action with nothing to show is an empty `<td>`, so `:empty` and `empty:hidden` still match it, in server markup too", async () => {
+    const list = body(
+      [createElement(SummaryListAction)],
+      [createElement(SummaryListAction, null, undefined)],
+      [createElement(SummaryListAction, null, false)],
+      [createElement(SummaryListAction, null, null, false)],
+      [createElement(SummaryListAction, null, "")],
+      [createElement(SummaryListAction, null, "", null)],
+      [
+        createElement(SummaryListAction, {
+          dangerouslySetInnerHTML: { __html: "" },
+        }),
+      ],
     );
-    expect(
-      [...container.querySelectorAll("td")].map((cell) =>
-        cell.matches(":empty"),
-      ),
-    ).toEqual([true, true, true, true]);
+    const read = (within: ParentNode) =>
+      [...within.querySelectorAll("td")].map((cell) => cell.matches(":empty"));
+    const expected = [true, true, true, true, true, true, true];
+    expect(read(serverRender(list))).toEqual(expected);
+    expect(read(await mount(list))).toEqual(expected);
   });
 });

@@ -128,7 +128,8 @@ const SummaryListDetail: FunctionComponent<ComponentProps<"td">> = ({
  * The row's actions, in a `<td>` on the row's baseline. Its children sit in
  * a row inside it, against its end edge. `className` and the other props go
  * on the `<td>`, so flex classes such as `gap-2` don't reach the children:
- * put those on your own wrapper. With nothing to show, it's an empty cell.
+ * put those on your own wrapper. With no children, or only ones React
+ * renders as nothing, such as `null`, `false` or `""`, it's an empty cell.
  */
 const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   children,
@@ -137,9 +138,12 @@ const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   ...props
 }) => {
   // With nothing to show, it renders no wrapper, so CSS's `:empty` matches
-  // it, as it did when the action was the flex box
+  // it, as it did when the action was the flex box. `Children.toArray` drops
+  // `null`, `undefined` and booleans, but keeps `""`, which React renders as
+  // nothing too. A child component that renders nothing can't be seen here.
   const isEmpty =
-    !dangerouslySetInnerHTML && Children.toArray(children).length === 0;
+    !dangerouslySetInnerHTML?.__html &&
+    Children.toArray(children).every((child) => child === "");
   return (
     <td
       className={clx("py-1.5 pr-3 text-right align-baseline", className)}

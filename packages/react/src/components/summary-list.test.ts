@@ -619,12 +619,12 @@ describe("naming a summary list's table", () => {
   // The attributes that can name the table
   type Naming = Pick<ComponentProps<"table">, "aria-label" | "aria-labelledby">;
 
-  // A summary list titled by `header`, if given, whose body gets `naming`
-  const list = (header: ReactElement | null, naming: Naming = {}) =>
+  // A summary list titled by `heading`, if given, whose body gets `naming`
+  const list = (heading: ReactElement | null, naming: Naming = {}) =>
     createElement(
       SummaryList,
       null,
-      header,
+      heading,
       createElement(
         SummaryListBody,
         naming,
@@ -749,9 +749,9 @@ describe("naming a summary list's table", () => {
   test("two lists on one page, each with its own id from `useId()`, are each named by their own header", async () => {
     // A summary list named by its header, as a component that renders one
     // more than once makes it
-    const Titled = ({ title }: { title: string }) => {
+    const Titled = ({ text }: { text: string }) => {
       const id = useId();
-      return list(createElement(SummaryListHeader, { id }, title), {
+      return list(createElement(SummaryListHeader, { id }, text), {
         "aria-labelledby": id,
       });
     };
@@ -759,8 +759,8 @@ describe("naming a summary list's table", () => {
       createElement(
         Fragment,
         null,
-        createElement(Titled, { title: "Applicant Details" }),
-        createElement(Titled, { title: "Subsidy Details" }),
+        createElement(Titled, { text: "Applicant Details" }),
+        createElement(Titled, { text: "Subsidy Details" }),
       ),
     );
     const ids = [...container.querySelectorAll("h2")].map(({ id }) => id);

@@ -4,10 +4,10 @@ SearchBar is built on cmdk's Command, Input, List and Item. Some of its accessib
 
 How cmdk 1.1.1 handles selection and keys:
 
-- **One list of options for both selecting and moving.** Keyboard navigation and the select-first that runs after each query change both use `[cmdk-item]:not([aria-disabled="true"])`, and neither checks visibility. SearchBarResultsList renders a hidden `--` option first. select-first lands on it, so no result is highlighted at rest. But Home, ArrowUp from the first result and a wrap with `loop` land on it too, and the highlight disappears.
+- **One list of options for both selecting and moving.** Keyboard navigation and the select-first that runs after each query change both use `[cmdk-item]:not([aria-disabled="true"])`, and neither checks visibility. SearchBarResultsList renders a hidden `--` option first. select-first lands on it, so no result is highlighted at rest. But Home, Meta+ArrowUp, ArrowUp from the first result and a wrap with `loop` land on it too, and the highlight disappears.
 - **`aria-activedescendant` is worked out at the wrong time.** cmdk works out its id before the options re-render, so it can name a result that's no longer selected. It never updates the id when the list remounts or SearchBar's `value` changes, so the id can name an option that no longer exists.
 - **A controlled query arrives late on React 18.3.** A controlled Command.Input copies the query into cmdk from a passive effect. On React 18.3, select-first can then run after a key pressed straight after typing, and undo that key.
-- **A key can only be skipped by cancelling it.** cmdk handles keys in its root's `onKeyDown`, after calling the author's. It skips a key only once it's cancelled, and cancelling also stops the browser from moving the caret or submitting a form. It cancels Home and End in every state, even with no results.
+- **cmdk skips a key only when its React event reads as cancelled.** cmdk handles keys in its root's `onKeyDown`, after calling the author's. Apart from keys sent during an IME composition, it skips a key only when the React event's `defaultPrevented` is set. `preventDefault` sets it, but that also stops the browser from moving the caret or submitting a form. cmdk cancels Home and End in every state, even with no results.
 
 SearchBar works around all four, so it relies on cmdk 1.1.1 behaviour that cmdk doesn't document:
 
@@ -15,9 +15,11 @@ SearchBar works around all four, so it relies on cmdk 1.1.1 behaviour that cmdk 
 - SearchBarInput names the highlighted result itself, on the input and on the listbox, rather than using cmdk's id;
 - it hides the `--` option from cmdk's navigation for each move key;
 - it hands cmdk a controlled query only when the author changed it;
-- it keeps some keys from reaching cmdk's root, without cancelling them, so the input acts as a text field:
-  - every key while no list is displayed (#398);
-  - Home and End in every state, and Meta+ArrowUp and Meta+ArrowDown (#399).
+- it keeps some of the keys cmdk acts on away from cmdk, without cancelling them in the browser, so the input acts as a text field:
+  - the keys cmdk acts on, while no list is displayed, and keys pressed on the Clear and Search buttons (#398);
+  - Home and End, and Meta+ArrowUp and Meta+ArrowDown, with any modifiers, in every state (#399).
+
+  Other keys, such as Escape, Tab and typed characters, reach cmdk's root and bubble on as today.
 
 Because of that, `@amerfathullah/myds-react` depends on cmdk `1.1.1` exactly, not `^1.1.1`.
 
@@ -44,8 +46,13 @@ Because of that, `@amerfathullah/myds-react` depends on cmdk `1.1.1` exactly, no
 - **Some things stay as cmdk has them:**
   - SearchBar's own `value`, `onValueChange` and `defaultValue` keep cmdk's meaning, including the `--` value they report while nothing is highlighted.
   - On React 18.3, a query change the author makes, such as Clear, still reaches cmdk through its passive effect. Only typing is fixed.
-- **A key kept from cmdk stops below cmdk's root.** Listeners above that point, `document` and `window` included, don't see it on bubble; capture listeners still do. The author's SearchBar `onKeyDown` is still called once for it, before the browser acts, and its `preventDefault` is honoured.
-- **The work is split across three issues, landing in this order:**
-  - **#398** pins cmdk, makes the input name the highlighted result, and keeps keys from cmdk while no list is displayed.
-  - **#399** keeps Home and End (and Meta+ArrowUp/ArrowDown) from cmdk in every state.
-  - **#205** makes the remaining keys skip the hidden option, and fixes the React 18.3 race after typing.
+- **Keeping a key from cmdk without cancelling it has a cost either way.** #398 chooses the route, and #399 follows it.
+  - **Stopping the key below cmdk's root:** listeners above that point, `document` and `window` included, don't see it on bubble; capture listeners still do. The author's SearchBar `onKeyDown` must then be called by SearchBar, and its `currentTarget` is where the key stopped, not the root `<div>` its type names.
+  - **Setting only the React event's `defaultPrevented`,** without cancelling the native event: the key bubbles as today, but React handlers above the input read it as cancelled, and it relies on React's event internals as well as cmdk's.
+
+  Either way, the author's SearchBar `onKeyDown` runs once, before the browser acts, and its `preventDefault` is honoured.
+
+- **Where each workaround lands:**
+  - **#398:** the pin, naming the highlighted result, and keeping keys from cmdk while no list is displayed and on the Clear and Search buttons.
+  - **#399:** keeping Home and End, and the Meta arrows, from cmdk in every state.
+  - **#205:** skipping the hidden option for the remaining move keys, and handing cmdk the typed query synchronously.

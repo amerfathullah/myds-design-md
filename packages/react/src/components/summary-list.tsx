@@ -71,6 +71,15 @@ const SummaryListRow: FunctionComponent<ComponentProps<"tr">> = ({
   </tr>
 );
 
+// The term and the action stay table cells, with no `display` of their own,
+// so `colSpan` and `rowSpan` work on them and a row without a detail puts
+// its action in the next column. A flex cell isn't a table cell: the browser
+// wraps it in an anonymous cell, which ignores its spans.
+
+/**
+ * The row's header, a `<th scope="row">`. Its text starts at its left edge,
+ * on the row's baseline.
+ */
 const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
   children,
   className,
@@ -80,7 +89,7 @@ const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
     // scope equals row here to indicate the header relates to all the row it belongs to
     scope="row"
     className={clx(
-      "text-txt-black-500 flex min-w-[190px] items-start py-3 pr-3",
+      "text-txt-black-500 min-w-[190px] py-3 pr-3 text-left align-baseline",
       className,
     )}
     {...props}
@@ -102,16 +111,22 @@ const SummaryListDetail: FunctionComponent<ComponentProps<"td">> = ({
   </td>
 );
 
+/**
+ * The row's actions, in a `<td>` on the row's baseline. Its children sit in
+ * a row inside it, at its right edge. `className` and the other props go on
+ * the `<td>`, so flex classes such as `gap-2` don't reach the children: put
+ * those on your own wrapper.
+ */
 const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   children,
   className,
   ...props
 }) => (
   <td
-    className={clx("flex justify-end py-1.5 pr-3 text-right", className)}
+    className={clx("py-1.5 pr-3 text-right align-baseline", className)}
     {...props}
   >
-    {children}
+    <div className="flex justify-end">{children}</div>
   </td>
 );
 

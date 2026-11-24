@@ -221,3 +221,78 @@ describe("SummaryListHeader with `asChild`", () => {
     expect(headings(await mount(h1))).toEqual([title("h1", headerClasses)]);
   });
 });
+
+// SummaryListTerm and SummaryListAction are table cells with no `display` of
+// their own (#208), so `colSpan` and `rowSpan` work on them. The Chromium test
+// in the style package checks the layout; these check where an author's props
+// land.
+describe("an author's props on SummaryListTerm and SummaryListAction", () => {
+  // A summary list's body holding `rows`, each given as its cells
+  const body = (...rows: ReactElement[][]) =>
+    createElement(
+      SummaryListBody,
+      null,
+      ...rows.map((cells) => createElement(SummaryListRow, null, ...cells)),
+    );
+
+  test("the term's `colSpan`, `rowSpan` and `className` reach its `<th scope=\"row\">`, and an author's `scope` wins", async () => {
+    const container = await mount(
+      body(
+        [
+          createElement(
+            SummaryListTerm,
+            { colSpan: 2, rowSpan: 2, className: "w-60" },
+            "Application ID",
+          ),
+        ],
+        [createElement(SummaryListTerm, { scope: "col" }, "Applicant Name")],
+      ),
+    );
+    const [spanning, scoped] = container.querySelectorAll("th");
+    expect({
+      scope: spanning!.scope,
+      colSpan: spanning!.colSpan,
+      rowSpan: spanning!.rowSpan,
+      classes: [...spanning!.classList].includes("w-60"),
+      authorScope: scoped!.scope,
+    }).toEqual({
+      scope: "row",
+      colSpan: 2,
+      rowSpan: 2,
+      classes: true,
+      authorScope: "col",
+    });
+  });
+
+  test("the action's `className`, `colSpan` and `id` go on its `<td>`, and its children sit in a wrapper inside it, which the `className` doesn't reach", async () => {
+    const container = await mount(
+      body([
+        createElement(SummaryListTerm, null, "Application ID"),
+        createElement(
+          SummaryListAction,
+          { colSpan: 2, id: "actions", className: "gap-2" },
+          createElement("button", { type: "button" }, "Edit"),
+          createElement("button", { type: "button" }, "Remove"),
+        ),
+      ]),
+    );
+    const cell = container.querySelector("td")!;
+    const [edit, remove] = cell.querySelectorAll("button");
+    const wrapper = edit!.parentElement!;
+    expect({
+      id: cell.id,
+      colSpan: cell.colSpan,
+      cellHasGap: cell.classList.contains("gap-2"),
+      sameWrapper: remove!.parentElement === wrapper,
+      wrapperInCell: wrapper.parentElement === cell,
+      wrapperHasGap: wrapper.classList.contains("gap-2"),
+    }).toEqual({
+      id: "actions",
+      colSpan: 2,
+      cellHasGap: true,
+      sameWrapper: true,
+      wrapperInCell: true,
+      wrapperHasGap: false,
+    });
+  });
+});

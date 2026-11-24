@@ -34,7 +34,7 @@ type Part =
   | {
       kind: "list";
       displayed: boolean;
-      placeholder: RefObject<HTMLElement | null>;
+      hiddenOption: RefObject<HTMLElement | null>;
     };
 
 /** How SearchBarInput wires its <input>, from the parts mounted */
@@ -110,12 +110,12 @@ function createParts() {
     },
     wiring: () => wiring,
     /** The hidden `--` options of the lists displayed */
-    displayedPlaceholders: () => {
-      const placeholders: Element[] = [];
+    displayedHiddenOptions: () => {
+      const options: Element[] = [];
       for (const part of parts)
-        if (part.kind === "list" && part.displayed && part.placeholder.current)
-          placeholders.push(part.placeholder.current);
-      return placeholders;
+        if (part.kind === "list" && part.displayed && part.hiddenOption.current)
+          options.push(part.hiddenOption.current);
+      return options;
     },
   };
 }
@@ -179,7 +179,18 @@ function useWiring(parts: Parts | undefined) {
 }
 
 // The marker on SearchBarResultsList's hidden `--` option
-const NOTHING = "data-nothing-highlighted";
+const MARKER = "data-nothing-highlighted";
+
+// Whether `element` belongs to the SearchBar whose cmdk root is `root`, not
+// to one nested in it
+const inRoot = (element: Element, root: Element) =>
+  element.closest("[cmdk-root]") === root;
+
+// The hidden `--` options in the SearchBar whose cmdk root is `root`
+const hiddenOptions = (root: Element) =>
+  [...root.querySelectorAll(`[cmdk-item][${MARKER}]`)].filter((option) =>
+    inRoot(option, root),
+  );
 
 // The <input>s this copy's SearchBarInput renders. cmdk's own
 // `aria-activedescendant` never reaches them, so `nameHighlighted` names
@@ -207,26 +218,26 @@ function setActive(element: Element, id: string | undefined) {
  * after each commit that could change it.
  */
 function nameHighlighted(root: Element, parts: Parts | undefined) {
-  const placeholders = parts
-    ? parts.displayedPlaceholders()
-    : [...root.querySelectorAll(`[cmdk-item][${NOTHING}]`)];
+  const displayed = parts
+    ? parts.displayedHiddenOptions()
+    : hiddenOptions(root);
   let highlighted: Element | undefined;
-  for (const placeholder of placeholders) {
-    const listbox = placeholder.closest("[cmdk-list]");
+  for (const hidden of displayed) {
+    const listbox = hidden.closest("[cmdk-list]");
     const option = listbox?.querySelector(
-      `[cmdk-item][aria-selected="true"]:not([${NOTHING}])`,
+      `[cmdk-item][aria-selected="true"]:not([${MARKER}])`,
     );
     if (option && option.closest("[cmdk-list]") === listbox) {
       highlighted = option;
       break;
     }
   }
-  const owned = (element: Element) => element.closest("[cmdk-root]") === root;
   for (const input of root.querySelectorAll("[cmdk-input]"))
-    if (ownInputs.has(input) && owned(input)) setActive(input, highlighted?.id);
-  for (const placeholder of root.querySelectorAll(`[cmdk-item][${NOTHING}]`)) {
-    const listbox = placeholder.closest("[cmdk-list]");
-    if (listbox && owned(listbox))
+    if (ownInputs.has(input) && inRoot(input, root))
+      setActive(input, highlighted?.id);
+  for (const hidden of hiddenOptions(root)) {
+    const listbox = hidden.closest("[cmdk-list]");
+    if (listbox)
       setActive(
         listbox,
         highlighted && listbox.contains(highlighted)
@@ -236,11 +247,22 @@ function nameHighlighted(root: Element, parts: Parts | undefined) {
   }
 }
 
-// Re-renders the component calling it when cmdk's selection, or the id cmdk
-// works out for it, changes, in the same commit as cmdk's own parts
-function useSelection() {
+/**
+ * Names the highlighted result after every commit of the component calling
+ * it, in the SearchBar `element` is in. The component re-renders when cmdk's
+ * selection, or the id cmdk works out for it, changes, in the same commit as
+ * cmdk's own parts.
+ */
+function useNameHighlighted(
+  element: RefObject<Element | null>,
+  parts: Parts | undefined,
+) {
   useCommandState((state) => state.value);
   useCommandState((state) => state.selectedItemId);
+  useBeforePaint(() => {
+    const root = element.current?.closest("[cmdk-root]");
+    if (root) nameHighlighted(root, parts);
+  });
 }
 
 /**
@@ -297,13 +319,10 @@ const editsText = ({ key, metaKey }: KeyboardEvent) =>
  * and puts it back in a microtask, once the key's handlers have run: after a
  * query change, cmdk's select-first still lands on it.
  */
-function skipNothing(root: Element) {
+function skipHiddenOptions(root: Element) {
   const marked: [Element, string | null][] = [];
-  for (const option of root.querySelectorAll(`[cmdk-item][${NOTHING}]`))
-    if (
-      option.closest("[cmdk-root]") === root &&
-      option.getAttribute("aria-disabled") !== "true"
-    ) {
+  for (const option of hiddenOptions(root))
+    if (option.getAttribute("aria-disabled") !== "true") {
       marked.push([option, option.getAttribute("aria-disabled")]);
       option.setAttribute("aria-disabled", "true");
     }
@@ -363,7 +382,8 @@ const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
               event.defaultPrevented = true;
             // The other keys move cmdk's selection, except Enter, and never
             // onto the hidden `--`
-            else if (event.key !== "Enter") skipNothing(event.currentTarget);
+            else if (event.key !== "Enter")
+              skipHiddenOptions(event.currentTarget);
           }}
         >
           {children}
@@ -437,7 +457,10 @@ export const SearchBarInput: FunctionComponent<
       useContext(SearchBarContext);
     const wiring = useWiring(parts);
     const input = useRef<HTMLInputElement>(null);
-    useSelection();
+    // After every commit that changes the wiring or cmdk's selection, name
+    // the highlighted result on this input
+    useBeforePaint(() => void (input.current && ownInputs.add(input.current)));
+    useNameHighlighted(input, parts);
     // A controlled value reaches cmdk only when it isn't cmdk's query
     // already, as when the author sets it. Typing then leaves cmdk's input
     // uncontrolled, so cmdk takes the query in its change handler, and
@@ -448,14 +471,6 @@ export const SearchBarInput: FunctionComponent<
     const controlled = props.value != null;
     const toCmdk =
       controlled && props.value !== search ? props.value : undefined;
-    // After every commit that changes the wiring or cmdk's selection, name
-    // the highlighted result
-    useBeforePaint(() => {
-      const root = input.current?.closest("[cmdk-root]");
-      if (!root) return;
-      ownInputs.add(input.current!);
-      nameHighlighted(root, parts);
-    });
     // In an older copy's SearchBar, which has no parts, the input keeps that
     // copy's wiring: its results id, and cmdk's `aria-expanded`
     const controls =
@@ -665,22 +680,18 @@ export const SearchBarResultsList: FunctionComponent<
 > = ({ children, "aria-label": ariaLabel, label, ...props }) => {
   const { parts } = useContext(SearchBarContext);
   const { open } = useContext(SearchBarResultsContext);
-  const placeholder = useRef<HTMLDivElement>(null);
+  const hiddenOption = useRef<HTMLDivElement>(null);
   // Count this list, whether it's displayed, and its hidden `--` option, from
   // before the browser paints until it unmounts
   useBeforePaint(
-    () => parts?.add({ kind: "list", displayed: open, placeholder }),
+    () => parts?.add({ kind: "list", displayed: open, hiddenOption }),
     [parts, open],
   );
-  useSelection();
   // After every commit that changes this list or cmdk's selection, name the
   // highlighted result, and again once the list has gone
+  useNameHighlighted(hiddenOption, parts);
   useBeforePaint(() => {
-    const root = placeholder.current?.closest("[cmdk-root]");
-    if (root) nameHighlighted(root, parts);
-  });
-  useBeforePaint(() => {
-    const root = placeholder.current?.closest("[cmdk-root]");
+    const root = hiddenOption.current?.closest("[cmdk-root]");
     if (root) return () => queueMicrotask(() => nameHighlighted(root, parts));
   }, [parts]);
   return (
@@ -697,7 +708,7 @@ export const SearchBarResultsList: FunctionComponent<
       marker. Both rely on cmdk 1.1.1's internals, which is why cmdk is
       pinned to exactly 1.1.1 (ADR-0015). */}
       <Command.Item
-        ref={placeholder}
+        ref={hiddenOption}
         className="hidden"
         data-nothing-highlighted=""
       >

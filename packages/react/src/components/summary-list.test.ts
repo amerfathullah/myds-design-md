@@ -348,8 +348,8 @@ describe("an author's props on SummaryListTerm and SummaryListAction", () => {
     expect(read(await mount(list))).toEqual(expected);
   });
 
-  // As in the docs' rows, whose action holds `{action && <Button>…}`, where
-  // `action` may be an empty string
+  // As in an action holding `{label && <Button>{label}</Button>}`, which
+  // renders `""` when `label` is an empty string
   test("an action with nothing to show is an empty `<td>`, so `:empty` and `empty:hidden` still match it, in server markup too", async () => {
     const list = body(
       [createElement(SummaryListAction)],

@@ -52,6 +52,8 @@ Because of that, `@amerfathullah/myds-react` depends on cmdk `1.1.1` exactly, no
 
   Either way, the author's SearchBar `onKeyDown` runs once, before the browser acts, and its `preventDefault` is honoured.
 
+  #398 took the second route, and #399 follows it. It keeps the key's bubbling, `document` and `window` listeners see it uncancelled, as the browser acts on it, and the author's `onKeyDown` keeps SearchBar's root as its `currentTarget`, since cmdk still calls it. React handlers above the root read the key as cancelled, as they did when cmdk cancelled it, though its `isDefaultPrevented()` is `false`.
+
 - **Where each workaround lands:**
   - **#398:** the pin, naming the highlighted result, and keeping keys from cmdk while no list is displayed and on the Clear and Search buttons.
   - **#399:** keeping Home and End, and the Meta arrows, from cmdk in every state.

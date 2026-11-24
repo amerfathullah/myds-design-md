@@ -1,4 +1,5 @@
 import {
+  Children,
   ComponentProps,
   ComponentPropsWithoutRef,
   forwardRef,
@@ -75,7 +76,8 @@ const SummaryListRow: FunctionComponent<ComponentProps<"tr">> = ({
 // so `colSpan` and `rowSpan` work on them and a row without a detail puts
 // its action in the next column. A flex cell isn't a table cell: the browser
 // wraps it in an anonymous cell, which ignores its spans. Each lays its
-// children out in a flex row inside it instead, as the cell itself once did.
+// children out in a flex row inside it instead, as the cell itself once did,
+// and `dangerouslySetInnerHTML` fills that wrapper as children would.
 
 /**
  * The row's header, a `<th scope="row">` on the row's baseline. Its children
@@ -88,6 +90,7 @@ const SummaryListRow: FunctionComponent<ComponentProps<"tr">> = ({
 const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
   children,
   className,
+  dangerouslySetInnerHTML,
   ...props
 }) => (
   <th
@@ -99,7 +102,12 @@ const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
     )}
     {...props}
   >
-    <div className="flex items-start">{children}</div>
+    <div
+      className="flex items-start"
+      dangerouslySetInnerHTML={dangerouslySetInnerHTML}
+    >
+      {children}
+    </div>
   </th>
 );
 
@@ -120,20 +128,37 @@ const SummaryListDetail: FunctionComponent<ComponentProps<"td">> = ({
  * The row's actions, in a `<td>` on the row's baseline. Its children sit in
  * a row inside it, against its end edge. `className` and the other props go
  * on the `<td>`, so flex classes such as `gap-2` don't reach the children:
- * put those on your own wrapper.
+ * put those on your own wrapper. With nothing to show, it's an empty cell.
  */
 const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   children,
   className,
+  dangerouslySetInnerHTML,
   ...props
-}) => (
-  <td
-    className={clx("py-1.5 pr-3 text-right align-baseline", className)}
-    {...props}
-  >
-    <div className="flex justify-end">{children}</div>
-  </td>
-);
+}) => {
+  // With nothing to show, it renders no wrapper, so CSS's `:empty` matches
+  // it, as it did when the action was the flex box
+  const isEmpty =
+    !dangerouslySetInnerHTML && Children.toArray(children).length === 0;
+  return (
+    <td
+      className={clx("py-1.5 pr-3 text-right align-baseline", className)}
+      {...props}
+    >
+      {!isEmpty && (
+        // `flex-1` does nothing in a table cell. It fills an action made a
+        // flex box, as one hidden on small screens may be, so its buttons
+        // stay at its end edge.
+        <div
+          className="flex flex-1 justify-end"
+          dangerouslySetInnerHTML={dangerouslySetInnerHTML}
+        >
+          {children}
+        </div>
+      )}
+    </td>
+  );
+};
 
 const SummaryListAddition: FunctionComponent<ComponentProps<"td">> = ({
   children,

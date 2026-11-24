@@ -324,4 +324,44 @@ describe("an author's props on SummaryListTerm and SummaryListAction", () => {
       wrapperHasGap: false,
     });
   });
+
+  test("`dangerouslySetInnerHTML` on the term and the action fills the wrapper inside its cell, as children do, in server markup too", async () => {
+    const list = body([
+      createElement(SummaryListTerm, {
+        dangerouslySetInnerHTML: { __html: "Nama <em>pemohon</em>" },
+      }),
+      createElement(SummaryListAction, {
+        dangerouslySetInnerHTML: { __html: '<a href="#change">Change</a>' },
+      }),
+    ]);
+    // How many nodes each cell holds, and the markup inside its first
+    const read = (within: ParentNode) =>
+      [...within.querySelectorAll("th, td")].map((cell) => ({
+        nodes: cell.childNodes.length,
+        wrapped: cell.firstElementChild?.innerHTML,
+      }));
+    const expected = [
+      { nodes: 1, wrapped: "Nama <em>pemohon</em>" },
+      { nodes: 1, wrapped: '<a href="#change">Change</a>' },
+    ];
+    expect(read(serverRender(list))).toEqual(expected);
+    expect(read(await mount(list))).toEqual(expected);
+  });
+
+  // As in the docs' rows, whose action holds `{action && <Button>…}`
+  test("an action with nothing to show is an empty `<td>`, so `:empty` and `empty:hidden` still match it", async () => {
+    const container = await mount(
+      body(
+        [createElement(SummaryListAction)],
+        [createElement(SummaryListAction, null, undefined)],
+        [createElement(SummaryListAction, null, false)],
+        [createElement(SummaryListAction, null, null, false)],
+      ),
+    );
+    expect(
+      [...container.querySelectorAll("td")].map((cell) =>
+        cell.matches(":empty"),
+      ),
+    ).toEqual([true, true, true, true]);
+  });
 });

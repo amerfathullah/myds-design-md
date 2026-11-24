@@ -13,6 +13,8 @@
 // - `term-rowspan`: a term with `rowSpan={2}` over two details.
 // - `term-colspan`: a term with `colSpan={2}` in place of a detail.
 // - `no-detail`: a row with a term and an action but no detail.
+// - `action-flex`: an action with `hidden sm:flex`, below an action whose
+//   wider button widens the action column.
 //
 // The test bundles this file with esbuild.
 import { useEffect } from "react";
@@ -210,6 +212,21 @@ function Page() {
           <SummaryListTerm>Supporting documents</SummaryListTerm>
           <SummaryListAction>
             <ActionButton>Add More</ActionButton>
+          </SummaryListAction>
+        </SummaryListRow>
+      </List>
+
+      <List name="action-flex" title="An action hidden on small screens">
+        <Row
+          term="Supporting documents"
+          detail="Proof Of Income"
+          action="Add More Documents"
+        />
+        <SummaryListRow>
+          <SummaryListTerm>Application ID</SummaryListTerm>
+          <SummaryListDetail>SUB12345</SummaryListDetail>
+          <SummaryListAction className="hidden sm:flex">
+            <ActionButton>Ubah</ActionButton>
           </SummaryListAction>
         </SummaryListRow>
       </List>

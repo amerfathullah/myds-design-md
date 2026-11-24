@@ -11,7 +11,9 @@
 // cell's right edge. A term's children sit side by side too, and a term that
 // wraps centres its lines, as a `<th>` centres its text by default. In a
 // right-to-left list the term's text still starts at its cell's right edge,
-// inside its padding, and the action's buttons at its left edge. Each list's
+// inside its padding, and the action's buttons at its left edge. An action
+// made a flex box, as `hidden sm:flex` makes it on wider screens, keeps its
+// buttons against its right edge, as before #208. Each list's
 // accessibility tree is a table whose rows hold a `rowheader` for the term and
 // a `cell` for each other part. happy-dom has no layout, so the unit tests
 // can't check this.
@@ -337,6 +339,18 @@ test("in a right-to-left list, the term's text starts at its cell's right edge, 
         buttonLeft: action.buttons[0].left,
       },
       { termTextRight: term.right - 12, buttonLeft: action.left },
+    );
+  }));
+
+// `hidden sm:flex` was how to hide an action on small screens when the
+// action was a flex box. It costs the action its spans, but its buttons stay
+// where they were.
+test("an action made a flex box, as `hidden sm:flex` makes it on wider screens, still ends its button 12px from its right edge", () =>
+  withPage(async (page) => {
+    const [, [, , action]] = await rows(page, "action-flex");
+    assert.deepEqual(
+      action.buttons.map(({ right }) => right),
+      [action.right - 12],
     );
   }));
 

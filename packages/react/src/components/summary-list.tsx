@@ -4,6 +4,7 @@ import {
   forwardRef,
   ForwardRefExoticComponent,
   FunctionComponent,
+  ReactNode,
   RefAttributes,
 } from "react";
 import { Slot } from "@radix-ui/react-slot";
@@ -71,21 +72,42 @@ const SummaryListRow: FunctionComponent<ComponentProps<"tr">> = ({
   </tr>
 );
 
+// The term and the action stay table cells, with no `display` of their own,
+// so `colSpan` and `rowSpan` work on them and a row without a detail puts
+// its action in the next column. A flex cell isn't a table cell: the browser
+// wraps it in an anonymous cell, which ignores its spans. Each lays its
+// children out in a flex row inside it instead, as the cell itself once did,
+// and `dangerouslySetInnerHTML` fills that wrapper as children would.
+
+/**
+ * The row's header, a `<th scope="row">` on the row's baseline. Its children
+ * sit in a row inside it, from its start edge. `className` and the other
+ * props go on the `<th>`, so flex classes such as `gap-2` don't reach the
+ * children: put those on your own wrapper. To widen its column, set its
+ * `min-width`, not its `width`: the detail takes all the width the columns'
+ * minimums leave.
+ */
 const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
   children,
   className,
+  dangerouslySetInnerHTML,
   ...props
 }) => (
   <th
     // scope equals row here to indicate the header relates to all the row it belongs to
     scope="row"
     className={clx(
-      "text-txt-black-500 flex min-w-[190px] items-start py-3 pr-3",
+      "text-txt-black-500 min-w-[190px] py-3 pr-3 align-baseline",
       className,
     )}
     {...props}
   >
-    {children}
+    <div
+      className="flex items-start"
+      dangerouslySetInnerHTML={dangerouslySetInnerHTML}
+    >
+      {children}
+    </div>
   </th>
 );
 
@@ -102,18 +124,54 @@ const SummaryListDetail: FunctionComponent<ComponentProps<"td">> = ({
   </td>
 );
 
+// Whether React renders `node` as nothing: `null`, `undefined`, a boolean,
+// `""`, or an array of those. It reads nothing else, since an iterator such
+// as `map.values()` can be read only once, and React has to read it.
+const rendersNothing = (node: ReactNode): boolean =>
+  node == null ||
+  typeof node === "boolean" ||
+  node === "" ||
+  (Array.isArray(node) && node.every(rendersNothing));
+
+/**
+ * The row's actions, in a `<td>` on the row's baseline. Its children sit in
+ * a row inside it, against its end edge. `className` and the other props go
+ * on the `<td>`, so flex classes such as `gap-2` don't reach the children:
+ * put those on your own wrapper. With no children, or only `null`,
+ * `undefined`, booleans or `""`, it's an empty cell; a component that renders
+ * nothing, or an empty fragment, still leaves the wrapper in it.
+ */
 const SummaryListAction: FunctionComponent<ComponentProps<"td">> = ({
   children,
   className,
+  dangerouslySetInnerHTML,
   ...props
-}) => (
-  <td
-    className={clx("flex justify-end py-1.5 pr-3 text-right", className)}
-    {...props}
-  >
-    {children}
-  </td>
-);
+}) => {
+  // With nothing to show, it renders no wrapper, so CSS's `:empty` matches
+  // it, as it did when the action was the flex box. React sets `__html` as a
+  // string, and a child component that renders nothing can't be seen here.
+  const html = dangerouslySetInnerHTML?.__html;
+  const isEmpty =
+    (html == null || String(html) === "") && rendersNothing(children);
+  return (
+    <td
+      className={clx("py-1.5 pr-3 text-right align-baseline", className)}
+      {...props}
+    >
+      {!isEmpty && (
+        // `flex-1` does nothing in a table cell. It fills an action made a
+        // flex box, as one hidden on small screens may be, so its buttons
+        // stay at its end edge.
+        <div
+          className="flex flex-1 justify-end"
+          dangerouslySetInnerHTML={dangerouslySetInnerHTML}
+        >
+          {children}
+        </div>
+      )}
+    </td>
+  );
+};
 
 const SummaryListAddition: FunctionComponent<ComponentProps<"td">> = ({
   children,

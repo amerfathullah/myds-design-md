@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
 //
 // SummaryListHeader is the list's title. It renders an `<h2>` by default, so a
-// summary list doesn't add a second `<h1>` to a page that has its own.
+// summary list doesn't add a second `<h1>` to a page that has its own. An
+// author's props on SummaryListTerm and SummaryListAction land on their table
+// cells.
 import {
   act,
   createElement,
@@ -219,5 +221,197 @@ describe("SummaryListHeader with `asChild`", () => {
     const h1 = header(createElement("h1", null, "Title"));
     expect(headings(serverRender(h1))).toEqual([title("h1", headerClasses)]);
     expect(headings(await mount(h1))).toEqual([title("h1", headerClasses)]);
+  });
+});
+
+// SummaryListTerm and SummaryListAction are table cells with no `display` of
+// their own (#208), so `colSpan` and `rowSpan` work on them. Each lays its
+// children out in a wrapper inside it. The Chromium test in the style package
+// checks the layout; these check where an author's props land.
+describe("an author's props on SummaryListTerm and SummaryListAction", () => {
+  // A summary list's body holding `rows`, each given as its cells
+  const body = (...rows: ReactElement[][]) =>
+    createElement(
+      SummaryListBody,
+      null,
+      ...rows.map((cells) => createElement(SummaryListRow, null, ...cells)),
+    );
+
+  test("the term's `colSpan`, `rowSpan` and `className` reach its `<th scope=\"row\">`, and an author's `scope` wins", async () => {
+    const container = await mount(
+      body(
+        [
+          createElement(
+            SummaryListTerm,
+            { colSpan: 2, rowSpan: 2, className: "w-60" },
+            "Application ID",
+          ),
+        ],
+        [createElement(SummaryListTerm, { scope: "col" }, "Applicant Name")],
+      ),
+    );
+    const [spanning, scoped] = container.querySelectorAll("th");
+    expect({
+      scope: spanning!.scope,
+      colSpan: spanning!.colSpan,
+      rowSpan: spanning!.rowSpan,
+      hasAuthorClass: spanning!.classList.contains("w-60"),
+      authorScope: scoped!.scope,
+    }).toEqual({
+      scope: "row",
+      colSpan: 2,
+      rowSpan: 2,
+      hasAuthorClass: true,
+      authorScope: "col",
+    });
+  });
+
+  test("the term's children sit in a wrapper inside its `<th>`, which its `className` doesn't reach", async () => {
+    const container = await mount(
+      body([
+        createElement(
+          SummaryListTerm,
+          { className: "gap-2" },
+          createElement("span", null, "Alamat"),
+          createElement("span", null, "Address"),
+        ),
+      ]),
+    );
+    const cell = container.querySelector("th")!;
+    const [malay, english] = cell.querySelectorAll("span");
+    const wrapper = malay!.parentElement!;
+    expect({
+      cellHasGap: cell.classList.contains("gap-2"),
+      sameWrapper: english!.parentElement === wrapper,
+      wrapperInCell: wrapper.parentElement === cell,
+      wrapperHasGap: wrapper.classList.contains("gap-2"),
+    }).toEqual({
+      cellHasGap: true,
+      sameWrapper: true,
+      wrapperInCell: true,
+      wrapperHasGap: false,
+    });
+  });
+
+  test("the action's `className`, `colSpan` and `id` go on its `<td>`, and its children sit in a wrapper inside it, which the `className` doesn't reach", async () => {
+    const container = await mount(
+      body([
+        createElement(SummaryListTerm, null, "Application ID"),
+        createElement(
+          SummaryListAction,
+          { colSpan: 2, id: "actions", className: "gap-2" },
+          createElement("button", { type: "button" }, "Edit"),
+          createElement("button", { type: "button" }, "Remove"),
+        ),
+      ]),
+    );
+    const cell = container.querySelector("td")!;
+    const [edit, remove] = cell.querySelectorAll("button");
+    const wrapper = edit!.parentElement!;
+    expect({
+      id: cell.id,
+      colSpan: cell.colSpan,
+      cellHasGap: cell.classList.contains("gap-2"),
+      sameWrapper: remove!.parentElement === wrapper,
+      wrapperInCell: wrapper.parentElement === cell,
+      wrapperHasGap: wrapper.classList.contains("gap-2"),
+    }).toEqual({
+      id: "actions",
+      colSpan: 2,
+      cellHasGap: true,
+      sameWrapper: true,
+      wrapperInCell: true,
+      wrapperHasGap: false,
+    });
+  });
+
+  test("`dangerouslySetInnerHTML` on the term and the action fills the wrapper inside its cell, as children do, in server markup too", async () => {
+    const list = body([
+      createElement(SummaryListTerm, {
+        dangerouslySetInnerHTML: { __html: "Nama <em>pemohon</em>" },
+      }),
+      createElement(SummaryListAction, {
+        dangerouslySetInnerHTML: { __html: '<a href="#change">Change</a>' },
+      }),
+    ]);
+    // How many nodes each cell holds, and the markup inside its first
+    const read = (within: ParentNode) =>
+      [...within.querySelectorAll("th, td")].map((cell) => ({
+        nodes: cell.childNodes.length,
+        wrapped: cell.firstElementChild?.innerHTML,
+      }));
+    const expected = [
+      { nodes: 1, wrapped: "Nama <em>pemohon</em>" },
+      { nodes: 1, wrapped: '<a href="#change">Change</a>' },
+    ];
+    expect(read(serverRender(list))).toEqual(expected);
+    expect(read(await mount(list))).toEqual(expected);
+  });
+
+  // As in an action holding `{label && <Button>{label}</Button>}`, which
+  // renders `""` when `label` is an empty string
+  test("an action with nothing to show is an empty `<td>`, so `:empty` and `empty:hidden` still match it, in server markup too", async () => {
+    const list = body(
+      [createElement(SummaryListAction)],
+      [createElement(SummaryListAction, null, undefined)],
+      [createElement(SummaryListAction, null, false)],
+      [createElement(SummaryListAction, null, null, false)],
+      [createElement(SummaryListAction, null, "")],
+      [createElement(SummaryListAction, null, "", null)],
+      [
+        createElement(SummaryListAction, {
+          dangerouslySetInnerHTML: { __html: "" },
+        }),
+      ],
+      // What a Trusted Types policy returns for "": an object, which React
+      // sets as its string
+      [
+        createElement(SummaryListAction, {
+          dangerouslySetInnerHTML: {
+            __html: { toString: () => "" } as unknown as TrustedHTML,
+          },
+        }),
+      ],
+    );
+    const read = (within: ParentNode) =>
+      [...within.querySelectorAll("td")].map((cell) => cell.matches(":empty"));
+    const expected = [true, true, true, true, true, true, true, true];
+    expect(read(serverRender(list))).toEqual(expected);
+    expect(read(await mount(list))).toEqual(expected);
+  });
+
+  // React renders an iterator's items, as on main, though it warns that
+  // iterators as children are unsupported, since one can be read only once.
+  // So deciding whether the action is empty mustn't read it first.
+  test("an action given its buttons as an iterator, such as `map.values()`, renders them, in server markup too", async () => {
+    // A list whose action holds a fresh iterator over two buttons
+    const list = () =>
+      body([
+        createElement(
+          SummaryListAction,
+          null,
+          new Map([
+            ["edit", createElement("button", { key: "edit" }, "Edit")],
+            ["remove", createElement("button", { key: "remove" }, "Remove")],
+          ]).values(),
+        ),
+      ]);
+    const read = (within: ParentNode) =>
+      [...within.querySelectorAll("td button")].map(
+        (button) => button.textContent,
+      );
+    expect(read(serverRender(list()))).toEqual(["Edit", "Remove"]);
+    expect(read(await mount(list()))).toEqual(["Edit", "Remove"]);
+    // React's warning is all that's logged
+    const errors = vi
+      .mocked(console.error)
+      .mock.calls.map(([message]) => String(message));
+    expect(
+      errors.filter(
+        (message) =>
+          !message.startsWith("Using Iterators as children is unsupported"),
+      ),
+    ).toEqual([]);
+    vi.mocked(console.error).mockClear();
   });
 });

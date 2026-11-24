@@ -2,6 +2,9 @@
 // wide, as the stories render them, each with `data-test` on its root.
 //
 // - `docs`: the develop docs' example, row for row.
+// - `wrapping-term`: a list 340px wide, whose first term wraps onto two
+//   lines.
+// - `rtl`: a right-to-left list.
 // - `two-buttons`: a row whose action holds two buttons.
 // - `action-colspan`: rows with a SummaryListAddition, and one whose action
 //   has `colSpan={2}` in place of an addition.
@@ -36,9 +39,10 @@ const ActionButton = ({ children }) => (
   </Button>
 );
 
-// A list 660px wide, as the stories render one, titled `title`
-const List = ({ name, title, children }) => (
-  <div className="w-[660px]">
+// A list 660px wide, as the stories render one, titled `title`. `narrow`
+// makes it 340px, and `dir` sets its direction.
+const List = ({ name, title, narrow = false, dir, children }) => (
+  <div className={narrow ? "w-[340px]" : "w-[660px]"} dir={dir}>
     <SummaryList data-test={name}>
       <SummaryListHeader>{title}</SummaryListHeader>
       <SummaryListBody>{children}</SummaryListBody>
@@ -93,6 +97,29 @@ function Page() {
           </SummaryListAction>
         </SummaryListRow>
         <Row term="Expected Response Date" detail="23/03/2023 17:35:00" />
+      </List>
+
+      <List name="wrapping-term" title="A term that wraps" narrow>
+        <SummaryListRow>
+          <SummaryListTerm>
+            Tarikh Jangkaan Maklum Balas Permohonan
+          </SummaryListTerm>
+          <SummaryListDetail>23/03/2023</SummaryListDetail>
+          <SummaryListAction>
+            <ActionButton>Ubah</ActionButton>
+          </SummaryListAction>
+        </SummaryListRow>
+        <Row term="Status" detail="Lulus" />
+      </List>
+
+      <List name="rtl" title="Right to left" dir="rtl">
+        <SummaryListRow>
+          <SummaryListTerm>Application ID</SummaryListTerm>
+          <SummaryListDetail>SUB12345</SummaryListDetail>
+          <SummaryListAction>
+            <ActionButton>Change</ActionButton>
+          </SummaryListAction>
+        </SummaryListRow>
       </List>
 
       <List name="two-buttons" title="Two buttons">

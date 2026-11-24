@@ -77,8 +77,9 @@ const SummaryListRow: FunctionComponent<ComponentProps<"tr">> = ({
 // wraps it in an anonymous cell, which ignores its spans.
 
 /**
- * The row's header, a `<th scope="row">`. Its text starts at its left edge,
- * on the row's baseline.
+ * The row's header, a `<th scope="row">`. Its text starts at its start edge
+ * (`text-start`: the left in a left-to-right page), on the row's baseline,
+ * and each line it wraps onto starts there too.
  */
 const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
   children,
@@ -89,7 +90,7 @@ const SummaryListTerm: FunctionComponent<ComponentProps<"td">> = ({
     // scope equals row here to indicate the header relates to all the row it belongs to
     scope="row"
     className={clx(
-      "text-txt-black-500 min-w-[190px] py-3 pr-3 text-left align-baseline",
+      "text-txt-black-500 min-w-[190px] py-3 pr-3 text-start align-baseline",
       className,
     )}
     {...props}

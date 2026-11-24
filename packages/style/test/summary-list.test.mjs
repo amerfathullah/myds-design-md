@@ -7,9 +7,13 @@
 // spans. Lists built as the docs build them look as they did: each term's
 // text starts at its cell's left edge, on the same baseline as its row's
 // first line, and an action's buttons sit side by side, the last ending 12px
-// (`pr-3`) from its cell's right edge. Each list's accessibility tree is a
-// table whose rows hold a `rowheader` for the term and a `cell` for each
-// other part. happy-dom has no layout, so the unit tests can't check this.
+// (`pr-3`) from its cell's right edge. A term that wraps starts each line at
+// its cell's left edge: its lines used to be centred, as a `<th>` centres
+// its text by default. In a right-to-left list the term's text still starts
+// at its cell's right edge, inside its padding, and the action's buttons at
+// its left edge. Each list's accessibility tree is a table whose rows hold a
+// `rowheader` for the term and a `cell` for each other part. happy-dom has
+// no layout, so the unit tests can't check this.
 //
 // The page is summary-list.page.jsx: the React components themselves,
 // bundled with esbuild, on the stylesheet the Tailwind import compiles for
@@ -84,8 +88,9 @@ async function withPage(use) {
 }
 
 // Runs in the page: the list `name`'s rows, each as its cells in order. A
-// cell is its tag, its border box, its text's left edge and first baseline,
-// and its buttons, each as its border box and baseline. A box is its left,
+// cell is its tag, its border box, its text's lines and first baseline, and
+// its buttons, each as its border box and baseline. A line is its left and
+// right edges. A box is its left,
 // right, top and bottom edges. Every length is to the hundredth of a pixel,
 // so edges on the table's grid compare equal.
 function readRows(name) {
@@ -118,16 +123,18 @@ function readRows(name) {
     wrapper.replaceWith(text);
     return round(bottom);
   };
-  // `element`'s text: its first line's left edge and baseline
+  // `element`'s text: its lines, its first line's left edge, and its
+  // baseline
   const readText = (element) => {
     const text = firstText(element);
     if (!text) return null;
     const range = document.createRange();
     range.selectNodeContents(text);
-    return {
-      left: round(range.getClientRects()[0].left),
-      baseline: baseline(text),
-    };
+    const lines = [...range.getClientRects()].map(({ left, right }) => ({
+      left: round(left),
+      right: round(right),
+    }));
+    return { lines, left: lines[0].left, baseline: baseline(text) };
   };
   // A button's baseline, which a flex container takes from its first item.
   // An icon has no baseline, so Chromium takes its bottom edge.
@@ -257,6 +264,27 @@ test("two buttons in an action sit side by side on one line, the second ending 1
         removeTop: edit.top,
         removeRight: action.right - 12,
       },
+    );
+  }));
+
+test("a term that wraps starts each line at its cell's left edge", () =>
+  withPage(async (page) => {
+    const [[term]] = await rows(page, "wrapping-term");
+    assert.deepEqual(
+      term.text.lines.map(({ left }) => left),
+      [term.left, term.left],
+    );
+  }));
+
+test("in a right-to-left list, the term's text starts at its cell's right edge, inside its 12px padding, and the action's button sits at its cell's left edge", () =>
+  withPage(async (page) => {
+    const [[term, , action]] = await rows(page, "rtl");
+    assert.deepEqual(
+      {
+        termTextRight: term.text.lines[0].right,
+        buttonLeft: action.buttons[0].left,
+      },
+      { termTextRight: term.right - 12, buttonLeft: action.left },
     );
   }));
 

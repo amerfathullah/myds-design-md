@@ -542,9 +542,10 @@ describe("a ref on a Spinner that isn't shown", () => {
 });
 
 // A ref changes nothing a part renders: each composition server-renders the
-// same with a ref on every part as with none. Forwarding the refs changed no
-// markup either: on React 18.3.1 and 19.3.1, each composition, with a ref on
-// every part and with none, server-rendered as on main (4e50f8f).
+// same with a ref on every part as with none. That it renders as before these
+// parts forwarded their refs isn't pinned here, as the markup of nine
+// components would break on every change to their classes: it was checked by
+// hand against main (4e50f8f), byte for byte, on React 18.3.1 and 19.3.1.
 test.each(Object.keys(compositions) as (keyof typeof compositions)[])(
   "the %s server-renders the same with a ref on every part as with none",
   (name) => {

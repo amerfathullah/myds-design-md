@@ -14,8 +14,8 @@ import { act, createRef, type ReactElement, type Ref } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, test } from "vitest";
 
-/** A part whose ref the tests check */
-export interface ForwardedRef {
+/** A part whose ref the tests check: one case of `describeForwardedRefs` */
+export interface RefCase {
   /** The part's export name, which is its name in React's tools */
   name: string;
   /** The part */
@@ -59,7 +59,7 @@ export async function whileMounted<T>(
  * Checks each part's ref, as an object and as a callback, and that each part
  * is a forwardRef component named after its export.
  */
-export function describeForwardedRefs(parts: readonly ForwardedRef[]) {
+export function describeForwardedRefs(parts: readonly RefCase[]) {
   describe.each(parts)(
     "a ref on $name",
     ({ name, part, element, render, find, show, attachments = 1 }) => {

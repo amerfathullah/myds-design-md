@@ -21,10 +21,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import {
-  describeForwardedRefs,
-  type ForwardedRef,
-} from "./forwarded-ref-tests";
+import { describeForwardedRefs } from "./forwarded-ref-tests";
 import {
   SummaryList,
   SummaryListAction,
@@ -245,60 +242,62 @@ describe("a ref on SummaryListHeader", () => {
 // Every other part forwards its ref to the element it renders too, so a ref
 // works on React 18, which gives a plain function component none (#209)
 describeForwardedRefs(
-  (
-    [
-      // Each part, its name, the element its ref is, and how to find that
-      // element in the container a summary list is mounted in
-      [
-        SummaryList,
-        "SummaryList",
-        "`<div>`",
-        (container) => container.firstElementChild,
-      ],
-      [
-        SummaryListBody,
-        "SummaryListBody",
-        "`<table>`, not its `<tbody>`",
-        (container) => container.querySelector("table"),
-      ],
-      [
-        SummaryListRow,
-        "SummaryListRow",
-        "`<tr>`",
-        (container) => container.querySelector("tr"),
-      ],
-      [
-        SummaryListTerm,
-        "SummaryListTerm",
-        '`<th scope="row">`',
-        (container) => container.querySelector("th"),
-      ],
-      [
-        SummaryListDetail,
-        "SummaryListDetail",
-        "`<td>`",
-        (container) => container.querySelector("tr")!.children[1],
-      ],
-      [
-        SummaryListAction,
-        "SummaryListAction",
-        "`<td>`",
-        (container) => container.querySelector("tr")!.children[2],
-      ],
-      [
-        SummaryListAddition,
-        "SummaryListAddition",
-        "`<td>`",
-        (container) => container.querySelector("tr")!.children[3],
-      ],
-    ] satisfies [Part, string, string, ForwardedRef["find"]][]
-  ).map(([part, name, element, find]) => ({
-    name,
-    part,
-    element,
-    render: (ref) => summaryList(undefined, { refOn: part, ref }),
-    find,
-  })),
+  // Each part, the element its ref is, and how to find that element in the
+  // container a summary list is mounted in
+  [
+    {
+      name: "SummaryList",
+      part: SummaryList,
+      element: "`<div>`",
+      render: (ref) => summaryList(undefined, { refOn: SummaryList, ref }),
+      find: (container) => container.firstElementChild,
+    },
+    {
+      name: "SummaryListBody",
+      part: SummaryListBody,
+      element: "`<table>`, not its `<tbody>`",
+      render: (ref) => summaryList(undefined, { refOn: SummaryListBody, ref }),
+      find: (container) => container.querySelector("table"),
+    },
+    {
+      name: "SummaryListRow",
+      part: SummaryListRow,
+      element: "`<tr>`",
+      render: (ref) => summaryList(undefined, { refOn: SummaryListRow, ref }),
+      find: (container) => container.querySelector("tr"),
+    },
+    {
+      name: "SummaryListTerm",
+      part: SummaryListTerm,
+      element: '`<th scope="row">`',
+      render: (ref) => summaryList(undefined, { refOn: SummaryListTerm, ref }),
+      find: (container) => container.querySelector("th"),
+    },
+    {
+      name: "SummaryListDetail",
+      part: SummaryListDetail,
+      element: "`<td>`",
+      render: (ref) =>
+        summaryList(undefined, { refOn: SummaryListDetail, ref }),
+      find: (container) => container.querySelector("tr")!.children[1],
+    },
+    {
+      name: "SummaryListAction",
+      part: SummaryListAction,
+      element: "`<td>`",
+      render: (ref) =>
+        summaryList(undefined, { refOn: SummaryListAction, ref }),
+      find: (container) => container.querySelector("tr")!.children[2],
+    },
+    {
+      name: "SummaryListAddition",
+      part: SummaryListAddition,
+      element: "`<td>`",
+      render: (ref) =>
+        summaryList(undefined, { refOn: SummaryListAddition, ref }),
+      find: (container) => container.querySelector("tr")!.children[3],
+    },
+  ],
 );
 
 // Forwarding refs changes no markup. This is a full summary list's server

@@ -120,6 +120,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@amerfathullah/myds-react/select";
+import { Spinner } from "@amerfathullah/myds-react/spinner";
 import {
   SummaryList,
   SummaryListAction,
@@ -130,7 +131,6 @@ import {
   SummaryListRow,
   SummaryListTerm,
 } from "@amerfathullah/myds-react/summary-list";
-import { Spinner } from "@amerfathullah/myds-react/spinner";
 import { TableTooltip } from "@amerfathullah/myds-react/table";
 import { TextArea } from "@amerfathullah/myds-react/textarea";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
@@ -1198,7 +1198,8 @@ export const SummaryListPartTypes: [
 // The parts of Masthead, Navbar, DateField, TimeField, Spinner, Breadcrumb,
 // Pagination, Radio and SearchBar forward their refs to the element they
 // render (#212), so a ref works on React 18 too. Each ref is typed as that
-// element's, and a ref of another element's type is refused.
+// element's. TypeScript compares elements by their members, so it refuses a
+// ref only to an element unlike that one, such as a `<table>` or an `<svg>`.
 export const MastheadRefs = () => {
   const masthead = useRef<HTMLDivElement>(null);
   const header = createRef<HTMLDivElement>();
@@ -1266,14 +1267,22 @@ export const NavbarRefs = () => {
   );
 };
 
+export const SpinnerRefs = () => {
+  const spinner = createRef<HTMLDivElement>();
+  return (
+    <>
+      <Spinner ref={spinner} />
+      <Spinner ref={(node: HTMLDivElement | null) => void node} show={false} />
+    </>
+  );
+};
+
 export const FieldRefs = () => {
   const date = useRef<HTMLInputElement>(null);
-  const spinner = createRef<HTMLDivElement>();
   return (
     <>
       <DateField ref={date} />
       <TimeField ref={(input: HTMLInputElement | null) => input?.focus()} />
-      <Spinner ref={spinner} show={false} />
       {/* @ts-expect-error The field's ref is its `<input>`, not a `<table>` */}
       <DateField ref={createRef<HTMLTableElement>()} />
     </>
@@ -1427,28 +1436,62 @@ export const ForwardingPartsAsTheirOldTypes: [
 // Each part's type as it's built: its props, ref included
 export const ForwardingPartTypes: [
   ForwardRefExoticComponent<ComponentProps<"div">>,
+  ForwardRefExoticComponent<ComponentProps<"div">>,
   ForwardRefExoticComponent<ComponentProps<"p">>,
   ForwardRefExoticComponent<ComponentProps<"button">>,
+  ForwardRefExoticComponent<ComponentProps<typeof MastheadContent>>,
+  ForwardRefExoticComponent<ComponentProps<typeof MastheadSection>>,
   ForwardRefExoticComponent<ComponentProps<"header">>,
+  ForwardRefExoticComponent<ComponentProps<typeof NavbarLogo>>,
+  ForwardRefExoticComponent<ComponentProps<typeof NavbarMenuItem>>,
+  ForwardRefExoticComponent<ComponentProps<typeof NavbarAction>>,
+  ForwardRefExoticComponent<ComponentProps<typeof DateField>>,
+  ForwardRefExoticComponent<ComponentProps<typeof TimeField>>,
+  ForwardRefExoticComponent<ComponentProps<typeof Spinner>>,
   ForwardRefExoticComponent<ComponentProps<"li">>,
   ForwardRefExoticComponent<ComponentProps<"span">>,
+  ForwardRefExoticComponent<ComponentProps<"div"> & { disabled?: boolean }>,
   ForwardRefExoticComponent<ComponentProps<"label">>,
+  ForwardRefExoticComponent<ComponentProps<typeof RadioHintText>>,
+  ForwardRefExoticComponent<ComponentProps<typeof SearchBar>>,
+  ForwardRefExoticComponent<ComponentProps<"div">>,
+  ForwardRefExoticComponent<ComponentProps<typeof SearchBarInput>>,
   ForwardRefExoticComponent<ButtonProps>,
   ForwardRefExoticComponent<ButtonProps>,
   ForwardRefExoticComponent<ComponentProps<"div">>,
   ForwardRefExoticComponent<ComponentProps<"div"> & { open: boolean }>,
+  ForwardRefExoticComponent<ComponentProps<typeof SearchBarResultsList>>,
+  ForwardRefExoticComponent<ComponentProps<typeof SearchBarResultsGroup>>,
+  ForwardRefExoticComponent<ComponentProps<typeof SearchBarResultsItem>>,
 ] = [
+  Masthead,
   MastheadHeader,
   MastheadTitle,
   MastheadTrigger,
+  MastheadContent,
+  MastheadSection,
   Navbar,
+  NavbarLogo,
+  NavbarMenuItem,
+  NavbarAction,
+  DateField,
+  TimeField,
+  Spinner,
   BreadcrumbSeparator,
   PaginationEllipsis,
+  RadioItem,
   RadioLabel,
+  RadioHintText,
+  SearchBar,
+  SearchBarInputContainer,
+  SearchBarInput,
   SearchBarSearchButton,
   SearchBarClearButton,
   SearchBarHint,
   SearchBarResults,
+  SearchBarResultsList,
+  SearchBarResultsGroup,
+  SearchBarResultsItem,
 ];
 
 // ToastIcon and ToastProgress are exported for a toast composed by hand

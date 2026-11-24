@@ -22,7 +22,8 @@ const breadcrumb_cva = cva(
 );
 
 interface BreadcrumbProps
-  extends ComponentProps<"nav">, VariantProps<typeof breadcrumb_cva> {}
+  extends ComponentProps<"nav">,
+    VariantProps<typeof breadcrumb_cva> {}
 
 const Breadcrumb: ForwardRefExoticComponent<BreadcrumbProps> = forwardRef(
   ({ variant = "default", className, children, ...props }, ref) => (

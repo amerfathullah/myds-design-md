@@ -28,9 +28,8 @@ const DEFAULT_SIZE = "medium";
  * Extends Radix UI's RadioGroup.Root props.
  * @see https://www.radix-ui.com/primitives/docs/components/radio-group#root
  */
-export interface RadioProps extends React.ComponentPropsWithoutRef<
-  typeof RadioGroupPrimitive.Root
-> {
+export interface RadioProps
+  extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
   size?: RadioSize;
 }
 

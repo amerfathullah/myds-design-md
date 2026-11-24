@@ -469,9 +469,8 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
 
 NavbarMenu.displayName = "NavbarMenu";
 
-interface NavbarMenuItemProps extends ComponentProps<
-  typeof NavigationMenuItem
-> {
+interface NavbarMenuItemProps
+  extends ComponentProps<typeof NavigationMenuItem> {
   children: ReactNode;
   href: string;
   className?: string;

@@ -25,15 +25,18 @@ const Skiplink = forwardRef<HTMLAnchorElement, SkiplinkProps>(
           className={clx(
             // to hide the element
             "shadow-context-menu",
-            "absolute z-[99] size-[1px]",
+            "fixed z-[99] size-[1px]",
             "overflow-hidden",
             "whitespace-nowrap",
             "[clip-path:inset(50%)]",
-            // Focus state (visible)
+            "print:hidden",
+            // Focus state (visible), fixed to the window's top left
             "focus:h-auto focus:w-auto",
             "focus:left-4 focus:top-11",
             "focus:[clip-path:none]",
-            "transition-all duration-500 ease-in-out",
+            // Only colours transition, overriding Button's `transition`, so
+            // the link shows and hides in a single frame
+            "transition-colors",
             "opacity-0 focus:opacity-100",
             className,
           )}

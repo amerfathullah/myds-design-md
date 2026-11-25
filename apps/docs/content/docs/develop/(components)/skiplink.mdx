@@ -11,7 +11,7 @@ import { Skiplink } from "@/components/myds";
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
-    <div className="justify-center relative not-prose">
+    <div className="justify-center relative contain-layout not-prose">
       <Skiplink href="#main-content">
         {/* Text-inherit for span to overwrite Fumadocs text color */}
         <span className="text-inherit">Skip to main content</span>
@@ -61,7 +61,7 @@ import { Skiplink } from "@/components/myds";
     <Skiplink href="#main-content">
       <span>Skip to main content</span>
     </Skiplink>
-    <main id="main-content">
+    <main id="main-content" tabIndex={-1}>
       <span className="text-slate-600">
         Main content here
       </span>
@@ -91,7 +91,7 @@ export default () => (
   <Skiplink href="#main-content">
     <span>Skip to main content</span>
   </Skiplink>
-  <main id="main-content">
+  <main id="main-content" tabIndex={-1}>
     <span className="text-slate-600">
       Main content here
     </span>

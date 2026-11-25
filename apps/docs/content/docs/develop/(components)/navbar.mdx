@@ -397,6 +397,8 @@ Enter or Space on the button opens the menu and moves focus to its first item. T
 
 ### NavbarMenu
 
+`NavbarMenu` renders its children once: in the menu bar while the mobile menu is closed, and in the mobile menu while it is open. They mount again each time the mobile menu opens or closes, so keep state that must last above `NavbarMenu`.
+
 <TypeTable
   type={{
     children: {

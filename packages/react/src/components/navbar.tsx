@@ -273,6 +273,10 @@ const NavbarMenu: FunctionComponent<NavigationMenuProps> = ({
   "aria-label": ariaLabel = "Main",
   "aria-labelledby": ariaLabelledBy,
 }) => {
+  // The children render once: in the desktop list while the mobile menu is
+  // closed, and in the mobile menu while it's open. So an author's id is on
+  // one element, and a ref holds the element that's mounted (#214).
+  const { show } = useContext(NavbarContext);
   return (
     <NavigationMenu
       className="grow"
@@ -280,14 +284,16 @@ const NavbarMenu: FunctionComponent<NavigationMenuProps> = ({
       aria-labelledby={ariaLabelledBy}
     >
       {/* Desktop */}
-      <NavigationMenuList
-        className={clx(
-          "hidden xl:flex xl:justify-start xl:gap-1",
-          classNameNavDesktop,
-        )}
-      >
-        {children}
-      </NavigationMenuList>
+      {!show && (
+        <NavigationMenuList
+          className={clx(
+            "hidden xl:flex xl:justify-start xl:gap-1",
+            classNameNavDesktop,
+          )}
+        >
+          {children}
+        </NavigationMenuList>
+      )}
 
       {/* Tablet / Mobile */}
       <NavbarMobileMenu className={clx(classNameNavMobile)}>
@@ -342,6 +348,22 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
   useEffect(() => {
     if (show) closedFromOutsideRef.current = false;
   }, [show]);
+
+  // From `xl:` up the desktop list shows in its place and the toggle hides,
+  // so the menu closes once the window is that wide. Left open, it would
+  // render the children nowhere seen, and its scroll lock would stop the
+  // page scrolling (#214). `80rem` is Tailwind's `xl`, which the preset
+  // keeps. Where there's no `matchMedia`, as in jsdom, the menu stays open.
+  useEffect(() => {
+    if (!show || typeof window.matchMedia !== "function") return;
+    const wide = window.matchMedia("(min-width: 80rem)");
+    const closeIfWide = () => {
+      if (wide.matches) setShow(false);
+    };
+    closeIfWide();
+    wide.addEventListener("change", closeIfWide);
+    return () => wide.removeEventListener("change", closeIfWide);
+  }, [show, setShow]);
 
   if (!show) {
     return null;

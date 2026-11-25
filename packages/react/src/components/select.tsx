@@ -2,6 +2,8 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { clx } from "../utils";
 import { setRef } from "../utils/set-ref";
+import { composeEventHandlers } from "../utils/compose-event-handlers";
+import { keepDisabledTriggerShut } from "../utils/disabled-trigger";
 import { cva } from "class-variance-authority";
 import { ChevronDownFillIcon } from "../icons/chevron-down-fill";
 import { CheckCircleFillIcon } from "../icons/check-circle-fill";
@@ -413,7 +415,16 @@ const select_trigger_cva = cva(
 const SelectTrigger: React.ForwardRefExoticComponent<
   React.ComponentProps<typeof SelectPrimitive.Trigger>
 > = React.forwardRef(
-  ({ className, children, "aria-labelledby": labelledBy, ...props }, ref) => {
+  (
+    {
+      className,
+      children,
+      "aria-labelledby": labelledBy,
+      onPointerDown,
+      ...props
+    },
+    ref,
+  ) => {
     const { variant, size, _naming: naming } = React.useContext(SelectContext);
 
     // The consumer names the trigger with an `aria-label` or `aria-labelledby`
@@ -460,6 +471,12 @@ const SelectTrigger: React.ForwardRefExoticComponent<
         // out of the spread, so an `aria-labelledby={undefined}` there, as a
         // wrapper forwards one it wasn't given, can't drop the label's.
         aria-labelledby={labelNames ? naming.labelId : labelledBy}
+        // The consumer's handler, then the stop for a press on a `:disabled`
+        // button, which a disabled fieldset makes without the prop
+        onPointerDown={composeEventHandlers(
+          onPointerDown,
+          keepDisabledTriggerShut,
+        )}
       >
         {children}
       </SelectPrimitive.Trigger>
@@ -471,7 +488,13 @@ SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 /*========================================================================================================================*/
 
 const select_label_cva = cva(
-  ["group-data-[disabled]:text-txt-black-disabled"],
+  [
+    // Dims with the trigger it sits in, which `disabled` on Select or
+    // SelectTrigger, or a disabled fieldset, disables. A button can't hold
+    // another, so `in-[button:disabled]:` matches only that trigger, and no
+    // `group` around the Select, such as a disabled AccordionItem, dims it.
+    "in-[button:disabled]:text-txt-black-disabled",
+  ],
   {
     variants: {
       size: {

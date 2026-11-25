@@ -365,6 +365,8 @@ You can set the `variant` prop to `danger` on `DropdownItem` to indicate that th
   </Tab>
 </Tabs>
 
+To disable the whole menu, set `disabled` on `DropdownTrigger`, and the trigger won't open it. A disabled `<fieldset>` around the `Dropdown` disables it too. With `asChild`, any `disabled` key on the child overrides the trigger's, even `false` or `undefined`. So set `disabled` on `DropdownTrigger`, and either leave it off the child or give it the same value.
+
 ### Alignment
 
 You can set `align` on `DialogContent` to align where the content viewport should begin with respect to the **trigger element**. By default, the alignment is set to `end`. You can also set the alignment to `start` or `center`.
@@ -606,6 +608,11 @@ You can set `side` on `DialogContent` to position where the content viewport sho
   type={{
     asChild: {
       description: "Flag to inherit child component directly",
+      type: "boolean",
+      default: "false",
+    },
+    disabled: {
+      description: "Disables the trigger, so it doesn't open the menu",
       type: "boolean",
       default: "false",
     },

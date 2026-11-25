@@ -10,6 +10,8 @@ import {
 import * as DropdownPrimitive from "@radix-ui/react-dropdown-menu";
 import { cva, VariantProps } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
+import { composeEventHandlers } from "../utils/compose-event-handlers";
+import { keepDisabledTriggerShut } from "../utils/disabled-trigger";
 
 /**----------------------------------------------
  * *                   INFO
@@ -23,8 +25,20 @@ Dropdown.displayName = "Dropdown";
 
 const DropdownTrigger: ForwardRefExoticComponent<
   ComponentProps<typeof DropdownPrimitive.Trigger>
-> = forwardRef((props, ref) => {
-  return <DropdownPrimitive.Trigger {...props} ref={ref} />;
+> = forwardRef(({ onPointerDown, ...props }, ref) => {
+  return (
+    <DropdownPrimitive.Trigger
+      {...props}
+      ref={ref}
+      // The consumer's handler, then the stop for a press on a `:disabled`
+      // button, which a disabled fieldset or an `asChild` child's `disabled`
+      // makes without the prop
+      onPointerDown={composeEventHandlers(
+        onPointerDown,
+        keepDisabledTriggerShut,
+      )}
+    />
+  );
 });
 DropdownTrigger.displayName = "DropdownTrigger";
 

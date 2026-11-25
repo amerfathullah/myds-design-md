@@ -615,10 +615,15 @@ Berikut adalah contoh **Banner Kuki Terkawal**.
 
 ### CookieBannerTitle
 
-`<h2>`. Idnya menamakan banner, jadi sentiasa sertakannya.
+`<h2>`. Idnya menamakan banner, jadi sentiasa sertakannya. Dengan `asChild`, tajuk anda sendiri dipaparkan sebagai ganti, dan `id`-nya sendiri, jika ada, menamakan banner.
 
 <TypeTable
   type={{
+    asChild: {
+      type: "boolean",
+      description:
+        "Menimpa untuk menggunakan komponen anak sebagai elemen DOM asas.",
+    },
     children: {
       type: "ReactNode",
     },

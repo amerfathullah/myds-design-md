@@ -620,10 +620,14 @@ Below is an example of a **controlled Cookie Banner**.
 
 ### CookieBannerTitle
 
-An `<h2>`. Its id names the banner, so always include one.
+An `<h2>`. Its id names the banner, so always include one. With `asChild`, your own heading renders instead, and its own `id`, if it has one, names the banner.
 
 <TypeTable
   type={{
+    asChild: {
+      type: "boolean",
+      description: "Overrides to use the child component as base DOM element.",
+    },
     children: {
       type: "ReactNode",
     },

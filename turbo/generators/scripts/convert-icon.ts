@@ -65,32 +65,45 @@ export function componentName(source: string): string {
 }
 
 /**
- * A component that renders the SVG, named `${name}Icon`. If the SVG refers to
- * its own ids, the component gets the `id` that prefixes them from
- * `React.useId()`, so each copy on a page has its own; otherwise it calls no
- * hook.
+ * A component that renders the SVG, named `${name}Icon`. It's a forwardRef
+ * component, so a ref on it is its root `<svg>` on React 18 too, and its
+ * `displayName` is its export's name. If the SVG refers to its own ids, the
+ * component gets the `id` that prefixes them from `React.useId()`, so each
+ * copy on a page has its own; otherwise it calls no hook.
+ *
+ * Both calls that make the component, `forwardRef()` and the
+ * `Object.assign()` that names it, are marked `@__PURE__`. A bundler keeps a
+ * call it can't prove is free of side effects, so without the marks an app
+ * that imports one icon would bundle every icon built into the same file
+ * (#215).
  */
 export function convertIcon(name: string, svg: string): string {
   const { jsx, usesId } = svgToJsx(svg);
   const idDeclaration = usesId
-    ? `  // A prefix for the ids this SVG refers to, unique to this copy, so that
-  // hiding another copy on the page can't change how this one draws
-  const id = React.useId();
+    ? `        // A prefix for the ids this SVG refers to, unique to this copy, so that
+        // hiding another copy on the page can't change how this one draws
+        const id = React.useId();
 `
     : "";
   return `import React from "react";
-import { FunctionComponent, SVGProps } from "react";
+import { forwardRef, ForwardRefExoticComponent, SVGProps } from "react";
 
 /**
  * ${name} Icon
  * @param className
  * @returns ${name}Icon
  */
-export const ${name}Icon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
-${idDeclaration}  return (
-    ${jsx}
+export const ${name}Icon: ForwardRefExoticComponent<SVGProps<SVGSVGElement>> =
+  /* @__PURE__ */ Object.assign(
+    /* @__PURE__ */ forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
+      (props, ref) => {
+${idDeclaration}        return (
+          ${jsx}
+        );
+      },
+    ),
+    { displayName: "${name}Icon" },
   );
-};
 `;
 }
 
@@ -155,7 +168,8 @@ export interface Jsx {
 
 /**
  * The SVG as JSX that React accepts: attribute names in React's camelCase, a
- * `style` object, and the caller's props spread onto the root `<svg>`.
+ * `style` object, and on the root `<svg>` the component's forwarded `ref`,
+ * before its own attributes, and the caller's props spread after them.
  * Attribute values stay as they are, with two exceptions:
  *
  * - the icon colour, `#18181B`, becomes `currentColor`;
@@ -196,9 +210,12 @@ export function svgToJsx(svg: string): Jsx {
           );
         },
       );
-    const props = tag === "svg" && root ? " {...props}" : "";
+    // The root `<svg>` is the element the component forwards its ref to
+    const isRoot = tag === "svg" && root;
+    const ref = isRoot ? " ref={ref}" : "";
+    const props = isRoot ? " {...props}" : "";
     root = false;
-    return `<${tag}${attributes}${props}${selfClosing ? "/" : ""}>`;
+    return `<${tag}${ref}${attributes}${props}${selfClosing ? "/" : ""}>`;
   });
   return { jsx, usesId: ownIds.size > 0 };
 }

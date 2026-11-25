@@ -1,86 +1,92 @@
 import React from "react";
-import { FunctionComponent, SVGProps } from "react";
+import { forwardRef, ForwardRefExoticComponent, SVGProps } from "react";
 
 /**
  * MiniInternetMCMC Icon
  * @param className
  * @returns MiniInternetMCMCIcon
  */
-export const MiniInternetMCMCIcon: FunctionComponent<
+export const MiniInternetMCMCIcon: ForwardRefExoticComponent<
   SVGProps<SVGSVGElement>
-> = (props) => {
-  // A prefix for the ids this SVG refers to, unique to this copy, so that
-  // hiding another copy on the page can't change how this one draws
-  const id = React.useId();
-  return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <g>
-        <g>
-          <circle
-            cx="12"
-            cy="12"
-            r="9"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
+> = /* @__PURE__ */ Object.assign(
+  /* @__PURE__ */ forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
+    (props, ref) => {
+      // A prefix for the ids this SVG refers to, unique to this copy, so that
+      // hiding another copy on the page can't change how this one draws
+      const id = React.useId();
+      return (
+        <svg
+          ref={ref}
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
           <g>
-            <mask
-              id={`${id}mask0_14447_1242`}
-              style={{ maskType: "alpha" }}
-              maskUnits="userSpaceOnUse"
-              x="3"
-              y="3"
-              width="18"
-              height="18"
-            >
-              <circle cx="12" cy="12" r="9" fill="white" />
-            </mask>
-            <g mask={`url(#${id}mask0_14447_1242)`}>
+            <g>
+              <circle
+                cx="12"
+                cy="12"
+                r="9"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
               <g>
-                <path
-                  d="M12.0002 3.00122V21.0012"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M3.00024 12.0012L21.0002 12.0012"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M21.8182 0.545532C21.8182 4.61236 17.4225 7.90917 12.0001 7.90917C6.57763 7.90917 2.18188 4.61236 2.18188 0.545532"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
-                <path
-                  d="M21.8182 23.4544C21.8182 19.3876 17.4225 16.0908 12.0001 16.0908C6.57763 16.0908 2.18188 19.3876 2.18188 23.4544"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
-                <path
-                  d="M14.4542 21.8184C10.3874 21.8184 7.09058 17.4227 7.09058 12.0002C7.09058 6.57782 10.3874 2.18207 14.4542 2.18207"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
-                <path
-                  d="M9.5453 21.8193C13.6121 21.8193 16.9089 17.4235 16.9089 12.0011C16.9089 6.57867 13.6121 2.18292 9.5453 2.18292"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
+                <mask
+                  id={`${id}mask0_14447_1242`}
+                  style={{ maskType: "alpha" }}
+                  maskUnits="userSpaceOnUse"
+                  x="3"
+                  y="3"
+                  width="18"
+                  height="18"
+                >
+                  <circle cx="12" cy="12" r="9" fill="white" />
+                </mask>
+                <g mask={`url(#${id}mask0_14447_1242)`}>
+                  <g>
+                    <path
+                      d="M12.0002 3.00122V21.0012"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M3.00024 12.0012L21.0002 12.0012"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M21.8182 0.545532C21.8182 4.61236 17.4225 7.90917 12.0001 7.90917C6.57763 7.90917 2.18188 4.61236 2.18188 0.545532"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M21.8182 23.4544C21.8182 19.3876 17.4225 16.0908 12.0001 16.0908C6.57763 16.0908 2.18188 19.3876 2.18188 23.4544"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M14.4542 21.8184C10.3874 21.8184 7.09058 17.4227 7.09058 12.0002C7.09058 6.57782 10.3874 2.18207 14.4542 2.18207"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M9.5453 21.8193C13.6121 21.8193 16.9089 17.4235 16.9089 12.0011C16.9089 6.57867 13.6121 2.18292 9.5453 2.18292"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                  </g>
+                </g>
               </g>
             </g>
           </g>
-        </g>
-      </g>
-    </svg>
-  );
-};
+        </svg>
+      );
+    },
+  ),
+  { displayName: "MiniInternetMCMCIcon" },
+);

@@ -19,13 +19,13 @@ describe("componentName", () => {
 });
 
 describe("svgToJsx", () => {
-  test("spreads props onto the root svg, after its own attributes", () => {
+  test("puts the forwarded ref on the root svg, and spreads props onto it after its own attributes", () => {
     expect(
       svgToJsx(
         `<svg width="20" xmlns="http://www.w3.org/2000/svg"><svg width="4"/></svg>`,
       ).jsx,
     ).toBe(
-      `<svg width="20" xmlns="http://www.w3.org/2000/svg" {...props}><svg width="4"/></svg>`,
+      `<svg ref={ref} width="20" xmlns="http://www.w3.org/2000/svg" {...props}><svg width="4"/></svg>`,
     );
   });
 
@@ -45,7 +45,7 @@ describe("svgToJsx", () => {
     ["xml:space", "xmlSpace"],
   ])("names %s as %s", (attribute, prop) => {
     expect(svgToJsx(`<svg><path ${attribute}="1"/></svg>`).jsx).toBe(
-      `<svg {...props}><path ${prop}="1"/></svg>`,
+      `<svg ref={ref} {...props}><path ${prop}="1"/></svg>`,
     );
   });
 
@@ -58,7 +58,7 @@ describe("svgToJsx", () => {
       );
 
       expect(jsx).toBe(
-        `<svg {...props}><g strokeDasharray="1 -2"><path d="M-1 -2L3-4"/></g></svg>`,
+        `<svg ref={ref} {...props}><g strokeDasharray="1 -2"><path d="M-1 -2L3-4"/></g></svg>`,
       );
       expect(usesId).toBe(false);
     });
@@ -69,7 +69,7 @@ describe("svgToJsx", () => {
       );
 
       expect(jsx).toBe(
-        "<svg {...props}><g clipPath={`url(#${id}clip0)`}><path/></g><clipPath id={`${id}clip0`}/></svg>",
+        "<svg ref={ref} {...props}><g clipPath={`url(#${id}clip0)`}><path/></g><clipPath id={`${id}clip0`}/></svg>",
       );
       expect(usesId).toBe(true);
     });
@@ -80,7 +80,7 @@ describe("svgToJsx", () => {
           `<svg id="root"><g id='a'><path id="b" d="M1"/><path d="M2" id="c"/><path d="M3" id="d" fill="none" /><path\n  id="e"\n  d="M4"\n/></g></svg>`,
         ).jsx,
       ).toBe(
-        `<svg {...props}><g><path d="M1"/><path d="M2"/><path d="M3" fill="none" /><path\n  d="M4"\n/></g></svg>`,
+        `<svg ref={ref} {...props}><g><path d="M1"/><path d="M2"/><path d="M3" fill="none" /><path\n  d="M4"\n/></g></svg>`,
       );
     });
 
@@ -90,7 +90,7 @@ describe("svgToJsx", () => {
           `<svg><mask id="a&amp;b"/><path id="a&amp;c" mask="url(#a&amp;b)"/></svg>`,
         ).jsx,
       ).toBe(
-        "<svg {...props}><mask id={`${id}a&b`}/><path mask={`url(#${id}a&b)`}/></svg>",
+        "<svg ref={ref} {...props}><mask id={`${id}a&b`}/><path mask={`url(#${id}a&b)`}/></svg>",
       );
     });
   });
@@ -104,7 +104,7 @@ describe("svgToJsx", () => {
       );
 
       expect(jsx).toBe(
-        '<svg {...props}><g clipPath={`url(#${id}clip-path-1)`}><path d="M-1 -2L3-4"/></g><defs><clipPath id={`${id}clip-path-1`}><rect/></clipPath></defs><g clipPath={`url(#${id}clip-path-1)`}/></svg>',
+        '<svg ref={ref} {...props}><g clipPath={`url(#${id}clip-path-1)`}><path d="M-1 -2L3-4"/></g><defs><clipPath id={`${id}clip-path-1`}><rect/></clipPath></defs><g clipPath={`url(#${id}clip-path-1)`}/></svg>',
       );
       expect(usesId).toBe(true);
     });
@@ -115,7 +115,7 @@ describe("svgToJsx", () => {
           `<svg><mask id="m"/><linearGradient id="g"/><path mask="url(#m)" fill="url(#g)" stroke="url( #g )"/></svg>`,
         ).jsx,
       ).toBe(
-        "<svg {...props}><mask id={`${id}m`}/><linearGradient id={`${id}g`}/><path mask={`url(#${id}m)`} fill={`url(#${id}g)`} stroke={`url( #${id}g )`}/></svg>",
+        "<svg ref={ref} {...props}><mask id={`${id}m`}/><linearGradient id={`${id}g`}/><path mask={`url(#${id}m)`} fill={`url(#${id}g)`} stroke={`url( #${id}g )`}/></svg>",
       );
     });
 
@@ -125,7 +125,7 @@ describe("svgToJsx", () => {
           `<svg><mask id="m"/><path mask="url('#m')" clip-path='url("#m")' fill="url(&quot;#m&quot;)"/></svg>`,
         ).jsx,
       ).toBe(
-        '<svg {...props}><mask id={`${id}m`}/><path mask={`url(\'#${id}m\')`} clipPath={`url("#${id}m")`} fill={`url("#${id}m")`}/></svg>',
+        '<svg ref={ref} {...props}><mask id={`${id}m`}/><path mask={`url(\'#${id}m\')`} clipPath={`url("#${id}m")`} fill={`url("#${id}m")`}/></svg>',
       );
     });
 
@@ -135,7 +135,7 @@ describe("svgToJsx", () => {
           `<svg><defs><path id="shape"/></defs><use href="#shape"/><use xlink:href="#shape"/></svg>`,
         ).jsx,
       ).toBe(
-        "<svg {...props}><defs><path id={`${id}shape`}/></defs><use href={`#${id}shape`}/><use xlinkHref={`#${id}shape`}/></svg>",
+        "<svg ref={ref} {...props}><defs><path id={`${id}shape`}/></defs><use href={`#${id}shape`}/><use xlinkHref={`#${id}shape`}/></svg>",
       );
     });
 
@@ -143,7 +143,7 @@ describe("svgToJsx", () => {
       expect(
         svgToJsx(`<svg><path id="shape"/><use xl:href="#shape"/></svg>`).jsx,
       ).toBe(
-        "<svg {...props}><path id={`${id}shape`}/><use xlHref={`#${id}shape`}/></svg>",
+        "<svg ref={ref} {...props}><path id={`${id}shape`}/><use xlHref={`#${id}shape`}/></svg>",
       );
     });
 
@@ -153,7 +153,7 @@ describe("svgToJsx", () => {
           '<svg><mask id="a`b${c}\\d&amp;e"/><path mask="url(\'#a`b${c}\\d&amp;e\')"/></svg>',
         ).jsx,
       ).toBe(
-        "<svg {...props}><mask id={`${id}a\\`b\\${c}\\\\d&e`}/><path mask={`url('#${id}a\\`b\\${c}\\\\d&e')`}/></svg>",
+        "<svg ref={ref} {...props}><mask id={`${id}a\\`b\\${c}\\\\d&e`}/><path mask={`url('#${id}a\\`b\\${c}\\\\d&e')`}/></svg>",
       );
     });
   });
@@ -297,25 +297,29 @@ describe("svgToJsx", () => {
   test("leaves aria- and data- attributes dash-case, as React wants them", () => {
     expect(
       svgToJsx(`<svg aria-hidden="true"><path data-part="a"/></svg>`).jsx,
-    ).toBe(`<svg aria-hidden="true" {...props}><path data-part="a"/></svg>`);
+    ).toBe(
+      `<svg ref={ref} aria-hidden="true" {...props}><path data-part="a"/></svg>`,
+    );
   });
 
   test("names class as className", () => {
     expect(svgToJsx(`<svg><path class="a"/></svg>`).jsx).toBe(
-      `<svg {...props}><path className="a"/></svg>`,
+      `<svg ref={ref} {...props}><path className="a"/></svg>`,
     );
   });
 
   test("turns a style string into an object", () => {
     expect(
       svgToJsx(`<svg><g style="mix-blend-mode:hard-light"/></svg>`).jsx,
-    ).toBe(`<svg {...props}><g style={{ mixBlendMode: "hard-light" }}/></svg>`);
+    ).toBe(
+      `<svg ref={ref} {...props}><g style={{ mixBlendMode: "hard-light" }}/></svg>`,
+    );
     expect(
       svgToJsx(
         `<svg><mask style="mask-type: alpha; -webkit-mask-clip: border-box; font-family: &quot;A; B&quot;;--depth:2;"/></svg>`,
       ).jsx,
     ).toBe(
-      `<svg {...props}><mask style={{ maskType: "alpha", WebkitMaskClip: "border-box", fontFamily: "\\"A; B\\"", "--depth": "2" }}/></svg>`,
+      `<svg ref={ref} {...props}><mask style={{ maskType: "alpha", WebkitMaskClip: "border-box", fontFamily: "\\"A; B\\"", "--depth": "2" }}/></svg>`,
     );
   });
 
@@ -331,13 +335,13 @@ describe("svgToJsx", () => {
         `<svg><path fill="#18181B" stroke="#18181b"/><path fill="#27272A" stop-color="#18181B"/></svg>`,
       ).jsx,
     ).toBe(
-      `<svg {...props}><path fill="currentColor" stroke="currentColor"/><path fill="#27272A" stopColor="#18181B"/></svg>`,
+      `<svg ref={ref} {...props}><path fill="currentColor" stroke="currentColor"/><path fill="#27272A" stopColor="#18181B"/></svg>`,
     );
   });
 
   test("reads single-quoted attributes and values holding a >", () => {
     expect(svgToJsx(`<svg><text font-family='a "b" > c'/></svg>`).jsx).toBe(
-      `<svg {...props}><text fontFamily='a "b" > c'/></svg>`,
+      `<svg ref={ref} {...props}><text fontFamily='a "b" > c'/></svg>`,
     );
   });
 });
@@ -348,9 +352,9 @@ describe("convertIcon", () => {
     `<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="2"/></svg>\n`,
   );
 
-  test("exports the component under its name", () => {
+  test("exports the component under its name, typed as a forwardRef component", () => {
     expect(component).toContain(
-      "export const RSSIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) =>",
+      "export const RSSIcon: ForwardRefExoticComponent<SVGProps<SVGSVGElement>> =\n",
     );
   });
 
@@ -360,31 +364,54 @@ describe("convertIcon", () => {
     );
   });
 
-  test("renders the converted SVG", () => {
+  test("renders the converted SVG, with the forwarded ref on its root", () => {
     expect(component).toContain(
-      `<svg xmlns="http://www.w3.org/2000/svg" {...props}><path strokeWidth="2"/></svg>`,
+      `<svg ref={ref} xmlns="http://www.w3.org/2000/svg" {...props}><path strokeWidth="2"/></svg>`,
     );
+  });
+
+  // React 18 gives a plain function component no ref (#215). A bundler keeps
+  // a call it can't prove is pure, so each call is marked: unmarked, every icon
+  // would be bundled with any one of them.
+  test("forwards its ref from a forwardRef call marked pure", () => {
+    expect(component).toContain(
+      "/* @__PURE__ */ forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(\n" +
+        "      (props, ref) => {\n",
+    );
+  });
+
+  test("is named after its export in React's tools, by an Object.assign marked pure", () => {
+    expect(component).toContain(
+      "=\n  /* @__PURE__ */ Object.assign(\n    /* @__PURE__ */ forwardRef<",
+    );
+    expect(component).toContain(`    { displayName: "RSSIcon" },\n  );\n`);
   });
 
   test("calls no hook when the SVG refers to none of its ids", () => {
     expect(component).not.toContain("useId");
     expect(component).toBe(`import React from "react";
-import { FunctionComponent, SVGProps } from "react";
+import { forwardRef, ForwardRefExoticComponent, SVGProps } from "react";
 
 /**
  * RSS Icon
  * @param className
  * @returns RSSIcon
  */
-export const RSSIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" {...props}><path strokeWidth="2"/></svg>
+export const RSSIcon: ForwardRefExoticComponent<SVGProps<SVGSVGElement>> =
+  /* @__PURE__ */ Object.assign(
+    /* @__PURE__ */ forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
+      (props, ref) => {
+        return (
+          <svg ref={ref} xmlns="http://www.w3.org/2000/svg" {...props}><path strokeWidth="2"/></svg>
+        );
+      },
+    ),
+    { displayName: "RSSIcon" },
   );
-};
 `);
   });
 
-  test("gives each copy its own `id`, from one useId() before it renders, when the SVG refers to its ids", () => {
+  test("gives each copy its own `id`, from one useId() in the render function, when the SVG refers to its ids", () => {
     const clipped = convertIcon(
       "Facebook",
       `<svg><g clip-path="url(#clip0)"/><clipPath id="clip0"/></svg>`,
@@ -392,13 +419,13 @@ export const RSSIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
 
     expect(clipped.match(/useId/g)).toEqual(["useId"]);
     expect(clipped).toContain(
-      "(props) => {\n" +
-        "  // A prefix for the ids this SVG refers to, unique to this copy, so that\n" +
-        "  // hiding another copy on the page can't change how this one draws\n" +
-        "  const id = React.useId();\n" +
-        "  return (\n" +
-        "    <svg {...props}><g clipPath={`url(#${id}clip0)`}/><clipPath id={`${id}clip0`}/></svg>\n" +
-        "  );\n",
+      "(props, ref) => {\n" +
+        "        // A prefix for the ids this SVG refers to, unique to this copy, so that\n" +
+        "        // hiding another copy on the page can't change how this one draws\n" +
+        "        const id = React.useId();\n" +
+        "        return (\n" +
+        "          <svg ref={ref} {...props}><g clipPath={`url(#${id}clip0)`}/><clipPath id={`${id}clip0`}/></svg>\n" +
+        "        );\n",
     );
   });
 });

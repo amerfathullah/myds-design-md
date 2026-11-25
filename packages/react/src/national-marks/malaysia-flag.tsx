@@ -1,5 +1,10 @@
 import React from "react";
-import { FunctionComponent, SVGProps } from "react";
+import {
+  ForwardedRef,
+  forwardRef,
+  ForwardRefExoticComponent,
+  SVGProps,
+} from "react";
 
 /**
  * The Malaysia flag, 32×16 in full colour. It's a national mark, not an icon,
@@ -7,11 +12,24 @@ import { FunctionComponent, SVGProps } from "react";
  * the deprecated `MalaysiaFlagIcon`, until the next major (ADR-0007). The
  * Masthead shows it.
  */
-export const MalaysiaFlag: FunctionComponent<SVGProps<SVGSVGElement>> = (
-  props,
-) => {
+export const MalaysiaFlag: ForwardRefExoticComponent<SVGProps<SVGSVGElement>> =
+  /* @__PURE__ */ Object.assign(
+    /* @__PURE__ */ forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
+      renderMalaysiaFlag,
+    ),
+    { displayName: "MalaysiaFlag" },
+  );
+
+// Its render function, which forwards the ref to its root `<svg>`. Both calls
+// above are marked pure, as the icons' are, so a bundler can drop the mark
+// from an app that doesn't use it (#215).
+function renderMalaysiaFlag(
+  props: SVGProps<SVGSVGElement>,
+  ref: ForwardedRef<SVGSVGElement>,
+) {
   return (
     <svg
+      ref={ref}
       width="32"
       height="16"
       viewBox="0 0 32 16"
@@ -64,4 +82,4 @@ export const MalaysiaFlag: FunctionComponent<SVGProps<SVGSVGElement>> = (
       </svg>
     </svg>
   );
-};
+}

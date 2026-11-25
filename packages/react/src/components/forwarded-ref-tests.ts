@@ -1,5 +1,6 @@
 // The tests that a part forwards its ref to the element it renders, shared by
-// the tests of the components whose parts do (#209, #212).
+// the tests of the components whose parts do (#209, #212) and of the icons
+// (#215).
 //
 // React 18 gives a plain function component no ref: an object ref stays
 // `null`, a callback ref is never called, and in development React warns
@@ -18,6 +19,12 @@ import { describe, expect, test } from "vitest";
 export interface RefCase {
   /** The part's export name, which is its name in React's tools */
   name: string;
+  /**
+   * Its name in React's tools, where that isn't its export name, as for an
+   * export that's another name for a component
+   * @default name
+   */
+  displayName?: string;
   /** The part */
   part: { readonly $$typeof?: symbol; displayName?: string };
   /** The element its ref is, as the tests' titles name it */
@@ -62,11 +69,20 @@ export async function whileMounted<T>(
 export function describeForwardedRefs(parts: readonly RefCase[]) {
   describe.each(parts)(
     "a ref on $name",
-    ({ name, part, element, render, find, show, attachments = 1 }) => {
-      test(`is a forwardRef component, named "${name}" in React's tools`, () => {
+    ({
+      name,
+      displayName = name,
+      part,
+      element,
+      render,
+      find,
+      show,
+      attachments = 1,
+    }) => {
+      test(`is a forwardRef component, named "${displayName}" in React's tools`, () => {
         expect({ type: part.$$typeof, displayName: part.displayName }).toEqual({
           type: Symbol.for("react.forward_ref"),
-          displayName: name,
+          displayName,
         });
       });
 
@@ -74,7 +90,7 @@ export function describeForwardedRefs(parts: readonly RefCase[]) {
         const ref = createRef<Element>();
         await whileMounted(render(ref), async (container) => {
           await show?.(container);
-          expect(ref.current).toBeInstanceOf(HTMLElement);
+          expect(ref.current).toBeInstanceOf(Element);
           expect(ref.current).toBe(find(container));
         });
       });
@@ -91,7 +107,7 @@ export function describeForwardedRefs(parts: readonly RefCase[]) {
             return { rendered: find(container), mounted: [...calls] };
           },
         );
-        expect(rendered).toBeInstanceOf(HTMLElement);
+        expect(rendered).toBeInstanceOf(Element);
         // Each call as "the element", or as what it got otherwise
         const named = (nodes: (Element | null)[]) =>
           nodes.map((node) =>

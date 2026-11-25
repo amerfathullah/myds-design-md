@@ -1,5 +1,10 @@
 import React from "react";
-import { FunctionComponent, SVGProps } from "react";
+import {
+  ForwardedRef,
+  forwardRef,
+  ForwardRefExoticComponent,
+  SVGProps,
+} from "react";
 
 /**
  * The Jata Negara, 32×32 in full colour. It's a national mark, not an icon,
@@ -7,11 +12,24 @@ import { FunctionComponent, SVGProps } from "react";
  * `@amerfathullah/myds-react/icon`, as the deprecated `JataNegaraIcon`, and
  * the next major deletes it (ADR-0007).
  */
-export const JataNegara: FunctionComponent<SVGProps<SVGSVGElement>> = (
-  props,
-) => {
+export const JataNegara: ForwardRefExoticComponent<SVGProps<SVGSVGElement>> =
+  /* @__PURE__ */ Object.assign(
+    /* @__PURE__ */ forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
+      renderJataNegara,
+    ),
+    { displayName: "JataNegara" },
+  );
+
+// Its render function, which forwards the ref to its root `<svg>`. Both calls
+// above are marked pure, as the icons' are, so a bundler can drop the mark
+// from an app that doesn't use it (#215).
+function renderJataNegara(
+  props: SVGProps<SVGSVGElement>,
+  ref: ForwardedRef<SVGSVGElement>,
+) {
   return (
     <svg
+      ref={ref}
       width="32"
       height="32"
       viewBox="0 0 32 32"
@@ -3080,4 +3098,4 @@ export const JataNegara: FunctionComponent<SVGProps<SVGSVGElement>> = (
       </defs>
     </svg>
   );
-};
+}

@@ -7,7 +7,8 @@
 // "Function components cannot be given refs". React 19, which these tests run
 // on, passes a ref as a prop, and each part spreads its props onto its
 // element, so a ref arrives either way. So each part is also checked to be a
-// forwardRef component, named after its export in React's tools.
+// forwardRef component, named in React's tools after its export, or after the
+// component that an export is another name for.
 //
 // The test file that calls `describeForwardedRefs` checks that nothing is
 // logged, React's warnings included.
@@ -17,7 +18,7 @@ import { describe, expect, test } from "vitest";
 
 /** A part whose ref the tests check: one case of `describeForwardedRefs` */
 export interface RefCase {
-  /** The part's export name, which is its name in React's tools */
+  /** The part's export name, which the tests' titles name it by */
   name: string;
   /**
    * Its name in React's tools, where that isn't its export name, as for an
@@ -64,7 +65,8 @@ export async function whileMounted<T>(
 
 /**
  * Checks each part's ref, as an object and as a callback, and that each part
- * is a forwardRef component named after its export.
+ * is a forwardRef component with the expected `displayName`: its export's
+ * name, unless the case gives another.
  */
 export function describeForwardedRefs(parts: readonly RefCase[]) {
   describe.each(parts)(

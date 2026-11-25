@@ -21,8 +21,8 @@ export const JataNegara: ForwardRefExoticComponent<SVGProps<SVGSVGElement>> =
   );
 
 // Its render function, which forwards the ref to its root `<svg>`. Both calls
-// above are marked pure, as the icons' are, so a bundler can drop the mark
-// from an app that doesn't use it (#215).
+// above carry a `@__PURE__` annotation, as the icons' do, so a bundler can
+// leave this component out of an app that doesn't use it (#215).
 function renderJataNegara(
   props: SVGProps<SVGSVGElement>,
   ref: ForwardedRef<SVGSVGElement>,

@@ -1,10 +1,12 @@
 import {
+  cloneElement,
   ComponentProps,
   ComponentPropsWithoutRef,
   Dispatch,
   ElementType,
   forwardRef,
   ForwardRefExoticComponent,
+  isValidElement,
   Ref,
   RefAttributes,
   SetStateAction,
@@ -38,7 +40,8 @@ interface CookieBannerContextValue {
   // Switches views and moves focus into the new one
   togglePreferences: () => void;
   close: () => void;
-  // The id of the CookieBannerTitle, which names the banner
+  // The id the CookieBannerTitle's heading renders with, which names the
+  // banner
   setTitleId: Dispatch<SetStateAction<string | undefined>>;
   // Records `node` as a part of the banner, and returns what forgets it
   registerPart: (node: HTMLElement, part: Part) => () => void;
@@ -514,37 +517,51 @@ const cookie_action_cva = cva(
   },
 );
 
-/** The banner's heading, an `<h2>`. Its id names the banner. */
+/**
+ * The banner's heading, an `<h2>`, or with `asChild` your own heading. Its id
+ * names the banner: with `asChild`, the heading's own `id` if it has one.
+ */
 const CookieBannerTitle: ForwardRefExoticComponent<
   SlottableProps<"h2"> & RefAttributes<HTMLHeadingElement>
-> = forwardRef(({ className, asChild = false, id, ...props }, ref) => {
-  const context = useContext(CookieBannerContext);
-  const generatedId = useId();
-  const titleId = id ?? generatedId;
-  const setTitleId = context?.setTitleId;
-  useBeforePaint(() => {
-    if (!setTitleId) return;
-    setTitleId(titleId);
-    return () =>
-      setTitleId((current) => (current === titleId ? undefined : current));
-  }, [setTitleId, titleId]);
+> = forwardRef(
+  ({ className, asChild = false, id, children, ...props }, ref) => {
+    const context = useContext(CookieBannerContext);
+    const generatedId = useId();
+    // Slot lets the child's props win, `id={undefined}` included, so with
+    // `asChild` the heading keeps its own id, and gets ours only when it has
+    // none
+    const child =
+      asChild && isValidElement<{ id?: string }>(children)
+        ? children
+        : undefined;
+    const titleId = child?.props.id ?? id ?? generatedId;
+    const setTitleId = context?.setTitleId;
+    useBeforePaint(() => {
+      if (!setTitleId) return;
+      setTitleId(titleId);
+      return () =>
+        setTitleId((current) => (current === titleId ? undefined : current));
+    }, [setTitleId, titleId]);
 
-  if (!context)
-    throw new Error("CookieBannerTitle must be used within CookieBanner");
+    if (!context)
+      throw new Error("CookieBannerTitle must be used within CookieBanner");
 
-  const Comp = asChild ? Slot : "h2";
-  return (
-    <Comp
-      ref={ref}
-      id={titleId}
-      className={clx(
-        "text-body-md font-body text-txt-black-900 font-semibold",
-        className,
-      )}
-      {...props}
-    />
-  );
-});
+    const Comp = asChild ? Slot : "h2";
+    return (
+      <Comp
+        ref={ref}
+        id={titleId}
+        className={clx(
+          "text-body-md font-body text-txt-black-900 font-semibold",
+          className,
+        )}
+        {...props}
+      >
+        {child ? cloneElement(child, { id: titleId }) : children}
+      </Comp>
+    );
+  },
+);
 
 /** The banner's text, a `<p>`, read in reading order. */
 const CookieBannerDescription: ForwardRefExoticComponent<

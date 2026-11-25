@@ -21,7 +21,7 @@ import {
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { computeAccessibleName } from "dom-accessibility-api";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
   CookieBanner,
@@ -46,7 +46,8 @@ const TITLE = "This site uses cookies";
 // A CookieBanner composed as the docs compose one. The default view offers
 // Accept all, Reject all and Customise. The Customise view shows the
 // preferences, a disabled checkbox and then the Analytics one, with Back and
-// Save preferences.
+// Save preferences. `title` is false for no title, or the title to render in
+// place of the docs' one.
 function banner(
   props: BannerProps = {},
   {
@@ -54,7 +55,7 @@ function banner(
     onAccept,
     onCustomise,
   }: {
-    title?: boolean;
+    title?: boolean | ReactElement;
     onAccept?: ClickHandler;
     onCustomise?: ClickHandler;
   } = {},
@@ -62,7 +63,9 @@ function banner(
   return createElement(
     CookieBanner,
     props,
-    title ? createElement(CookieBannerTitle, null, TITLE) : null,
+    title === true
+      ? createElement(CookieBannerTitle, null, TITLE)
+      : title || null,
     createElement(
       CookieBannerDescription,
       null,
@@ -219,6 +222,28 @@ function button(name: string) {
   return matches[0]!;
 }
 
+// The element the section's `aria-labelledby` names, which must be on the
+// page
+function labelledBy(section: Element) {
+  const id = section.getAttribute("aria-labelledby");
+  expect(id).not.toBeNull();
+  const label = document.getElementById(id!);
+  expect(label).not.toBeNull();
+  return label!;
+}
+
+// A CookieBannerTitle with `asChild` and `titleProps`, whose child is an
+// `<h3>` with `headingProps`
+const h3Title = (
+  titleProps: Omit<ComponentProps<typeof CookieBannerTitle>, "asChild">,
+  headingProps: ComponentProps<"h3">,
+) =>
+  createElement(
+    CookieBannerTitle,
+    { ...titleProps, asChild: true },
+    createElement("h3", headingProps, TITLE),
+  );
+
 const click = (element: HTMLElement) => act(async () => element.click());
 const focus = (element: HTMLElement) => act(async () => element.focus());
 
@@ -322,6 +347,166 @@ describe("what it renders", () => {
     await mount(page(banner({ defaultOpen: true, ref })));
     expect(ref.current).not.toBeNull();
     expect(ref.current).toBe(region());
+  });
+
+  // The title's heading must render with the id in the section's
+  // `aria-labelledby`. With `asChild` it's the author's own heading, whose
+  // props Slot lets win, its `id` included (#213).
+  describe("the title's heading names it", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    // React logs no warning
+    afterEach(async () => {
+      await unmountAll();
+      expect([
+        ...vi.mocked(console.error).mock.calls,
+        ...vi.mocked(console.warn).mock.calls,
+      ]).toEqual([]);
+    });
+
+    test("with `asChild`, a heading with its own `id` keeps it, and that id names the section", async () => {
+      await mount(
+        page(
+          banner(
+            { defaultOpen: true },
+            { title: h3Title({}, { id: "cookie-title" }) },
+          ),
+        ),
+      );
+      const heading = byId("cookie-title");
+      expect(heading.tagName).toBe("H3");
+      expect(labelledBy(region()!)).toBe(heading);
+      expect(computeAccessibleName(region()!)).toBe(TITLE);
+    });
+
+    test("with `asChild` and an `id` on both the title and its heading, the heading's id renders and names the section", async () => {
+      await mount(
+        page(
+          banner(
+            { defaultOpen: true },
+            { title: h3Title({ id: "title-id" }, { id: "heading-id" }) },
+          ),
+        ),
+      );
+      const heading = byId("heading-id");
+      expect(heading.tagName).toBe("H3");
+      expect(document.getElementById("title-id")).toBeNull();
+      expect(labelledBy(region()!)).toBe(heading);
+      expect(computeAccessibleName(region()!)).toBe(TITLE);
+    });
+
+    test("with `asChild` and a heading with `id={undefined}`, the heading gets an id, and it names the section", async () => {
+      await mount(
+        page(
+          banner(
+            { defaultOpen: true },
+            { title: h3Title({}, { id: undefined }) },
+          ),
+        ),
+      );
+      const heading = document.querySelector("h3")!;
+      expect(heading.id).not.toBe("");
+      expect(labelledBy(region()!)).toBe(heading);
+      expect(computeAccessibleName(region()!)).toBe(TITLE);
+    });
+
+    test("with `asChild` and a heading with no `id`, the heading names the section, and no `<h2>` renders", async () => {
+      await mount(
+        page(banner({ defaultOpen: true }, { title: h3Title({}, {}) })),
+      );
+      expect(document.querySelectorAll("h2")).toHaveLength(0);
+      const heading = document.querySelector("h3")!;
+      expect(labelledBy(region()!)).toBe(heading);
+      expect(computeAccessibleName(region()!)).toBe(TITLE);
+    });
+
+    test("with `asChild` and an `id` on the title only, the heading gets that id, and it names the section", async () => {
+      await mount(
+        page(
+          banner(
+            { defaultOpen: true },
+            { title: h3Title({ id: "title-id" }, {}) },
+          ),
+        ),
+      );
+      const heading = byId("title-id");
+      expect(heading.tagName).toBe("H3");
+      expect(labelledBy(region()!)).toBe(heading);
+      expect(computeAccessibleName(region()!)).toBe(TITLE);
+    });
+
+    test("without `asChild`, an `id` on the title renders on its `<h2>` and names the section", async () => {
+      await mount(
+        page(
+          banner(
+            { defaultOpen: true },
+            {
+              title: createElement(
+                CookieBannerTitle,
+                { id: "title-id" },
+                TITLE,
+              ),
+            },
+          ),
+        ),
+      );
+      const heading = byId("title-id");
+      expect(heading.tagName).toBe("H2");
+      expect(labelledBy(region()!)).toBe(heading);
+      expect(computeAccessibleName(region()!)).toBe(TITLE);
+    });
+
+    test("when the heading's `id` changes, the section follows it, and removing the title removes `aria-labelledby`", async () => {
+      const { rerender } = await mount(
+        page(
+          banner({ open: true }, { title: h3Title({}, { id: "first-id" }) }),
+        ),
+      );
+      expect(labelledBy(region()!)).toBe(byId("first-id"));
+      await rerender(
+        page(
+          banner({ open: true }, { title: h3Title({}, { id: "second-id" }) }),
+        ),
+      );
+      expect(document.getElementById("first-id")).toBeNull();
+      expect(labelledBy(region()!)).toBe(byId("second-id"));
+      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      await rerender(page(banner({ open: true }, { title: false })));
+      expect(region()!.hasAttribute("aria-labelledby")).toBe(false);
+    });
+
+    test("with `asChild`, the title's and the heading's classes, both refs and the heading's other attributes reach the one heading", async () => {
+      const titleRef = createRef<HTMLHeadingElement>();
+      const headingRef = createRef<HTMLHeadingElement>();
+      await mount(
+        page(
+          banner(
+            { defaultOpen: true },
+            {
+              title: h3Title({ ref: titleRef, className: "title-class" }, {
+                ref: headingRef,
+                id: "cookie-title",
+                className: "heading-class",
+                lang: "ms",
+                "data-part": "heading",
+              } as ComponentProps<"h3">),
+            },
+          ),
+        ),
+      );
+      const heading = byId("cookie-title");
+      expect(document.querySelectorAll("h2, h3")).toHaveLength(1);
+      expect(titleRef.current).toBe(heading);
+      expect(headingRef.current).toBe(heading);
+      expect(heading.classList).toContain("title-class");
+      expect(heading.classList).toContain("heading-class");
+      expect(heading.classList).toContain("font-semibold");
+      expect(heading.getAttribute("lang")).toBe("ms");
+      expect(heading.getAttribute("data-part")).toBe("heading");
+    });
   });
 });
 

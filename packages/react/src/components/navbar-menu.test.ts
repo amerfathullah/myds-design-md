@@ -145,6 +145,13 @@ const copies = () => ({
   mounted,
 });
 
+// Where the element `ref` holds is, and whether it's the one with the
+// author's id
+const refState = (ref: { current: Element | null }) => ({
+  ref: where(ref.current),
+  refIsItem: ref.current === document.getElementById("item-a"),
+});
+
 // Presses Escape where focus is, in the open mobile menu
 const pressEscape = () =>
   act(
@@ -170,17 +177,16 @@ describe("NavbarMenu's children", () => {
     async (_, close) => {
       const ref = createRef<HTMLLIElement>();
       const toggle = await navbar(ref);
-      const closed = { ...copies(), ref: where(ref.current) };
+      const closed = { ...copies(), ...refState(ref) };
       await press(toggle);
-      const open = { ...copies(), ref: where(ref.current) };
+      const open = { ...copies(), ...refState(ref) };
       await close(toggle);
-      const reclosed = { ...copies(), ref: where(ref.current) };
+      const reclosed = { ...copies(), ...refState(ref) };
       expect([closed, open, reclosed]).toEqual([
-        { items: ["desktop"], mounted: 1, ref: "desktop" },
-        { items: ["mobile"], mounted: 1, ref: "mobile" },
-        { items: ["desktop"], mounted: 1, ref: "desktop" },
+        { items: ["desktop"], mounted: 1, ref: "desktop", refIsItem: true },
+        { items: ["mobile"], mounted: 1, ref: "mobile", refIsItem: true },
+        { items: ["desktop"], mounted: 1, ref: "desktop", refIsItem: true },
       ]);
-      expect(ref.current).toBe(document.getElementById("item-a"));
       expect(toggle.getAttribute("aria-expanded")).toBe("false");
     },
   );
@@ -238,6 +244,55 @@ describe("NavbarMenu's children", () => {
     });
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
   });
+});
+
+// Presses `element` with a pointer of type `pointerType`, as a click or a tap
+// does: a pointerdown, then a click. A tick first lets an open dropdown start
+// listening for presses outside it.
+async function pointerPress(element: HTMLElement, pointerType: string) {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    element.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        cancelable: true,
+        pointerType,
+      }),
+    );
+    element.click();
+  });
+}
+
+// A press on an open dropdown's trigger closes it again. Radix tells a press
+// on the trigger from one outside the dropdown by the items the menu bar's
+// list tracks, so the list stays mounted while the mobile menu is open.
+describe("A dropdown in the mobile menu", () => {
+  test.each(["mouse", "touch"])(
+    "opens on a %s press on its trigger, and closes on the next",
+    async (pointerType) => {
+      const toggle = await navbar(
+        createRef(),
+        createElement(NavbarMenuDropdown, {
+          title: "Lagi",
+          children: createElement(NavbarMenuItem, {
+            href: "#soalan",
+            children: "Soalan lazim",
+          }),
+        }),
+      );
+      await press(toggle);
+      const [trigger, ...others] = [...panel()!.querySelectorAll("button")];
+      expect(others).toEqual([]);
+      expect(trigger!.textContent).toBe("Lagi");
+      const expanded = [trigger!.getAttribute("aria-expanded")];
+      for (let pressed = 0; pressed < 3; pressed++) {
+        await pointerPress(trigger!, pointerType);
+        expanded.push(trigger!.getAttribute("aria-expanded"));
+      }
+      expect(expanded).toEqual(["false", "true", "false", "true"]);
+      expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    },
+  );
 });
 
 // What the page shows of the menu: whether the mobile menu's panel is open,
@@ -300,9 +355,25 @@ describe("The mobile menu", () => {
     expect(closed).toMatchObject({ panel: false, items: ["desktop"] });
   });
 
-  describe("where the window has no `matchMedia`, as in jsdom", () => {
+  // A test environment can have no `matchMedia`, or one that stands in for
+  // it without the media query lists' `addEventListener`. The menu then
+  // stays open, and opening it throws nothing, which would unmount the
+  // Navbar.
+  describe.each([
+    ["no `matchMedia`, as in jsdom", undefined],
+    [
+      "a `matchMedia` whose lists have only `addListener`, as an older polyfill gives",
+      (media: string) => ({
+        media,
+        matches: false,
+        addListener() {},
+        removeListener() {},
+      }),
+    ],
+    ["a `matchMedia` mock that returns nothing", () => undefined],
+  ])("where the window has %s", (_, standIn) => {
     beforeEach(() => {
-      vi.stubGlobal("matchMedia", undefined);
+      vi.stubGlobal("matchMedia", standIn);
     });
     afterEach(() => {
       vi.unstubAllGlobals();
@@ -311,15 +382,15 @@ describe("The mobile menu", () => {
     test.each(closings)(
       "opens, and closes with %s, rendering the children once",
       async (_, close) => {
-        expect(window.matchMedia).toBeUndefined();
+        expect(window.matchMedia).toBe(standIn);
         const ref = createRef<HTMLLIElement>();
         const toggle = await navbar(ref);
         await press(toggle);
-        const open = { ...menuState(toggle), ref: where(ref.current) };
+        const open = { ...menuState(toggle), ...refState(ref) };
         await close(toggle);
         const { overflow, ...closed } = {
           ...menuState(toggle),
-          ref: where(ref.current),
+          ...refState(ref),
         };
         expect({ open, closed }).toEqual({
           open: {
@@ -328,12 +399,14 @@ describe("The mobile menu", () => {
             overflow: "hidden",
             expanded: "true",
             ref: "mobile",
+            refIsItem: true,
           },
           closed: {
             panel: false,
             items: ["desktop"],
             expanded: "false",
             ref: "desktop",
+            refIsItem: true,
           },
         });
         expect(overflow).not.toBe("hidden");

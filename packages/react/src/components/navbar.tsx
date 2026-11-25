@@ -275,7 +275,10 @@ const NavbarMenu: FunctionComponent<NavigationMenuProps> = ({
 }) => {
   // The children render once: in the desktop list while the mobile menu is
   // closed, and in the mobile menu while it's open. So an author's id is on
-  // one element, and a ref holds the element that's mounted (#214).
+  // one element, and a ref holds the element that's mounted (#214). The list
+  // itself stays mounted: Radix finds the menu's dropdown triggers through
+  // it, so that a press on an open dropdown's trigger closes the dropdown,
+  // rather than counting as a press outside it.
   const { show } = useContext(NavbarContext);
   return (
     <NavigationMenu
@@ -284,16 +287,14 @@ const NavbarMenu: FunctionComponent<NavigationMenuProps> = ({
       aria-labelledby={ariaLabelledBy}
     >
       {/* Desktop */}
-      {!show && (
-        <NavigationMenuList
-          className={clx(
-            "hidden xl:flex xl:justify-start xl:gap-1",
-            classNameNavDesktop,
-          )}
-        >
-          {children}
-        </NavigationMenuList>
-      )}
+      <NavigationMenuList
+        className={clx(
+          "hidden xl:flex xl:justify-start xl:gap-1",
+          classNameNavDesktop,
+        )}
+      >
+        {!show && children}
+      </NavigationMenuList>
 
       {/* Tablet / Mobile */}
       <NavbarMobileMenu className={clx(classNameNavMobile)}>
@@ -353,10 +354,14 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
   // so the menu closes once the window is that wide. Left open, it would
   // render the children nowhere seen, and its scroll lock would stop the
   // page scrolling (#214). `80rem` is Tailwind's `xl`, which the preset
-  // keeps. Where there's no `matchMedia`, as in jsdom, the menu stays open.
+  // keeps. Where a test environment has no `matchMedia`, as jsdom has none,
+  // or one whose lists have no `addEventListener`, as an older polyfill or a
+  // bare mock gives, the menu stays open.
   useEffect(() => {
     if (!show || typeof window.matchMedia !== "function") return;
-    const wide = window.matchMedia("(min-width: 80rem)");
+    const wide: MediaQueryList | undefined =
+      window.matchMedia("(min-width: 80rem)");
+    if (typeof wide?.addEventListener !== "function") return;
     const closeIfWide = () => {
       if (wide.matches) setShow(false);
     };

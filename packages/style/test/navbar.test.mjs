@@ -274,11 +274,11 @@ test("opened at 390px, the menu closes as the window widens to 1440px, the deskt
   withPage(async (page) => {
     assert.equal(await openWithEnter(page), "Menu A");
     await page.setViewportSize(desktop);
-    await page.waitForSelector(list, { state: "detached", timeout: 5000 });
-    await frames(page);
+    // Focus after widening is #162's, so only `aria-expanded` is checked
+    const { expanded } = await closed(page);
     assert.deepEqual(
       {
-        expanded: await page.getAttribute(toggle, "aria-expanded"),
+        expanded,
         desktopItem: await page.isVisible('header nav a[href="#Menu-A"]'),
         items: await page.locator('a[href="#Menu-A"]').count(),
       },
@@ -288,6 +288,33 @@ test("opened at 390px, the menu closes as the window widens to 1440px, the deskt
     await page.mouse.wheel(0, 800);
     assert.ok((await scrolled(page)) > 0, "the page didn't scroll");
   }));
+
+// The mobile menu's dropdown opens and closes on presses on its trigger. Radix
+// tells a press on the trigger from one outside the dropdown by the items the
+// desktop list tracks, so that list stays mounted, empty, while the mobile
+// menu is open (#214).
+for (const [press, hasTouch] of [
+  ["click", false],
+  ["tap", true],
+])
+  test(`a ${press} on the mobile menu's Dropdown trigger opens it, the next ${press} closes it, and the one after opens it again`, () =>
+    withPage(
+      async (page) => {
+        await page.click(toggle);
+        await page.waitForSelector(list);
+        await frames(page);
+        const trigger = page.locator(`${list} button`, { hasText: "Dropdown" });
+        const expanded = [];
+        for (let pressed = 0; pressed < 3; pressed++) {
+          await (hasTouch ? trigger.tap() : trigger.click());
+          await frames(page);
+          expanded.push(await trigger.getAttribute("aria-expanded"));
+        }
+        assert.deepEqual(expanded, ["true", "false", "true"]);
+        assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
+      },
+      { hasTouch },
+    ));
 
 for (const theme of themes) {
   const options = { theme };

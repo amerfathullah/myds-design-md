@@ -14,7 +14,7 @@ import { Skiplink } from "@/components/myds";
     <div className="justify-center relative contain-layout not-prose">
       <Skiplink href="#main-content">
         {/* Text-inherit for span to overwrite Fumadocs text color */}
-        <span className="text-inherit">Skip to main content</span>
+        <span className="text-inherit">Langkau ke kandungan utama</span>
       </Skiplink>
       <nav className="h-[200px] bg-slate-800 block">
         <div className="items-center justify-between">
@@ -52,14 +52,16 @@ import { Skiplink } from "@/components/myds";
     ```tsx 
     import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 
-    <Skiplink href="#main-content">
-      <span>Skip to main content</span>
-    </Skiplink>
-    <main id="main-content" tabIndex={-1}>
-      <span className="text-slate-600">
-        Main content here
-      </span>
-    </main>
+    <>
+      <Skiplink href="#main-content">
+        <span>Langkau ke kandungan utama</span>
+      </Skiplink>
+      <main id="main-content" tabIndex={-1}>
+        <span className="text-slate-600">
+          Main content here
+        </span>
+      </main>
+    </>;
     ```
 
   </Tab>
@@ -82,14 +84,33 @@ import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 
 ```tsx copy title="Anatomi"
 export default () => (
-  <Skiplink href="#main-content">
-    <span>Skip to main content</span>
-  </Skiplink>
-  <main id="main-content" tabIndex={-1}>
-    <span className="text-slate-600">
-      Main content here
-    </span>
-  </main>
+  <>
+    <Skiplink href="#main-content">
+      <span>Langkau ke kandungan utama</span>
+    </Skiplink>
+    <main id="main-content" tabIndex={-1}>
+      <span className="text-slate-600">
+        Main content here
+      </span>
+    </main>
+  </>
+);
+```
+
+## Kedudukan
+
+Paparkan `Skiplink` sebagai elemen pertama dalam `<body>`. Jika halaman memaparkan `CookieBanner`, paparkan `Skiplink` sejurus selepasnya. Letakkan `Skiplink` di luar mana-mana `<header>` dan `<nav>`, sebelum `Masthead` dan `Navbar`. Halakan `href` ke `id` elemen `<main>` halaman, dan berikan `tabIndex={-1}` kepada `<main>` itu supaya pautan langkau boleh mengalihkan fokus ke situ tanpa menambah hentian Tab. Untuk panduan penuh, lihat halaman [Pautan langkau](/docs/design/skip-link) dalam garis panduan reka bentuk.
+
+```tsx copy title="Kedudukan"
+export default () => (
+  <body>
+    {/* CookieBanner, jika digunakan */}
+    <Skiplink href="#main-content">Langkau ke kandungan utama</Skiplink>
+    <Masthead />
+    <Navbar>{/* … */}</Navbar>
+    <main id="main-content" tabIndex={-1}>{/* … */}</main>
+    <Footer>{/* … */}</Footer>
+  </body>
 );
 ```
 

@@ -437,7 +437,7 @@ const Dropdown = ({ label, options, selectedOption, onChange }) => {
 
 - Halaman mesti mempunyai struktur tajuk yang betul (**h1-h6**)
 - Landmark mesti digunakan untuk mengenal pasti kawasan halaman
-- Pautan lompat harus disediakan untuk kandungan yang berulang
+- Pautan langkau harus disediakan untuk kandungan yang berulang
 - Tajuk halaman mesti deskriptif dan unik
 
 **Petua Pelaksanaan**
@@ -447,12 +447,12 @@ const Dropdown = ({ label, options, selectedOption, onChange }) => {
 const PageLayout = ({ children }) => (
   <>
     <a href="#main-content" className="skip-link">
-      Lompat ke kandungan utama
+      Langkau ke kandungan utama
     </a>
     <header>
       <nav aria-label="Navigasi Utama">{/* Item navigasi */}</nav>
     </header>
-    <main id="main-content">{children}</main>
+    <main id="main-content" tabIndex={-1}>{children}</main>
     <aside aria-label="Maklumat Berkaitan">{/* Kandungan sidebar */}</aside>
     <footer>{/* Kandungan footer */}</footer>
   </>
@@ -480,7 +480,7 @@ const PageContent = () => (
 
 - Gunakan alat garis besar tajuk untuk mengesahkan struktur tajuk yang betul
 - Uji navigasi dengan pembaca skrin untuk mengesahkan landmark diumumkan
-- Sahkan bahawa pautan lompat berfungsi dan kelihatan apabila difokuskan
+- Sahkan bahawa pautan langkau berfungsi dan kelihatan apabila difokuskan
 
 ## Kandungan dan Teks
 

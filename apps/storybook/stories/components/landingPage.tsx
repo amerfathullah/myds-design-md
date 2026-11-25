@@ -23,6 +23,7 @@ import {
   NavbarMenuDropdown,
   NavbarMenuItem,
 } from "@amerfathullah/myds-react/navbar";
+import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 
 import { clx } from "@amerfathullah/myds-react/utils";
 import { useState } from "react";
@@ -173,50 +174,57 @@ const DemoFooter = () => {
 export default function LandingPage() {
   return (
     <div>
+      <Skiplink href="#main-content">Skip to main content</Skiplink>
       <Masthead />
       <DemoNavbar />
-      <section className="flex h-screen flex-col items-center justify-center">
-        <div
-          className={clx(
-            "grid w-full pb-8 pt-8",
-            "gap-4.5 px-4.5 grid-cols-4",
-            "md:gap-6 md:px-6 md:max-lg:grid-cols-8",
-            "max-w-[1280px] lg:mx-auto lg:grid-cols-12",
-            "font-body",
-          )}
-        >
-          <picture
-            className={clx(
-              "col-span-full mx-auto max-w-[740px] md:order-2",
-              "md:max-lg:col-span-5 md:max-lg:col-start-4",
-              "lg:col-span-5 lg:col-start-6",
-            )}
-          >
-            <img alt="" src="/common/preview-2.svg" className="h-auto w-full" />
-          </picture>
+      <main id="main-content" tabIndex={-1}>
+        <section className="flex h-screen flex-col items-center justify-center">
           <div
             className={clx(
-              "max-auto gap-4.5 col-span-full flex max-w-[640px] flex-col md:order-1",
-              "md:max-lg:col-span-3 md:max-lg:col-start-1",
-              "lg:col-span-3 lg:col-start-2",
+              "grid w-full pb-8 pt-8",
+              "gap-4.5 px-4.5 grid-cols-4",
+              "md:gap-6 md:px-6 md:max-lg:grid-cols-8",
+              "max-w-[1280px] lg:mx-auto lg:grid-cols-12",
+              "font-body",
             )}
           >
-            <p className="text-txt-primary text-body-sm font-semibold">
-              Subtitle
-            </p>
-            <h1 className="font-heading text-heading-sm font-semibold">
-              Title
-            </h1>
-            <p>
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-              Temporibus enim cupiditate doloribus quam ut perferendis illo
-              quaerat architecto autem possimus recusandae corrupti commodi
-              blanditiis, a impedit?
-            </p>
-            <Button>Click here</Button>
+            <picture
+              className={clx(
+                "col-span-full mx-auto max-w-[740px] md:order-2",
+                "md:max-lg:col-span-5 md:max-lg:col-start-4",
+                "lg:col-span-5 lg:col-start-6",
+              )}
+            >
+              <img
+                alt=""
+                src="/common/preview-2.svg"
+                className="h-auto w-full"
+              />
+            </picture>
+            <div
+              className={clx(
+                "max-auto gap-4.5 col-span-full flex max-w-[640px] flex-col md:order-1",
+                "md:max-lg:col-span-3 md:max-lg:col-start-1",
+                "lg:col-span-3 lg:col-start-2",
+              )}
+            >
+              <p className="text-txt-primary text-body-sm font-semibold">
+                Subtitle
+              </p>
+              <h1 className="font-heading text-heading-sm font-semibold">
+                Title
+              </h1>
+              <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit.
+                Temporibus enim cupiditate doloribus quam ut perferendis illo
+                quaerat architecto autem possimus recusandae corrupti commodi
+                blanditiis, a impedit?
+              </p>
+              <Button>Click here</Button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
       <DemoFooter />
     </div>
   );

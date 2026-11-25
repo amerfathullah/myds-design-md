@@ -31,15 +31,17 @@ a) Toggle Language now
 	-- check the path and replaces the lang on path
 	-- navigate to new path and re-render using react-router
 b) Since using React Router, change children to <Outlet>
+c) Render `Skiplink` first, before the Masthead, and wrap the demo block and the `<Outlet>` in `<main id="main-content" tabIndex={-1}>`, which the skip link points at. Its `tabIndex={-1}` makes following the link move focus to the content.
 
 ```
-import { Button } from "@amerfathullah/myds-react/button";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import FooterMyds from "./FooterMyds";
 import MastheadMyds from "./MastheadMyds";
 import NavbarMyds from "./NavbarMyds";
 import { Outlet, useNavigate } from "react-router";
+import { Button } from "@amerfathullah/myds-react/button";
+import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 
 export default function LayoutMain() {
   const navigate = useNavigate();
@@ -64,16 +66,19 @@ export default function LayoutMain() {
 
   return (
     <>
+      <Skiplink href="#main-content">Skip to main content</Skiplink>
       <MastheadMyds></MastheadMyds>
       <NavbarMyds></NavbarMyds>
-      <div className="bg-bg-warning-50">
-        <Button onClick={toggleLangMs}>Toggle this to ms</Button>
-        <Button onClick={toggleLangEn}>Toggle this to en</Button>
-        <h1>{t("welcome")} sini</h1>
-      </div>
+      <main id="main-content" tabIndex={-1}>
+        <div className="bg-bg-warning-50">
+          <Button onClick={toggleLangMs}>Toggle this to ms</Button>
+          <Button onClick={toggleLangEn}>Toggle this to en</Button>
+          <h1>{t("welcome")} sini</h1>
+        </div>
 
-      {/* use outlet instead of children to tell where to render child routes for the current route hierarchy. */}
-      <Outlet></Outlet>
+        {/* use outlet instead of children to tell where to render child routes for the current route hierarchy. */}
+        <Outlet></Outlet>
+      </main>
       <FooterMyds></FooterMyds>
     </>
   );

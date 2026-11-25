@@ -19,11 +19,14 @@ Part 1 : Layout Prep
     [fe-template-b/src/components/layout/FooterMyds.tsx](fe-template-b/src/components/layout/FooterMyds.tsx)
 
     These files hold this repo's docs examples of the page-level components Masthead, Navbar and Footer, importing `@amerfathullah/myds-react`. Upstream's docs at https://myds.vercel.app are for MYDS 1.x and import the old package name, so don't copy from there.
-11. Prepare the Layout like below example by importing the MastheadMyds.tsx, NavbarMyds.tsx, FooterMyds.tsx
+11. Prepare the Layout like below example by importing the MastheadMyds.tsx, NavbarMyds.tsx, FooterMyds.tsx, and `Skiplink` from `@amerfathullah/myds-react/skiplink`
+
+    The skip link comes first, before the Masthead, and points at the `<main id="main-content">` that holds the page's content. Its `tabIndex={-1}` makes following the link move focus to the content.
 
 Ex:
 
 ```
+import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 import FooterMyds from "./FooterMyds";
 import MastheadMyds from "./MastheadMyds";
 import NavbarMyds from "./NavbarMyds";
@@ -34,9 +37,12 @@ type LayoutMainProps = {
 export default function LayoutMain({ children }: LayoutMainProps) {
   return (
     <>
+      <Skiplink href="#main-content">Skip to main content</Skiplink>
       <MastheadMyds></MastheadMyds>
       <NavbarMyds></NavbarMyds>
-      {children}
+      <main id="main-content" tabIndex={-1}>
+        {children}
+      </main>
       <FooterMyds></FooterMyds>
     </>
   );

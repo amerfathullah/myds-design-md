@@ -140,7 +140,7 @@ Masthead bukan landmark dengan sendirinya: ia memaparkan `<div id="masthead">` b
 </Masthead>
 ```
 
-Pembaca skrin kemudian menyebut kawasan bernama "Portal Rasmi Kerajaan Malaysia", iaitu teks tajuk itu sendiri, jadi nama itu mengikut bahasa laman anda tanpa rentetan baharu untuk diterjemahkan. Id itu mesti unik pada halaman. Untuk nama yang lain, hantar `role="region"` bersama `aria-label` sebagai ganti, contohnya `aria-label="Laman web rasmi kerajaan"`. Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan.
+Pembaca skrin kemudian menyebut kawasan bernama "Portal Rasmi Kerajaan Malaysia", iaitu teks tajuk itu sendiri, jadi nama itu mengikut bahasa halaman anda tanpa rentetan baharu untuk diterjemahkan. Id itu mesti unik pada halaman. Untuk nama yang lain, hantar `role="region"` bersama `aria-label` sebagai ganti, contohnya `aria-label="Laman web rasmi kerajaan"`. Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan.
 
 - **Sentiasa namakan kawasan itu.** `role="region"` tanpa nama lulus peraturan `region` axe, tetapi pelayar tidak mendedahkannya sebagai landmark, jadi Masthead masih berada di luar semua landmark.
 - **Jangan namakan Masthead tanpa `role="region"`.** Ia `<div>` biasa, dan ARIA tidak membenarkan anda memberikan `aria-label` atau `aria-labelledby` kepadanya.
@@ -198,7 +198,7 @@ Setiap bahagian meneruskan `ref`nya kepada elemen yang dipaparkannya. Ref `Masth
     },
     id: {
       description:
-        "Id yang dihalakan oleh `aria-labelledby` `Masthead`, supaya teks tajuk menamakan kawasan Masthead. Id itu mesti unik pada halaman.",
+        "Id yang ditunjuk oleh `aria-labelledby` `Masthead`, supaya teks tajuk menamakan kawasan Masthead. Id itu mesti unik pada halaman.",
       type: "string",
     },
   }}

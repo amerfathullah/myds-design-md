@@ -154,7 +154,7 @@ async function tree(page) {
 
 // Runs axe-core over the whole document: the nodes its `region` rule flags
 // inside the Masthead, from the collapsible around the element its ref gets
-// down, and every other rule it finds violated
+// down, and every other rule it finds violated and where
 async function axe(page) {
   if (!(await page.evaluate(() => "axe" in window)))
     await page.addScriptTag({ content: axeSource });
@@ -169,7 +169,10 @@ async function axe(page) {
         .filter((target) => root.contains(document.querySelector(target))),
       others: violations
         .filter(({ id }) => id !== "region")
-        .map(({ id, nodes }) => `${id} (${nodes.length})`),
+        .map(
+          ({ id, nodes }) =>
+            `${id} (${nodes.map(({ target }) => target.join(" ")).join(", ")})`,
+        ),
     };
   });
 }
@@ -179,7 +182,7 @@ async function read(page, t, where) {
   const { version, inMasthead, others } = await axe(page);
   assert.equal(version, "4.10.2");
   if (others.length)
-    t.diagnostic(`${where}: other axe violations: ${others.join(", ")}`);
+    t.diagnostic(`${where}: other axe violations: ${others.join("; ")}`);
   return { ...(await tree(page)), regionNodesInMasthead: inMasthead };
 }
 

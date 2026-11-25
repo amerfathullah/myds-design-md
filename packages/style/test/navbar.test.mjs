@@ -12,7 +12,8 @@
 // menu's panel is a dialog the accessibility tree names after the toggle,
 // "Menu", or what an `aria-label` on NavbarAction renames both to (#169).
 // The menu closes once the window widens to `xl:`, and the page scrolls
-// again (#214).
+// again (#214). An `id` on the Navbar leaves the menu where it opens: below
+// the header, as wide as it, over its overlay (#216).
 //
 // The page is navbar.page.jsx: the React components themselves, bundled with
 // esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -68,8 +69,9 @@ const still =
   "*,::before,::after{transition:none!important;animation:none!important}";
 
 // Opens the page with the menu `menu` (see navbar.page.jsx) at `viewport`,
-// in `theme`, with `label` as the toggle's `aria-label` when it's given, and
-// runs `use` on it once React has rendered it. `hasTouch` gives the page a
+// in `theme`, with `label` as the toggle's `aria-label` and `id` as the
+// Navbar's when they're given, and runs `use` on it once React has rendered
+// it. `hasTouch` gives the page a
 // touchscreen, and `forcedColors` is Playwright's option, "active" for
 // forced colours. Nothing logs an error or a warning.
 async function withPage(
@@ -77,6 +79,7 @@ async function withPage(
   {
     menu = "a",
     label,
+    id,
     viewport = phone,
     theme = "light",
     hasTouch = false,
@@ -106,6 +109,7 @@ async function withPage(
     );
     const query = new URLSearchParams({ menu });
     if (label !== undefined) query.set("label", label);
+    if (id !== undefined) query.set("id", id);
     await page.goto(`${pageUrl}?${query}`);
     await page.waitForFunction(() => window.ready.length === 1);
     const result = await use(page);
@@ -289,6 +293,99 @@ test("opened at 390px, the menu closes as the window widens to 1440px, the deskt
     await page.mouse.wheel(0, 800);
     assert.ok((await scrolled(page)) > 0, "the page didn't scroll");
   }));
+
+// Runs in the page: the `<header>`'s id, the boxes of the header and of the
+// mobile menu's list and overlay, and whether the element at the centre of
+// the focused item, Menu A once Enter opens the menu, is that item or in it,
+// rather than the header drawn over it
+function readMenuLayout() {
+  const box = (element) => {
+    const { x, y, width, height } = element.getBoundingClientRect();
+    return { x, y, width, height };
+  };
+  const header = document.querySelector("header");
+  const panel = document.querySelector(
+    "[data-radix-popper-content-wrapper] > *",
+  );
+  const item = document.activeElement;
+  const { x, y, width, height } = item.getBoundingClientRect();
+  return {
+    id: header.id,
+    header: box(header),
+    list: box(panel.querySelector("ul")),
+    overlay: box(panel.querySelector(":scope > [aria-hidden]")),
+    itemShown: item.contains(
+      document.elementFromPoint(x + width / 2, y + height / 2),
+    ),
+  };
+}
+
+// The mobile menu opens below the `<header>`, as wide as it, over its
+// overlay, whatever `id` the Navbar has: none, an author's, or an empty one,
+// which gets a generated id. An author's id used to replace the one the menu
+// found the header by, so the menu opened in the top-left corner, as wide as
+// its content and with no overlay, and the header covered Menu A (#216).
+for (const id of [undefined, "site-header", ""]) {
+  const given = id === undefined ? "no `id`" : `\`id="${id}"\``;
+
+  test(`with ${given} on the Navbar, at 390px, the mobile menu opens below the header, as wide as it, over its overlay, and the header doesn't cover Menu A`, () =>
+    withPage(
+      async (page) => {
+        assert.equal(await openWithEnter(page), "Menu A");
+        const {
+          id: headerId,
+          header,
+          list,
+          overlay,
+          itemShown,
+        } = await page.evaluate(readMenuLayout);
+        // Where the list and the overlay start, and how wide they are: at
+        // the header's bottom-left corner, as wide as the header. The header
+        // is below the button before it, as wide as the window and 56px tall.
+        const placed = ({ x, y, width }) => ({ x, y, width });
+        const below = {
+          x: header.x,
+          y: header.y + header.height,
+          width: header.width,
+        };
+        assert.deepEqual(
+          {
+            header: { width: header.width, height: header.height },
+            list: placed(list),
+            overlay: placed(overlay),
+            itemShown,
+          },
+          {
+            header: { width: phone.width, height: 56 },
+            list: below,
+            overlay: below,
+            itemShown: true,
+          },
+        );
+        if (id) assert.equal(headerId, id);
+        else assert.match(headerId, /\S/);
+      },
+      { id },
+    ));
+}
+
+// A finger on Menu A's centre, where the header covered it (#216). Waits
+// for the link to be followed, for up to a second.
+test("with `id=\"site-header\"` on the Navbar, at 390px, a tap on Menu A's centre follows Menu A's link, rather than landing on the header", () =>
+  withPage(
+    async (page) => {
+      await page.tap(toggle);
+      await page.waitForSelector(list);
+      await frames(page);
+      const box = await page.locator(`${list} a[href="#Menu-A"]`).boundingBox();
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+      await page
+        .waitForFunction(() => location.hash !== "", null, { timeout: 1000 })
+        .catch(() => {});
+      assert.equal(await page.evaluate(() => location.hash), "#Menu-A");
+    },
+    { id: "site-header", hasTouch: true },
+  ));
 
 // The mobile menu's dropdown opens and closes on presses on its trigger. Radix
 // tells a press on the trigger from one outside the dropdown by the items the

@@ -541,6 +541,9 @@ importers:
       dom-accessibility-api:
         specifier: ^0.6.3
         version: 0.6.3
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       eslint:
         specifier: ^10.13.0
         version: 10.13.0(jiti@2.7.0)(supports-color@8.1.1)

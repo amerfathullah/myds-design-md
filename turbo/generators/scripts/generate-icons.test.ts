@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
+import { convertIcon } from "./convert-icon";
 import {
   type Formatter,
   generateIcons,
@@ -200,6 +201,30 @@ describe("the default formatter", () => {
         { path: file, content: `export const a = 'b'` },
       ]),
     ).resolves.toEqual([{ path: file, content: `export const a = "b";\n` }]);
+  });
+
+  // A bundler drops an unused icon only if the calls that make it are marked
+  // pure, directly before each call (#215)
+  test("keeps an icon's pure marks directly before the calls they mark", async () => {
+    const file = join(repository, "packages/react/src/icons/example.tsx");
+
+    const [formatted] = await prettierFormatter(repository)([
+      {
+        path: file,
+        content: convertIcon(
+          "Example",
+          `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 8L10 13L15 8" stroke="#18181B" stroke-width="1.5"/></svg>`,
+        ),
+      },
+    ]);
+
+    expect(formatted?.content.match(/\/\* @__PURE__ \*\/ \w+/g)).toEqual([
+      "/* @__PURE__ */ Object",
+      "/* @__PURE__ */ forwardRef",
+    ]);
+    expect(formatted?.content).toMatch(
+      /\/\* @__PURE__ \*\/ Object\.assign\(\s*\/\* @__PURE__ \*\/ forwardRef</,
+    );
   });
 
   test("names the file it can't format", async () => {

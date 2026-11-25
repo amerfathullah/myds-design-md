@@ -1,30 +1,37 @@
 import React from "react";
-import { FunctionComponent, SVGProps } from "react";
+import { forwardRef, ForwardRefExoticComponent, SVGProps } from "react";
 
 /**
  * Bolt Icon
  * @param className
  * @returns BoltIcon
  */
-export const BoltIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (props) => {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <g>
-        <path
-          d="M3 12.2308L11.9091 2L10 8.76923H17L8.09091 18L10 12.2308H3Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-    </svg>
+export const BoltIcon: ForwardRefExoticComponent<SVGProps<SVGSVGElement>> =
+  /* @__PURE__ */ Object.assign(
+    /* @__PURE__ */ forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
+      (props, ref) => {
+        return (
+          <svg
+            ref={ref}
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            {...props}
+          >
+            <g>
+              <path
+                d="M3 12.2308L11.9091 2L10 8.76923H17L8.09091 18L10 12.2308H3Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          </svg>
+        );
+      },
+    ),
+    { displayName: "BoltIcon" },
   );
-};

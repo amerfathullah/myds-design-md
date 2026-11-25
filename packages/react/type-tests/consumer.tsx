@@ -169,6 +169,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type RefAttributes,
+  type SVGProps,
 } from "react";
 
 type Employee = {
@@ -992,6 +993,33 @@ export const Icons = () => (
     <JataNegaraIcon width={32} height={32} />
   </>
 );
+
+// Each icon, the deprecated national marks too, forwards its ref to its
+// `<svg>` (#215), so a ref works on React 18 too. The ref is typed as an
+// `<svg>`'s, so TypeScript refuses an HTML element's.
+export const IconRefs = () => {
+  const svg = useRef<SVGSVGElement>(null);
+  const div = createRef<HTMLDivElement>();
+  return (
+    <>
+      <ChevronDownIcon ref={svg} />
+      <ChevronDownIcon ref={(node: SVGSVGElement | null) => void node} />
+      <MalaysiaFlagIcon ref={svg} />
+      <JataNegaraIcon ref={createRef<SVGSVGElement>()} />
+      {/* @ts-expect-error An icon's ref is its `<svg>`, not a `<div>` */}
+      <ChevronDownIcon ref={div} />
+    </>
+  );
+};
+
+// Each icon is built as a forwardRef component, and still assigns to the
+// function component type it had. The deprecated national marks keep that
+// type until the next major removes them.
+export const IconTypes: ForwardRefExoticComponent<SVGProps<SVGSVGElement>>[] = [
+  ChevronDownIcon,
+];
+export const IconsAsTheirOldType: FunctionComponent<SVGProps<SVGSVGElement>>[] =
+  [ChevronDownIcon, MalaysiaFlagIcon, JataNegaraIcon];
 
 // The Switch takes its name from a Label's `htmlFor` (Toggle's `id`), or from
 // `aria-label` or `aria-labelledby` on ToggleThumb, and has no default name.

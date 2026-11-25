@@ -10,7 +10,11 @@
 import { createElement, type FunctionComponent, type SVGProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-/** An icon component, as `@amerfathullah/myds-react/icon` exports each one */
+/**
+ * An icon component, as `@amerfathullah/myds-react/icon` types its deprecated
+ * national marks. Each icon it exports is a forwardRef component, which
+ * assigns to this type too.
+ */
 export type Icon = FunctionComponent<SVGProps<SVGSVGElement>>;
 
 /**

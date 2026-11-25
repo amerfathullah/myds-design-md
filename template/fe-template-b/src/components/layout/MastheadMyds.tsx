@@ -14,9 +14,11 @@ import {
 
 export default function MastheadMyds() {
   return (
-    <Masthead>
+    <Masthead role="region" aria-labelledby="masthead-title">
       <MastheadHeader>
-        <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
+        <MastheadTitle id="masthead-title">
+          Official Malaysian Government Website
+        </MastheadTitle>
         <MastheadTrigger>Here's how you know</MastheadTrigger>
       </MastheadHeader>
       <MastheadContent>

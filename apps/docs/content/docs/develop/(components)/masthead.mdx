@@ -24,9 +24,9 @@ import {
 <Tabs items={["Preview", "Code"]} className="not-prose">
   <Tab value="Preview">
     <div className="h-[250px] w-full">
-      <Masthead>
+      <Masthead role="region" aria-labelledby="masthead-title">
         <MastheadHeader>
-          <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
+          <MastheadTitle id="masthead-title">Official Malaysian Government Website</MastheadTitle>
           <MastheadTrigger>Here's how you know</MastheadTrigger>
         </MastheadHeader>
         <MastheadContent>
@@ -58,9 +58,11 @@ import {
 } from "@amerfathullah/myds-react/masthead";
 import { PutrajayaIcon, Lock2Icon, LockFillIcon } from "@amerfathullah/myds-react/icon";
 
-<Masthead>
+<Masthead role="region" aria-labelledby="masthead-title">
   <MastheadHeader>
-    <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
+    <MastheadTitle id="masthead-title">
+      Official Malaysian Government Website
+    </MastheadTitle>
     <MastheadTrigger>Here's how you know</MastheadTrigger>
   </MastheadHeader>
   <MastheadContent>
@@ -124,6 +126,25 @@ export default () => (
 
 The text you pass as `MastheadTrigger`'s children names it for screen readers and speech input, at every width. Below `sm:` the trigger shows only its chevron, and the text is visually hidden but still names it. With no children, the trigger is named "Toggle masthead"; pass an `aria-label` to name it in your site's language, for example `<MastheadTrigger aria-label="Kenal pasti begini" />`. An `aria-label` also replaces the children's text as the name. If you pass both, make the `aria-label` contain the visible text, so people who control the page by voice can say what they see. Children with no text, such as an icon alone, need an `aria-label`.
 
+The Masthead isn't a landmark on its own: it renders a plain `<div id="masthead">`, before the `Navbar`'s `<header>`. So its title and explainer sit outside every landmark. Screen reader users who move by landmark skip them, and an axe check of the whole page reports them under its `region` rule. Make the Masthead a page region named by its title: pass `role="region"` to `Masthead`, give `MastheadTitle` an `id`, and point `Masthead`'s `aria-labelledby` at it, as the example at the top of this page does.
+
+```tsx copy title="Page region"
+<Masthead role="region" aria-labelledby="masthead-title">
+  <MastheadHeader>
+    <MastheadTitle id="masthead-title">
+      Official Malaysian Government Website
+    </MastheadTitle>
+    <MastheadTrigger>Here's how you know</MastheadTrigger>
+  </MastheadHeader>
+  <MastheadContent>{/* MastheadSection */}</MastheadContent>
+</Masthead>
+```
+
+Screen readers then announce a region named "Official Malaysian Government Website", the title's own text, so the name follows your page's language with no new string to translate. The id must be unique on the page. For a different name, pass `role="region"` with an `aria-label` instead, e.g. `aria-label="Official government website"`. If you pass both, `aria-labelledby` wins.
+
+- **Always name the region.** A `role="region"` with no name passes axe's `region` rule, but browsers don't expose it as a landmark, so the Masthead is still outside every landmark.
+- **Don't name the Masthead without `role="region"`.** It's a plain `<div>`, and ARIA doesn't let you give one an `aria-label` or `aria-labelledby`.
+
 ## Props
 
 Each part forwards its `ref` to the element it renders. `Masthead`'s ref is its `<div id="masthead">`, not the collapsible around it.
@@ -136,6 +157,21 @@ Each part forwards its `ref` to the element it renders. `Masthead`'s ref is its 
       description:
         "Content to be displayed inside the Masthead component. Can include a MastheadHeader and MastheadContent.",
       type: "ReactNode",
+    },
+    role: {
+      description:
+        "Pass `region` to make the Masthead a page region, so its title and explainer sit in a landmark. Name the region with `aria-labelledby` or `aria-label`: browsers don't expose a region with no name as a landmark. Without it, the Masthead is a plain `<div>` with no role.",
+      type: "string",
+    },
+    "aria-labelledby": {
+      description:
+        "The `id` of the `MastheadTitle`, whose text names the region. Use it only with the `region` role; ARIA doesn't allow it without one. The id must be unique on the page. It wins over `aria-label`.",
+      type: "string",
+    },
+    "aria-label": {
+      description:
+        "Accessible name of the region, in place of the title's text. Screen readers announce it; it is not shown. Use it only with the `region` role; ARIA doesn't allow it without one. `aria-labelledby` wins over it.",
+      type: "string",
     },
   }}
 />
@@ -159,10 +195,13 @@ Each part forwards its `ref` to the element it renders. `Masthead`'s ref is its 
     children: {
       description: "Text to display alongside the official Malaysia flag.",
       type: "ReactNode",
-
     },
-
-}}
+    id: {
+      description:
+        "The id that `Masthead`'s `aria-labelledby` points at, so the title's text names the Masthead's region. It must be unique on the page.",
+      type: "string",
+    },
+  }}
 />
 
 ### MastheadTrigger

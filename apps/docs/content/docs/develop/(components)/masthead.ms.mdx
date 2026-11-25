@@ -24,9 +24,9 @@ import {
 <Tabs items={["Pratonton", "Kod"]} className="not-prose">
   <Tab value="Pratonton">
     <div className="h-[250px] w-full">
-      <Masthead>
+      <Masthead role="region" aria-labelledby="masthead-title">
         <MastheadHeader>
-          <MastheadTitle>Portal Rasmi Kerajaan Malaysia</MastheadTitle>
+          <MastheadTitle id="masthead-title">Portal Rasmi Kerajaan Malaysia</MastheadTitle>
           <MastheadTrigger>Kenal pasti begini</MastheadTrigger>
         </MastheadHeader>
         <MastheadContent>
@@ -58,9 +58,11 @@ import {
 } from "@amerfathullah/myds-react/masthead";
 import { PutrajayaIcon, Lock2Icon, LockFillIcon } from "@amerfathullah/myds-react/icon";
 
-<Masthead>
+<Masthead role="region" aria-labelledby="masthead-title">
   <MastheadHeader>
-    <MastheadTitle>Portal Rasmi Kerajaan Malaysia</MastheadTitle>
+    <MastheadTitle id="masthead-title">
+      Portal Rasmi Kerajaan Malaysia
+    </MastheadTitle>
     <MastheadTrigger>Ketahui Lebih Lanjut</MastheadTrigger>
   </MastheadHeader>
   <MastheadContent>
@@ -124,6 +126,25 @@ export default () => (
 
 Teks yang anda hantar sebagai `children` `MastheadTrigger` menamakannya untuk pembaca skrin dan input suara, pada setiap lebar skrin. Di bawah `sm:`, pencetus hanya memaparkan ikon anak panah, dan teks itu disembunyikan secara visual tetapi masih menamakannya. Tanpa `children`, pencetus dinamakan "Toggle masthead"; hantar `aria-label` untuk menamakannya dalam bahasa laman anda, contohnya `<MastheadTrigger aria-label="Kenal pasti begini" />`. `aria-label` juga menggantikan teks `children` sebagai nama. Jika anda menghantar kedua-duanya, pastikan `aria-label` mengandungi teks yang kelihatan, supaya pengguna yang mengawal laman dengan suara boleh menyebut apa yang mereka lihat. `children` tanpa teks, seperti ikon sahaja, memerlukan `aria-label`.
 
+Masthead bukan landmark dengan sendirinya: ia memaparkan `<div id="masthead">` biasa, sebelum `<header>` `Navbar`. Jadi tajuk dan penerangannya berada di luar semua landmark. Pengguna pembaca skrin yang bergerak mengikut landmark melangkauinya, dan semakan axe ke atas seluruh halaman melaporkannya di bawah peraturan `region`. Jadikan Masthead kawasan halaman yang dinamakan oleh tajuknya: hantar `role="region"` kepada `Masthead`, berikan `id` kepada `MastheadTitle`, dan halakan `aria-labelledby` `Masthead` kepada id itu, seperti contoh di bahagian atas halaman ini.
+
+```tsx copy title="Kawasan halaman"
+<Masthead role="region" aria-labelledby="masthead-title">
+  <MastheadHeader>
+    <MastheadTitle id="masthead-title">
+      Portal Rasmi Kerajaan Malaysia
+    </MastheadTitle>
+    <MastheadTrigger>Kenal pasti begini</MastheadTrigger>
+  </MastheadHeader>
+  <MastheadContent>{/* MastheadSection */}</MastheadContent>
+</Masthead>
+```
+
+Pembaca skrin kemudian menyebut kawasan bernama "Portal Rasmi Kerajaan Malaysia", iaitu teks tajuk itu sendiri, jadi nama itu mengikut bahasa halaman anda tanpa rentetan baharu untuk diterjemahkan. Id itu mesti unik pada halaman. Untuk nama yang lain, hantar `role="region"` bersama `aria-label` sebagai ganti, contohnya `aria-label="Laman web rasmi kerajaan"`. Jika anda menghantar kedua-duanya, `aria-labelledby` diutamakan.
+
+- **Sentiasa namakan kawasan itu.** `role="region"` tanpa nama lulus peraturan `region` axe, tetapi pelayar tidak mendedahkannya sebagai landmark, jadi Masthead masih berada di luar semua landmark.
+- **Jangan namakan Masthead tanpa `role="region"`.** Ia `<div>` biasa, dan ARIA tidak membenarkan anda memberikan `aria-label` atau `aria-labelledby` kepadanya.
+
 ## Props
 
 Setiap bahagian meneruskan `ref`nya kepada elemen yang dipaparkannya. Ref `Masthead` ialah `<div id="masthead">`nya, bukan elemen boleh lipat yang membalutnya.
@@ -136,6 +157,21 @@ Setiap bahagian meneruskan `ref`nya kepada elemen yang dipaparkannya. Ref `Masth
       description:
         "Kandungan yang akan dipaparkan di dalam komponen Masthead. Boleh termasuk MastheadHeader dan MastheadContent.",
       type: "ReactNode",
+    },
+    role: {
+      description:
+        "Hantar `region` untuk menjadikan Masthead kawasan halaman, supaya tajuk dan penerangannya berada dalam landmark. Namakan kawasan itu dengan `aria-labelledby` atau `aria-label`: pelayar tidak mendedahkan kawasan tanpa nama sebagai landmark. Tanpa prop ini, Masthead ialah `<div>` biasa tanpa peranan.",
+      type: "string",
+    },
+    "aria-labelledby": {
+      description:
+        "Id `MastheadTitle`, yang teksnya menamakan kawasan itu. Gunakannya hanya dengan peranan `region`; ARIA tidak membenarkannya tanpa peranan. Id itu mesti unik pada halaman. Ia diutamakan berbanding `aria-label`.",
+      type: "string",
+    },
+    "aria-label": {
+      description:
+        "Nama boleh capai kawasan itu, sebagai ganti teks tajuk. Pembaca skrin menyebutnya; ia tidak dipaparkan. Gunakannya hanya dengan peranan `region`; ARIA tidak membenarkannya tanpa peranan. `aria-labelledby` diutamakan berbanding prop ini.",
+      type: "string",
     },
   }}
 />
@@ -159,6 +195,11 @@ Setiap bahagian meneruskan `ref`nya kepada elemen yang dipaparkannya. Ref `Masth
     children: {
       description: "Teks untuk dipaparkan bersama bendera rasmi Malaysia.",
       type: "ReactNode",
+    },
+    id: {
+      description:
+        "Id yang ditunjuk oleh `aria-labelledby` `Masthead`, supaya teks tajuk menamakan kawasan Masthead. Id itu mesti unik pada halaman.",
+      type: "string",
     },
   }}
 />

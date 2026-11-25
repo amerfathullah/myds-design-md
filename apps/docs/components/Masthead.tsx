@@ -17,9 +17,11 @@ import {
 const MastheadExample = (props: { lang: "en" | "ms" }) => {
   const { t } = getRosetta(props.lang);
   return (
-    <Masthead>
+    <Masthead role="region" aria-labelledby="masthead-title">
       <MastheadHeader>
-        <MastheadTitle>{t("Masthead.official_gov_website")}</MastheadTitle>
+        <MastheadTitle id="masthead-title">
+          {t("Masthead.official_gov_website")}
+        </MastheadTitle>
         <MastheadTrigger>{t("Masthead.how_to_identify")}</MastheadTrigger>
       </MastheadHeader>
       <MastheadContent>

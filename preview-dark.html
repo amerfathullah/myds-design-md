@@ -144,9 +144,10 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .btn-outline:disabled{background:var(--bg-white-disabled);border-color:transparent;color:var(--txt-primary-disabled)}
 .btn-default:disabled{background:var(--bg-white-disabled);border-color:transparent;color:var(--txt-black-disabled)}
 
-/* SkipLink: a small primary-outline button, hidden until focused */
-.skiplink{position:absolute;z-index:99;width:1px;height:1px;overflow:hidden;white-space:nowrap;clip-path:inset(50%);opacity:0;box-shadow:var(--shadow-context-menu);transition:all .5s ease-in-out}
+/* SkipLink: a small primary-outline button, hidden until focused, then fixed to the window's top left at once; only its colours transition. It isn't printed. */
+.skiplink{position:fixed;z-index:99;width:1px;height:1px;overflow:hidden;white-space:nowrap;clip-path:inset(50%);opacity:0;box-shadow:var(--shadow-context-menu);transition:color .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease)}
 .skiplink:focus{left:16px;top:44px;width:auto;height:auto;clip-path:none;opacity:1;box-shadow:0 0 0 3px var(--fr-primary),var(--shadow-context-menu)}
+@media print{.skiplink{display:none}}
 
 /* Tag: medium size, default mode */
 .tag{display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;gap:5px;height:28px;padding:4px 8px;border:1px solid;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap}
@@ -310,8 +311,8 @@ section{padding:40px 0;border-top:1px solid var(--otl-gray-200)}
 .dialog-close{position:absolute;top:16px;right:16px;display:grid;place-content:center;color:var(--txt-black-900)}
 .btn-default.dialog-close:hover{color:var(--txt-black-900)}
 
-/* Page frame: Masthead specimen, Navbar, Footer */
-.frame{position:relative;padding:0;overflow:hidden}
+/* Page frame: Masthead specimen, Navbar, Footer. `contain: layout` keeps the specimen's fixed SkipLink inside the card. */
+.frame{position:relative;padding:0;overflow:hidden;contain:layout}
 .frame .skiplink:focus{left:16px;top:44px}
 .masthead{background:var(--bg-washed)}
 .masthead-header{display:flex;align-items:center;gap:8px;padding:8px 18px;overflow-x:hidden}

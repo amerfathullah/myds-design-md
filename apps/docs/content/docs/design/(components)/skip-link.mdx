@@ -5,57 +5,60 @@ description: Enables users to bypass repetitive navigation links and jump direct
 
 ## Where to use?
 
-Every `gov.my` page should have a skip link placed immediately after `<body>` tab.
+Every `gov.my` page should have a skip link placed immediately after the `<body>` tag.
 
-However if cookie banner is used, place skip links immediately after cookie banner.
+However, if a cookie banner is used, place skip links immediately after the cookie banner.
 
 If `<header>` is present, skip links still come first (after the cookie banner, if one is used), outside any `<header>`. Do not wrap skip links inside `<nav>`.
 
-```jsx
+```html
 <body>
-   <!-- Cookie banner -->
-   <cookie-banner />
+   <!-- Cookie banner, if used -->
 
    <!-- 1. Place skip links here -->
-   <a href="#main-content" class="myds-skip-link">
+   <a href="#main-content">
       Skip to main content
    </a>
 
-   <masthead />
-   <nav />
+   <!-- Masthead -->
+   <!-- Navbar -->
 
    <!-- 2. Main content -->
-   <div id="main-content" class="container">
-      <input class="myds-search-bar" tabindex="0">
-   </div>
+   <main id="main-content" tabindex="-1">
+      <input>
+   </main>
 
 </body>
 ```
 
-1. Skip link component which link to main content section ID.
-2. To add a focusable element in anywhere of the section or page just add `tabindex="0"`.
+1. The skip link component, which links to the main content section's ID.
+2. The main content section the skip link points to. Give it `tabindex="-1"`, so the skip link can move focus to it without adding a Tab stop. Don't add `tabindex="0"` to content that isn't interactive.
 
-## How it works?
+The example shows placement only. For the component, see the develop docs' [Skiplink](/docs/develop/skiplink) page.
 
-Skip link is hidden by default and only appear when user tap on TAB key on keyboard after page load. When it appears, it will be in a fixed position at the top left of the screen.
+## How it works
+
+The skip link is hidden until it has focus. After the page loads, the first TAB shows it. If a cookie banner is shown, the banner's controls come first, and closing the banner moves focus to the skip link. When it appears, it is in a fixed position at the top left of the screen.
 
 ![skip-link-how-it-works.png](/design/skip-link-how-it-works.png)
 
-1. When press TAB key on keyboard, skip links appear (instantly) in focus state. Additionally, add a Shadow/context-menu shadow to indicate that it is above other menus. Note: When click anywhere on the page, hide the skip link button.
-2. While skip link is in focus, press the ENTER key will hide the skip link button, scroll to the main content section, and focus on the first focusable element.
+1. When the user presses TAB, the skip link appears (instantly) in its focus state. Add a Shadow/context-menu shadow to show that it sits above other menus. Note: when the user clicks anywhere on the page, hide the skip link.
+2. While the skip link has focus, pressing ENTER moves focus to the main content section, scrolls to it and hides the skip link. The next TAB moves focus to the first focusable element in that section.
 
-## What if user continue to press TAB?
+## What if the user keeps pressing TAB?
 
-If the user continues to press TAB after the skip links button appears, the focus will move sequentially to the next interactive elements on the page, following the natural tab order.
+If the user keeps pressing TAB after the skip link appears, focus moves in sequence to the next interactive elements on the page, following the natural Tab order.
 
 ![skip-link-press-tab.png](/design/skip-link-press-tab.png)
 
-1. Focus on first focusable element (nav buttons).
-2. Focus on second focusable element and so on following natural tab order.
+1. Focus on the first focusable element after the skip link: the Masthead's trigger ("Here's how you know"), then the Navbar's logo.
+2. Focus on the second focusable element, and so on, following the natural Tab order.
+
+The images and videos are design mockups. With MYDS's components, ENTER moves focus to the main content section, not to its first control. On a MYDS page, the Masthead's trigger and the Navbar's logo come before the menu in the Tab order.
 
 ## Demo
 
-### Press TAB → Enter
+### Press TAB → ENTER
 
 Skip to main content.
 
@@ -65,9 +68,9 @@ Skip to main content.
   </video>
 </figure>
 
-### Press TAB → TAB → TAB ..
+### Press TAB → TAB → TAB
 
-To focus on first focusable links (Usually the links in navbar).
+Each TAB moves focus to the next focusable element: the Masthead's trigger, then the Navbar's logo and menu.
 
 <figure>
   <video controls="true" allowfullscreen="true">

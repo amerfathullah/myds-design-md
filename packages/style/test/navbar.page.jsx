@@ -1,14 +1,13 @@
 // The page navbar.test.mjs renders in Chromium: a button before the Navbar,
 // the Navbar composed as the docs compose it, with a logo, a menu and
 // NavbarAction's toggle, then a main column of controls. The `menu` query
-// parameter picks the menu's items, from `menus` below, `label`, when
-// given, is the toggle's `aria-label`, and `id`, when given, even empty, is
-// the Navbar's `id`. `data-test` names
-// what the test focuses; NavbarMenu renders its items in the desktop list
-// while the mobile menu is closed, and in the mobile menu while it's open
-// (#214), so the test names them by where they are. The main column is taller
-// than the window, so the page can scroll. The test bundles this file with
-// esbuild.
+// parameter picks the menu's items, from `menus` below. `label`, when given,
+// is the toggle's `aria-label`, and `id`, when given, even empty, is the
+// Navbar's `id`. `data-test` names what the test focuses. NavbarMenu renders
+// its items in the desktop list while the mobile menu is closed, and in the
+// mobile menu while it's open (#214), so the test names them by where they
+// are. The main column is taller than the window, so the page can scroll.
+// The test bundles this file with esbuild.
 import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 

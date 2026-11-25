@@ -69,11 +69,11 @@ const still =
   "*,::before,::after{transition:none!important;animation:none!important}";
 
 // Opens the page with the menu `menu` (see navbar.page.jsx) at `viewport`,
-// in `theme`, with `label` as the toggle's `aria-label` and `id` as the
-// Navbar's when they're given, and runs `use` on it once React has rendered
-// it. `hasTouch` gives the page a
-// touchscreen, and `forcedColors` is Playwright's option, "active" for
-// forced colours. Nothing logs an error or a warning.
+// in `theme`, and runs `use` on it once React has rendered it. `label` and
+// `id`, when given, are the toggle's `aria-label` and the Navbar's `id`.
+// `hasTouch` gives the page a touchscreen, and `forcedColors` is
+// Playwright's option, "active" for forced colours. Nothing logs an error
+// or a warning.
 async function withPage(
   use,
   {

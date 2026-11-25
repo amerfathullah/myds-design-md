@@ -222,14 +222,14 @@ function button(name: string) {
   return matches[0]!;
 }
 
-// The element the section's `aria-labelledby` names, which must be on the
-// page
-function labelledBy(section: Element) {
+// Checks that the section's `aria-labelledby` is `heading`'s id, and that
+// `getElementById` finds `heading` by it, so the section is named by its text
+function expectNamedBy(heading: HTMLElement) {
+  const section = region()!;
   const id = section.getAttribute("aria-labelledby");
   expect(id).not.toBeNull();
-  const label = document.getElementById(id!);
-  expect(label).not.toBeNull();
-  return label!;
+  expect(document.getElementById(id!)).toBe(heading);
+  expect(computeAccessibleName(section)).toBe(TITLE);
 }
 
 // A CookieBannerTitle with `asChild` and `titleProps`, whose child is an
@@ -378,8 +378,7 @@ describe("what it renders", () => {
       );
       const heading = byId("cookie-title");
       expect(heading.tagName).toBe("H3");
-      expect(labelledBy(region()!)).toBe(heading);
-      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      expectNamedBy(heading);
     });
 
     test("with `asChild` and an `id` on both the title and its heading, the heading's id renders and names the section", async () => {
@@ -394,8 +393,7 @@ describe("what it renders", () => {
       const heading = byId("heading-id");
       expect(heading.tagName).toBe("H3");
       expect(document.getElementById("title-id")).toBeNull();
-      expect(labelledBy(region()!)).toBe(heading);
-      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      expectNamedBy(heading);
     });
 
     test("with `asChild` and a heading with `id={undefined}`, the heading gets an id, and it names the section", async () => {
@@ -409,8 +407,7 @@ describe("what it renders", () => {
       );
       const heading = document.querySelector("h3")!;
       expect(heading.id).not.toBe("");
-      expect(labelledBy(region()!)).toBe(heading);
-      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      expectNamedBy(heading);
     });
 
     test("with `asChild` and a heading with no `id`, the heading names the section, and no `<h2>` renders", async () => {
@@ -419,8 +416,7 @@ describe("what it renders", () => {
       );
       expect(document.querySelectorAll("h2")).toHaveLength(0);
       const heading = document.querySelector("h3")!;
-      expect(labelledBy(region()!)).toBe(heading);
-      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      expectNamedBy(heading);
     });
 
     test("with `asChild` and an `id` on the title only, the heading gets that id, and it names the section", async () => {
@@ -434,8 +430,7 @@ describe("what it renders", () => {
       );
       const heading = byId("title-id");
       expect(heading.tagName).toBe("H3");
-      expect(labelledBy(region()!)).toBe(heading);
-      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      expectNamedBy(heading);
     });
 
     test("without `asChild`, an `id` on the title renders on its `<h2>` and names the section", async () => {
@@ -455,8 +450,7 @@ describe("what it renders", () => {
       );
       const heading = byId("title-id");
       expect(heading.tagName).toBe("H2");
-      expect(labelledBy(region()!)).toBe(heading);
-      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      expectNamedBy(heading);
     });
 
     test("when the heading's `id` changes, the section follows it, and removing the title removes `aria-labelledby`", async () => {
@@ -465,15 +459,14 @@ describe("what it renders", () => {
           banner({ open: true }, { title: h3Title({}, { id: "first-id" }) }),
         ),
       );
-      expect(labelledBy(region()!)).toBe(byId("first-id"));
+      expectNamedBy(byId("first-id"));
       await rerender(
         page(
           banner({ open: true }, { title: h3Title({}, { id: "second-id" }) }),
         ),
       );
       expect(document.getElementById("first-id")).toBeNull();
-      expect(labelledBy(region()!)).toBe(byId("second-id"));
-      expect(computeAccessibleName(region()!)).toBe(TITLE);
+      expectNamedBy(byId("second-id"));
       await rerender(page(banner({ open: true }, { title: false })));
       expect(region()!.hasAttribute("aria-labelledby")).toBe(false);
     });
@@ -506,6 +499,7 @@ describe("what it renders", () => {
       expect(heading.classList).toContain("font-semibold");
       expect(heading.getAttribute("lang")).toBe("ms");
       expect(heading.getAttribute("data-part")).toBe("heading");
+      expectNamedBy(heading);
     });
   });
 });

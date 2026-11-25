@@ -1,6 +1,6 @@
 import { fn } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { createStory } from "../utils";
+import { createRender, createStory } from "../utils";
 import {
   Select,
   SelectContent,
@@ -403,3 +403,19 @@ export const DarkDefault: Story = createStory(
   },
   "dark",
 );
+
+// A disabled fieldset disables the select, with no `disabled` prop on Select:
+// a press doesn't open it, and the trigger and its "Fruit" prefix take the
+// disabled look
+const InDisabledFieldset = () => (
+  <fieldset disabled>
+    <legend className="text-body-sm text-txt-black-900 mb-2">Order</legend>
+    <Select defaultValue="apple">
+      <SelectTrigger>
+        <SelectValue label="Fruit" placeholder="Select" />
+      </SelectTrigger>
+      <SelectContent>{CONTENT}</SelectContent>
+    </Select>
+  </fieldset>
+);
+export const DisabledFieldset = createRender(InDisabledFieldset, "light");

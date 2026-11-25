@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { createStory } from "../utils";
+import { createRender, createStory } from "../utils";
 import {
   Dropdown,
   DropdownContent,
@@ -184,3 +184,21 @@ export const CustomTrigger: Story = createStory({
 export const WithIcon: Story = createStory({
   children: "with_icon",
 });
+
+// A disabled fieldset disables the trigger, with no `disabled` prop on
+// DropdownTrigger: a press doesn't open the menu
+const InDisabledFieldset = () => (
+  <fieldset disabled>
+    <legend className="text-body-sm text-txt-black-900 mb-2">Document</legend>
+    <Dropdown>
+      <DropdownTrigger asChild>
+        <Button variant="default-outline">Options</Button>
+      </DropdownTrigger>
+      <DropdownContent>
+        <DropdownItem>Edit</DropdownItem>
+        <DropdownItem>Copy link</DropdownItem>
+      </DropdownContent>
+    </Dropdown>
+  </fieldset>
+);
+export const DisabledFieldset = createRender(InDisabledFieldset, "light");

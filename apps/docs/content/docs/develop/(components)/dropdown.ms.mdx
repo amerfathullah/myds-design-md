@@ -365,6 +365,8 @@ Anda boleh menetapkan prop `variant` kepada `danger` pada `DropdownItem` untuk m
   </Tab>
 </Tabs>
 
+Untuk menonaktifkan seluruh menu, tetapkan `disabled` pada `DropdownTrigger`, dan pencetus itu tidak akan membukanya. `<fieldset>` yang dinonaktifkan di sekeliling `Dropdown` turut menonaktifkannya. Dengan `asChild`, sebarang kunci `disabled` pada anak mengatasi `disabled` pencetus, walaupun `false` atau `undefined`. Jadi, tetapkan `disabled` pada `DropdownTrigger`, dan sama ada jangan tetapkannya pada anak atau berikan nilai yang sama.
+
 ### Penjajaran
 
 Anda boleh menetapkan `align` pada `DialogContent` untuk menjajarkan di mana paparan kandungan harus bermula berkenaan dengan **elemen pencetus**. Secara lalai, penjajaran ditetapkan kepada `end`. Anda juga boleh menetapkan penjajaran kepada `start` atau `center`.
@@ -606,6 +608,11 @@ Anda boleh menetapkan `side` pada `DialogContent` untuk meletakkan di mana papar
   type={{
     asChild: {
       description: "Suis untuk mewarisi komponen anak secara langsung",
+      type: "boolean",
+      default: "false",
+    },
+    disabled: {
+      description: "Menonaktifkan pencetus, supaya ia tidak membuka menu",
       type: "boolean",
       default: "false",
     },

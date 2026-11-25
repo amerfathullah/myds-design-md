@@ -5,6 +5,7 @@ import MastheadMyds from "./MastheadMyds";
 import NavbarMyds from "./NavbarMyds";
 import { Outlet, useNavigate } from "react-router";
 import { Button } from "@amerfathullah/myds-react/button";
+import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 
 export default function LayoutMain() {
   const navigate = useNavigate();
@@ -29,16 +30,19 @@ export default function LayoutMain() {
 
   return (
     <>
+      <Skiplink href="#main-content">Skip to main content</Skiplink>
       <MastheadMyds></MastheadMyds>
       <NavbarMyds></NavbarMyds>
-      <div className="bg-bg-warning-50">
-        <Button onClick={toggleLangMs}>Toggle this to ms</Button>
-        <Button onClick={toggleLangEn}>Toggle this to en</Button>
-        <h1>{t("welcome")} sini</h1>
-      </div>
+      <main id="main-content" tabIndex={-1}>
+        <div className="bg-bg-warning-50">
+          <Button onClick={toggleLangMs}>Toggle this to ms</Button>
+          <Button onClick={toggleLangEn}>Toggle this to en</Button>
+          <h1>{t("welcome")} sini</h1>
+        </div>
 
-      {/* use outlet instead of children to tell where to render child routes for the current route hierarchy. */}
-      <Outlet></Outlet>
+        {/* use outlet instead of children to tell where to render child routes for the current route hierarchy. */}
+        <Outlet></Outlet>
+      </main>
       <FooterMyds></FooterMyds>
     </>
   );

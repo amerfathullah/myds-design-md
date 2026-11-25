@@ -274,7 +274,8 @@ test("opened at 390px, the menu closes as the window widens to 1440px, the deskt
   withPage(async (page) => {
     assert.equal(await openWithEnter(page), "Menu A");
     await page.setViewportSize(desktop);
-    // Focus after widening is #162's, so only `aria-expanded` is checked
+    // The toggle hides as the window widens, so focus falls to `<body>`, as
+    // on main. #214 leaves that, so only `aria-expanded` is checked.
     const { expanded } = await closed(page);
     assert.deepEqual(
       {

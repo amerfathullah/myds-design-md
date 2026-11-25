@@ -357,8 +357,8 @@ describe("The mobile menu", () => {
 
   // A test environment can have no `matchMedia`, or one that stands in for
   // it without the media query lists' `addEventListener`. The menu then
-  // stays open, and opening it throws nothing, which would unmount the
-  // Navbar.
+  // stays open, and opening it throws nothing: a throw there would unmount
+  // the Navbar.
   describe.each([
     ["no `matchMedia`, as in jsdom", undefined],
     [

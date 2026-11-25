@@ -1,4 +1,4 @@
-import { ComponentProps, FunctionComponent } from "react";
+import { ComponentProps, forwardRef, ForwardRefExoticComponent } from "react";
 import { ClockIcon } from "../icons/clock";
 import { cva, VariantProps } from "class-variance-authority";
 
@@ -78,33 +78,31 @@ type TimeFieldProps = Omit<ComponentProps<"input">, "type" | "size"> &
 
 /**
  * Native time input styled to match DateField. `step` is in seconds and defaults to 60 (hours and minutes).
- * 12/24-hour display follows the user's locale.
+ * 12/24-hour display follows the user's locale. Its ref is the `<input>`, which
+ * gets the props; `className` goes on the frame around it.
  */
-const TimeField: FunctionComponent<TimeFieldProps> = ({
-  className,
-  size,
-  invalid,
-  step = 60,
-  ...props
-}) => {
-  return (
-    <div
-      className={timefield_container_cva({
-        size,
-        className,
-      })}
-    >
-      <ClockIcon className={icon_cva({ size })} aria-hidden />
-      <input
-        type="time"
-        className={timefield_cva()}
-        aria-invalid={invalid ?? undefined}
-        step={step}
-        {...props}
-      />
-    </div>
-  );
-};
+const TimeField: ForwardRefExoticComponent<TimeFieldProps> = forwardRef(
+  ({ className, size, invalid, step = 60, ...props }, ref) => {
+    return (
+      <div
+        className={timefield_container_cva({
+          size,
+          className,
+        })}
+      >
+        <ClockIcon className={icon_cva({ size })} aria-hidden />
+        <input
+          ref={ref}
+          type="time"
+          className={timefield_cva()}
+          aria-invalid={invalid ?? undefined}
+          step={step}
+          {...props}
+        />
+      </div>
+    );
+  },
+);
 TimeField.displayName = "TimeField";
 
 export { TimeField };

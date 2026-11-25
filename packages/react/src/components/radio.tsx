@@ -2,7 +2,8 @@
 
 import React, {
   ComponentProps,
-  FunctionComponent,
+  forwardRef,
+  ForwardRefExoticComponent,
   HTMLAttributes,
   Ref,
   useCallback,
@@ -102,9 +103,9 @@ Radio.displayName = "Radio";
  * One option: a RadioButton, its RadioLabel and any RadioHintTexts. The
  * RadioButton points `aria-describedby` at the hints in its item.
  */
-const RadioItem: FunctionComponent<
+const RadioItem: ForwardRefExoticComponent<
   ComponentProps<"div"> & { disabled?: boolean }
-> = ({ className, children, ...props }) => {
+> = forwardRef(({ className, children, ...props }, ref) => {
   const { disabled } = useContext(RadioContext);
   const itemDisabled = props.disabled ?? disabled;
   const [hints, setHints] = useState<readonly Hint[]>([]);
@@ -136,12 +137,16 @@ const RadioItem: FunctionComponent<
   );
   return (
     <RadioItemContext.Provider value={context}>
-      <div className={clx("flex items-center gap-3", className)} {...props}>
+      <div
+        ref={ref}
+        className={clx("flex items-center gap-3", className)}
+        {...props}
+      >
         {children}
       </div>
     </RadioItemContext.Provider>
   );
-};
+});
 RadioItem.displayName = "RadioItem";
 
 /**
@@ -194,29 +199,27 @@ const RadioButton = React.forwardRef<
 });
 RadioButton.displayName = "RadioButton";
 
-const RadioLabel = ({
-  className,
-  children,
-  ...props
-}: ComponentProps<"label">) => {
-  const { size } = useContext(RadioContext);
-  const { disabled } = useContext(RadioItemContext);
-  return (
-    <label
-      className={clx(
-        "text-txt-black-700 font-medium",
-        size === "small" && "text-body-sm",
-        size === "medium" && "text-body-md",
-        size === "large" && "text-lg",
-        disabled && "text-txt-black-disabled",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </label>
-  );
-};
+const RadioLabel: ForwardRefExoticComponent<ComponentProps<"label">> =
+  forwardRef(({ className, children, ...props }, ref) => {
+    const { size } = useContext(RadioContext);
+    const { disabled } = useContext(RadioItemContext);
+    return (
+      <label
+        ref={ref}
+        className={clx(
+          "text-txt-black-700 font-medium",
+          size === "small" && "text-body-sm",
+          size === "medium" && "text-body-md",
+          size === "large" && "text-lg",
+          disabled && "text-txt-black-disabled",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </label>
+    );
+  });
 RadioLabel.displayName = "RadioLabel";
 
 interface RadioHintTextProps extends HTMLAttributes<HTMLElement> {
@@ -245,70 +248,76 @@ interface RadioHintTextProps extends HTMLAttributes<HTMLElement> {
  * select the radio. It renders your `id`, or generates one. In a disabled
  * item it's marked `aria-disabled`.
  */
-const RadioHintText = ({
-  className,
-  children,
-  id,
-  ref,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deprecated; taken out so it doesn't reach the div
-  htmlFor,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deprecated; taken out so it doesn't reach the div
-  form,
-  ...props
-}: RadioHintTextProps) => {
-  const { size } = useContext(RadioContext);
-  const { disabled, registerHint, sortHints } = useContext(RadioItemContext);
-  const generatedId = useId();
-  const hintId = id || generatedId;
-  const element = useRef<HTMLDivElement | null>(null);
-  // The `<div>` goes to the author's ref too. A cleanup it returns runs on
-  // unmount, in place of a call with `null`.
-  const divRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      element.current = node;
-      const cleanup = setRef(ref, node);
-      if (typeof cleanup === "function")
-        return () => {
-          element.current = null;
-          cleanup();
-        };
+// Typed by its props, `ref` included, as the other parts are. Under React 18's
+// types, forwardRef's own type takes a string ref too, which `ref` doesn't.
+const RadioHintText = forwardRef<HTMLElement, RadioHintTextProps>(
+  (
+    {
+      className,
+      children,
+      id,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deprecated; taken out so it doesn't reach the div
+      htmlFor,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deprecated; taken out so it doesn't reach the div
+      form,
+      ...props
     },
-    [ref],
-  );
-  // Describe the item's RadioButton before the browser paints, and stop when
-  // the hint unmounts or its id changes. Outside a RadioItem, or in one from
-  // an older copy, it wires nothing.
-  useBeforePaint(() => {
-    if (!registerHint || !element.current) return;
-    return registerHint(hintId, element.current);
-  }, [registerHint, hintId]);
-  // After every render, as keyed hints can move among their item's others
-  // without remounting, which the registration above doesn't see
-  useBeforePaint(() => {
-    sortHints?.();
-  });
-  return (
-    <div
-      ref={divRef}
-      id={hintId}
-      // A disabled option's hint is part of that inactive option, as its
-      // label is, so accessibility checkers exempt its dimmed colour from
-      // contrast. Before the spread, so an `aria-disabled` you pass wins.
-      aria-disabled={disabled || undefined}
-      className={clx(
-        "text-txt-black-500",
-        size === "small" && "text-xs",
-        size === "medium" && "text-body-sm",
-        size === "large" && "text-body-md",
-        disabled && "text-otl-gray-300",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-};
+    ref,
+  ) => {
+    const { size } = useContext(RadioContext);
+    const { disabled, registerHint, sortHints } = useContext(RadioItemContext);
+    const generatedId = useId();
+    const hintId = id || generatedId;
+    const element = useRef<HTMLDivElement | null>(null);
+    // The `<div>` goes to the author's ref too. A cleanup it returns runs on
+    // unmount, in place of a call with `null`.
+    const divRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        element.current = node;
+        const cleanup = setRef(ref, node);
+        if (typeof cleanup === "function")
+          return () => {
+            element.current = null;
+            cleanup();
+          };
+      },
+      [ref],
+    );
+    // Describe the item's RadioButton before the browser paints, and stop when
+    // the hint unmounts or its id changes. Outside a RadioItem, or in one from
+    // an older copy, it wires nothing.
+    useBeforePaint(() => {
+      if (!registerHint || !element.current) return;
+      return registerHint(hintId, element.current);
+    }, [registerHint, hintId]);
+    // After every render, as keyed hints can move among their item's others
+    // without remounting, which the registration above doesn't see
+    useBeforePaint(() => {
+      sortHints?.();
+    });
+    return (
+      <div
+        ref={divRef}
+        id={hintId}
+        // A disabled option's hint is part of that inactive option, as its
+        // label is, so accessibility checkers exempt its dimmed colour from
+        // contrast. Before the spread, so an `aria-disabled` you pass wins.
+        aria-disabled={disabled || undefined}
+        className={clx(
+          "text-txt-black-500",
+          size === "small" && "text-xs",
+          size === "medium" && "text-body-sm",
+          size === "large" && "text-body-md",
+          disabled && "text-otl-gray-300",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  },
+) as ForwardRefExoticComponent<RadioHintTextProps>;
 RadioHintText.displayName = "RadioHintText";
 
 export { Radio, RadioItem, RadioButton, RadioLabel, RadioHintText };

@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  ForwardRefExoticComponent,
   FunctionComponent,
   useState,
   useContext,
@@ -150,46 +152,45 @@ function assignRef<T>(ref: Ref<T> | undefined, node: T | null) {
   else if (ref) (ref as { current: T | null }).current = node;
 }
 
-const Navbar: FunctionComponent<NavbarProps> = ({
-  children,
-  className,
-  ...props
-}) => {
-  const id = useId();
+const Navbar: ForwardRefExoticComponent<NavbarProps> = forwardRef(
+  ({ children, className, ...props }, ref) => {
+    const id = useId();
 
-  const [show, setShow] = useState(false);
-  const toggleRef = useRef<HTMLButtonElement | null>(null);
-  const [panel, setPanel] = useState<HTMLElement | null>(null);
-  const [panelLabelledBy, setPanelLabelledBy] = useState<string>();
-  return (
-    <NavbarContext.Provider
-      value={{
-        id,
-        show,
-        setShow,
-        toggleRef,
-        panel,
-        setPanel,
-        panelLabelledBy,
-        setPanelLabelledBy,
-      }}
-    >
-      <header
-        id={id}
-        className={clx(
-          "bg-bg-white border-otl-gray-200 shadow-button sticky top-0 z-50 h-16 w-full border-b max-md:h-14 print:hidden",
-          className,
-        )}
-        data-nosnippet
-        {...props}
+    const [show, setShow] = useState(false);
+    const toggleRef = useRef<HTMLButtonElement | null>(null);
+    const [panel, setPanel] = useState<HTMLElement | null>(null);
+    const [panelLabelledBy, setPanelLabelledBy] = useState<string>();
+    return (
+      <NavbarContext.Provider
+        value={{
+          id,
+          show,
+          setShow,
+          toggleRef,
+          panel,
+          setPanel,
+          panelLabelledBy,
+          setPanelLabelledBy,
+        }}
       >
-        <div className="px-4.5 relative mx-auto flex h-16 max-w-screen-xl items-center justify-between gap-4 max-md:h-14 md:px-6">
-          {children}
-        </div>
-      </header>
-    </NavbarContext.Provider>
-  );
-};
+        <header
+          ref={ref}
+          id={id}
+          className={clx(
+            "bg-bg-white border-otl-gray-200 shadow-button sticky top-0 z-50 h-16 w-full border-b max-md:h-14 print:hidden",
+            className,
+          )}
+          data-nosnippet
+          {...props}
+        >
+          <div className="px-4.5 relative mx-auto flex h-16 max-w-screen-xl items-center justify-between gap-4 max-md:h-14 md:px-6">
+            {children}
+          </div>
+        </header>
+      </NavbarContext.Provider>
+    );
+  },
+);
 
 Navbar.displayName = "Navbar";
 
@@ -213,41 +214,39 @@ const logo_cva = cva(
     },
   },
 );
-const NavbarLogo: FunctionComponent<NavbarLogoProps> = ({
-  src,
-  alt,
-  href = "/",
-  children,
-  maxChars = 19,
-  className,
-  ...props
-}) => {
-  return (
-    // The header centres the link rather than the link filling the header's
-    // height, so the link's focus ring isn't cut off at the window's top
-    <Link
-      href={href}
-      underline="none"
-      className={clx("flex w-auto items-center gap-2.5", className)}
-      {...props}
-    >
-      <img
-        src={src}
-        width={40}
-        height={32}
-        className="aspect-auto h-full max-h-8 w-auto select-none"
-        alt={alt}
-      />
-      {typeof children === "string" ? (
-        <span className={logo_cva({ too_long: children.length > maxChars })}>
-          {children}
-        </span>
-      ) : (
-        children
-      )}
-    </Link>
-  );
-};
+const NavbarLogo: ForwardRefExoticComponent<NavbarLogoProps> = forwardRef(
+  (
+    { src, alt, href = "/", children, maxChars = 19, className, ...props },
+    ref,
+  ) => {
+    return (
+      // The header centres the link rather than the link filling the header's
+      // height, so the link's focus ring isn't cut off at the window's top
+      <Link
+        ref={ref}
+        href={href}
+        underline="none"
+        className={clx("flex w-auto items-center gap-2.5", className)}
+        {...props}
+      >
+        <img
+          src={src}
+          width={40}
+          height={32}
+          className="aspect-auto h-full max-h-8 w-auto select-none"
+          alt={alt}
+        />
+        {typeof children === "string" ? (
+          <span className={logo_cva({ too_long: children.length > maxChars })}>
+            {children}
+          </span>
+        ) : (
+          children
+        )}
+      </Link>
+    );
+  },
+);
 
 NavbarLogo.displayName = "NavbarLogo";
 interface NavigationMenuProps {
@@ -507,32 +506,28 @@ const navbar_menu_link_cva = cva(["truncate px-2.5 py-1.5"], {
   },
 });
 
-const NavbarMenuItem: FunctionComponent<NavbarMenuItemProps> = ({
-  className,
-  children,
-  href,
-  asChild,
-  ...props
-}) => {
-  const is_from_dropdown = useContext(NavbarMenuDropdownContext);
-  return (
-    <NavigationMenuItem
-      className={clx(navbar_menu_item_cva({ is_from_dropdown }), className)}
-      {...props}
-    >
-      {/* With `asChild`, Link slots the child, which gets Link's classes and
-          `target`, and Link keeps `underline` */}
-      <Link
-        asChild={asChild}
-        href={href}
-        underline="none"
-        className={clx("w-full", navbar_menu_link_cva({ is_from_dropdown }))}
+const NavbarMenuItem: ForwardRefExoticComponent<NavbarMenuItemProps> =
+  forwardRef(({ className, children, href, asChild, ...props }, ref) => {
+    const is_from_dropdown = useContext(NavbarMenuDropdownContext);
+    return (
+      <NavigationMenuItem
+        ref={ref}
+        className={clx(navbar_menu_item_cva({ is_from_dropdown }), className)}
+        {...props}
       >
-        {children}
-      </Link>
-    </NavigationMenuItem>
-  );
-};
+        {/* With `asChild`, Link slots the child, which gets Link's classes and
+          `target`, and Link keeps `underline` */}
+        <Link
+          asChild={asChild}
+          href={href}
+          underline="none"
+          className={clx("w-full", navbar_menu_link_cva({ is_from_dropdown }))}
+        >
+          {children}
+        </Link>
+      </NavigationMenuItem>
+    );
+  });
 
 NavbarMenuItem.displayName = "NavbarMenuItem";
 
@@ -605,79 +600,77 @@ interface NavbarActionProps extends ComponentProps<typeof Button> {
   "aria-labelledby"?: string;
 }
 
-const NavbarAction: FunctionComponent<NavbarActionProps> = ({
-  children,
-  className,
-  onClick,
-  onKeyDown,
-  ref,
-  id: idProp,
-  ...props
-}) => {
-  const { show, setShow, toggleRef, panel, setPanelLabelledBy } =
-    useContext(NavbarContext);
-  // The toggle's id, which an author's `id` replaces
-  const generatedId = useId();
-  const id = idProp || generatedId;
-  // The mobile menu's panel is named as the toggle is. It points at the ids
-  // in an author's `aria-labelledby` on the toggle, since a name computed
-  // through the toggle would skip the toggle's own `aria-labelledby`.
-  // Otherwise it points at the toggle, which its `aria-label` names.
-  const ariaLabelledBy = props["aria-labelledby"];
-  const panelLabelledBy = ariaLabelledBy?.trim() ? ariaLabelledBy : id;
-  useBeforePaint(() => {
-    if (!setPanelLabelledBy) return;
-    setPanelLabelledBy(panelLabelledBy);
-    return () =>
-      setPanelLabelledBy((current) =>
-        current === panelLabelledBy ? undefined : current,
-      );
-  }, [setPanelLabelledBy, panelLabelledBy]);
-  // The toggle, for the Navbar, and for an author's ref
-  const attachToggle = useCallback(
-    (node: HTMLButtonElement | null) => {
-      assignRef(ref, node);
-      assignRef(toggleRef, node);
-    },
-    [ref, toggleRef],
-  );
-  const handleToggle = () => {
-    setShow(!show);
-    if (onClick) onClick();
-  };
-  // The panel, while the menu shows it
-  const shownPanel = show ? panel : null;
-  // While the menu is open, Tab moves from the toggle to its first item, and
-  // Shift+Tab to its last
-  const enterMenu = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (!shownPanel || event.key !== "Tab") return;
-    if (event.altKey || event.ctrlKey || event.metaKey) return;
-    const next = menuEdge(shownPanel, event.shiftKey);
-    if (!next) return;
-    event.preventDefault();
-    next.focus();
-  };
-  return (
-    <div className="flex items-center justify-end gap-2">
-      {children}
-      <Button
-        variant="default-ghost"
-        iconOnly
-        className={clx("xl:hidden", className)}
-        id={id}
-        aria-label={menuLabel}
-        aria-expanded={show}
-        aria-controls={shownPanel?.id || undefined}
-        {...props}
-        ref={attachToggle}
-        onClick={handleToggle}
-        onKeyDown={composeEventHandlers(onKeyDown, enterMenu)}
-      >
-        {show ? <CrossIcon /> : <HamburgerMenuIcon />}
-      </Button>
-    </div>
-  );
-};
+/**
+ * The mobile menu's toggle, after any children. Its ref is the toggle's
+ * `<button>`, which gets the props, not the `<div>` around it.
+ */
+const NavbarAction: ForwardRefExoticComponent<NavbarActionProps> = forwardRef(
+  ({ children, className, onClick, onKeyDown, id: idProp, ...props }, ref) => {
+    const { show, setShow, toggleRef, panel, setPanelLabelledBy } =
+      useContext(NavbarContext);
+    // The toggle's id, which an author's `id` replaces
+    const generatedId = useId();
+    const id = idProp || generatedId;
+    // The mobile menu's panel is named as the toggle is. It points at the ids
+    // in an author's `aria-labelledby` on the toggle, since a name computed
+    // through the toggle would skip the toggle's own `aria-labelledby`.
+    // Otherwise it points at the toggle, which its `aria-label` names.
+    const ariaLabelledBy = props["aria-labelledby"];
+    const panelLabelledBy = ariaLabelledBy?.trim() ? ariaLabelledBy : id;
+    useBeforePaint(() => {
+      if (!setPanelLabelledBy) return;
+      setPanelLabelledBy(panelLabelledBy);
+      return () =>
+        setPanelLabelledBy((current) =>
+          current === panelLabelledBy ? undefined : current,
+        );
+    }, [setPanelLabelledBy, panelLabelledBy]);
+    // The toggle, for the Navbar, and for an author's ref
+    const attachToggle = useCallback(
+      (node: HTMLButtonElement | null) => {
+        assignRef(ref, node);
+        assignRef(toggleRef, node);
+      },
+      [ref, toggleRef],
+    );
+    const handleToggle = () => {
+      setShow(!show);
+      if (onClick) onClick();
+    };
+    // The panel, while the menu shows it
+    const shownPanel = show ? panel : null;
+    // While the menu is open, Tab moves from the toggle to its first item, and
+    // Shift+Tab to its last
+    const enterMenu = (event: KeyboardEvent<HTMLButtonElement>) => {
+      if (!shownPanel || event.key !== "Tab") return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const next = menuEdge(shownPanel, event.shiftKey);
+      if (!next) return;
+      event.preventDefault();
+      next.focus();
+    };
+    return (
+      <div className="flex items-center justify-end gap-2">
+        {children}
+        <Button
+          variant="default-ghost"
+          iconOnly
+          className={clx("xl:hidden", className)}
+          id={id}
+          aria-label={menuLabel}
+          aria-expanded={show}
+          aria-controls={shownPanel?.id || undefined}
+          {...props}
+          ref={attachToggle}
+          onClick={handleToggle}
+          onKeyDown={composeEventHandlers(onKeyDown, enterMenu)}
+        >
+          {show ? <CrossIcon /> : <HamburgerMenuIcon />}
+        </Button>
+      </div>
+    );
+  },
+);
 
 NavbarAction.displayName = "NavbarAction";
 

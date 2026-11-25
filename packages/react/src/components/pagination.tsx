@@ -291,19 +291,17 @@ const PaginationLabel: ForwardRefExoticComponent<
 
 PaginationLabel.displayName = "PaginationLabel";
 
-const PaginationEllipsis = ({
-  className,
-  children = ELLIPSIS_LABEL,
-  ...props
-}: ComponentProps<"span">) => (
-  <span
-    className={clx("flex size-8 items-center justify-center", className)}
-    {...props}
-  >
-    <EllipsisIcon aria-hidden className="text-txt-black-700 size-4" />
-    <span className="sr-only">{children}</span>
-  </span>
-);
+const PaginationEllipsis: ForwardRefExoticComponent<ComponentProps<"span">> =
+  forwardRef(({ className, children = ELLIPSIS_LABEL, ...props }, ref) => (
+    <span
+      ref={ref}
+      className={clx("flex size-8 items-center justify-center", className)}
+      {...props}
+    >
+      <EllipsisIcon aria-hidden className="text-txt-black-700 size-4" />
+      <span className="sr-only">{children}</span>
+    </span>
+  ));
 PaginationEllipsis.displayName = "PaginationEllipsis";
 
 interface AutoPaginationProps extends ComponentProps<"nav">, PaginatorProps {

@@ -1,6 +1,6 @@
 import React, {
-  FunctionComponent,
   ComponentProps,
+  ForwardRefExoticComponent,
   Dispatch,
   KeyboardEvent,
   RefObject,
@@ -347,7 +347,7 @@ interface SearchBarProps extends ComponentProps<typeof Command> {
  * once per key, and its `preventDefault` stops both.
  * @see https://github.com/pacocoursey/cmdk#command-cmdk-root
  */
-const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
+const SearchBar: ForwardRefExoticComponent<SearchBarProps> = forwardRef(
   ({ children, className, size = DEFAULT_SIZE, onKeyDown, ...props }, ref) => {
     // One id per SearchBar, so two on a page don't share their results' id
     const generatedResultsId = useId();
@@ -392,6 +392,7 @@ const SearchBar: FunctionComponent<SearchBarProps> = forwardRef(
     );
   },
 );
+SearchBar.displayName = "SearchBar";
 
 const search_bar_input_container_cva = cva(
   [
@@ -411,17 +412,19 @@ const search_bar_input_container_cva = cva(
     },
   },
 );
-export const SearchBarInputContainer: FunctionComponent<
+export const SearchBarInputContainer: ForwardRefExoticComponent<
   ComponentProps<"div">
-> = ({ className, ...props }) => {
+> = forwardRef(({ className, ...props }, ref) => {
   const { size } = useContext(SearchBarContext);
   return (
     <div
+      ref={ref}
       className={search_bar_input_container_cva({ size, className })}
       {...props}
     />
   );
-};
+});
+SearchBarInputContainer.displayName = "SearchBarInputContainer";
 
 // A naming prop counts only when it holds text: `undefined`, as a
 // prop-forwarding wrapper passes, and an empty or blank string name nothing
@@ -440,7 +443,7 @@ const hasText = (value: string | undefined): value is string =>
  * `aria-controls` you pass wins.
  * @see https://github.com/pacocoursey/cmdk#input-cmdk-input
  */
-export const SearchBarInput: FunctionComponent<
+export const SearchBarInput: ForwardRefExoticComponent<
   Omit<ComponentProps<typeof Command.Input>, "asChild">
 > = forwardRef(
   (
@@ -540,76 +543,78 @@ export const SearchBarInput: FunctionComponent<
     );
   },
 );
+SearchBarInput.displayName = "SearchBarInput";
 
 /**
  * The icon-only search button. Screen readers announce it as "Search"; pass
  * an `aria-label` to name it in your site's language.
  */
-export const SearchBarSearchButton: FunctionComponent<ButtonProps> = ({
-  className,
-  ...props
-}) => {
-  const { size } = useContext(SearchBarContext);
-  if (size === "large") {
+export const SearchBarSearchButton: ForwardRefExoticComponent<ButtonProps> =
+  forwardRef(({ className, ...props }, ref) => {
+    const { size } = useContext(SearchBarContext);
+    if (size === "large") {
+      return (
+        <Button
+          ref={ref}
+          className={clx(
+            "border-primary-600 from-primary-400 to-primary-600 rounded-full border bg-linear-to-b/srgb p-1",
+            className,
+          )}
+          aria-label="Search"
+          {...props}
+        >
+          <SearchIcon className="text-white" />
+        </Button>
+      );
+    }
     return (
       <Button
-        className={clx(
-          "border-primary-600 from-primary-400 to-primary-600 rounded-full border bg-linear-to-b/srgb p-1",
-          className,
-        )}
+        ref={ref}
+        variant="default-ghost"
+        className={clx("p-0", className)}
         aria-label="Search"
         {...props}
       >
-        <SearchIcon className="text-white" />
+        <SearchIcon className="text-txt-black-500" />
       </Button>
     );
-  }
-  return (
-    <Button
-      variant="default-ghost"
-      className={clx("p-0", className)}
-      aria-label="Search"
-      {...props}
-    >
-      <SearchIcon className="text-txt-black-500" />
-    </Button>
-  );
-};
+  });
+SearchBarSearchButton.displayName = "SearchBarSearchButton";
 
 /**
  * The icon-only clear button. Screen readers announce it as "Clear"; pass an
  * `aria-label` to name it in your site's language.
  */
-export const SearchBarClearButton: FunctionComponent<ButtonProps> = ({
-  className,
-  ...props
-}) => {
-  return (
-    <Button
-      variant="default-ghost"
-      className={clx("p-0", className)}
-      aria-label="Clear"
-      {...props}
-    >
-      <CrossIcon className="text-txt-black-500" />
-    </Button>
-  );
-};
+export const SearchBarClearButton: ForwardRefExoticComponent<ButtonProps> =
+  forwardRef(({ className, ...props }, ref) => {
+    return (
+      <Button
+        ref={ref}
+        variant="default-ghost"
+        className={clx("p-0", className)}
+        aria-label="Clear"
+        {...props}
+      >
+        <CrossIcon className="text-txt-black-500" />
+      </Button>
+    );
+  });
+SearchBarClearButton.displayName = "SearchBarClearButton";
 
-export const SearchBarHint: FunctionComponent<ComponentProps<"div">> = ({
-  className,
-  ...props
-}) => {
-  return (
-    <div
-      className={clx(
-        "text-txt-black-500 flex items-center gap-1 text-sm",
-        className,
-      )}
-      {...props}
-    />
-  );
-};
+export const SearchBarHint: ForwardRefExoticComponent<ComponentProps<"div">> =
+  forwardRef(({ className, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={clx(
+          "text-txt-black-500 flex items-center gap-1 text-sm",
+          className,
+        )}
+        {...props}
+      />
+    );
+  });
+SearchBarHint.displayName = "SearchBarHint";
 
 const search_bar_results_dropdown_cva = cva(
   [
@@ -635,11 +640,11 @@ const search_bar_results_dropdown_cva = cva(
  * generated, one per SearchBar, unless you pass one. A list inside it is
  * displayed only while it's `open`.
  */
-export const SearchBarResults: FunctionComponent<
+export const SearchBarResults: ForwardRefExoticComponent<
   ComponentProps<"div"> & {
     open: boolean;
   }
-> = ({ className, open, id, ...props }) => {
+> = forwardRef(({ className, open, id, ...props }, ref) => {
   const { size, generatedResultsId, setGivenResultsId, parts } =
     useContext(SearchBarContext);
   // Count this panel, and the id given to it, from before the browser paints
@@ -657,6 +662,7 @@ export const SearchBarResults: FunctionComponent<
   return (
     <SearchBarResultsContext.Provider value={results}>
       <div
+        ref={ref}
         className={clx(
           search_bar_results_dropdown_cva({ size, className }),
           !open && "hidden",
@@ -666,7 +672,8 @@ export const SearchBarResults: FunctionComponent<
       />
     </SearchBarResultsContext.Provider>
   );
-};
+});
+SearchBarResults.displayName = "SearchBarResults";
 
 /**
  * Uses cmdk's Command.List API. Screen readers announce the list as
@@ -675,30 +682,35 @@ export const SearchBarResults: FunctionComponent<
  * input is expanded unless the SearchBarResults around it is closed.
  * @see https://github.com/pacocoursey/cmdk#list-cmdk-list
  */
-export const SearchBarResultsList: FunctionComponent<
+export const SearchBarResultsList: ForwardRefExoticComponent<
   ComponentProps<typeof Command.List>
-> = ({ children, "aria-label": ariaLabel, label, ...props }) => {
-  const { parts } = useContext(SearchBarContext);
-  const { open } = useContext(SearchBarResultsContext);
-  const hiddenOption = useRef<HTMLDivElement>(null);
-  // Count this list, whether it's displayed, and its hidden `--` option, from
-  // before the browser paints until it unmounts
-  useBeforePaint(
-    () => parts?.add({ kind: "list", displayed: open, hiddenOption }),
-    [parts, open],
-  );
-  // After every commit that changes this list or cmdk's selection, name the
-  // highlighted result, and again once the list has gone
-  useNameHighlighted(hiddenOption, parts);
-  useBeforePaint(() => {
-    const root = hiddenOption.current?.closest("[cmdk-root]");
-    if (root) return () => queueMicrotask(() => nameHighlighted(root, parts));
-  }, [parts]);
-  return (
-    // cmdk names the listbox from `label`, after the props it spreads, so an
-    // `aria-label` reaches the listbox only through `label`
-    <Command.List label={ariaLabel ?? label ?? "Suggestions"} {...props}>
-      {/* The hidden `--` option, which holds cmdk's selection while nothing
+> = forwardRef(
+  ({ children, "aria-label": ariaLabel, label, ...props }, ref) => {
+    const { parts } = useContext(SearchBarContext);
+    const { open } = useContext(SearchBarResultsContext);
+    const hiddenOption = useRef<HTMLDivElement>(null);
+    // Count this list, whether it's displayed, and its hidden `--` option, from
+    // before the browser paints until it unmounts
+    useBeforePaint(
+      () => parts?.add({ kind: "list", displayed: open, hiddenOption }),
+      [parts, open],
+    );
+    // After every commit that changes this list or cmdk's selection, name the
+    // highlighted result, and again once the list has gone
+    useNameHighlighted(hiddenOption, parts);
+    useBeforePaint(() => {
+      const root = hiddenOption.current?.closest("[cmdk-root]");
+      if (root) return () => queueMicrotask(() => nameHighlighted(root, parts));
+    }, [parts]);
+    return (
+      // cmdk names the listbox from `label`, after the props it spreads, so an
+      // `aria-label` reaches the listbox only through `label`
+      <Command.List
+        ref={ref}
+        label={ariaLabel ?? label ?? "Suggestions"}
+        {...props}
+      >
+        {/* The hidden `--` option, which holds cmdk's selection while nothing
       is highlighted. cmdk 1.1.1 selects the first option it finds, at rest,
       after each query change, and when the highlighted result unmounts, so
       this one keeps any result from being highlighted until the person moves
@@ -707,27 +719,30 @@ export const SearchBarResultsList: FunctionComponent<
       never names it in `aria-activedescendant` (#398). It finds it by its
       marker. Both rely on cmdk 1.1.1's internals, which is why cmdk is
       pinned to exactly 1.1.1 (ADR-0015). */}
-      <Command.Item
-        ref={hiddenOption}
-        className="hidden"
-        data-nothing-highlighted=""
-      >
-        --
-      </Command.Item>
-      {children}
-    </Command.List>
-  );
-};
+        <Command.Item
+          ref={hiddenOption}
+          className="hidden"
+          data-nothing-highlighted=""
+        >
+          --
+        </Command.Item>
+        {children}
+      </Command.List>
+    );
+  },
+);
+SearchBarResultsList.displayName = "SearchBarResultsList";
 
 /**
  * Uses cmdk's Command.Group API.
  * @see https://github.com/pacocoursey/cmdk#group-cmdk-group-hidden
  */
-export const SearchBarResultsGroup: FunctionComponent<
+export const SearchBarResultsGroup: ForwardRefExoticComponent<
   ComponentProps<typeof Command.Group>
-> = ({ className, ...props }) => {
+> = forwardRef(({ className, ...props }, ref) => {
   return (
     <Command.Group
+      ref={ref}
       className={clx(
         "my-2 text-sm first:mt-0 last:mt-0",
         "[&_[cmdk-group-heading]]:text-txt-black-500 [&_[cmdk-group-heading]]:mb-1 [&_[cmdk-group-heading]]:ml-3 [&_[cmdk-group-heading]]:font-medium",
@@ -736,17 +751,19 @@ export const SearchBarResultsGroup: FunctionComponent<
       {...props}
     />
   );
-};
+});
+SearchBarResultsGroup.displayName = "SearchBarResultsGroup";
 
 /**
  * Uses cmdk's Command.Item API.
  * @see https://github.com/pacocoursey/cmdk#item-cmdk-item-data-disabled-data-selected
  */
-export const SearchBarResultsItem: FunctionComponent<
+export const SearchBarResultsItem: ForwardRefExoticComponent<
   ComponentProps<typeof Command.Item>
-> = ({ className, ...props }) => {
+> = forwardRef(({ className, ...props }, ref) => {
   return (
     <Command.Item
+      ref={ref}
       className={clx(
         "data-[selected=true]:bg-bg-washed text-txt-black-900 flex cursor-pointer items-center gap-2 rounded px-3 py-2",
         className,
@@ -754,6 +771,7 @@ export const SearchBarResultsItem: FunctionComponent<
       {...props}
     />
   );
-};
+});
+SearchBarResultsItem.displayName = "SearchBarResultsItem";
 
 export { SearchBar };

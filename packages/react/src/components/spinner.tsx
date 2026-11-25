@@ -1,5 +1,4 @@
-import React from "react";
-import { ComponentProps } from "react";
+import { ComponentProps, forwardRef, ForwardRefExoticComponent } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clx } from "../utils";
 
@@ -38,23 +37,24 @@ interface SpinnerProps
   show?: boolean;
 }
 
-export const Spinner: React.FC<SpinnerProps> = ({
-  size,
-  color,
-  className = "",
-  show = true,
-  ...props
-}) => {
-  if (!show) {
-    return null;
-  }
-  return (
-    <div
-      {...props}
-      className={clx("relative flex items-center justify-center", className)}
-    >
-      <div className={spinnerVariants({ size, color })}></div>
-    </div>
-  );
-};
+/**
+ * Its ref is the outer `<div>`. With `show={false}` it renders nothing, so its
+ * ref gets no element.
+ */
+export const Spinner: ForwardRefExoticComponent<SpinnerProps> = forwardRef(
+  ({ size, color, className = "", show = true, ...props }, ref) => {
+    if (!show) {
+      return null;
+    }
+    return (
+      <div
+        ref={ref}
+        {...props}
+        className={clx("relative flex items-center justify-center", className)}
+      >
+        <div className={spinnerVariants({ size, color })}></div>
+      </div>
+    );
+  },
+);
 Spinner.displayName = "Spinner";

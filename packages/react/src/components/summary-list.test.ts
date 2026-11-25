@@ -21,6 +21,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { computeAccessibleName } from "dom-accessibility-api";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { describeForwardedRefs } from "./forwarded-ref-tests";
 import {
   SummaryList,
   SummaryListAction,
@@ -239,85 +240,65 @@ describe("a ref on SummaryListHeader", () => {
 });
 
 // Every other part forwards its ref to the element it renders too, so a ref
-// works on React 18, which gives a plain function component none (#209). On
-// React 19, which these tests run on, a ref is a prop, and each part spreads
-// its props onto its element, so a ref arrives either way: each part is also
-// checked to be a forwardRef component.
-describe.each([
+// works on React 18, which gives a plain function component none (#209)
+describeForwardedRefs(
   // Each part, the element its ref is, and how to find that element in the
   // container a summary list is mounted in
   [
-    "SummaryList",
-    SummaryList,
-    "`<div>`",
-    (container: Element) => container.firstElementChild,
+    {
+      name: "SummaryList",
+      part: SummaryList,
+      element: "`<div>`",
+      render: (ref) => summaryList(undefined, { refOn: SummaryList, ref }),
+      find: (container) => container.firstElementChild,
+    },
+    {
+      name: "SummaryListBody",
+      part: SummaryListBody,
+      element: "`<table>`, not its `<tbody>`",
+      render: (ref) => summaryList(undefined, { refOn: SummaryListBody, ref }),
+      find: (container) => container.querySelector("table"),
+    },
+    {
+      name: "SummaryListRow",
+      part: SummaryListRow,
+      element: "`<tr>`",
+      render: (ref) => summaryList(undefined, { refOn: SummaryListRow, ref }),
+      find: (container) => container.querySelector("tr"),
+    },
+    {
+      name: "SummaryListTerm",
+      part: SummaryListTerm,
+      element: '`<th scope="row">`',
+      render: (ref) => summaryList(undefined, { refOn: SummaryListTerm, ref }),
+      find: (container) => container.querySelector("th"),
+    },
+    {
+      name: "SummaryListDetail",
+      part: SummaryListDetail,
+      element: "`<td>`",
+      render: (ref) =>
+        summaryList(undefined, { refOn: SummaryListDetail, ref }),
+      find: (container) => container.querySelector("tr")!.children[1],
+    },
+    {
+      name: "SummaryListAction",
+      part: SummaryListAction,
+      element: "`<td>`",
+      render: (ref) =>
+        summaryList(undefined, { refOn: SummaryListAction, ref }),
+      find: (container) => container.querySelector("tr")!.children[2],
+    },
+    {
+      name: "SummaryListAddition",
+      part: SummaryListAddition,
+      element: "`<td>`",
+      render: (ref) =>
+        summaryList(undefined, { refOn: SummaryListAddition, ref }),
+      find: (container) => container.querySelector("tr")!.children[3],
+    },
   ],
-  [
-    "SummaryListBody",
-    SummaryListBody,
-    "`<table>`, not its `<tbody>`",
-    (container: Element) => container.querySelector("table"),
-  ],
-  [
-    "SummaryListRow",
-    SummaryListRow,
-    "`<tr>`",
-    (container: Element) => container.querySelector("tr"),
-  ],
-  [
-    "SummaryListTerm",
-    SummaryListTerm,
-    '`<th scope="row">`',
-    (container: Element) => container.querySelector("th"),
-  ],
-  [
-    "SummaryListDetail",
-    SummaryListDetail,
-    "`<td>`",
-    (container: Element) => container.querySelector("tr")!.children[1],
-  ],
-  [
-    "SummaryListAction",
-    SummaryListAction,
-    "`<td>`",
-    (container: Element) => container.querySelector("tr")!.children[2],
-  ],
-  [
-    "SummaryListAddition",
-    SummaryListAddition,
-    "`<td>`",
-    (container: Element) => container.querySelector("tr")!.children[3],
-  ],
-] as const)("a ref on %s", (name, Part, element, find) => {
-  test(`is a forwardRef component, named "${name}" in React's tools`, () => {
-    expect({ type: Part.$$typeof, displayName: Part.displayName }).toEqual({
-      type: Symbol.for("react.forward_ref"),
-      displayName: name,
-    });
-  });
-
-  test(`as an object, is its ${element}`, async () => {
-    const ref = createRef<Element>();
-    const container = await mount(summaryList(undefined, { refOn: Part, ref }));
-    expect(ref.current).toBeInstanceOf(HTMLElement);
-    expect(ref.current).toBe(find(container));
-  });
-
-  test(`as a callback, gets its ${element} on mount and \`null\` on unmount`, async () => {
-    const calls: (Element | null)[] = [];
-    const ref = (node: Element | null) => {
-      calls.push(node);
-    };
-    const container = await mount(summaryList(undefined, { refOn: Part, ref }));
-    const rendered = find(container);
-    expect(rendered).toBeInstanceOf(HTMLElement);
-    expect(calls).toHaveLength(1);
-    expect(calls[0]).toBe(rendered);
-    await unmountAll();
-    expect(calls).toHaveLength(2);
-    expect(calls[1]).toBeNull();
-  });
-});
+);
 
 // Forwarding refs changes no markup. This is a full summary list's server
 // markup as main (5afee22) rendered it, before its parts forwarded their refs,

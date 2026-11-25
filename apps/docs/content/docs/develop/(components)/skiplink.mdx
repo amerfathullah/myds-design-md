@@ -58,14 +58,16 @@ import { Skiplink } from "@/components/myds";
     ```tsx 
     import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 
-    <Skiplink href="#main-content">
-      <span>Skip to main content</span>
-    </Skiplink>
-    <main id="main-content" tabIndex={-1}>
-      <span className="text-slate-600">
-        Main content here
-      </span>
-    </main>
+    <>
+      <Skiplink href="#main-content">
+        <span>Skip to main content</span>
+      </Skiplink>
+      <main id="main-content" tabIndex={-1}>
+        <span className="text-slate-600">
+          Main content here
+        </span>
+      </main>
+    </>;
     ```
 
   </Tab>
@@ -88,14 +90,33 @@ import { Skiplink } from "@amerfathullah/myds-react/skiplink";
 
 ```tsx copy title="Anatomy"
 export default () => (
-  <Skiplink href="#main-content">
-    <span>Skip to main content</span>
-  </Skiplink>
-  <main id="main-content" tabIndex={-1}>
-    <span className="text-slate-600">
-      Main content here
-    </span>
-  </main>
+  <>
+    <Skiplink href="#main-content">
+      <span>Skip to main content</span>
+    </Skiplink>
+    <main id="main-content" tabIndex={-1}>
+      <span className="text-slate-600">
+        Main content here
+      </span>
+    </main>
+  </>
+);
+```
+
+## Placement
+
+Render `Skiplink` first in `<body>`. If the page shows a `CookieBanner`, render `Skiplink` right after it. Keep `Skiplink` outside any `<header>` and `<nav>`, before the `Masthead` and the `Navbar`. Point its `href` at the `id` of the page's `<main>`, and give that `<main>` `tabIndex={-1}`, so the skip link can move focus to it without adding a Tab stop. For the full guidance, see the design guideline's [Skip link](/docs/design/skip-link) page.
+
+```tsx copy title="Placement"
+export default () => (
+  <body>
+    {/* CookieBanner, if used */}
+    <Skiplink href="#main-content">Skip to main content</Skiplink>
+    <Masthead />
+    <Navbar>{/* … */}</Navbar>
+    <main id="main-content" tabIndex={-1}>{/* … */}</main>
+    <Footer>{/* … */}</Footer>
+  </body>
 );
 ```
 

@@ -44,6 +44,8 @@ import { sharedContext } from "../utils/registry";
 type NavbarProps = ComponentProps<"header">;
 
 interface NavbarContextProps {
+  // The `<header>`'s id, the author's or a generated one, which the mobile
+  // menu finds the header by
   id: string;
   show: boolean;
   setShow: (value: boolean) => void;
@@ -153,8 +155,15 @@ function assignRef<T>(ref: Ref<T> | undefined, node: T | null) {
 }
 
 const Navbar: ForwardRefExoticComponent<NavbarProps> = forwardRef(
-  ({ children, className, ...props }, ref) => {
-    const id = useId();
+  ({ children, className, id: givenId, ...props }, ref) => {
+    // The header's id, which the mobile menu finds the header by: the
+    // author's, unless it's empty, else a generated one. An author's id used
+    // to replace the generated one on the header, so the menu found no
+    // header to open below (#216). `||`, not `??`, as an empty id finds no
+    // element. useId runs on every render, so adding or removing an id
+    // doesn't change the order of hooks.
+    const generatedId = useId();
+    const id = givenId || generatedId;
 
     const [show, setShow] = useState(false);
     const toggleRef = useRef<HTMLButtonElement | null>(null);

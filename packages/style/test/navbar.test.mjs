@@ -11,6 +11,8 @@
 // order. From `xl:` up, the desktop menu's Tab order is as it was. The
 // menu's panel is a dialog the accessibility tree names after the toggle,
 // "Menu", or what an `aria-label` on NavbarAction renames both to (#169).
+// The menu closes once the window widens to `xl:`, and the page scrolls
+// again (#214).
 //
 // The page is navbar.page.jsx: the React components themselves, bundled with
 // esbuild, on the stylesheet the Tailwind import compiles for full.css's
@@ -258,6 +260,62 @@ for (const [label, name] of [
       { label },
     ));
 }
+
+// Waits for the page to scroll, for up to a second, and returns how far down
+// it is
+async function scrolled(page) {
+  await page
+    .waitForFunction(() => window.scrollY > 0, null, { timeout: 1000 })
+    .catch(() => {});
+  return page.evaluate(() => window.scrollY);
+}
+
+test("opened at 390px, the menu closes as the window widens to 1440px, the desktop list shows Menu A, and the mouse wheel scrolls the page", () =>
+  withPage(async (page) => {
+    assert.equal(await openWithEnter(page), "Menu A");
+    await page.setViewportSize(desktop);
+    // The toggle hides as the window widens, so focus falls to `<body>`, as
+    // on main. #214 leaves that, so only `aria-expanded` is checked.
+    const { expanded } = await closed(page);
+    assert.deepEqual(
+      {
+        expanded,
+        desktopItem: await page.isVisible('header nav a[href="#Menu-A"]'),
+        items: await page.locator('a[href="#Menu-A"]').count(),
+      },
+      { expanded: "false", desktopItem: true, items: 1 },
+    );
+    await page.mouse.move(desktop.width / 2, desktop.height / 2);
+    await page.mouse.wheel(0, 800);
+    assert.ok((await scrolled(page)) > 0, "the page didn't scroll");
+  }));
+
+// The mobile menu's dropdown opens and closes on presses on its trigger. Radix
+// tells a press on the trigger from one outside the dropdown by the items the
+// desktop list tracks, so that list stays mounted, empty, while the mobile
+// menu is open (#214).
+for (const [press, hasTouch] of [
+  ["click", false],
+  ["tap", true],
+])
+  test(`a ${press} on the mobile menu's Dropdown trigger opens it, the next ${press} closes it, and the one after opens it again`, () =>
+    withPage(
+      async (page) => {
+        await page.click(toggle);
+        await page.waitForSelector(list);
+        await frames(page);
+        const trigger = page.locator(`${list} button`, { hasText: "Dropdown" });
+        const expanded = [];
+        for (let pressed = 0; pressed < 3; pressed++) {
+          await (hasTouch ? trigger.tap() : trigger.click());
+          await frames(page);
+          expanded.push(await trigger.getAttribute("aria-expanded"));
+        }
+        assert.deepEqual(expanded, ["true", "false", "true"]);
+        assert.equal(await page.getAttribute(toggle, "aria-expanded"), "true");
+      },
+      { hasTouch },
+    ));
 
 for (const theme of themes) {
   const options = { theme };

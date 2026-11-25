@@ -3,9 +3,11 @@
 // NavbarAction's toggle, then a main column of controls. The `menu` query
 // parameter picks the menu's items, from `menus` below, and `label`, when
 // given, is the toggle's `aria-label`. `data-test` names
-// what the test focuses; NavbarMenu renders its items twice, in the desktop
-// list and in the mobile menu, so the test tells them apart by where they
-// are. The test bundles this file with esbuild.
+// what the test focuses; NavbarMenu renders its items in the desktop list
+// while the mobile menu is closed, and in the mobile menu while it's open
+// (#214), so the test names them by where they are. The main column is taller
+// than the window, so the page can scroll. The test bundles this file with
+// esbuild.
 import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -144,6 +146,7 @@ function Page() {
         <button type="button" data-test="after-2">
           After 2
         </button>
+        <div style={{ height: "200vh" }} />
       </main>
     </>
   );

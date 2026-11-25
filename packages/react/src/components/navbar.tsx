@@ -273,6 +273,13 @@ const NavbarMenu: FunctionComponent<NavigationMenuProps> = ({
   "aria-label": ariaLabel = "Main",
   "aria-labelledby": ariaLabelledBy,
 }) => {
+  // The children render once: in the desktop list while the mobile menu is
+  // closed, and in the mobile menu while it's open. So an author's id is on
+  // one element, and a ref holds the element that's mounted (#214). The list
+  // itself stays mounted: Radix finds the menu's dropdown triggers through
+  // it, so that a press on an open dropdown's trigger closes the dropdown,
+  // rather than counting as a press outside it.
+  const { show } = useContext(NavbarContext);
   return (
     <NavigationMenu
       className="grow"
@@ -286,7 +293,7 @@ const NavbarMenu: FunctionComponent<NavigationMenuProps> = ({
           classNameNavDesktop,
         )}
       >
-        {children}
+        {!show && children}
       </NavigationMenuList>
 
       {/* Tablet / Mobile */}
@@ -342,6 +349,26 @@ const NavbarMobileMenu: FunctionComponent<NavbarMobileMenuProps> = ({
   useEffect(() => {
     if (show) closedFromOutsideRef.current = false;
   }, [show]);
+
+  // From `xl:` up the desktop list shows in its place and the toggle hides,
+  // so the menu closes once the window is that wide. Left open, it would
+  // render the children nowhere seen, and its scroll lock would stop the
+  // page scrolling (#214). `80rem` is Tailwind's `xl`, which the preset
+  // keeps. Where a test environment has no `matchMedia`, as jsdom has none,
+  // or one whose lists have no `addEventListener`, as an older polyfill or a
+  // bare mock gives, the menu stays open.
+  useEffect(() => {
+    if (!show || typeof window.matchMedia !== "function") return;
+    const wide: MediaQueryList | undefined =
+      window.matchMedia("(min-width: 80rem)");
+    if (typeof wide?.addEventListener !== "function") return;
+    const closeIfWide = () => {
+      if (wide.matches) setShow(false);
+    };
+    closeIfWide();
+    wide.addEventListener("change", closeIfWide);
+    return () => wide.removeEventListener("change", closeIfWide);
+  }, [show, setShow]);
 
   if (!show) {
     return null;

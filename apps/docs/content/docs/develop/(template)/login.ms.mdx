@@ -127,6 +127,7 @@ function HeaderLogin() {
         </div>
       </NavbarLogo>
       <div className="flex gap-2">
+        {/* ThemeSwitch memerlukan ThemeProvider dalam "Render Page" di bawah, atau satu di akar aplikasi anda. */}
         <ThemeSwitch />
         <div className="hidden sm:block">
           <Select defaultValue="EN" variant="outline" size="small">
@@ -210,7 +211,6 @@ Komponen `LoginTemplate` menyediakan contoh UI skrin log masuk menggunakan kompo
 
 > ⚠️ **Nota**: Ini ialah **templat reka bentuk sahaja**. Ia **tidak** merangkumi sebarang logik fungsi seperti:
 >
-> * Penukaran mod gelap/terang
 > * Pengesahan e-mel atau katalaluan
 > * Pengendalian pengesahan
 > * Penghantaran borang
@@ -321,6 +321,7 @@ function HeaderLogin() {
         </div>
       </NavbarLogo>
       <div className="flex gap-2">
+        {/* ThemeSwitch memerlukan ThemeProvider dalam "Render Page" di bawah, atau satu di akar aplikasi anda. */}
         <ThemeSwitch />
         <div className="hidden sm:block">
           <Select defaultValue="EN" variant="outline" size="small">
@@ -391,9 +392,14 @@ function Navlinks() {
 ```
 
 ```tsx copy title="Render Page"
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
+
 function LoginPage() {
   return (
-    <LoginTemplate/>
+    // Keluarkan ThemeProvider ini jika aplikasi anda sudah mempunyai satu di akarnya.
+    <ThemeProvider>
+      <LoginTemplate />
+    </ThemeProvider>
   );
 }
 ```
@@ -431,7 +437,7 @@ function LoginPage() {
 Anda boleh mengedit apa sahaja dalam kod ini — ia boleh disesuaikan sepenuhnya!
 Ia dibina untuk membantu anda bermula dengan cepat dengan antara muka log masuk, dan direka bentuk untuk disesuaikan mengikut keperluan anda. Templat ini terdiri daripada tiga bahagian utama:
 
-- `HeaderLogin` – Edit untuk menukar logo dan mengintegrasi komponen berfungsi (togol/dropdown)
+- `HeaderLogin` – Edit untuk menukar logo dan mengintegrasi komponen berfungsi (dropdown)
 - `BodyLogin` – Edit untuk mengendalikan logik log masuk
 - `FooterLogin` – Edit untuk menukar logo, info, dan pautan
 

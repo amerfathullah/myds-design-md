@@ -65,6 +65,26 @@ function App() {
 export default App;
 ```
 
+13. Wrap the app in a `ThemeProvider` from `@amerfathullah/myds-react/hooks` in main.tsx
+
+    NavbarMyds's `ThemeSwitch` changes the theme only under a `ThemeProvider`, and one provider at the root of the app serves every switch.
+
+```
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
+import "./index.css";
+import App from "./App.tsx";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  </StrictMode>
+);
+```
+
 Part 2: i18n
 
 1. Run `npm i i18next react-i18next`
@@ -202,19 +222,22 @@ i18n.use(initReactI18next).init({
 export default i18n;
 ```
 
-6. Wrap the app with suspense in case of load in main.tsx
+6. Wrap the app with suspense in case of load in main.tsx, inside the `ThemeProvider`
 
 ```
 import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
 import "./index.css";
 import App from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Suspense fallback={<div>Loading...</div>}>
-      <App />
-    </Suspense>
+    <ThemeProvider>
+      <Suspense fallback={<div>Loading...</div>}>
+        <App />
+      </Suspense>
+    </ThemeProvider>
   </StrictMode>
 );
 ```

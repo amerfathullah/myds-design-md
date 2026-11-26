@@ -128,6 +128,7 @@ function HeaderLogin() {
         </div>
       </NavbarLogo>
       <div className="flex gap-2">
+        {/* ThemeSwitch needs the ThemeProvider in "Render Page" below, or one at the root of your application. */}
         <ThemeSwitch />
         <div className="hidden sm:block">
           <Select defaultValue="EN" variant="outline" size="small">
@@ -211,7 +212,6 @@ The `LoginTemplate` component provides a sample UI login screen using [MYDS](htt
 This login page template is built for **rapid development** and **easy integration**. It is designed to help teams get started faster by providing a layout that adheres to the **MYDS design system**, eliminating the need to piece together individual components manually.
 
 > ⚠️ **Note**: This is a **design-only template**. It does **not** include any functional logic such as:
-> - Dark/light mode toggling
 > - Email or password validation
 > - Authentication handling
 > - Form submission
@@ -321,6 +321,7 @@ function HeaderLogin() {
         </div>
       </NavbarLogo>
       <div className="flex gap-2">
+        {/* ThemeSwitch needs the ThemeProvider in "Render Page" below, or one at the root of your application. */}
         <ThemeSwitch />
         <div className="hidden sm:block">
           <Select defaultValue="EN" variant="outline" size="small">
@@ -391,9 +392,14 @@ function Navlinks() {
 ```
 
 ```tsx copy title="Render Page"
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
+
 function LoginPage() {
   return (
-    <LoginTemplate/>
+    // Leave this ThemeProvider out if your application already has one at its root.
+    <ThemeProvider>
+      <LoginTemplate />
+    </ThemeProvider>
   );
 }
 ```
@@ -430,7 +436,7 @@ function LoginPage() {
 You can edit anything inside the code, its fully customizable!
 It’s built to help you get started quickly with a login UI and is meant to be adapted however you like. The template is made up of three main parts:
 
--  `HeaderLogin` - Edit to change the logo and integrate functional components (toggle/dropdown)
+-  `HeaderLogin` - Edit to change the logo and integrate functional components (dropdown)
 -  `BodyLogin` - Edit to handle login handling logic
 -  `FooterLogin` - Edit to change Logo, info, links
 

@@ -11,7 +11,8 @@
 // Each rebuild must show that tsup built the entries in the order forced on
 // it: the preload records the one glob it reordered, and tsup's
 // "Building entry:" line has to list the same order. No two rebuilds may
-// build the same order. Otherwise a rebuild would check nothing new.
+// build the same order. Otherwise a rebuild would check nothing new. The
+// orders themselves are pinned by `reorder-entries.test.mjs`.
 //
 // Run it after `pnpm build`, from the package: `pnpm check-reproducible`.
 import { spawnSync } from "node:child_process";
@@ -80,14 +81,20 @@ if (!existsSync(dist)) {
   process.exit(1);
 }
 const first = hashes(dist);
-const scratch = mkdtempSync(join(tmpdir(), "myds-react-reproducible-"));
-cpSync(dist, join(scratch, "dist"), { recursive: true });
+if (first.size === 0) {
+  report(`${dist} is empty: run \`pnpm build\` first`);
+  process.exit(1);
+}
 
 // Ctrl-C, or a cancelled CI job, signals tsup too, which stops it. These
 // listeners keep this process alive, so that it can put the first build back.
-// They only run once the check is over, since it runs synchronously.
+// They can't run before the check is over, since it runs synchronously, so a
+// signal sent to this process alone waits until then.
 for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"])
   process.on(signal, () => {});
+
+const scratch = mkdtempSync(join(tmpdir(), "myds-react-reproducible-"));
+cpSync(dist, join(scratch, "dist"), { recursive: true });
 
 let rebuilds = 0;
 // Rebuilds with the entries in the order `spec` names. It returns the entries
@@ -107,13 +114,16 @@ function rebuild(spec) {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
-  if (run.signal) throw new Error(`tsup was stopped by ${run.signal}`);
   // Without colours
   const output = `${run.stdout}${run.stderr}`.replace(/\x1b\[[\d;]*m/g, "");
+  // Such as ENOBUFS, when spawnSync stops tsup itself
+  if (run.error)
+    return { problems: [`Couldn't run tsup: ${run.error.message}`] };
+  if (run.signal) throw new Error(`tsup was stopped by ${run.signal}`);
   if (run.status !== 0)
     return {
       problems: [
-        `tsup failed (${run.error ?? `exit ${run.status}`}). The end of its output:\n${output.trimEnd().split("\n").slice(-40).join("\n")}`,
+        `tsup failed (exit ${run.status}). The end of its output:\n${output.trimEnd().split("\n").slice(-40).join("\n")}`,
       ],
     };
   // One per glob the preload reordered
@@ -172,16 +182,11 @@ try {
       console.log(`${spec}: all ${first.size} files match the first build`);
     return found;
   };
+  // No entries only when that rebuild failed, which it reported
   const found = rebuildAndReport("reverse") ?? [];
   const folders = [
     ...new Set(found.map((entry) => posix.dirname(entry))),
   ].sort();
-  if (folders.length === 0) {
-    broken = true;
-    report(
-      "Couldn't put each folder first: the reversed rebuild didn't record the entries tsup globbed",
-    );
-  }
   for (const folder of folders) rebuildAndReport(`first:${folder}`);
   const specs = [...built.keys()];
   const repeats = specs.filter((spec, i) =>

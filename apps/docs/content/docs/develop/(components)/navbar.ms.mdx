@@ -93,59 +93,64 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
   <Tab value="Kod">
 ```tsx
-<Navbar>
-  <NavbarLogo
-    src="/common/logo.svg"
-    alt="Sistem Reka Bentuk Kerajaan Malaysia"
-  >
-    MYDS
-  </NavbarLogo>
-  <NavbarMenu>
-    <NavbarMenuItem href="/menu1">Menu 1</NavbarMenuItem>
-    <NavbarMenuItem href="/menu2">Menu 2</NavbarMenuItem>
-    <NavbarMenuDropdown title="Menu Dropdown">
-      <NavbarMenuItem href="/submenu1">Submenu 1</NavbarMenuItem>
-      <NavbarMenuItem href="/submenu2">Submenu 2</NavbarMenuItem>
-      <NavbarMenuItem href="/submenu3">Submenu 3</NavbarMenuItem>
-      <NavbarMenuItem href="/submenu1">Submenu 4</NavbarMenuItem>
-    </NavbarMenuDropdown>
-    <NavbarMenuItem href="/menu3">Menu 3</NavbarMenuItem>
-  </NavbarMenu>
-  <NavbarAction>
-    {/* Butang Carian: sembunyikan pada mudah alih jika perlu */}
-    <Button
-      variant="default-ghost"
-      iconOnly
-      aria-label="Cari"
-      size={"small"}
+<ThemeProvider>
+  <Navbar>
+    <NavbarLogo
+      src="/common/logo.svg"
+      alt="Sistem Reka Bentuk Kerajaan Malaysia"
     >
-      <ButtonIcon>
-        <SearchIcon />
-      </ButtonIcon>
-    </Button>
+      MYDS
+    </NavbarLogo>
+    <NavbarMenu>
+      <NavbarMenuItem href="/menu1">Menu 1</NavbarMenuItem>
+      <NavbarMenuItem href="/menu2">Menu 2</NavbarMenuItem>
+      <NavbarMenuDropdown title="Menu Dropdown">
+        <NavbarMenuItem href="/submenu1">Submenu 1</NavbarMenuItem>
+        <NavbarMenuItem href="/submenu2">Submenu 2</NavbarMenuItem>
+        <NavbarMenuItem href="/submenu3">Submenu 3</NavbarMenuItem>
+        <NavbarMenuItem href="/submenu1">Submenu 4</NavbarMenuItem>
+      </NavbarMenuDropdown>
+      <NavbarMenuItem href="/menu3">Menu 3</NavbarMenuItem>
+    </NavbarMenu>
+    <NavbarAction>
+      {/* Butang Carian: sembunyikan pada mudah alih jika perlu */}
+      <Button
+        variant="default-ghost"
+        iconOnly
+        aria-label="Cari"
+        size={"small"}
+      >
+        <ButtonIcon>
+          <SearchIcon />
+        </ButtonIcon>
+      </Button>
 
-    {/* Butang Tukar Mod Cahaya: sembunyikan pada mudah alih jika perlu */}
-    <ThemeSwitch as="toggle" />
+      {/* Butang Tukar Mod Cahaya: sembunyikan pada mudah alih jika perlu.
+          ThemeSwitch memerlukan satu ThemeProvider daripada
+          "@amerfathullah/myds-react/hooks" di akar aplikasi anda, di atas setiap
+          ThemeSwitch. */}
+      <ThemeSwitch as="toggle" />
 
-    {/* Pilihan Bahasa: sembunyikan pada mudah alih jika perlu */}
-    <div className="hidden sm:block">
-      <Select defaultValue="EN" variant="outline" size="small">
-        <SelectTrigger aria-label="Bahasa">
-          <GlobeIcon className="h-4 w-4"></GlobeIcon>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent
-          align="end"
-          className="font-body rounded-[4px] py-1"
-        >
-          <SelectItem value="EN">EN</SelectItem>
-          <SelectItem value="BM">BM</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      {/* Pilihan Bahasa: sembunyikan pada mudah alih jika perlu */}
+      <div className="hidden sm:block">
+        <Select defaultValue="EN" variant="outline" size="small">
+          <SelectTrigger aria-label="Bahasa">
+            <GlobeIcon className="h-4 w-4"></GlobeIcon>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent
+            align="end"
+            className="font-body rounded-[4px] py-1"
+          >
+            <SelectItem value="EN">EN</SelectItem>
+            <SelectItem value="BM">BM</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-  </NavbarAction>
-</Navbar>
+    </NavbarAction>
+  </Navbar>
+</ThemeProvider>
 ```
 </Tab>
 </Tabs>
@@ -330,7 +335,10 @@ Kekunci Enter atau Space pada butang itu membuka menu dan mengalihkan fokus ke i
     </ButtonIcon>
   </Button>
 
-  {/* Butang Tukar Mod Cahaya: sembunyikan pada mudah alih jika perlu */}
+  {/* Butang Tukar Mod Cahaya: sembunyikan pada mudah alih jika perlu.
+      ThemeSwitch memerlukan satu ThemeProvider daripada
+      "@amerfathullah/myds-react/hooks" di akar aplikasi anda, di atas setiap
+      ThemeSwitch. */}
   <ThemeSwitch as="toggle" />
 
   {/* Pilihan Bahasa: sembunyikan pada mudah alih jika perlu */}

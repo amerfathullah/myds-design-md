@@ -101,7 +101,26 @@ function App() {
 }
 export default App;
 ```
-9. Create router.tsx inside src
+9. Edit main.tsx so the whole app sits inside one `ThemeProvider` from `@amerfathullah/myds-react/hooks`, around the `Suspense`
+-- NavbarMyds's `ThemeSwitch` changes the theme only under a `ThemeProvider`, and one provider at the root of the app serves every switch.
+```
+import { StrictMode, Suspense } from "react";
+import { createRoot } from "react-dom/client";
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
+import "./index.css";
+import App from "./App.tsx";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <ThemeProvider>
+      <Suspense fallback={<div>Loading...</div>}>
+        <App />
+      </Suspense>
+    </ThemeProvider>
+  </StrictMode>
+);
+```
+10. Create router.tsx inside src
 a)  Get lang from local storage, on initialize already added --> read main.tsx
 b) Routes from `/` to `/lang` --> making sure if someone goes to `/`, it goes to `lang`
 c) The path of `:lang` which is the dynamic route, contain an element `LangWrapper` where is set to get the language and share it with the pages and also handle error page `/*`
@@ -154,7 +173,7 @@ function Redirect404Page() {
 
 ```
 
-10. Create the LangWrapper inside src
+11. Create the LangWrapper inside src
 a) A React Router wrapper component that handles language-based routing and i18n initialization.
 b) Functions 
 --  Reads the `lang` URL parameter (`en` or `ms`).
@@ -197,7 +216,7 @@ export default function LangWrapper() {
 }
 
 ```
-11. Update NavbarMyds to update the dropdown language from the path.
+12. Update NavbarMyds to update the dropdown language from the path.
 a) Updated: Sync state when URL param changes
 b) you can now remove the test button to use this dropdown as the main language switcher
 ```

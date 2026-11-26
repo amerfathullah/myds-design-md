@@ -17,6 +17,7 @@ import {
 } from "@amerfathullah/myds-react/select";
 import { GlobeIcon, SearchIcon } from "@amerfathullah/myds-react/icon";
 import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
+import { ThemeProvider } from "@amerfathullah/myds-react/hooks";
 import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
 
 /**
@@ -117,10 +118,14 @@ const meta = {
     layout: "padded",
   },
   decorators: [
+    // One ThemeProvider for every story, so the Navbar's ThemeSwitch
+    // changes the theme.
     (Story) => {
       return (
         <div className="h-[300px]">
-          <Story />
+          <ThemeProvider>
+            <Story />
+          </ThemeProvider>
         </div>
       );
     },

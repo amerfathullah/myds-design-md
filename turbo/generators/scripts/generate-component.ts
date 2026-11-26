@@ -148,12 +148,14 @@ function readManifest(root: string, path: string): Manifest {
 
 /**
  * The component's entry, with the conditions every other entry has, pointing
- * at the files the build writes for it. Each entry keeps its `type` key: a
- * `types` key alone would make attw report it as masquerading as CJS.
+ * at the files the build writes for it. It has no `types` key: TypeScript
+ * finds each condition's declarations next to the file that condition
+ * resolves to, the `.d.mts` beside the `.mjs` and the `.d.ts` beside the
+ * `.js`. A `types` key pointing at the `.d.ts` would give ESM consumers the
+ * CJS types, and attw would report the entry as masquerading as CJS.
  */
 function exportsEntry(slug: string) {
   return {
-    type: `./dist/components/${slug}.d.ts`,
     import: `./dist/components/${slug}.mjs`,
     require: `./dist/components/${slug}.js`,
   };

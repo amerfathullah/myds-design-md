@@ -63,7 +63,6 @@ function snapshot(): Record<string, string> {
 /** A component's entry, as the react package's exports list each one */
 function entry(slug: string) {
   return {
-    type: `./dist/components/${slug}.d.ts`,
     import: `./dist/components/${slug}.mjs`,
     require: `./dist/components/${slug}.js`,
   };
@@ -75,13 +74,11 @@ const manifest = {
   files: ["dist", "README.md"],
   exports: {
     "./utils": {
-      type: "./dist/utils/index.d.ts",
       import: "./dist/utils/index.mjs",
       require: "./dist/utils/index.js",
     },
     "./skeleton": entry("skeleton"),
     "./hooks": {
-      type: "./dist/hooks/index.d.ts",
       import: "./dist/hooks/index.mjs",
       require: "./dist/hooks/index.js",
     },

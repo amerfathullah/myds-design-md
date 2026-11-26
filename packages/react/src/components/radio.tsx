@@ -56,9 +56,12 @@ interface RadioItemContextValue {
    * make it: what the RadioButton reported, or until it has, what RadioItem's
    * and Radio's `disabled` give it. A disabled fieldset doesn't count.
    */
-  radioDisabled?: boolean;
-  /** The RadioContext value of the Radio the item sits in */
-  radio?: RadioContextValue;
+  buttonDisabled?: boolean;
+  /**
+   * The RadioContext value of the Radio the item sits in, which a RadioButton
+   * compares with its own to tell whether the item is in its Radio
+   */
+  radioContext?: RadioContextValue;
   /**
    * Records whether the item's RadioButton is disabled, and returns what
    * forgets it. Only a RadioButton of the item's own Radio calls it.
@@ -138,15 +141,18 @@ const dimWhenDisabled = [
 const RadioItem: ForwardRefExoticComponent<
   ComponentProps<"div"> & { disabled?: boolean }
 > = forwardRef(({ className, children, ...props }, ref) => {
-  const radio = useContext(RadioContext);
-  const itemDisabled = props.disabled ?? radio.disabled;
+  const radioContext = useContext(RadioContext);
+  const itemDisabled = props.disabled ?? radioContext.disabled;
   // What the RadioButton reported, until which Radix's own rule predicts it:
   // the Radio's `disabled`, or the item's. On the server, too.
-  const [reported, setReported] = useState<boolean | undefined>(undefined);
-  const radioDisabled = reported ?? (radio.disabled || itemDisabled);
+  const [reportedDisabled, setReportedDisabled] = useState<boolean | undefined>(
+    undefined,
+  );
+  const buttonDisabled =
+    reportedDisabled ?? (radioContext.disabled || itemDisabled);
   const registerButton = useCallback((disabled: boolean) => {
-    setReported(disabled);
-    return () => setReported(undefined);
+    setReportedDisabled(disabled);
+    return () => setReportedDisabled(undefined);
   }, []);
   const [hints, setHints] = useState<readonly Hint[]>([]);
   const registerHint = useCallback((id: string, element: HTMLElement) => {
@@ -172,8 +178,8 @@ const RadioItem: ForwardRefExoticComponent<
       hintIds: hints.map((hint) => hint.id),
       registerHint,
       sortHints,
-      radioDisabled,
-      radio,
+      buttonDisabled,
+      radioContext,
       registerButton,
     }),
     [
@@ -181,8 +187,8 @@ const RadioItem: ForwardRefExoticComponent<
       hints,
       registerHint,
       sortHints,
-      radioDisabled,
-      radio,
+      buttonDisabled,
+      radioContext,
       registerButton,
     ],
   );
@@ -209,23 +215,24 @@ const RadioButton = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
 >(({ className, ...props }, ref) => {
-  const radio = useContext(RadioContext);
-  const { size } = radio;
+  const radioContext = useContext(RadioContext);
+  const { size } = radioContext;
   const {
     disabled,
     hintIds = noHints,
-    radio: itemRadio,
+    radioContext: itemRadioContext,
     registerButton,
   } = useContext(RadioItemContext);
   // Whether Radix disables the button: its Radio's `disabled`, or the
   // `disabled` it's given, which is yours when you pass one, even
   // `undefined`, and else the item's
   const buttonDisabled =
-    radio.disabled || Boolean("disabled" in props ? props.disabled : disabled);
+    radioContext.disabled ||
+    Boolean("disabled" in props ? props.disabled : disabled);
   // Tell the item before the browser paints, so its label and hint dim with
   // the button. Only to an item of this button's own Radio: in a Radio
   // nested in an option, a bare RadioButton doesn't speak for that option.
-  const ownItem = itemRadio === radio;
+  const ownItem = itemRadioContext === radioContext;
   useBeforePaint(() => {
     if (!registerButton || !ownItem) return;
     return registerButton(buttonDisabled);
@@ -273,7 +280,8 @@ const RadioLabel: ForwardRefExoticComponent<ComponentProps<"label">> =
   forwardRef(({ className, children, ...props }, ref) => {
     const { size } = useContext(RadioContext);
     // An older copy's RadioItem gives only `disabled`
-    const { disabled, radioDisabled = disabled } = useContext(RadioItemContext);
+    const { disabled, buttonDisabled = disabled } =
+      useContext(RadioItemContext);
     return (
       <label
         ref={ref}
@@ -284,7 +292,7 @@ const RadioLabel: ForwardRefExoticComponent<ComponentProps<"label">> =
           size === "small" && "text-body-sm",
           size === "medium" && "text-body-md",
           size === "large" && "text-lg",
-          radioDisabled && "text-txt-black-disabled",
+          buttonDisabled && "text-txt-black-disabled",
           className,
         )}
         {...props}
@@ -342,7 +350,7 @@ const RadioHintText = forwardRef<HTMLElement, RadioHintTextProps>(
     // An older copy's RadioItem gives only `disabled`
     const {
       disabled,
-      radioDisabled = disabled,
+      buttonDisabled = disabled,
       registerHint,
       sortHints,
     } = useContext(RadioItemContext);
@@ -386,7 +394,7 @@ const RadioHintText = forwardRef<HTMLElement, RadioHintTextProps>(
           size === "small" && "text-xs",
           size === "medium" && "text-body-sm",
           size === "large" && "text-body-md",
-          radioDisabled && "text-otl-gray-300",
+          buttonDisabled && "text-otl-gray-300",
           className,
         )}
         {...props}
@@ -395,7 +403,7 @@ const RadioHintText = forwardRef<HTMLElement, RadioHintTextProps>(
         // contrast. A disabled fieldset needs no mark: checkers exempt all
         // inside it. After the spread, so an `aria-disabled` you pass wins,
         // but an `undefined` one, as a wrapper forwards, doesn't erase it.
-        aria-disabled={props["aria-disabled"] ?? (radioDisabled || undefined)}
+        aria-disabled={props["aria-disabled"] ?? (buttonDisabled || undefined)}
       >
         {children}
       </div>

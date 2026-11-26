@@ -14,6 +14,8 @@ module.exports = [
       "vitest.config.ts",
       "registry-define.mjs",
       "eslint.config.js",
+      // Node scripts, outside the TypeScript project the parser reads
+      "scripts/",
     ],
   },
   // To fix the issue where the tsconfig is being looked at the root directory

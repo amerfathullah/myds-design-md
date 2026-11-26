@@ -15,6 +15,7 @@
     "build": "tsup",
     "check-exports": "attw --pack . --profile node16",
     "check-types": "tsc -p type-tests/tsconfig.react19.json && tsc -p type-tests/tsconfig.react18.json",
+    "check-reproducible": "node scripts/check-reproducible.mjs",
     "lint": "eslint .",
     "test": "vitest run"
   },

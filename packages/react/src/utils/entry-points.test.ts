@@ -174,6 +174,14 @@ describe("the entry-list reader", () => {
     );
   });
 
+  test.each([[[]], [["!src/components/calendar.tsx"]]])(
+    "lists nothing for %j, as tinyglobby does",
+    (patterns: string[]) => {
+      expect(tinyglobby(patterns)).toEqual([]);
+      expect(filesOf(root, patterns)).toEqual([]);
+    },
+  );
+
   test.each([
     "src/components/{button,link}.tsx",
     "src/components/[bl]*.tsx",
@@ -370,7 +378,9 @@ describe("the check", () => {
     expect(found).toEqual(
       sample.reports.map((names) =>
         expect.toSatisfy(
-          (report: string) => names.every((name) => report.includes(name)),
+          (report: unknown) =>
+            typeof report === "string" &&
+            names.every((name) => report.includes(name)),
           names.join(", "),
         ),
       ),

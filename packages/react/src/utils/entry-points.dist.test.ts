@@ -7,10 +7,10 @@
 // from build to build (#239). It needs `pnpm build` first, and fails, rather
 // than skips, without it.
 /// <reference types="node" />
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { posix, resolve, sep } from "node:path";
 import ts from "typescript";
-import { beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 
 const root = resolve(__dirname, "../..");
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
@@ -53,35 +53,33 @@ function references(file: string, text: string): string[] {
   return map ? [...named, posix.join(posix.dirname(file), map)] : named;
 }
 
-let built: Set<string>;
-// What the targets and their declarations reach, and what any of them names
-// that isn't built
-let reached: Set<string>;
-let missing: string[];
-beforeAll(() => {
-  const dist = resolve(root, "dist");
-  built = new Set(
-    readdirSync(dist, { recursive: true, encoding: "utf8" })
-      .filter((file) => statSync(resolve(dist, file)).isFile())
-      .map((file) => posix.join("dist", file.split(sep).join("/"))),
-  );
-  reached = new Set();
-  missing = [];
-  const visit = (file: string, from: string) => {
-    if (reached.has(file)) return;
-    if (!built.has(file)) return void missing.push(`${from} names ${file}`);
-    reached.add(file);
-    for (const next of references(
-      file,
-      readFileSync(resolve(root, file), "utf8"),
-    ))
-      visit(next, file);
-  };
-  for (const target of targets) {
-    visit(target, "`exports`");
-    visit(declarationOf(target), `${target}'s declaration`);
-  }
-});
+const dist = resolve(root, "dist");
+if (!existsSync(dist))
+  throw new Error(`${dist} doesn't exist: run \`pnpm build\` first`);
+const built = new Set(
+  readdirSync(dist, { recursive: true, encoding: "utf8" })
+    .filter((file) => statSync(resolve(dist, file)).isFile())
+    .map((file) => posix.join("dist", file.split(sep).join("/"))),
+);
+// What the targets and their declarations reach, and what they refer to that
+// isn't built
+const reached = new Set<string>();
+const missing: string[] = [];
+const visit = (file: string, why: string) => {
+  if (reached.has(file)) return;
+  if (!built.has(file))
+    return void missing.push(`${file}, ${why}, isn't built`);
+  reached.add(file);
+  for (const next of references(
+    file,
+    readFileSync(resolve(root, file), "utf8"),
+  ))
+    visit(next, `which ${file} refers to`);
+};
+for (const target of targets) {
+  visit(target, "an `exports` target");
+  visit(declarationOf(target), `the declaration of ${target}`);
+}
 
 test("finds the built package, and the targets in `exports`", () => {
   expect(targets.length).toBeGreaterThan(0);

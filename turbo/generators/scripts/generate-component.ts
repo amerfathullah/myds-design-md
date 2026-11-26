@@ -152,7 +152,7 @@ function readManifest(root: string, path: string): Manifest {
  * finds each condition's declarations next to the file that condition
  * resolves to, the `.d.mts` beside the `.mjs` and the `.d.ts` beside the
  * `.js`. A `types` key pointing at the `.d.ts` would give ESM consumers the
- * CJS types, and attw would report the entry as masquerading as CJS.
+ * CommonJS types, and attw would report the entry as masquerading as CJS.
  */
 function exportsEntry(slug: string) {
   return {

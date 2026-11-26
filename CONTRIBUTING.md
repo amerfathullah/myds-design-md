@@ -139,7 +139,7 @@ This part is for maintainers. `@amerfathullah/myds-react` and `@amerfathullah/my
 1. While changesets are pending on `main`, each push to `main` opens or updates the **Version Packages** PR, from the `changeset-release/main` branch. It bumps the versions, writes the changelogs and removes the changesets. These pushes build and publish nothing.
 2. The Version Packages PR gets its own `ci` run. Its commits come from the workflow's `GITHUB_TOKEN`, so GitHub holds the run until a maintainer approves it. Approve it, and merge the PR only once that run is green.
 3. Merging it pushes to `main` with no changesets pending, and `publish` takes the publish path. It builds both packages once and packs each version that npm doesn't list yet. Then it runs the release checks on those tarballs and the build they were packed from:
-   - for the React package, `attw`, both type-test configs (`check-types`) and the Vitest suite, which includes the tests of the built package (`*.dist.test.ts`);
+   - for the React package, that the build has the version being published, then `attw`, both type-test configs (`check-types`) and the Vitest suite, which includes the tests of the built package (`*.dist.test.ts`);
    - for the style package, that the tarball holds a non-empty `dist/index.css`, the `./full.css` export;
    - for each tarball, that its `dist` matches the build the checks read.
 

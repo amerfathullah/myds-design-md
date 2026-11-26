@@ -505,7 +505,7 @@ const october15 = new Date(2026, 9, 15);
 
 // The `disabled` values that disable the whole picker: `true`, alone or as an
 // element of an array, wherever it stands in the array (#231)
-const wholePicker: [string, Matcher | Matcher[]][] = [
+const wholePickerMatchers: [string, Matcher | Matcher[]][] = [
   ["`true`", true],
   ["`[true]`", [true]],
   ["`[true, { before: date }]`", [true, { before: october15 }]],
@@ -581,7 +581,7 @@ const pickers = {
 // JSX's bare `disabled` passes `true`, as `disabled={true}` does
 describe("`true`, alone or in an array", () => {
   test.each(
-    wholePicker.flatMap(([value, disabled]) =>
+    wholePickerMatchers.flatMap(([value, disabled]) =>
       (
         [
           ["no value", {}],
@@ -619,7 +619,7 @@ describe("`true`, alone or in an array", () => {
   );
 
   test.each(
-    wholePicker.flatMap(([value, disabled]) =>
+    wholePickerMatchers.flatMap(([value, disabled]) =>
       (
         [
           ["no value", {}],
@@ -699,7 +699,7 @@ describe("`true`, alone or in an array", () => {
     ["DateRangePicker", "no naming props", false, {}],
   ] as const;
   test.each(
-    wholePicker.flatMap(([value, disabled]) =>
+    wholePickerMatchers.flatMap(([value, disabled]) =>
       namingCases.map(
         ([picker, naming, inField, props]) =>
           [value, picker, naming, inField, props, disabled] as const,
@@ -707,7 +707,7 @@ describe("`true`, alone or in an array", () => {
     ),
   )(
     "%s disables %s's triggers but keeps their classes, text, names and descriptions, with %s",
-    async (_, picker, __, inField, props, value) => {
+    async (_, picker, __, inField, props, matcher) => {
       const render = (disabled: object) => {
         const element = pickers[picker].render({ ...props, ...disabled });
         return inField ? field("Dates", element) : element;
@@ -719,7 +719,7 @@ describe("`true`, alone or in an array", () => {
         looks: triggerLooks(page),
       });
       const enabled = await readMounted(render({}), read);
-      const disabled = await readMounted(render({ disabled: value }), read);
+      const disabled = await readMounted(render({ disabled: matcher }), read);
       const count = pickers[picker].triggers.length;
       expect(enabled.disabled).toEqual(Array(count).fill(false));
       expect(disabled.disabled).toEqual(Array(count).fill(true));

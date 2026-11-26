@@ -525,7 +525,8 @@ for (const width of widths) {
                   ...(prefix && { prefix: getComputedStyle(prefix).color }),
                 };
               });
-            const { prefix, ...look } = looks[disabled ? "disabled" : "enabled"];
+            const { prefix, ...look } =
+              looks[disabled ? "disabled" : "enabled"];
             want[`${mode} ${field} ${trigger}`] =
               picker === "range" ? { ...look, prefix } : look;
           }

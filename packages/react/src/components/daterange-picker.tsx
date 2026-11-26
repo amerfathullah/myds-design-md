@@ -90,8 +90,8 @@ export type DateRangePickerProps = {
 type Trigger = "dialog-from" | "dialog-to" | "popover-from" | "popover-to";
 
 // The classes of each trigger's "From:" / "To:" prefix. It dims with the
-// trigger it sits in, which `disabled={true}` or a disabled `<fieldset>`
-// disables. A button can't hold another, so `in-[button:disabled]:` matches
+// trigger it sits in, which a `disabled` that holds `true`, alone or in an
+// array, or a disabled `<fieldset>` disables. A button can't hold another, so `in-[button:disabled]:` matches
 // only that trigger. An unnamed `group-disabled:` would also match a
 // `<fieldset disabled className="group">` whose first `<legend>` holds an
 // enabled picker.

@@ -1,9 +1,10 @@
 // The page date-pickers.test.mjs renders in Chromium: DatePickers and
 // DateRangePickers named by a Label through `aria-labelledby`, described by a
 // hint, named by `aria-label` with their calendars' dialogs named in Malay,
-// and with no naming props; a DatePicker and a DateRangePicker disabled by a
-// `disabled` array that holds `true` (#231); then DateRangePickers disabled
-// by `disabled`, disabled by a `<fieldset disabled>` around them, and left
+// and with no naming props, then a DatePicker disabled by a `disabled` array
+// that holds `true` (#231); then DateRangePickers named the same ways, then
+// DateRangePickers disabled by `disabled`, disabled by a `disabled` array that
+// holds `true`, disabled by a `<fieldset disabled>` around them, and left
 // enabled in the first `<legend>` of a `<fieldset disabled
 // className="group">`. Each picker sits in a `<div data-test>` of its own. The
 // page renders them twice: in `#csr` on the client, and in `#ssr` from server

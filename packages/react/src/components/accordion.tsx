@@ -50,15 +50,25 @@ const AccordionTrigger = React.forwardRef<
       className={clx(
         "text-txt-black-700 font-body bg-bg-white hover:text-txt-black-900 data-[state=open]:text-txt-black-900 group flex flex-1 cursor-pointer items-center justify-between py-4 text-base font-medium leading-none hover:underline",
         "focus-visible:underline focus-visible:outline-hidden",
-        "data-[disabled]:text-txt-black-disabled data-[disabled]:cursor-not-allowed data-[disabled]:hover:no-underline",
+        // The disabled look follows the button's own `:disabled`, which
+        // `disabled` on Accordion, AccordionItem or AccordionTrigger, or a
+        // disabled fieldset, sets. Radix's `data-disabled` comes only from
+        // the first two. It dims an open trigger too, over
+        // `data-[state=open]:`.
+        "disabled:text-txt-black-disabled disabled:data-[state=open]:text-txt-black-disabled disabled:cursor-not-allowed disabled:hover:no-underline",
         className,
       )}
       {...props}
       ref={forwardedRef}
     >
       {children}
+      {/* The chevron dims while its parent, the trigger, is `:disabled`. Not
+          `in-[button:disabled]:`, which an author's `[&>svg]:text-*` on the
+          trigger beats, and not a `group` variant, named or not, which a
+          consumer's element of that group can set off. So it stays a direct
+          child of the button. */}
       <ChevronDownIcon
-        className="text-txt-black-500 group-data-[disabled]:text-txt-black-disabled transition-transform duration-300 ease-in-out group-data-[state=open]:rotate-180"
+        className="text-txt-black-500 [:disabled>&]:text-txt-black-disabled transition-transform duration-300 ease-in-out group-data-[state=open]:rotate-180"
         aria-hidden
       />
     </AccordionBase.Trigger>

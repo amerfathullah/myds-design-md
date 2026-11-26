@@ -12,10 +12,10 @@ const { createRequire } = require("node:module");
 const { posix } = require("node:path");
 
 /**
- * The entries in the order `spec` names, each folder's files sorted:
- * - `first:<folder>`, e.g. `first:src/hooks`: that folder's files, then the
- *   others;
- * - `reverse`: all of them, last to first.
+ * The entries in the order `spec` names:
+ * - `first:<folder>`, e.g. `first:src/hooks`: that folder's files, sorted,
+ *   then the others, sorted;
+ * - `reverse`: all of them, sorted, then last to first.
  * It throws on any other spec, and on a folder that holds no entry.
  */
 function order(entries, spec) {

@@ -6,7 +6,7 @@ The declaration files now list the members of a union in a stable, sorted order,
 
 This changes how unions are written in the `.d.ts` and `.d.mts` files of 17 components, not what they accept:
 
-- the variant props of 16 of them, such as `size`, whose `"small" | "medium" | "large"` is now `"large" | "medium" | "small"`;
+- in 16 of them, props that take one of a list of names, such as `variant` and `size`: `size?: "small" | "medium" | "large"` is now `"large" | "medium" | "small"`;
 - Accordion's props, now `AccordionMultipleProps | AccordionSingleProps`.
 
 It shows in editor tooltips and in snapshots of the types. The JavaScript and the sourcemaps are unchanged.

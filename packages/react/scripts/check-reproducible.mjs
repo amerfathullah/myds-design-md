@@ -94,19 +94,20 @@ function rebuild(spec) {
         `tsup failed (${run.error ?? `exit ${run.status}`}):\n${output}`,
       ],
     };
-  const globs = existsSync(record)
+  // One per glob the preload reordered
+  const reorderings = existsSync(record)
     ? readFileSync(record, "utf8")
         .split("\n")
         .filter(Boolean)
         .map((line) => JSON.parse(line))
     : [];
-  if (globs.length !== 1)
+  if (reorderings.length !== 1)
     return {
       problems: [
-        `The preload reordered ${globs.length} entry globs, not 1, so this can't tell what tsup built`,
+        `The preload reordered ${reorderings.length} entry globs, not 1, so this can't tell what tsup built`,
       ],
     };
-  const [{ found, forced }] = globs;
+  const [{ found, forced }] = reorderings;
   // As tsup prints it, without colours
   const logged = [
     ...output.replace(/\x1b\[[\d;]*m/g, "").matchAll(/Building entry: (.*)$/gm),
@@ -136,7 +137,9 @@ const report = (failure) =>
 
 let failed = false;
 try {
-  const check = (spec) => {
+  // Rebuilds in `spec`'s order and reports the result. It returns the
+  // entries tinyglobby found, to list the folders.
+  const rebuildAndReport = (spec) => {
     const { found, problems } = rebuild(spec);
     if (problems.length === 0)
       console.log(`${spec}: all ${first.size} files match the first build`);
@@ -146,7 +149,7 @@ try {
     }
     return found;
   };
-  const found = check("reverse") ?? [];
+  const found = rebuildAndReport("reverse") ?? [];
   const folders = [
     ...new Set(found.map((entry) => posix.dirname(entry))),
   ].sort();
@@ -156,7 +159,7 @@ try {
       "Couldn't put each folder first: the reversed rebuild didn't record the entries tsup globbed",
     );
   }
-  for (const folder of folders) check(`first:${folder}`);
+  for (const folder of folders) rebuildAndReport(`first:${folder}`);
 } finally {
   rmSync(dist, { recursive: true, force: true });
   cpSync(join(scratch, "dist"), dist, { recursive: true });

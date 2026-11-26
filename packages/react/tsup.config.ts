@@ -24,9 +24,14 @@ export default defineConfig((options) => ({
   // made their types, which changes from build to build: the declaration
   // build reads its files concurrently (#239). `stableTypeOrdering` is a
   // hidden TypeScript 6.0 option, meant for the move to TypeScript 7, which
-  // orders them so by default. tsup ignores an option TypeScript doesn't
-  // know, silently, so `variant-unions.dist.test.ts` fails if it stops
-  // taking effect.
+  // orders unions so by default and is expected to drop the option: remove
+  // it then. tsup ignores an option TypeScript doesn't know, silently, so
+  // `variant-unions.dist.test.ts` fails if it stops taking effect.
+  // It leaves one case: in a union of objects with the same name, or with
+  // none, from different files, the files' order decides. That follows the
+  // entries as tsup passes them to the declaration build, unsorted, since
+  // the sort in `esbuildOptions` doesn't reach it. No union in the package
+  // has that shape today.
   dts: { compilerOptions: { stableTypeOrdering: true } },
   sourcemap: true,
   external: ["react"],

@@ -1,6 +1,7 @@
-// The built declarations list each variant union's members sorted (#239).
-// cva infers these unions (`VariantProps`) from a component's variant config,
-// and TypeScript prints a union's members in the order it made their types.
+// In the built declarations, the members of each union that cva infers
+// (`VariantProps`) come sorted (#239). cva types each of a component's options,
+// such as `variant` and `size`, as a union of its values' names, and
+// TypeScript prints a union's members in the order it made their types.
 // The declaration build makes them in whatever order its files happen to be
 // read, which changes from build to build, unless `stableTypeOrdering` is set,
 // as tsup.config.ts sets it. So this fails if that option stops taking
@@ -15,14 +16,14 @@ const dist = resolve(__dirname, "../../dist");
 if (!existsSync(dist))
   throw new Error(`${dist} doesn't exist: run \`pnpm build\` first`);
 
-// A variant prop, as the declarations print it:
+// A prop cva types, as the declarations print it:
 // `variant?: "default" | "fill" | null | undefined`
-const variantUnion = /(\w+)\?: ("[^"]*"(?: \| "[^"]*")+) \| null \| undefined/g;
+const cvaUnion = /(\w+)\?: ("[^"]*"(?: \| "[^"]*")+) \| null \| undefined/g;
 
 const unions = readdirSync(dist, { recursive: true, encoding: "utf8" })
   .filter((file) => /\.d\.m?ts$/.test(file))
   .flatMap((file) =>
-    [...readFileSync(resolve(dist, file), "utf8").matchAll(variantUnion)].map(
+    [...readFileSync(resolve(dist, file), "utf8").matchAll(cvaUnion)].map(
       ([, name, members]) => ({
         file: `dist/${file.split(sep).join("/")}`,
         name: name as string,
@@ -49,7 +50,7 @@ test("finds Breadcrumb's variant union in both of its declarations", () => {
 
 // In the order TypeScript sorts string literal types: by `<`, code unit by
 // code unit, as `sort()` compares strings
-test("lists every variant union's members sorted", () => {
+test("lists the members of every union cva infers sorted", () => {
   expect(
     unions
       .filter(({ members }) =>

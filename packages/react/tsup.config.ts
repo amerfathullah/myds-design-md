@@ -4,8 +4,16 @@ import { registryDefine } from "./registry-define.mjs";
 
 export default defineConfig((options) => ({
   ...options,
+  // Every entry has a subpath in `exports`, and every subpath an entry
+  // (`src/utils/entry-points.test.ts`). Keep this a list of string literals:
+  // the tests read it. tsup globs it with tinyglobby, which reads a leading
+  // `!` as an ignore.
   entryPoints: [
     "src/components/**/*.tsx",
+    // Internal: only the date pickers use them, and no subpath loads them
+    // (#236). Their code is built into the pickers and the chunks those import.
+    "!src/components/calendar.tsx",
+    "!src/components/popover.tsx",
     "src/hooks/index.ts",
     "src/utils/index.ts",
     "src/icons/index.ts",

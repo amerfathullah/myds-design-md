@@ -14,6 +14,8 @@ import { relative, resolve } from "node:path";
 import ts from "typescript";
 import { beforeAll, describe, expect, test } from "vitest";
 
+import { entryPoints } from "./entry-points";
+
 const root = resolve(__dirname, "../..");
 const src = resolve(root, "src");
 const registry = resolve(src, "utils/registry.ts");
@@ -60,37 +62,6 @@ const programOf = (rootNames: readonly string[]) =>
 
 const collapse = (text: string) => text.replace(/\s+/g, " ").trim();
 const label = (fileName: string) => relative(src, fileName);
-
-// The build's entry points, from `entryPoints` in tsup.config.ts
-function entryPoints(): string[] {
-  const file = resolve(root, "tsup.config.ts");
-  const config = ts.createSourceFile(
-    file,
-    readFileSync(file, "utf8"),
-    ts.ScriptTarget.Latest,
-    true,
-  );
-  let globs: string[] | undefined;
-  const visit = (node: ts.Node): void => {
-    if (
-      ts.isPropertyAssignment(node) &&
-      ts.isIdentifier(node.name) &&
-      node.name.text === "entryPoints" &&
-      ts.isArrayLiteralExpression(node.initializer)
-    )
-      globs = node.initializer.elements.map((element) => {
-        if (!ts.isStringLiteralLike(element))
-          throw new Error(
-            `An entry point isn't a string: ${element.getText()}`,
-          );
-        return element.text;
-      });
-    ts.forEachChild(node, visit);
-  };
-  visit(config);
-  if (!globs) throw new Error("tsup.config.ts names no entryPoints");
-  return ts.sys.readDirectory(root, [".ts", ".tsx"], undefined, globs);
-}
 
 // Each module a file loads: what it imports or re-exports, other than
 // `import type` and `export type`, and what it imports dynamically
@@ -532,7 +503,7 @@ describe("the modules the build ships", () => {
   let shipped: string[];
   let found: ReturnType<typeof inspect>;
   beforeAll(() => {
-    const entries = entryPoints();
+    const entries = entryPoints().map((entry) => resolve(root, entry));
     // The registry, too, so its helpers are known before anything uses them
     const program = programOf([...entries, registry]);
     const modules = shippedModules(program, entries);
@@ -544,6 +515,10 @@ describe("the modules the build ships", () => {
     expect(shipped).toEqual(
       expect.arrayContaining([
         "components/button.tsx",
+        // Not entries, but the date pickers build them in (#236), so a
+        // context made outside the registry in either is still found
+        "components/calendar.tsx",
+        "components/popover.tsx",
         "components/toast.tsx",
         "hooks/index.ts",
         "hooks/use-theme.tsx",
@@ -552,8 +527,11 @@ describe("the modules the build ships", () => {
         "utils/index.ts",
       ]),
     );
+    // Nor the entry-list reader, which is test support for Node only
     expect(
-      shipped.filter((file) => /\.test\.|test-page|test-cases/.test(file)),
+      shipped.filter((file) =>
+        /\.test\.|test-page|test-cases|^utils\/entry-points\.ts$/.test(file),
+      ),
     ).toEqual([]);
   });
 

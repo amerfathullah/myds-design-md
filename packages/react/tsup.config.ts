@@ -28,10 +28,11 @@ export default defineConfig((options) => ({
   // it then. tsup ignores an option TypeScript doesn't know, silently, so
   // `variant-unions.dist.test.ts` fails if it stops taking effect.
   // It leaves one case: in a union of objects with the same name, or with
-  // none, from different files, the files' order decides. That follows the
-  // entries as tsup passes them to the declaration build, unsorted, since
-  // the sort in `esbuildOptions` doesn't reach it. No union in the package
-  // has that shape today.
+  // none, declared in files that the declaration build reaches through
+  // different entries, the files' order decides. That follows the entries as
+  // tsup passes them to the declaration build, unsorted, since the sort in
+  // `esbuildOptions` doesn't reach it. No union in the package has that shape
+  // today.
   dts: { compilerOptions: { stableTypeOrdering: true } },
   sourcemap: true,
   external: ["react"],

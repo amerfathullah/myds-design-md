@@ -4,14 +4,14 @@
 // mostly in which folder's files come first, and esbuild names and fills the
 // shared chunks by that order. So this rebuilds the package with the entries
 // in fixed orders, through `reorder-entries.cjs`: once last to first, then
-// once with each folder's files first. It fails unless each rebuild writes
-// the files of the build that was in `dist`, with the same SHA-256, and puts
-// that build back at the end.
+// once with each folder's files first. Each rebuild starts from an empty
+// `dist`. It fails unless each writes the files of the build that was there,
+// with the same SHA-256, and puts that build back at the end.
 //
 // Each rebuild must show that tsup built the entries in the order forced on
 // it: the preload records the one glob it reordered, and tsup's
-// "Building entry:" line has to list the same order. Otherwise a rebuild
-// would check nothing.
+// "Building entry:" line has to list the same order. No two rebuilds may
+// build the same order. Otherwise a rebuild would check nothing new.
 //
 // Run it after `pnpm build`, from the package: `pnpm check-reproducible`.
 import { spawnSync } from "node:child_process";
@@ -67,16 +67,36 @@ function differences(first, built) {
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-if (!existsSync(dist))
-  throw new Error(`${dist} doesn't exist: run \`pnpm build\` first`);
+// As an annotation in GitHub Actions
+const report = (failure) =>
+  console.error(
+    process.env.GITHUB_ACTIONS === "true"
+      ? `::error::${failure.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A")}`
+      : failure,
+  );
+
+if (!existsSync(dist)) {
+  report(`${dist} doesn't exist: run \`pnpm build\` first`);
+  process.exit(1);
+}
 const first = hashes(dist);
 const scratch = mkdtempSync(join(tmpdir(), "myds-react-reproducible-"));
 cpSync(dist, join(scratch, "dist"), { recursive: true });
 
+// Ctrl-C, or a cancelled CI job, signals tsup too, which stops it. These
+// listeners keep this process alive, so that it can put the first build back.
+// They only run once the check is over, since it runs synchronously.
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"])
+  process.on(signal, () => {});
+
+let rebuilds = 0;
 // Rebuilds with the entries in the order `spec` names. It returns the entries
-// tinyglobby found, and what's wrong with the rebuild.
+// tinyglobby found, the order tsup built them in, and what's wrong:
+// `problems` with the check itself, or `differences` from the first build.
 function rebuild(spec) {
-  const record = join(scratch, `${spec.replace(/\W/g, "-")}.jsonl`);
+  const record = join(scratch, `rebuild-${rebuilds++}.jsonl`);
+  // So that a file the rebuild doesn't write shows, whatever `clean` says
+  rmSync(dist, { recursive: true, force: true });
   const run = spawnSync(process.execPath, ["--require", preload, tsup], {
     cwd: root,
     env: {
@@ -87,11 +107,13 @@ function rebuild(spec) {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
-  const output = `${run.stdout}${run.stderr}`;
+  if (run.signal) throw new Error(`tsup was stopped by ${run.signal}`);
+  // Without colours
+  const output = `${run.stdout}${run.stderr}`.replace(/\x1b\[[\d;]*m/g, "");
   if (run.status !== 0)
     return {
       problems: [
-        `tsup failed (${run.error ?? `exit ${run.status}`}):\n${output}`,
+        `tsup failed (${run.error ?? `exit ${run.status}`}). The end of its output:\n${output.trimEnd().split("\n").slice(-40).join("\n")}`,
       ],
     };
   // One per glob the preload reordered
@@ -108,10 +130,9 @@ function rebuild(spec) {
       ],
     };
   const [{ found, forced }] = reorderings;
-  // As tsup prints it, without colours
-  const logged = [
-    ...output.replace(/\x1b\[[\d;]*m/g, "").matchAll(/Building entry: (.*)$/gm),
-  ].map(([, list]) => list.split(", "));
+  const logged = [...output.matchAll(/Building entry: (.*)$/gm)].map(
+    ([, list]) => list.split(", "),
+  );
   const expected = order(found, spec);
   if (
     !same(forced, expected) ||
@@ -124,29 +145,31 @@ function rebuild(spec) {
         `tsup didn't build the entries in the order forced on it, so this build checks nothing. Forced: ${expected.join(", ")}. tsup's "Building entry:" lines: ${logged.map((list) => list.join(", ")).join(" / ") || "none"}`,
       ],
     };
-  return { found, problems: differences(first, hashes(dist)) };
+  return { found, forced, differences: differences(first, hashes(dist)) };
 }
 
-// As an annotation in GitHub Actions
-const report = (failure) =>
-  console.error(
-    process.env.GITHUB_ACTIONS === "true"
-      ? `::error::${failure.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A")}`
-      : failure,
-  );
-
-let failed = false;
+// The check itself couldn't do its job
+let broken = false;
+// A rebuild didn't write the files of the first build
+let differs = false;
 try {
+  // Each spec, to the order tsup built, as JSON
+  const built = new Map();
   // Rebuilds in `spec`'s order and reports the result. It returns the
   // entries tinyglobby found, to list the folders.
   const rebuildAndReport = (spec) => {
-    const { found, problems } = rebuild(spec);
-    if (problems.length === 0)
-      console.log(`${spec}: all ${first.size} files match the first build`);
-    else {
-      failed = true;
+    const { found, forced, problems = [], differences = [] } = rebuild(spec);
+    if (forced) built.set(spec, JSON.stringify(forced));
+    if (problems.length > 0) {
+      broken = true;
       report(`${spec}:\n  ${problems.join("\n  ")}`);
-    }
+    } else if (differences.length > 0) {
+      differs = true;
+      report(
+        `${spec}: ${differences.length} files differ from the first build:\n  ${differences.join("\n  ")}`,
+      );
+    } else
+      console.log(`${spec}: all ${first.size} files match the first build`);
     return found;
   };
   const found = rebuildAndReport("reverse") ?? [];
@@ -154,21 +177,37 @@ try {
     ...new Set(found.map((entry) => posix.dirname(entry))),
   ].sort();
   if (folders.length === 0) {
-    failed = true;
+    broken = true;
     report(
       "Couldn't put each folder first: the reversed rebuild didn't record the entries tsup globbed",
     );
   }
   for (const folder of folders) rebuildAndReport(`first:${folder}`);
+  const specs = [...built.keys()];
+  const repeats = specs.filter((spec, i) =>
+    specs.slice(0, i).some((other) => built.get(other) === built.get(spec)),
+  );
+  if (repeats.length > 0) {
+    broken = true;
+    report(
+      `These rebuilds built the entries in an order an earlier rebuild built, so they checked nothing new: ${repeats.join(", ")}`,
+    );
+  }
+} catch (error) {
+  broken = true;
+  report(error instanceof Error ? error.message : String(error));
 } finally {
   rmSync(dist, { recursive: true, force: true });
   cpSync(join(scratch, "dist"), dist, { recursive: true });
   rmSync(scratch, { recursive: true, force: true });
 }
 
-if (failed) {
+if (differs)
   console.error(
-    "\nThe build isn't reproducible (#239): a rebuild with its entries in another order didn't write the same files as the first build. If dist is from an older commit, run `pnpm build` and check again.",
+    "\nThe build isn't reproducible (#239): a rebuild with its entries in another order didn't write the files of the first build. If dist is from an older commit, run `pnpm build` and check again.",
   );
-  process.exit(1);
-}
+if (broken)
+  console.error(
+    "\nThe check couldn't do its job, so it shows nothing about those rebuilds: see above.",
+  );
+if (differs || broken) process.exit(1);

@@ -1,13 +1,14 @@
 // AccordionTrigger's disabled look, in Chromium (#226). A trigger whose own
 // button is `:disabled` has `txt-black-disabled` text and chevron, a
-// not-allowed cursor and no underline on hover, in both themes, open or
-// closed, whatever disabled it: `disabled` on Accordion, AccordionItem or
-// AccordionTrigger, or a `<fieldset disabled>` (plain, `group`, nested in
-// another or disabled after mount, even with `disabled={false}` on Accordion
-// and AccordionItem, and the enabled look comes back when it's enabled
-// again). Radix sets `data-disabled` only from the props, and a fieldset sets
-// none, so the look keys on `:disabled`. happy-dom ignores a disabled
-// fieldset and applies no CSS, so this needs a real browser.
+// not-allowed cursor under the pointer and no underline on hover, in both
+// themes, open or closed, whatever disabled it: `disabled` on Accordion,
+// AccordionItem or AccordionTrigger, or a `<fieldset disabled>` (plain,
+// `group`, nested in another or disabled after mount, even with
+// `disabled={false}` on Accordion and AccordionItem, and the enabled look
+// comes back when it's enabled again). Radix sets `data-disabled` only from
+// the props, and a fieldset sets none, so the look keys on `:disabled`.
+// happy-dom ignores a disabled fieldset and applies no CSS, so this needs a
+// real browser.
 //
 // A trigger that isn't `:disabled` looks enabled, even with `data-disabled`:
 // `disabled={false}` or `{undefined}` on AccordionTrigger under a disabled
@@ -20,10 +21,10 @@
 // its colour, and the author's `[&>svg]:` or text colour on the trigger
 // applies while it's enabled and gives way to the dim while it's disabled.
 //
-// Every trigger is `:disabled`, opens on a click, takes a Tab stop and reads
-// in Chromium's accessibility tree as on main. axe-core 4.10.2's
-// color-contrast rule finds no violation in any fixture, in either theme.
-// Nothing logs an error or a warning.
+// Every trigger is `:disabled`, opens on a click, takes a Tab stop, reads in
+// Chromium's accessibility tree and turns its chevron as on main. axe-core
+// 4.10.2's color-contrast rule finds no violation in any fixture, in either
+// theme. Nothing logs an error or a warning.
 //
 // Each test checks either only cases #226 changes, and fails on main, or
 // only cases it leaves as they were, and passes on main too.
@@ -157,27 +158,32 @@ async function middle(page, test) {
 
 // What the trigger `test` shows: its text colour, cursor and underline, its
 // chevron's colour (the button's last child), and the colour of an icon of
-// the author's own, if it holds one
-const readTrigger = (page, test) =>
-  locate(page, test).evaluate((button) => {
+// the author's own, if it holds one. Under the pointer at `point`, the cursor
+// is that of the element there, which is what the user sees, and `hit` says
+// whether that element is the trigger or inside it.
+const readTrigger = (page, test, point) =>
+  locate(page, test).evaluate((button, point) => {
     const style = getComputedStyle(button);
     const icon = button.querySelector('[data-test$="-icon"]');
+    const under = point && document.elementFromPoint(...point);
     return {
       colour: style.color,
-      cursor: style.cursor,
+      cursor: getComputedStyle(under ?? button).cursor,
+      ...(point && { hit: button.contains(under) }),
       underline: style.textDecorationLine,
       chevron: getComputedStyle(button.lastElementChild).color,
       ...(icon && { icon: getComputedStyle(icon).color }),
     };
-  });
+  }, point);
 
 // What the trigger `test` shows at rest, with the mouse away from every
 // trigger, and under a real mouse hover
 async function readLook(page, test) {
   await page.mouse.move(0, 0);
   const rest = await readTrigger(page, test);
-  await page.mouse.move(...(await middle(page, test)));
-  const hover = await readTrigger(page, test);
+  const point = await middle(page, test);
+  await page.mouse.move(...point);
+  const hover = await readTrigger(page, test, point);
   await page.mouse.move(0, 0);
   return { rest, hover };
 }
@@ -199,7 +205,7 @@ function look(theme, { fixture, disabled, open }) {
       chevron: c["txt-black-disabled"],
       ...icon,
     };
-    return { rest: dim, hover: dim };
+    return { rest: dim, hover: { ...dim, hit: true } };
   }
   const chevron = fixture.svgClass ? c["txt-primary"] : c["txt-black-500"];
   return {
@@ -217,6 +223,7 @@ function look(theme, { fixture, disabled, open }) {
     hover: {
       colour: c["txt-black-900"],
       cursor: "pointer",
+      hit: true,
       underline: "underline",
       chevron,
       ...icon,
@@ -286,37 +293,60 @@ assert.ok(
   "every fixture has a topic with a test",
 );
 
-test("the triggers a disabled-after-mount fieldset dims look enabled again when it's enabled again, and dim when it's disabled again, in both themes, at rest and on hover", () =>
-  withPage(async (page) => {
-    const late = triggers.filter(({ fixture }) => fixture.wrap === "late");
-    assert.equal(late.length, 2);
-    const setLate = (disabled) =>
-      page.evaluate((disabled) => {
-        for (const fieldset of document.querySelectorAll("[data-late]"))
-          fieldset.disabled = disabled;
-      }, disabled);
-    const actual = [];
-    const want = [];
-    for (const theme of themes) {
-      await setTheme(page, theme);
-      for (const disabled of [true, false, true]) {
-        await setLate(disabled);
-        await settle(page);
-        for (const trigger of late) {
-          actual.push({
-            theme,
-            disabled,
-            test: trigger.test,
-            ...(await readLook(page, trigger.test)),
-          });
-          want.push({
-            theme,
-            disabled,
-            test: trigger.test,
-            ...look(theme, { ...trigger, disabled }),
-          });
-        }
+// The looks of the `late` fixture's triggers, in each theme, as its fieldset
+// is enabled again and then disabled again: as read and as expected, for each
+// phase in which the fieldset is `disabled` or not, as `pick` takes
+async function lateLooks(page, pick) {
+  const late = triggers.filter(({ fixture }) => fixture.wrap === "late");
+  assert.equal(late.length, 2);
+  const setLate = (disabled) =>
+    page.evaluate((disabled) => {
+      for (const fieldset of document.querySelectorAll("[data-late]"))
+        fieldset.disabled = disabled;
+    }, disabled);
+  const actual = [];
+  const want = [];
+  for (const theme of themes) {
+    await setTheme(page, theme);
+    for (const [phase, disabled] of [true, false, true].entries()) {
+      await setLate(disabled);
+      await settle(page);
+      if (!pick(disabled)) continue;
+      for (const trigger of late) {
+        const key = { theme, phase, test: trigger.test };
+        actual.push({ ...key, ...(await readLook(page, trigger.test)) });
+        want.push({ ...key, ...look(theme, { ...trigger, disabled }) });
       }
+    }
+  }
+  assert.ok(actual.length);
+  return [actual, want];
+}
+
+test("the triggers of a fieldset disabled after mount look disabled, in both themes, at rest and on hover, and again once it's enabled and disabled again", () =>
+  withPage(async (page) =>
+    assert.deepEqual(...(await lateLooks(page, (disabled) => disabled))),
+  ));
+
+test("the triggers of a fieldset disabled after mount look enabled again once it's enabled again, in both themes, at rest and on hover, as on main", () =>
+  withPage(async (page) =>
+    assert.deepEqual(...(await lateLooks(page, (disabled) => !disabled))),
+  ));
+
+// Whether each trigger's chevron is turned, as on main: an open trigger's is,
+// and so is the closed inner trigger's in the open item of the outer
+// Accordion. Its unnamed `group-data-[state=open]:` matches that open item, a
+// leak #431 fixes; #226 leaves the rotation alone.
+test("each chevron is turned as on main: an open trigger's, and the closed inner trigger's in an open outer item (#431)", () =>
+  withPage(async (page) => {
+    const actual = {};
+    const want = {};
+    for (const trigger of triggers) {
+      actual[trigger.test] = await locate(page, trigger.test).evaluate(
+        (button) => getComputedStyle(button.lastElementChild).rotate,
+      );
+      want[trigger.test] =
+        trigger.open || trigger.fixture.wrap === "outer" ? "180deg" : "none";
     }
     assert.deepEqual(actual, want);
   }));

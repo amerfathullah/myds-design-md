@@ -33,14 +33,15 @@ export interface RadioProps
   size?: RadioSize;
 }
 
-const RadioContext = sharedContext<
-  Required<Pick<RadioProps, "size" | "disabled">>
->("RadioContext", {
+type RadioContextValue = Required<Pick<RadioProps, "size" | "disabled">>;
+
+const RadioContext = sharedContext<RadioContextValue>("RadioContext", {
   size: DEFAULT_SIZE,
   disabled: false,
 });
 
 interface RadioItemContextValue {
+  /** RadioItem's `disabled`, or else its Radio's */
   disabled: boolean;
   // Added within 2.x, so a RadioItem from an older copy leaves them out, and
   // every reader works without them
@@ -50,6 +51,22 @@ interface RadioItemContextValue {
   registerHint?: (id: string, element: HTMLElement) => () => void;
   /** Puts the hints back in document order after one moves */
   sortHints?: () => void;
+  /**
+   * Whether the item's RadioButton is disabled, as its props and its Radio's
+   * make it: what the RadioButton reported, or until it has, what RadioItem's
+   * and Radio's `disabled` give it. A disabled fieldset doesn't count.
+   */
+  buttonDisabled?: boolean;
+  /**
+   * The RadioContext value of the Radio the item sits in, which a RadioButton
+   * compares with its own to tell whether the item is in its Radio
+   */
+  radioContext?: RadioContextValue;
+  /**
+   * Records whether the item's RadioButton is disabled, and returns what
+   * forgets it. Only a RadioButton of the item's own Radio calls it.
+   */
+  registerButton?: (disabled: boolean) => () => void;
 }
 
 // An item needs it's own context because labels and radio buttons need to be
@@ -86,8 +103,11 @@ const Radio = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
   RadioProps
 >(({ className, size = DEFAULT_SIZE, disabled = false, ...props }, ref) => {
+  // The same object while `size` and `disabled` stay as they are, so a
+  // RadioButton can tell its own Radio's from a nested one's
+  const context = useMemo(() => ({ size, disabled }), [size, disabled]);
   return (
-    <RadioContext.Provider value={{ size, disabled }}>
+    <RadioContext.Provider value={context}>
       <RadioGroupPrimitive.Root
         className={clx("grid gap-3", className)}
         disabled={disabled}
@@ -99,15 +119,41 @@ const Radio = React.forwardRef<
 });
 Radio.displayName = "Radio";
 
+// Dims the item's RadioLabel and RadioHintText while its own radio button is
+// `:disabled`, whatever disabled it: `disabled` on Radio, RadioItem or
+// RadioButton, or a disabled `<fieldset>`. The button, label and hint are
+// matched as children, or the label and hint inside one wrapper, so a nested
+// Radio's buttons, labels and hints never reach an outer option. The hint
+// dims only where checkers exempt it from contrast: marked `aria-disabled`,
+// or inside a disabled fieldset. These outrank a colour class on either.
+const dimWhenDisabled = [
+  "[&:has(>[role=radio]:disabled)>[data-radio-label]]:text-txt-black-disabled",
+  "[&:has(>[role=radio]:disabled)>*>[data-radio-label]]:text-txt-black-disabled",
+  "[&:has(>[role=radio]:disabled)>[data-radio-hint]:is([aria-disabled=true],fieldset:disabled_*):not([aria-disabled=false])]:text-otl-gray-300",
+  "[&:has(>[role=radio]:disabled)>*>[data-radio-hint]:is([aria-disabled=true],fieldset:disabled_*):not([aria-disabled=false])]:text-otl-gray-300",
+];
+
 /**
  * One option: a RadioButton, its RadioLabel and any RadioHintTexts. The
- * RadioButton points `aria-describedby` at the hints in its item.
+ * RadioButton points `aria-describedby` at the hints in its item. The label
+ * and hint dim with the RadioButton when it's disabled.
  */
 const RadioItem: ForwardRefExoticComponent<
   ComponentProps<"div"> & { disabled?: boolean }
 > = forwardRef(({ className, children, ...props }, ref) => {
-  const { disabled } = useContext(RadioContext);
-  const itemDisabled = props.disabled ?? disabled;
+  const radioContext = useContext(RadioContext);
+  const itemDisabled = props.disabled ?? radioContext.disabled;
+  // What the RadioButton reported, until which Radix's own rule predicts it:
+  // the Radio's `disabled`, or the item's. On the server, too.
+  const [reportedDisabled, setReportedDisabled] = useState<boolean | undefined>(
+    undefined,
+  );
+  const buttonDisabled =
+    reportedDisabled ?? (radioContext.disabled || itemDisabled);
+  const registerButton = useCallback((disabled: boolean) => {
+    setReportedDisabled(disabled);
+    return () => setReportedDisabled(undefined);
+  }, []);
   const [hints, setHints] = useState<readonly Hint[]>([]);
   const registerHint = useCallback((id: string, element: HTMLElement) => {
     const hint: Hint = { id, element };
@@ -132,14 +178,25 @@ const RadioItem: ForwardRefExoticComponent<
       hintIds: hints.map((hint) => hint.id),
       registerHint,
       sortHints,
+      buttonDisabled,
+      radioContext,
+      registerButton,
     }),
-    [itemDisabled, hints, registerHint, sortHints],
+    [
+      itemDisabled,
+      hints,
+      registerHint,
+      sortHints,
+      buttonDisabled,
+      radioContext,
+      registerButton,
+    ],
   );
   return (
     <RadioItemContext.Provider value={context}>
       <div
         ref={ref}
-        className={clx("flex items-center gap-3", className)}
+        className={clx("flex items-center gap-3", dimWhenDisabled, className)}
         {...props}
       >
         {children}
@@ -158,8 +215,28 @@ const RadioButton = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
 >(({ className, ...props }, ref) => {
-  const { size } = useContext(RadioContext);
-  const { disabled, hintIds = noHints } = useContext(RadioItemContext);
+  const radioContext = useContext(RadioContext);
+  const { size } = radioContext;
+  const {
+    disabled,
+    hintIds = noHints,
+    radioContext: itemRadioContext,
+    registerButton,
+  } = useContext(RadioItemContext);
+  // Whether Radix disables the button: its Radio's `disabled`, or the
+  // `disabled` it's given, which is yours when you pass one, even
+  // `undefined`, and else the item's
+  const buttonDisabled =
+    radioContext.disabled ||
+    Boolean("disabled" in props ? props.disabled : disabled);
+  // Tell the item before the browser paints, so its label and hint dim with
+  // the button. Only to an item of this button's own Radio: in a Radio
+  // nested in an option, a bare RadioButton doesn't speak for that option.
+  const ownItem = itemRadioContext === radioContext;
+  useBeforePaint(() => {
+    if (!registerButton || !ownItem) return;
+    return registerButton(buttonDisabled);
+  }, [registerButton, ownItem, buttonDisabled]);
   // Each id once, the hints' first, and none when there are none, so an
   // item without a hint points at no missing id
   const describedBy =
@@ -202,16 +279,20 @@ RadioButton.displayName = "RadioButton";
 const RadioLabel: ForwardRefExoticComponent<ComponentProps<"label">> =
   forwardRef(({ className, children, ...props }, ref) => {
     const { size } = useContext(RadioContext);
-    const { disabled } = useContext(RadioItemContext);
+    // An older copy's RadioItem gives only `disabled`
+    const { disabled, buttonDisabled = disabled } =
+      useContext(RadioItemContext);
     return (
       <label
         ref={ref}
+        // RadioItem dims it by this while its radio button is `:disabled`
+        data-radio-label=""
         className={clx(
           "text-txt-black-700 font-medium",
           size === "small" && "text-body-sm",
           size === "medium" && "text-body-md",
           size === "large" && "text-lg",
-          disabled && "text-txt-black-disabled",
+          buttonDisabled && "text-txt-black-disabled",
           className,
         )}
         {...props}
@@ -245,8 +326,9 @@ interface RadioHintTextProps extends HTMLAttributes<HTMLElement> {
  * Hint text for an option: a `<div>` that describes the RadioButton in its
  * RadioItem, which points `aria-describedby` at it. Screen readers read it
  * after the radio's name, which the RadioLabel gives. Clicking it doesn't
- * select the radio. It renders your `id`, or generates one. In a disabled
- * item it's marked `aria-disabled`.
+ * select the radio. It renders your `id`, or generates one. When its item's
+ * RadioButton is disabled by a prop, its own or its RadioItem's or Radio's,
+ * it's marked `aria-disabled`.
  */
 // Typed by its props, `ref` included, as the other parts are. Under React 18's
 // types, forwardRef's own type takes a string ref too, which `ref` doesn't.
@@ -265,7 +347,13 @@ const RadioHintText = forwardRef<HTMLElement, RadioHintTextProps>(
     ref,
   ) => {
     const { size } = useContext(RadioContext);
-    const { disabled, registerHint, sortHints } = useContext(RadioItemContext);
+    // An older copy's RadioItem gives only `disabled`
+    const {
+      disabled,
+      buttonDisabled = disabled,
+      registerHint,
+      sortHints,
+    } = useContext(RadioItemContext);
     const generatedId = useId();
     const hintId = id || generatedId;
     const element = useRef<HTMLDivElement | null>(null);
@@ -299,19 +387,23 @@ const RadioHintText = forwardRef<HTMLElement, RadioHintTextProps>(
       <div
         ref={divRef}
         id={hintId}
-        // A disabled option's hint is part of that inactive option, as its
-        // label is, so accessibility checkers exempt its dimmed colour from
-        // contrast. Before the spread, so an `aria-disabled` you pass wins.
-        aria-disabled={disabled || undefined}
+        // RadioItem dims it by this while its radio button is `:disabled`
+        data-radio-hint=""
         className={clx(
           "text-txt-black-500",
           size === "small" && "text-xs",
           size === "medium" && "text-body-sm",
           size === "large" && "text-body-md",
-          disabled && "text-otl-gray-300",
+          buttonDisabled && "text-otl-gray-300",
           className,
         )}
         {...props}
+        // A disabled option's hint is part of that inactive option, as its
+        // label is, so accessibility checkers exempt its dimmed colour from
+        // contrast. A disabled fieldset needs no mark: checkers exempt all
+        // inside it. After the spread, so an `aria-disabled` you pass wins,
+        // but an `undefined` one, as a wrapper forwards, doesn't erase it.
+        aria-disabled={props["aria-disabled"] ?? (buttonDisabled || undefined)}
       >
         {children}
       </div>

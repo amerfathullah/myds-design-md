@@ -293,6 +293,8 @@ describe("the Radio stories", () => {
       "Disabled",
       "Dark",
       "DisabledDark",
+      "DisabledFieldset",
+      "DisabledFieldsetDark",
     ]);
     // Each story as autodocs renders it, all on one page
     const elements = entries.map(([name, story]) => {
@@ -306,7 +308,7 @@ describe("the Radio stories", () => {
       );
     });
     const container = await mount(createElement("div", null, ...elements));
-    expect(container.querySelectorAll('[role="radiogroup"]')).toHaveLength(4);
+    expect(container.querySelectorAll('[role="radiogroup"]')).toHaveLength(6);
     expectWired(container);
   });
 });

@@ -49,7 +49,7 @@ jobs:
       - name: Test @amerfathullah/myds-react
         run: pnpm --filter @amerfathullah/myds-react test
 
-      - name: Install Chromium for the @amerfathullah/myds-style token-parity, focus-ring-contrast, focused-segment, segment-clip, segment-scroll, field-states, input-states, label-states, search-bar-states, search-bar-wiring, search-bar-keys, search-bar-caret, search-bar-highlight, select-item-states, entry-rendering, focus-rings, switch, data-table, data-table-radio, data-table-widen, table-tooltip, cookie-banner, pill, callout, toast, summary-list, masthead-region, skip-link, select-dropdown-disabled and radio-disabled tests
+      - name: Install Chromium for the @amerfathullah/myds-style token-parity, focus-ring-contrast, focused-segment, segment-clip, segment-scroll, field-states, input-states, label-states, search-bar-states, search-bar-wiring, search-bar-keys, search-bar-caret, search-bar-highlight, select-item-states, entry-rendering, focus-rings, switch, data-table, data-table-radio, data-table-widen, table-tooltip, cookie-banner, pill, callout, toast, summary-list, masthead-region, skip-link, select-dropdown-disabled, radio-disabled and accordion-disabled tests
         run: pnpm --filter @amerfathullah/myds-style exec playwright install --with-deps --only-shell chromium
 
       - name: Test @amerfathullah/myds-style

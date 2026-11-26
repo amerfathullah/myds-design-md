@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { createStory } from "../utils";
+import { createRender, createStory } from "../utils";
 import {
   AccordionTrigger,
   AccordionContent,
@@ -225,3 +225,28 @@ export const AccordionItemDisabled: Story = createStory({
     </AccordionItem>,
   ],
 });
+
+// A disabled fieldset disables the triggers, with no `disabled` prop on the
+// Accordion or its items: they dim, open or closed
+const InDisabledFieldset = () => (
+  <fieldset disabled>
+    <legend className="text-body-sm text-txt-black-900 mb-2">
+      Application
+    </legend>
+    <Accordion type="multiple" defaultValue={["item-1"]}>
+      <AccordionItem value="item-1">
+        <AccordionTrigger>Applicant details</AccordionTrigger>
+        <AccordionContent>
+          Name, identity card number and contact details.
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="item-2">
+        <AccordionTrigger>Supporting documents</AccordionTrigger>
+        <AccordionContent>
+          A copy of your identity card and proof of address.
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </fieldset>
+);
+export const DisabledFieldset = createRender(InDisabledFieldset, "light");

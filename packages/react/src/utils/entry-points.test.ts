@@ -143,6 +143,10 @@ describe("the entry-list reader", () => {
       "an `entry` beside `entryPoints`, which tsup reads first",
       config(`entry: ["src/a.ts"], entryPoints: ["src/b.ts"],`),
     ],
+    [
+      "a `dts.entry`, which picks the declarations' entries",
+      config(`entryPoints: ["src/b.ts"], dts: { entry: ["src/a.ts"] },`),
+    ],
   ])("throws on a config with %s", (_, text) => {
     expect(() => entryPatterns(text)).toThrow();
   });

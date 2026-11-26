@@ -36,7 +36,7 @@ pnpm exec turbo gen component --args react probe-x true
 
 It writes `packages/react/src/components/probe-x.tsx`, which exports `ProbeX`: a `div` that takes a div's own props, forwards its ref and merges its `className` with `clx`. It exports the component as `@amerfathullah/myds-react/probe-x`, adding the entry last in the react package's `exports`. With `true`, it also writes a story, `apps/storybook/stories/probe-x.stories.tsx`. Each file has TODOs for you to fill in.
 
-Every `.tsx` file in `packages/react/src/components` is an entry of the build, and needs its subpath in `exports`. A component that only other components use, as Calendar and Popover are, stays out of the entries: add a `!` pattern for it to `entryPoints` in `packages/react/tsup.config.ts`, and its code is built into the entries that import it. `entry-points.test.ts` fails when an entry has no subpath or a subpath has no entry, and `entry-points.dist.test.ts` fails when the build ships a file no subpath reaches.
+Every `.tsx` file in `packages/react/src/components` is an entry of the build, and needs its subpath in `exports`. A component that only other components use, as Calendar and Popover are, stays out of the entries: add a `!` pattern for it to `entryPoints` in `packages/react/tsup.config.ts`, and its code is built into the entries that import it. Remove any `"use client"` it begins with: bundling drops the directive from a module that isn't an entry, and `registry.dist.test.ts` fails on it. `entry-points.test.ts` fails when an entry has no subpath or a subpath has no entry, and `entry-points.dist.test.ts` fails when the build ships a file no subpath reaches.
 
 To start a hook, run this with its name, which starts with `use`:
 

@@ -20,10 +20,11 @@ const nameOf = (node: ts.ObjectLiteralElementLike) =>
 /**
  * The patterns in a tsup config's `entryPoints`, in order. It throws unless
  * the config names them once, as an array of string literals. It throws, too,
- * where the config sets `entry`, which tsup reads instead of `entryPoints`
- * (`options.entry || options.entryPoints`). An `entry` that reaches the
- * config through its `options`, as `tsup <file>` passes one, can't be seen
- * here: `entry-points.dist.test.ts` finds what it builds.
+ * where the config sets `entry` anywhere: beside `entryPoints`, tsup reads it
+ * first (`options.entry || options.entryPoints`), and under `dts` or
+ * `experimentalDts` it picks the declarations' entries. An `entry` that
+ * reaches the config through its `options`, as `tsup <file>` passes one,
+ * can't be seen here: `entry-points.dist.test.ts` finds what it builds.
  */
 export function entryPatterns(configText: string): string[] {
   const config = ts.createSourceFile(
@@ -37,7 +38,7 @@ export function entryPatterns(configText: string): string[] {
     if (ts.isObjectLiteralElementLike(node)) {
       if (nameOf(node) === "entry")
         throw new Error(
-          `tsup.config.ts sets \`entry\`, which tsup builds instead of \`entryPoints\`: ${node.getText()}`,
+          `tsup.config.ts sets \`entry\`, so \`entryPoints\` alone doesn't say what tsup builds: ${node.getText()}`,
         );
       if (nameOf(node) === "entryPoints") lists.push(node);
     }

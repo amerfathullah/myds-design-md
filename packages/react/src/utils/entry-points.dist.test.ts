@@ -17,9 +17,6 @@ const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
   exports: Record<string, unknown>;
 };
 
-// A path as the package's files name each other, from the package root
-// with no leading `./`, e.g. `dist/components/button.mjs`
-const normal = (path: string) => posix.normalize(path).replace(/^\.\//, "");
 const isDeclaration = (file: string) => /\.d\.[mc]?ts$/.test(file);
 // The declaration TypeScript finds beside a script: `x.d.mts` for `x.mjs`
 const declarationOf = (script: string) =>
@@ -35,7 +32,8 @@ const targets = [
   ),
 ]
   .filter((target): target is string => typeof target === "string")
-  .map(normal)
+  // As the package's files name each other: `dist/components/button.mjs`
+  .map((target) => posix.normalize(target))
   .sort();
 
 // The files a built file loads by relative path, and its sourcemap. In a
@@ -49,10 +47,10 @@ function references(file: string, text: string): string[] {
   const named = [...importedFiles, ...referencedFiles]
     .map(({ fileName }) => fileName)
     .filter((name) => /^\.\.?\//.test(name))
-    .map((name) => normal(posix.join(posix.dirname(file), name)))
+    .map((name) => posix.join(posix.dirname(file), name))
     .map((path) => (isDeclaration(file) ? declarationOf(path) : path));
   const map = /\/\/# sourceMappingURL=(?!data:)(\S+)\s*$/.exec(text)?.[1];
-  return map ? [...named, normal(posix.join(posix.dirname(file), map))] : named;
+  return map ? [...named, posix.join(posix.dirname(file), map)] : named;
 }
 
 let built: Set<string>;

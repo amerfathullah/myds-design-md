@@ -4,6 +4,7 @@ import { enGB, ms } from "react-day-picker/locale";
 import { format } from "date-fns";
 import { useControllableState } from "../hooks";
 import { useTriggerNames } from "../hooks/use-trigger-names";
+import { disablesWholePicker } from "../utils/disables-whole-picker";
 import { Button, button_cva } from "./button";
 import { Calendar } from "./calendar";
 import { Dialog, DialogBody, DialogContent, DialogTrigger } from "./dialog";
@@ -13,9 +14,10 @@ import { VariantProps } from "class-variance-authority";
 export type DateRangePickerProps = {
   defaultValue?: DateRange;
   /**
-   * `true` disables the whole picker: every trigger it renders, so none of
-   * them opens its calendar. Any other Matcher, or an array of Matchers,
-   * disables only the days it matches, in every calendar the picker renders.
+   * `true`, alone or as an element of an array, disables the whole picker:
+   * every trigger it renders, so none of them opens its calendar. Any other
+   * Matcher disables only the days it matches, in every calendar the picker
+   * renders, even one that matches every day, such as `() => true`.
    * @see {@link https://daypicker.dev/api/type-aliases/Matcher}
    */
   disabled?: Matcher | Matcher[];
@@ -132,6 +134,9 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
   const labelledBy = (trigger: Trigger) =>
     names.labelledBy(prefixId(trigger), dateId(trigger));
 
+  // Whether `disabled` disables all four triggers, not only days
+  const pickerDisabled = disablesWholePicker(disabled);
+
   const isMS = locale === "ms";
   const _locale = isMS ? ms : enGB;
   const formatDate = (date: Date) =>
@@ -160,7 +165,7 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
-              disabled={disabled === true}
+              disabled={pickerDisabled}
               aria-labelledby={labelledBy("dialog-from")}
               aria-describedby={ariaDescribedBy}
             >
@@ -212,7 +217,7 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
-              disabled={disabled === true}
+              disabled={pickerDisabled}
               aria-labelledby={labelledBy("dialog-to")}
               aria-describedby={ariaDescribedBy}
             >
@@ -264,7 +269,7 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
-              disabled={disabled === true}
+              disabled={pickerDisabled}
               aria-labelledby={labelledBy("popover-from")}
               aria-describedby={ariaDescribedBy}
             >
@@ -314,7 +319,7 @@ const DateRangePicker: FC<DateRangePickerProps> = ({
               variant="default-outline"
               size={size}
               className="whitespace-nowrap"
-              disabled={disabled === true}
+              disabled={pickerDisabled}
               aria-labelledby={labelledBy("popover-to")}
               aria-describedby={ariaDescribedBy}
             >

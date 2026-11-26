@@ -118,9 +118,9 @@ Untuk menggunakan pemilih tarikh dalam keadaan terkawal, tetapkan prop `value` k
 
 ### Dilumpuhkan
 
-Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Tarikh. Pemilih tarikh boleh dilumpuhkan sepenuhnya dengan menetapkan prop `disabled` kepada `true`. `<fieldset>` yang dilumpuhkan di sekeliling `DatePicker` turut melumpuhkannya. Tetapkan juga `disabled` pada `Label` supaya label turut malap.
+Terdapat banyak cara untuk berinteraksi dengan keadaan `disabled` Pemilih Tarikh. Pemilih tarikh boleh dilumpuhkan sepenuhnya dengan menetapkan prop `disabled` kepada `true`. `true` di dalam array berfungsi dengan cara yang sama, jadi `disabled={[isLocked, { before: new Date() }]}` melumpuhkan seluruh pemilih tarikh selagi `isLocked` ialah `true`. `<fieldset>` yang dilumpuhkan di sekeliling `DatePicker` turut melumpuhkannya. Tetapkan juga `disabled` pada `Label` supaya label turut malap.
 
-Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh menghantar `Matcher | Matcher[]` yang mentakrifkan peraturan untuk melumpuhkan tarikh.
+Untuk kawalan yang lebih halus pada tarikh yang hendak dilumpuhkan, anda boleh menghantar `Matcher | Matcher[]` yang mentakrifkan peraturan untuk melumpuhkan tarikh. Peraturan yang kebetulan sepadan dengan setiap hari, seperti `() => true`, hanya melumpuhkan hari-hari tersebut: pemilih tarikh masih boleh difokuskan dan dibuka. Untuk melumpuhkan seluruh pemilih tarikh, hantar `true` itu sendiri, seperti `disabled={isLocked ? true : rule}`, atau letakkannya dalam `<fieldset>` yang dilumpuhkan.
 
 <Tabs items={["Pratonton", "Kod"]}>
   <Tab value="Pratonton">
@@ -306,7 +306,7 @@ Nilai lalai adalah `en` untuk English. Untuk menukar kepada Bahasa Melayu, tetap
     },
     disabled: {
       description:
-        "`true` melumpuhkan seluruh pemilih tarikh, setiap butang yang membuka kalendarnya. Matcher lain, atau array Matcher, hanya melumpuhkan hari yang sepadan dengannya.",
+        "`true`, sama ada sendiri atau dalam array, melumpuhkan seluruh pemilih tarikh, setiap butang yang membuka kalendarnya. Matcher lain hanya melumpuhkan hari yang sepadan dengannya, walaupun ia sepadan dengan setiap hari.",
       type: "boolean | Matcher | Matcher[]",
       default: "false",
     },

@@ -4,8 +4,9 @@
 // triggers for below `lg:` and Popover triggers from `lg:` up, so
 // `aria-labelledby`, `aria-label` and `aria-describedby` reach every trigger,
 // and none of the calendars. A trigger is named by the label, then by what it
-// shows. `disabled={true}` disables every trigger; any other `disabled`
-// leaves them enabled and disables only the days it matches.
+// shows. `true`, alone or as an element of an array, disables every trigger;
+// any other `disabled` leaves them enabled and disables only the days it
+// matches, even when that is every day.
 import { act, createElement, Fragment, type ReactElement } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
@@ -502,9 +503,19 @@ const dateOf = (isoDate: string) => {
 const october13 = new Date(2026, 9, 13);
 const october15 = new Date(2026, 9, 15);
 
-// The `disabled` values other than `true`, as props, each with the days it
-// matches. Each leaves the triggers enabled and disables only those days.
-// `[true]` matches every day; #231 may make it disable the triggers too.
+// The `disabled` values that disable the whole picker: `true`, alone or as an
+// element of an array, wherever it stands in the array (#231)
+const wholePicker: [string, Matcher | Matcher[]][] = [
+  ["`true`", true],
+  ["`[true]`", [true]],
+  ["`[true, { before: date }]`", [true, { before: october15 }]],
+  ["`[{ dayOfWeek: [0, 6] }, true]`", [{ dayOfWeek: [0, 6] }, true]],
+];
+
+// Every other `disabled` value, as props, each with the days it matches. Each
+// leaves the triggers enabled and disables only those days, even when that is
+// every day, as `() => true` does: only a `true` itself, alone or in an array,
+// disables the whole picker. A `false` in an array matches no day.
 const dayMatchers: [
   string,
   { disabled?: Matcher | Matcher[] },
@@ -526,11 +537,18 @@ const dayMatchers: [
     (day) => day.getDate() === 13,
   ],
   [
-    "an array of matchers",
+    "an array of matchers with no boolean",
     { disabled: [{ dayOfWeek: [0] }, october13] },
     (day) => day.getDay() === 0 || day.getTime() === october13.getTime(),
   ],
-  ["`[true]`", { disabled: [true] }, () => true],
+  [
+    "`[false, { before: date }]`",
+    { disabled: [false, { before: october15 }] },
+    (day) => day < october15,
+  ],
+  ["`[false]`", { disabled: [false] }, () => false],
+  ["`[]`", { disabled: [] }, () => false],
+  ["`() => true`", { disabled: () => true }, () => true],
   ["`false`", { disabled: false }, () => false],
   ["no `disabled`", {}, () => false],
 ];
@@ -561,20 +579,26 @@ const pickers = {
 };
 
 // JSX's bare `disabled` passes `true`, as `disabled={true}` does
-describe("`disabled={true}`", () => {
-  test.each([
-    ["no value", {}],
-    ["`defaultValue`", { defaultValue: range }],
-    ["a controlled `value`", { value: range }],
-  ])(
-    "disables all four of DateRangePicker's triggers, which open nothing, with %s",
-    async (_, props) => {
+describe("`true`, alone or in an array", () => {
+  test.each(
+    wholePicker.flatMap(([value, disabled]) =>
+      (
+        [
+          ["no value", {}],
+          ["`defaultValue`", { defaultValue: range }],
+          ["a controlled `value`", { value: range }],
+        ] as const
+      ).map(([state, props]) => [value, state, disabled, props] as const),
+    ),
+  )(
+    "%s disables all four of DateRangePicker's triggers, which open nothing, with %s",
+    async (_, __, disabled, props) => {
       const onValueChange = vi.fn();
       const page = await mount(
         createElement(DateRangePicker, {
           ...props,
           onValueChange,
-          disabled: true,
+          disabled,
         }),
       );
       const triggers = triggersOf(page);
@@ -594,15 +618,21 @@ describe("`disabled={true}`", () => {
     },
   );
 
-  test.each([
-    ["no value", {}],
-    ["a value", { value: october30 }],
-  ])(
-    "disables both of DatePicker's triggers, which open nothing, with %s",
-    async (_, props) => {
+  test.each(
+    wholePicker.flatMap(([value, disabled]) =>
+      (
+        [
+          ["no value", {}],
+          ["a value", { value: october30 }],
+        ] as const
+      ).map(([state, props]) => [value, state, disabled, props] as const),
+    ),
+  )(
+    "%s disables both of DatePicker's triggers, which open nothing, with %s",
+    async (_, __, disabled, props) => {
       const onValueChange = vi.fn();
       const page = await mount(
-        createElement(DatePicker, { ...props, onValueChange, disabled: true }),
+        createElement(DatePicker, { ...props, onValueChange, disabled }),
       );
       const triggers = triggersOf(page);
       expect(triggers.map((trigger) => trigger.disabled)).toEqual([true, true]);
@@ -618,7 +648,7 @@ describe("`disabled={true}`", () => {
 
   // A Label and hint for `field` to name and describe the picker, or the
   // naming props that need neither, with each prop that changes the text
-  test.each([
+  const namingCases = [
     [
       "DatePicker",
       "`aria-labelledby` and `aria-describedby`",
@@ -667,9 +697,17 @@ describe("`disabled={true}`", () => {
       },
     ],
     ["DateRangePicker", "no naming props", false, {}],
-  ] as const)(
-    "disables %s's triggers but keeps their classes, text, names and descriptions, with %s",
-    async (picker, _, inField, props) => {
+  ] as const;
+  test.each(
+    wholePicker.flatMap(([value, disabled]) =>
+      namingCases.map(
+        ([picker, naming, inField, props]) =>
+          [value, picker, naming, inField, props, disabled] as const,
+      ),
+    ),
+  )(
+    "%s disables %s's triggers but keeps their classes, text, names and descriptions, with %s",
+    async (_, picker, __, inField, props, value) => {
       const render = (disabled: object) => {
         const element = pickers[picker].render({ ...props, ...disabled });
         return inField ? field("Dates", element) : element;
@@ -681,7 +719,7 @@ describe("`disabled={true}`", () => {
         looks: triggerLooks(page),
       });
       const enabled = await readMounted(render({}), read);
-      const disabled = await readMounted(render({ disabled: true }), read);
+      const disabled = await readMounted(render({ disabled: value }), read);
       const count = pickers[picker].triggers.length;
       expect(enabled.disabled).toEqual(Array(count).fill(false));
       expect(disabled.disabled).toEqual(Array(count).fill(true));

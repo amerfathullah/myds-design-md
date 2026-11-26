@@ -4,6 +4,7 @@ import { enGB, ms } from "react-day-picker/locale";
 import { format } from "date-fns";
 import { useControllableState } from "../hooks";
 import { useTriggerNames } from "../hooks/use-trigger-names";
+import { disablesWholePicker } from "../utils/disables-whole-picker";
 import { CalendarIcon } from "../icons/calendar";
 import { Button, button_cva, ButtonIcon } from "./button";
 import { Calendar } from "./calendar";
@@ -14,9 +15,10 @@ import { VariantProps } from "class-variance-authority";
 type DatePickerProps = {
   defaultValue?: Date;
   /**
-   * `true` disables the whole picker: every trigger it renders, so none of
-   * them opens its calendar. Any other Matcher, or an array of Matchers,
-   * disables only the days it matches, in every calendar the picker renders.
+   * `true`, alone or as an element of an array, disables the whole picker:
+   * every trigger it renders, so none of them opens its calendar. Any other
+   * Matcher disables only the days it matches, in every calendar the picker
+   * renders, even one that matches every day, such as `() => true`.
    * @see {@link https://daypicker.dev/api/type-aliases/Matcher}
    */
   disabled?: Matcher | Matcher[];
@@ -106,6 +108,9 @@ const DatePicker: FC<DatePickerProps> = ({
   const dialogTextId = `${id}dialog-text`;
   const popoverTextId = `${id}popover-text`;
 
+  // Whether `disabled` disables both triggers, not only days
+  const pickerDisabled = disablesWholePicker(disabled);
+
   const _locale = locale === "en" ? enGB : ms;
   const formatDate = (date: Date) =>
     format(date, formatStr, {
@@ -123,7 +128,7 @@ const DatePicker: FC<DatePickerProps> = ({
             variant="default-outline"
             size={size}
             className="flex lg:hidden"
-            disabled={disabled === true}
+            disabled={pickerDisabled}
             aria-labelledby={labelledBy(dialogTextId)}
             aria-describedby={ariaDescribedBy}
           >
@@ -156,7 +161,7 @@ const DatePicker: FC<DatePickerProps> = ({
             variant="default-outline"
             size={size}
             className="hidden lg:flex"
-            disabled={disabled === true}
+            disabled={pickerDisabled}
             aria-labelledby={labelledBy(popoverTextId)}
             aria-describedby={ariaDescribedBy}
           >

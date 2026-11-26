@@ -16,12 +16,14 @@
 // it.
 //
 // `disabled={true}` and a `<fieldset disabled>` around a DateRangePicker
-// disable its shown triggers: the tree reports them disabled, under the names
-// an enabled picker's have; Tab skips them; a click, Enter or Space opens
-// nothing; and they take `default-outline`'s disabled look, with a
-// `txt-black-disabled` prefix. A picker in the first `<legend>` of a
-// `<fieldset disabled className="group">` stays enabled, its prefix
-// `txt-black-500` as on any enabled picker.
+// disable its shown triggers, and so does a `disabled` array that holds
+// `true`, `[true, { before: date }]`, on either picker (#231): the tree
+// reports them disabled, under the names an enabled picker's have; Tab skips
+// them; a click, Enter or Space opens nothing; and they take
+// `default-outline`'s disabled look, with a `txt-black-disabled` prefix on
+// DateRangePicker. A picker in the first `<legend>` of a `<fieldset disabled
+// className="group">` stays enabled, its prefix `txt-black-500` as on any
+// enabled picker.
 //
 // The page is date-pickers.page.jsx: the React components themselves,
 // bundled with esbuild, on the stylesheet the Tailwind import compiles for
@@ -174,6 +176,11 @@ const fields = {
     calendars: ["Pilih tarikh"],
   },
   "date-unnamed": { picker: "date", triggers: [["30 Oct 2026", ""]] },
+  "date-disabled-array": {
+    picker: "date",
+    disabled: true,
+    triggers: [["Date of birth 30 Oct 2026", "No earlier than 1 January 1950"]],
+  },
   "range-labelled": {
     picker: "range",
     triggers: [
@@ -204,6 +211,14 @@ const fields = {
     ],
   },
   "range-disabled": {
+    picker: "range",
+    disabled: true,
+    triggers: [
+      ["Travel dates From: 01 Oct 2026", "Up to 30 days"],
+      ["Travel dates To: 30 Oct 2026", "Up to 30 days"],
+    ],
+  },
+  "range-disabled-array": {
     picker: "range",
     disabled: true,
     triggers: [
@@ -267,8 +282,8 @@ const openCount = (page) =>
   page.evaluate(() => document.querySelectorAll('[role="dialog"]').length);
 
 // A trigger's look, as `default-outline` gives it at rest, enabled or
-// disabled, with the colour of its "From:" / "To:" prefix. `pointer` is the
-// cursor index.css gives every enabled button.
+// disabled, with the colour of its "From:" / "To:" prefix on DateRangePicker.
+// `pointer` is the cursor index.css gives every enabled button.
 const { light } = colours;
 const looks = {
   enabled: {
@@ -479,35 +494,40 @@ for (const width of widths) {
       );
     }));
 
-  test(`at ${width}px, a disabled picker's shown triggers take default-outline's disabled look and dim their prefix, and an enabled picker's don't`, () =>
+  test(`at ${width}px, a disabled picker's shown triggers take default-outline's disabled look and dim DateRangePicker's prefix, and an enabled picker's don't`, () =>
     withPage(width, async (page) => {
       const actual = {};
       const want = {};
       for (const mode of modes) {
         for (const field of [
+          "date-labelled",
+          "date-disabled-array",
           "range-labelled",
           "range-disabled",
+          "range-disabled-array",
           "range-in-disabled-fieldset",
           "range-in-legend",
         ]) {
-          for (const trigger of shown[width][fields[field].picker]) {
+          const { picker, disabled } = fields[field];
+          for (const trigger of shown[width][picker]) {
             actual[`${mode} ${field} ${trigger}`] = await page
               .locator(`[data-test="${mode}-${field}"] button`)
               .nth(trigger)
               .evaluate((button) => {
                 const style = getComputedStyle(button);
+                // DatePicker's triggers have no prefix
+                const prefix = button.querySelector('[id$="-prefix"]');
                 return {
                   colour: style.color,
                   background: style.backgroundColor,
                   border: style.borderColor,
                   cursor: style.cursor,
-                  prefix: getComputedStyle(
-                    button.querySelector('[id$="-prefix"]'),
-                  ).color,
+                  ...(prefix && { prefix: getComputedStyle(prefix).color }),
                 };
               });
+            const { prefix, ...look } = looks[disabled ? "disabled" : "enabled"];
             want[`${mode} ${field} ${trigger}`] =
-              looks[fields[field].disabled ? "disabled" : "enabled"];
+              picker === "range" ? { ...look, prefix } : look;
           }
         }
       }

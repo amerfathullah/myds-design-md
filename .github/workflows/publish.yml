@@ -25,6 +25,12 @@ concurrency:
 
 permissions: {}
 
+# `bash -eo pipefail`, rather than the default `bash -e`, so a failing command
+# in a pipeline fails its step
+defaults:
+  run:
+    shell: bash
+
 jobs:
   mode:
     name: Choose the mode
@@ -143,7 +149,8 @@ jobs:
         run: |
           pnpm exec changeset pack --out-dir "$RUNNER_TEMP/packed"
           plan="$RUNNER_TEMP/packed/publish-plan.json"
-          while read -r name; do
+          names=$(jq -r '.plan[][] | select(.kind == "publish") | .name' "$plan")
+          for name in $names; do
             case "$name" in
               @amerfathullah/myds-react | @amerfathullah/myds-style) ;;
               *)
@@ -151,7 +158,7 @@ jobs:
                 exit 1
                 ;;
             esac
-          done < <(jq -r '.plan[][] | select(.kind == "publish") | .name' "$plan")
+          done
           react=$(jq -c '.plan[][] | select(.kind == "publish" and .name == "@amerfathullah/myds-react")' "$plan")
           style=$(jq -c '.plan[][] | select(.kind == "publish" and .name == "@amerfathullah/myds-style")' "$plan")
           {
@@ -218,8 +225,11 @@ jobs:
       - name: Check that each tarball's dist is the build the checks read
         run: |
           pnpm ls -r --depth -1 --json > "$RUNNER_TEMP/workspace.json"
+          releases=$(jq -r '.plan[][] | select(.kind == "publish") | [.name, .tarball.path] | @tsv' \
+            "$RUNNER_TEMP/packed/publish-plan.json")
           status=0
           while IFS=$'\t' read -r name tarball; do
+            [ -n "$name" ] || continue
             dir=$(jq -r --arg name "$name" '.[] | select(.name == $name) | .path' "$RUNNER_TEMP/workspace.json")
             unpacked=$(mktemp -d)
             tar -xzf "$RUNNER_TEMP/packed/$tarball" -C "$unpacked"
@@ -229,8 +239,7 @@ jobs:
               echo "::error::$name: the tarball's dist differs from $dir/dist"
               status=1
             fi
-          done < <(jq -r '.plan[][] | select(.kind == "publish") | [.name, .tarball.path] | @tsv' \
-            "$RUNNER_TEMP/packed/publish-plan.json")
+          done <<< "$releases"
           exit "$status"
 
       # Only once every check above has passed
@@ -341,8 +350,10 @@ jobs:
       - name: Publish the tarballs (dry run)
         run: |
           pnpm ls -r --depth -1 --json > "$RUNNER_TEMP/workspace.json"
+          releases=$(jq -r '.plan[][] | select(.kind == "publish") | [.name, .tarball.path, .access, .tag] | @tsv' \
+            "$RUNNER_TEMP/packed/publish-plan.json")
           while IFS=$'\t' read -r name tarball access tag; do
+            [ -n "$name" ] || continue
             dir=$(jq -r --arg name "$name" '.[] | select(.name == $name) | .path' "$RUNNER_TEMP/workspace.json")
             (cd "$dir" && pnpm publish "$RUNNER_TEMP/packed/$tarball" --dry-run --no-git-checks --access "$access" --tag "$tag")
-          done < <(jq -r '.plan[][] | select(.kind == "publish") | [.name, .tarball.path, .access, .tag] | @tsv' \
-            "$RUNNER_TEMP/packed/publish-plan.json")
+          done <<< "$releases"

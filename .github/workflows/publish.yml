@@ -1,10 +1,18 @@
 name: "publish"
 
-# The Changesets flow for @amerfathullah/myds-react and @amerfathullah/myds-style.
-# A push to main opens or updates the "Version Packages" PR while changesets
-# are pending, and publishes both packages to npm once that PR merges.
-# A manual run is a dry run on any branch: it versions, builds and packs both
-# packages as a release would, without publishing or pushing anything.
+# The Changesets flow for @amerfathullah/myds-react and @amerfathullah/myds-style
+# (#237). A push to main takes one of three paths, which the `mode` job picks:
+# - version: changesets are pending, so the `version` job opens or updates the
+#   "Version Packages" PR. Nothing is built.
+# - publish: none are pending, and npm doesn't list a local version. The `check`
+#   job builds both packages once, packs the versions to publish and runs the
+#   release checks on those tarballs and the build they came from. Only if every
+#   check passes does the `publish` job publish those same tarballs.
+# - none: npm lists every local version, so nothing runs.
+# A manual run is a dry run on any branch. It versions the packages first, so it
+# takes the publish path, and runs everything but the publish, which
+# `publish-dry-run` stands in for. It needs pending changesets, since
+# `changeset version` fails without them.
 
 on:
   push:
@@ -15,13 +23,61 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
+permissions: {}
+
 jobs:
-  publish:
+  mode:
+    name: Choose the mode
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: "pnpm"
+
+      # The Changesets CLI, without the workspace or any lifecycle script
+      - name: Install the root's dependencies
+        run: pnpm install --frozen-lockfile --filter myds --ignore-scripts
+
+      - name: Version the packages (dry run)
+        if: github.event_name == 'workflow_dispatch'
+        run: pnpm version-packages
+
+      # Pending changesets mean version, even when npm lacks a local version.
+      # Otherwise it's publish if the publish plan is not empty, and none if it is.
+      - name: Choose the mode
+        id: mode
+        uses: changesets/action/select-mode@v2
+
+      - name: Show the mode
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          echo "::notice::Mode: $MODE"
+
+  version:
+    name: Open or update the Version Packages PR
+    needs: mode
+    if: github.event_name == 'push' && needs.mode.outputs.mode == 'version'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-      id-token: write # npm provenance
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -36,37 +92,257 @@ jobs:
         with:
           node-version: 26
           cache: "pnpm"
-          registry-url: https://registry.npmjs.org/ # npm auth, read from NODE_AUTH_TOKEN
 
+      # `changeset version` needs only the root's dependencies
+      - name: Install the root's dependencies
+        run: pnpm install --frozen-lockfile --filter myds --ignore-scripts
+
+      - name: Open or update the Version Packages PR
+        uses: changesets/action/version@v2
+
+  check:
+    name: Build, pack and run the release checks
+    needs: mode
+    if: needs.mode.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: "pnpm"
+
+      # The whole workspace: React's dist tests read the docs app and Storybook,
+      # and compile samples against the docs app's dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Dry run
+      - name: Version the packages (dry run)
         if: github.event_name == 'workflow_dispatch'
-        run: |
-          pnpm version-packages
-          pnpm build:packages
-          pnpm changeset pack --out-dir "$RUNNER_TEMP/packed"
-          pnpm exec attw "$RUNNER_TEMP"/packed/packages/amerfathullah-myds-react-*.tgz --profile node16
+        run: pnpm version-packages
 
-      # The Changesets action publishes when no changesets are pending
+      # The only build. Nothing below writes to either package's dist, and the
+      # last check fails if a tarball's dist differs from it.
+      - name: Build @amerfathullah/myds-react and @amerfathullah/myds-style
+        run: pnpm build:packages
+
+      - name: Pack the versions to publish
+        id: pack
+        run: |
+          pnpm exec changeset pack --out-dir "$RUNNER_TEMP/packed"
+          plan="$RUNNER_TEMP/packed/publish-plan.json"
+          while read -r name; do
+            case "$name" in
+              @amerfathullah/myds-react | @amerfathullah/myds-style) ;;
+              *)
+                echo "::error::$name has no release checks. Add them to this workflow first."
+                exit 1
+                ;;
+            esac
+          done < <(jq -r '.plan[][] | select(.kind == "publish") | .name' "$plan")
+          react=$(jq -c '.plan[][] | select(.kind == "publish" and .name == "@amerfathullah/myds-react")' "$plan")
+          style=$(jq -c '.plan[][] | select(.kind == "publish" and .name == "@amerfathullah/myds-style")' "$plan")
+          {
+            if [ -n "$react" ]; then
+              echo "react-tarball=$RUNNER_TEMP/packed/$(jq -r .tarball.path <<< "$react")"
+              echo "react-version=$(jq -r .version <<< "$react")"
+            fi
+            if [ -n "$style" ]; then
+              echo "style-tarball=$RUNNER_TEMP/packed/$(jq -r .tarball.path <<< "$style")"
+            fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Log the tarballs' integrity
+        run: .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
+
+      # The registry key's call (src/utils/registry.ts) carries the version. A
+      # build from before the version bump would carry the old one.
+      - name: Check that the React build has the version being published
+        if: steps.pack.outputs.react-tarball != ''
+        env:
+          VERSION: ${{ steps.pack.outputs.react-version }}
+        run: |
+          embedded=$({ grep -rhoE '"@amerfathullah/myds-react", ?"[^"]+"' packages/react/dist \
+            --include='*.js' --include='*.mjs' || true; } | sort | uniq -c)
+          echo "$embedded"
+          if [ -z "$embedded" ] || grep -vqF "\"$VERSION\"" <<< "$embedded"; then
+            echo "::error::The React build should carry $VERSION, the version being published."
+            exit 1
+          fi
+
+      # The checks below run on the build itself: the package's own scripts,
+      # not turbo's `test` task, which depends on `build`, nor `check-exports`,
+      # which packs again
+      - name: Check the React tarball's exports
+        if: steps.pack.outputs.react-tarball != ''
+        env:
+          TARBALL: ${{ steps.pack.outputs.react-tarball }}
+        run: pnpm exec attw "$TARBALL" --profile node16
+
+      - name: Type-check the React build against React 18 and 19 types
+        if: steps.pack.outputs.react-tarball != ''
+        run: pnpm --filter @amerfathullah/myds-react check-types
+
+      # Includes every test of the built package (`*.dist.test.ts`)
+      - name: Test @amerfathullah/myds-react
+        if: steps.pack.outputs.react-tarball != ''
+        run: pnpm --filter @amerfathullah/myds-react test
+
+      - name: Check the style tarball's full.css
+        if: steps.pack.outputs.style-tarball != ''
+        env:
+          TARBALL: ${{ steps.pack.outputs.style-tarball }}
+        run: |
+          unpacked=$(mktemp -d)
+          tar -xzf "$TARBALL" -C "$unpacked"
+          css="$unpacked/package/dist/index.css"
+          if [ ! -s "$css" ]; then
+            echo "::error::The style tarball has no dist/index.css, or it's empty, so its ./full.css export is broken."
+            exit 1
+          fi
+          echo "dist/index.css: $(wc -c < "$css") bytes"
+
+      # The pack rewrites package.json, so only dist is compared
+      - name: Check that each tarball's dist is the build the checks read
+        run: |
+          pnpm ls -r --depth -1 --json > "$RUNNER_TEMP/workspace.json"
+          status=0
+          while IFS=$'\t' read -r name tarball; do
+            dir=$(jq -r --arg name "$name" '.[] | select(.name == $name) | .path' "$RUNNER_TEMP/workspace.json")
+            unpacked=$(mktemp -d)
+            tar -xzf "$RUNNER_TEMP/packed/$tarball" -C "$unpacked"
+            if diff -rq "$unpacked/package/dist" "$dir/dist"; then
+              echo "$name: the tarball's dist matches $dir/dist"
+            else
+              echo "::error::$name: the tarball's dist differs from $dir/dist"
+              status=1
+            fi
+          done < <(jq -r '.plan[][] | select(.kind == "publish") | [.name, .tarball.path] | @tsv' \
+            "$RUNNER_TEMP/packed/publish-plan.json")
+          exit "$status"
+
+      # Only once every check above has passed
+      - name: Upload the tarballs
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-tarballs
+          path: ${{ runner.temp }}/packed
+          if-no-files-found: error
+          overwrite: true # so that a re-run replaces it
+
+  publish:
+    name: Publish the checked tarballs
+    needs: [mode, check]
+    # An `if:` without a status function also needs every job in `needs` to
+    # have succeeded, so a failed check skips this job
+    if: github.event_name == 'push' && needs.mode.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          run_install: false
+
+      # No dependency cache in the job that holds the npm token
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          registry-url: https://registry.npmjs.org/ # npm auth, read from NODE_AUTH_TOKEN
+
       - name: Check for the npm token
-        if: github.event_name == 'push'
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if [ -z "$(find .changeset -name '*.md' ! -name README.md)" ] && [ -z "$NPM_TOKEN" ]; then
+          if [ -z "$NPM_TOKEN" ]; then
             echo "::error::Add an NPM_TOKEN repository secret: an npm token that can publish @amerfathullah/myds-react and @amerfathullah/myds-style."
             exit 1
           fi
 
-      - name: Open the version PR or publish
-        if: github.event_name == 'push'
-        uses: changesets/action@v2
+      # The Changesets CLI, without the workspace or any lifecycle script
+      - name: Install the root's dependencies
+        run: pnpm install --frozen-lockfile --filter myds --ignore-scripts
+
+      - name: Download the tarballs
+        uses: actions/download-artifact@v8
         with:
-          publish-script: pnpm release
-          create-github-releases: false
-          push-git-tags: false # `pnpm release` publishes with --no-git-tag
+          name: release-tarballs
+          path: ${{ runner.temp }}/packed
+
+      - name: Log the tarballs' integrity
+        run: .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
+
+      # `pnpm publish <tarball>` from each package's directory, under the
+      # plan's dist-tag. No git tag, no GitHub release.
+      - name: Publish the tarballs
+        run: pnpm exec changeset publish --from-pack-dir "$RUNNER_TEMP/packed" --no-git-tag
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           PNPM_CONFIG_PROVENANCE: true
+
+  publish-dry-run:
+    name: Publish the checked tarballs (dry run)
+    needs: [mode, check]
+    if: github.event_name == 'workflow_dispatch' && needs.mode.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install the root's dependencies
+        run: pnpm install --frozen-lockfile --filter myds --ignore-scripts
+
+      - name: Download the tarballs
+        uses: actions/download-artifact@v8
+        with:
+          name: release-tarballs
+          path: ${{ runner.temp }}/packed
+
+      - name: Log the tarballs' integrity
+        run: .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
+
+      # What `changeset publish --from-pack-dir` runs, with --dry-run. Without
+      # --no-git-checks, pnpm refuses to publish from a branch other than main.
+      - name: Publish the tarballs (dry run)
+        run: |
+          pnpm ls -r --depth -1 --json > "$RUNNER_TEMP/workspace.json"
+          while IFS=$'\t' read -r name tarball access tag; do
+            dir=$(jq -r --arg name "$name" '.[] | select(.name == $name) | .path' "$RUNNER_TEMP/workspace.json")
+            (cd "$dir" && pnpm publish "$RUNNER_TEMP/packed/$tarball" --dry-run --no-git-checks --access "$access" --tag "$tag")
+          done < <(jq -r '.plan[][] | select(.kind == "publish") | [.name, .tarball.path, .access, .tag] | @tsv' \
+            "$RUNNER_TEMP/packed/publish-plan.json")

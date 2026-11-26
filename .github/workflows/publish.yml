@@ -2,13 +2,14 @@ name: "publish"
 
 # The Changesets flow for @amerfathullah/myds-react and @amerfathullah/myds-style
 # (#237). A push to main takes one of three paths, which the `mode` job picks:
-# - version: changesets are pending, so the `version` job opens or updates the
-#   "Version Packages" PR. Nothing is built.
+# - version: changesets that release something are pending, so the `version`
+#   job opens or updates the "Version Packages" PR. Nothing is built.
 # - publish: none are pending, and npm doesn't list a local version. The `check`
 #   job builds both packages once, packs the versions to publish and runs the
 #   release checks on those tarballs and the build they came from. Only if every
 #   check passes does the `publish` job publish those same tarballs.
-# - none: npm lists every local version, so nothing runs.
+# - none: only empty changesets are pending, or none are and npm lists every
+#   local version. Nothing runs.
 # A manual run is a dry run on any branch. It versions the packages first, so it
 # takes the publish path, and runs everything but the publish, which
 # `publish-dry-run` stands in for. It needs pending changesets, since
@@ -50,23 +51,25 @@ jobs:
         with:
           run_install: false
 
+      # No dependency cache: the key is the lockfile's alone, so a root-only
+      # store saved under it would be what every full install restores
       - name: Install Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 26
-          cache: "pnpm"
 
       # The Changesets CLI, without the workspace or any lifecycle script
       - name: Install the root's dependencies
         run: pnpm install --frozen-lockfile --filter myds --ignore-scripts
 
-      - name: Version the packages (dry run)
+      - name: Version the packages, for the dry run
         if: github.event_name == 'workflow_dispatch'
         run: pnpm version-packages
 
-      # Pending changesets mean version, even when npm lacks a local version.
-      # Otherwise it's publish if the publish plan is not empty, and none if it is.
-      - name: Choose the mode
+      # Pending changesets that release something mean version, even when npm
+      # lacks a local version, and only empty ones mean none. With none pending,
+      # it's publish if the publish plan is not empty, and none if it is.
+      - name: Select the mode with Changesets
         id: mode
         uses: changesets/action/select-mode@v2
 
@@ -93,11 +96,11 @@ jobs:
         with:
           run_install: false
 
+      # No dependency cache, as in `mode`
       - name: Install Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 26
-          cache: "pnpm"
 
       # `changeset version` needs only the root's dependencies
       - name: Install the root's dependencies
@@ -135,7 +138,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Version the packages (dry run)
+      - name: Version the packages, for the dry run
         if: github.event_name == 'workflow_dispatch'
         run: pnpm version-packages
 
@@ -172,7 +175,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Log the tarballs' integrity
-        run: .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
+        run: bash .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
 
       # The registry key's call (src/utils/registry.ts) carries the version. A
       # build from before the version bump would carry the old one.
@@ -299,16 +302,18 @@ jobs:
           path: ${{ runner.temp }}/packed
 
       - name: Log the tarballs' integrity
-        run: .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
+        run: bash .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
 
       # `pnpm publish <tarball>` from each package's directory, under the
       # plan's dist-tag. No git tag, no GitHub release.
       - name: Publish the tarballs
-        run: pnpm exec changeset publish --from-pack-dir "$RUNNER_TEMP/packed" --no-git-tag
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           PNPM_CONFIG_PROVENANCE: true
+        run: pnpm exec changeset publish --from-pack-dir "$RUNNER_TEMP/packed" --no-git-tag
 
+  # The `publish` job's steps, without the npm token or id-token, and with a
+  # dry run in place of the publish
   publish-dry-run:
     name: Publish the checked tarballs (dry run)
     needs: [mode, check]
@@ -327,12 +332,14 @@ jobs:
         with:
           run_install: false
 
+      # No dependency cache, as in `publish`
       - name: Install Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 26
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://registry.npmjs.org/ # as in `publish`, though nothing here authenticates
 
+      # The Changesets CLI, without the workspace or any lifecycle script
       - name: Install the root's dependencies
         run: pnpm install --frozen-lockfile --filter myds --ignore-scripts
 
@@ -343,7 +350,7 @@ jobs:
           path: ${{ runner.temp }}/packed
 
       - name: Log the tarballs' integrity
-        run: .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
+        run: bash .github/scripts/tarball-integrity.sh "$RUNNER_TEMP/packed"
 
       # What `changeset publish --from-pack-dir` runs, with --dry-run. Without
       # --no-git-checks, pnpm refuses to publish from a branch other than main.
@@ -355,5 +362,6 @@ jobs:
           while IFS=$'\t' read -r name tarball access tag; do
             [ -n "$name" ] || continue
             dir=$(jq -r --arg name "$name" '.[] | select(.name == $name) | .path' "$RUNNER_TEMP/workspace.json")
-            (cd "$dir" && pnpm publish "$RUNNER_TEMP/packed/$tarball" --dry-run --no-git-checks --access "$access" --tag "$tag")
+            (cd "$dir" && pnpm publish "$RUNNER_TEMP/packed/$tarball" --dry-run --no-git-checks \
+              --access "$access" --tag "$tag" < /dev/null)
           done <<< "$releases"

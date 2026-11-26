@@ -143,7 +143,7 @@ This part is for maintainers. `@amerfathullah/myds-react` and `@amerfathullah/my
    - for the style package, that the tarball holds a non-empty `dist/index.css`, the `./full.css` export;
    - for each tarball, that its `dist` matches the build the checks read.
 
-   If every check passes, it publishes those same tarballs, with provenance, and logs each one's integrity (`sha512-…`) in the log and the run's summary. If any check fails, it publishes nothing.
+   If every check passes, it publishes those same tarballs, with provenance, and prints each one's integrity (`sha512-…`) in the log and the run's summary. If any check fails, it publishes nothing.
 
 4. Releases are staged on npm: a version that `publish` sends isn't public until a maintainer approves it, which prompts for 2FA. Find its stage ID with `npm stage list <package>`, then run `npm stage approve <stage-id>`, or approve it in the **Staged Packages** tab of your npmjs.com account settings. `npm stage reject <stage-id>` removes it instead.
    - Approve a staged version only once the `publish` run that staged it is green, and `ci` is green on the commit that run built. If a later push cancelled that `ci` run, re-run it.

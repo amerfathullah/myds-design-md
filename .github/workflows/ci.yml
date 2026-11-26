@@ -5,6 +5,7 @@ name: "ci"
 # the `publish` workflow's GITHUB_TOKEN, which starts no push run, so this is its
 # only CI, and GitHub holds it until a maintainer approves it. On every other PR
 # the job is skipped, since the branch's push run covers it.
+
 on:
   push:
     branches:

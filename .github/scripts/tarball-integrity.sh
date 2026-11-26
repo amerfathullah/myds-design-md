@@ -8,6 +8,10 @@
 # Usage: tarball-integrity.sh <pack dir>
 set -euo pipefail
 
+if [ -z "${1-}" ]; then
+  echo "Usage: $0 <pack dir>" >&2
+  exit 2
+fi
 pack_dir=$1
 summary=${GITHUB_STEP_SUMMARY:-/dev/null}
 

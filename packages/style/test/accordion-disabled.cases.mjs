@@ -26,17 +26,17 @@
 export const fixtures = [];
 
 /**
- * Adds a fixture. `triggers` maps each `at` to `[disabled, changes]`, or to
- * `{ disabled, changes, open, ariaDisabled }`.
+ * Adds a fixture. `expectations` maps each trigger's `at` to
+ * `[disabled, changes]`, or to `{ disabled, changes, open, ariaDisabled }`.
  */
-function add(id, topic, spec, triggers, axe = "same") {
+function add(id, topic, spec, expectations, axe = "same") {
   fixtures.push({
     id,
     topic,
     props: {},
     ...spec,
     axe,
-    triggers: Object.entries(triggers).map(([at, expected]) => {
+    triggers: Object.entries(expectations).map(([at, expected]) => {
       const { disabled, changes, open, ariaDisabled } = Array.isArray(expected)
         ? { disabled: expected[0], changes: expected[1] }
         : expected;

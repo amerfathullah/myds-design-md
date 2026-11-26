@@ -404,23 +404,19 @@ test("a click toggles every trigger that isn't :disabled, but for a non-collapsi
     const want = {};
     for (const fixture of fixtures) {
       const before = await expandedOf(page, fixture);
-      for (const trigger of fixture.triggers) {
-        const name = `${fixture.id}-${trigger.at}-trigger`;
-        await click(page, name);
-        actual[name] = (await expandedOf(page, fixture))[name] !== before[name];
-        want[name] = !trigger.disabled && !(fixture.single && trigger.open);
+      const own = triggers.filter((trigger) => trigger.fixture === fixture);
+      for (const { test, disabled, open } of own) {
+        await click(page, test);
+        actual[test] = (await expandedOf(page, fixture))[test] !== before[test];
+        want[test] = !disabled && !(fixture.single && open);
         // Puts each item back as it was, the open ones first, as a single
         // Accordion opens one item by closing the other
-        for (const other of [...fixture.triggers].sort(
-          (a, b) => b.open - a.open,
-        )) {
-          const otherTest = `${fixture.id}-${other.at}-trigger`;
+        for (const other of [...own].sort((a, b) => b.open - a.open))
           if (
-            (await expandedOf(page, fixture))[otherTest] !== before[otherTest]
+            (await expandedOf(page, fixture))[other.test] !== before[other.test]
           )
-            await click(page, otherTest);
-        }
-        assert.deepEqual(await expandedOf(page, fixture), before, name);
+            await click(page, other.test);
+        assert.deepEqual(await expandedOf(page, fixture), before, test);
       }
     }
     assert.deepEqual(actual, want);

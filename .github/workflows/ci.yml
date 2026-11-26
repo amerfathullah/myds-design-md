@@ -1,13 +1,18 @@
 name: "ci"
 
+# Every push to a branch runs the job. Pull requests into main trigger this too,
+# but the job runs only for the Version Packages PR (#237). Its commits come from
+# the `publish` workflow's GITHUB_TOKEN, which starts no push run, so this is its
+# only CI, and GitHub holds it until a maintainer approves it. On every other PR
+# the job is skipped, since the branch's push run covers it.
+
 on:
   push:
     branches:
       - "**"
-    paths:
-      - "packages/react/**"
-      - "packages/style/**"
-      - "DESIGN.md"
+  pull_request:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,6 +20,10 @@ concurrency:
 
 jobs:
   ci:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'changeset-release/main')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

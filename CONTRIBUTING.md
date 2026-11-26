@@ -132,6 +132,26 @@ Or run `pnpm exec turbo gen mdx` to choose them from a list. It writes the Engli
    - Link to relevant issues.
    - Request a review from a maintainer.
 
+## Releasing
+
+This part is for maintainers. `@amerfathullah/myds-react` and `@amerfathullah/myds-style` are released with Changesets, by the [`publish`](./.github/workflows/publish.yml) workflow:
+
+1. While changesets are pending on `main`, each push to `main` opens or updates the **Version Packages** PR, from the `changeset-release/main` branch. It bumps the versions, writes the changelogs and removes the changesets. These pushes build and publish nothing.
+2. The Version Packages PR gets its own `ci` run. Its commits come from the workflow's `GITHUB_TOKEN`, so GitHub holds the run until a maintainer approves it. Approve it, and merge the PR only once that run is green.
+3. Merging it pushes to `main` with no changesets pending, and `publish` takes the publish path. It builds both packages once and packs each version that npm doesn't list yet. Then it runs the release checks on those tarballs and the build they were packed from:
+   - for the React package, that the build has the version being published, then `attw`, both type-test configs (`check-types`) and the Vitest suite, which includes the tests of the built package (`*.dist.test.ts`);
+   - for the style package, that the tarball holds a non-empty `dist/index.css`, the `./full.css` export;
+   - for each tarball, that its `dist` matches the build the checks read.
+
+   If every check passes, it publishes those same tarballs, with provenance, and prints each one's integrity (`sha512-…`) in the log and the run's summary. If any check fails, it publishes nothing.
+
+4. Releases are staged on npm: a version that `publish` sends isn't public until a maintainer approves it, which prompts for 2FA. Find its stage ID with `npm stage list <package>`, then run `npm stage approve <stage-id>`, or approve it in the **Staged Packages** tab of your npmjs.com account settings. `npm stage reject <stage-id>` removes it instead.
+   - Approve a staged version only once the `publish` run that staged it is green, and `ci` is green on the commit that run built. If a later push cancelled that `ci` run, re-run it.
+   - Approve or reject it before anything else merges to `main`. A push in between finds the version still unpublished on npm, so `publish` runs the publish path again for the same version.
+   - Once a version is public, `npm view <package>@<version> dist.integrity` should match the integrity the run logged.
+
+To try the publish path without publishing, run `publish` by hand from the Actions tab, on a branch with pending changesets. It versions the packages first, then builds, packs and runs every release check, and in place of the publish runs `pnpm publish --dry-run` on each tarball. Without pending changesets it fails at `changeset version`.
+
 ## Questions?
 
 Feel free to open a discussion or reach out to the maintainers.

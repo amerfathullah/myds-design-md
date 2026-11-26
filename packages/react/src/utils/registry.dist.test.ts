@@ -455,6 +455,9 @@ describe("the built files", () => {
     expect(clientModules).not.toEqual([]);
   });
 
+  // Only an entry's own files can keep a directive: bundling drops it from a
+  // module built into another file. So a module that begins with
+  // "use client" has to be an entry (#236).
   test.each(clientModules)(
     'the CommonJS and ESM files of %s keep its "use client" in their prologue',
     (file) => {

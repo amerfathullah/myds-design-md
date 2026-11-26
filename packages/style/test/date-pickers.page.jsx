@@ -1,9 +1,11 @@
 // The page date-pickers.test.mjs renders in Chromium: DatePickers and
 // DateRangePickers named by a Label through `aria-labelledby`, described by a
 // hint, named by `aria-label` with their calendars' dialogs named in Malay,
-// and with no naming props, then DateRangePickers
-// disabled by `disabled`, disabled by a `<fieldset disabled>` around them, and
-// left enabled in the first `<legend>` of a `<fieldset disabled
+// and with no naming props, then a DatePicker disabled by a `disabled` array
+// that holds `true` (#231); then DateRangePickers named the same ways, then
+// DateRangePickers disabled by `disabled`, disabled by a `disabled` array that
+// holds `true`, disabled by a `<fieldset disabled>` around them, and left
+// enabled in the first `<legend>` of a `<fieldset disabled
 // className="group">`. Each picker sits in a `<div data-test>` of its own. The
 // page renders them twice: in `#csr` on the client, and in `#ssr` from server
 // HTML that React hydrates. The test bundles this file with esbuild.
@@ -20,8 +22,12 @@ window.recoverableErrors = [];
 window.ready = [];
 
 const october1 = new Date(2026, 9, 1);
+const october15 = new Date(2026, 9, 15);
 const october30 = new Date(2026, 9, 30);
 const range = { from: october1, to: october30 };
+// The `[isLocked, rule]` pattern with `isLocked` on: `true` in an array
+// disables the whole picker, as `true` does
+const lockedRule = [true, { before: october15 }];
 
 // The picker `children` in a box `<mode>-<name>`
 function Field({ mode, name, children }) {
@@ -59,6 +65,18 @@ function Fixtures({ mode }) {
       </Field>
       <Field mode={mode} name="date-unnamed">
         <DatePicker value={october30} />
+      </Field>
+      <Field mode={mode} name="date-disabled-array">
+        <Label id={`${mode}-locked-dob`} disabled>
+          Date of birth
+        </Label>
+        <p id={`${mode}-locked-dob-hint`}>No earlier than 1 January 1950</p>
+        <DatePicker
+          value={october30}
+          disabled={lockedRule}
+          aria-labelledby={`${mode}-locked-dob`}
+          aria-describedby={`${mode}-locked-dob-hint`}
+        />
       </Field>
       <Field mode={mode} name="range-labelled">
         <Label id={`${mode}-travel`}>Travel dates</Label>
@@ -100,6 +118,18 @@ function Fixtures({ mode }) {
           disabled
           aria-labelledby={`${mode}-locked`}
           aria-describedby={`${mode}-locked-hint`}
+        />
+      </Field>
+      <Field mode={mode} name="range-disabled-array">
+        <Label id={`${mode}-locked-array`} disabled>
+          Travel dates
+        </Label>
+        <p id={`${mode}-locked-array-hint`}>Up to 30 days</p>
+        <DateRangePicker
+          value={range}
+          disabled={lockedRule}
+          aria-labelledby={`${mode}-locked-array`}
+          aria-describedby={`${mode}-locked-array-hint`}
         />
       </Field>
       <Field mode={mode} name="range-in-disabled-fieldset">

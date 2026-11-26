@@ -56,7 +56,7 @@ const meta = {
     },
     disabled: {
       description:
-        "`true` disables the whole picker, every trigger it renders. Any other Matcher, or an array of Matchers, disables only the days it matches. See: https://daypicker.dev/api/type-aliases/Matcher",
+        "`true`, alone or as an element of an array, disables the whole picker, every trigger it renders, so none of them opens its calendar. Any other Matcher disables only the days it matches, even one that matches every day, such as `() => true`. See: https://daypicker.dev/api/type-aliases/Matcher",
     },
     excludeDisabled: {
       table: {

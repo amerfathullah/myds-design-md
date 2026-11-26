@@ -126,9 +126,9 @@ To use the daterange picker in the controlled state, set the `value` prop to the
 
 ### Disabled
 
-There are many ways to interact with DateRangePicker `disabled` state. Daterange picker can be disabled entirely by setting the `disabled` prop to `true`. A disabled `<fieldset>` around the `DateRangePicker` disables it too. Pass `disabled` to its `Label` as well, so the label dims too.
+There are many ways to interact with DateRangePicker `disabled` state. Daterange picker can be disabled entirely by setting the `disabled` prop to `true`. `true` inside an array works the same way, so `disabled={[isLocked, { before: new Date() }]}` disables the whole date range picker while `isLocked` is `true`. A disabled `<fieldset>` around the `DateRangePicker` disables it too. Pass `disabled` to its `Label` as well, so the label dims too.
 
-For a finer control on which dates to disable, you can pass a `Matcher | Matcher[]` that defines the rules for disabling dates.
+For a finer control on which dates to disable, you can pass a `Matcher | Matcher[]` that defines the rules for disabling dates. A rule that happens to match every day, such as `() => true`, disables only the days: the date range picker can still be focused and opened. To disable the whole date range picker, pass `true` itself, as in `disabled={isLocked ? true : rule}`, or put it in a disabled `<fieldset>`.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview">
@@ -327,7 +327,7 @@ Default value is `en`. To switch to Bahasa Melayu, pass `ms`.
     },
     disabled: {
       description:
-        "`true` disables the whole date range picker, every button that opens one of its calendars. Any other Matcher, or an array of Matchers, disables only the days it matches.",
+        "`true`, alone or in an array, disables the whole date range picker, every button that opens one of its calendars. Any other Matcher disables only the days it matches, even one that matches every day.",
       type: "boolean | Matcher | Matcher[]",
       default: "false",
     },

@@ -29,6 +29,7 @@ import {
   RadioItem,
   RadioLabel,
 } from "./radio";
+import { sharedContext } from "../utils/registry";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -621,22 +622,86 @@ describe.each([
   });
 });
 
+// The RadioLabel that names the radio whose value is `value`
+function labelOf(within: ParentNode, value: string) {
+  const found = within.querySelector<HTMLLabelElement>(`label[for="${value}"]`);
+  expect(found, `no label for ${value}`).not.toBeNull();
+  return found!;
+}
+
+const labelDim = "text-txt-black-disabled";
+const hintDim = "text-otl-gray-300";
+
+// Whether the option of `value` looks and reads disabled: its radio button's
+// `disabled`, whether its label and hint carry their dimmed classes, and its
+// hint's `aria-disabled`
+function state(within: ParentNode, value: string) {
+  const [hint] = hints(within, value);
+  return {
+    radio: button(within, value).disabled,
+    label: labelOf(within, value).classList.contains(labelDim),
+    hint: hint!.classList.contains(hintDim),
+    ariaDisabled: hint!.getAttribute("aria-disabled"),
+  };
+}
+
+const dimmed = {
+  radio: true,
+  label: true,
+  hint: true,
+  ariaDisabled: "true",
+};
+const enabled = {
+  radio: false,
+  label: false,
+  hint: false,
+  ariaDisabled: null,
+};
+
 // A disabled option's hint is part of that inactive option, as its label is.
 // It's marked `aria-disabled`, which assistive technology and accessibility
 // checkers such as axe read as inherited, so axe exempts its dimmed colour
 // from contrast, as it did when the hint was a label of the disabled radio.
+// The option is disabled when its radio button is, as Radix makes it: by the
+// Radio's `disabled`, or by the `disabled` the RadioButton passes, or else by
+// its RadioItem's (#225).
 describe("the hint's aria-disabled", () => {
-  const hintOf = async (props: RadioProps, item?: boolean, own?: HintProps) => {
+  const hintOf = async (
+    props: RadioProps,
+    item?: boolean,
+    own?: HintProps,
+    buttonProps?: ButtonProps,
+  ) => {
     const { container } = await mount(
       radio(
         props,
         option("email", {
           disabled: item,
+          button: buttonProps,
           hints: [{ children: "We will email you.", ...own }],
         }),
       ),
     );
     return hints(container, "email")[0]!;
+  };
+
+  // Mounts the option "email", with a hint, and returns how it reads
+  const stateOf = async (
+    props: RadioProps,
+    item?: boolean,
+    buttonProps?: ButtonProps,
+  ) => {
+    const { container } = await mount(
+      radio(
+        props,
+        option("email", {
+          disabled: item,
+          button: buttonProps,
+          hints: [{ children: "We will email you." }],
+        }),
+      ),
+    );
+    return state(container, "email");
   };
 
   test('is "true" when the Radio or the hint\'s RadioItem is disabled', async () => {
@@ -646,11 +711,43 @@ describe("the hint's aria-disabled", () => {
     expect((await hintOf({}, true)).getAttribute("aria-disabled")).toBe("true");
   });
 
+  test('is "true", and the label and hint dim, when the RadioButton alone is disabled', async () => {
+    expect(await stateOf({}, undefined, { disabled: true })).toEqual(dimmed);
+  });
+
+  test('is "true", and the label and hint dim, when a disabled Radio\'s RadioItem passes `disabled={false}`, which Radix overrides (#357)', async () => {
+    expect(await stateOf({ disabled: true }, false)).toEqual(dimmed);
+  });
+
   test("is left off when the option is enabled", async () => {
     expect((await hintOf({})).hasAttribute("aria-disabled")).toBe(false);
-    expect(
-      (await hintOf({ disabled: true }, false)).hasAttribute("aria-disabled"),
-    ).toBe(false);
+  });
+
+  test.each([
+    ["`disabled={false}`", { disabled: false }],
+    ["`disabled={undefined}`", { disabled: undefined }],
+  ] as const)(
+    "is left off, and nothing dims, when a disabled RadioItem's RadioButton passes %s, which enables its radio",
+    async (_, buttonProps) => {
+      expect(await stateOf({}, true, buttonProps)).toEqual(enabled);
+    },
+  );
+
+  test("follows the RadioButton's `disabled` as it changes", async () => {
+    const tree = (disabled: boolean) =>
+      radio(
+        {},
+        option("email", {
+          button: { disabled },
+          hints: [{ children: "We will email you." }],
+        }),
+      );
+    const { container, rerender } = await mount(tree(false));
+    expect(state(container, "email")).toEqual(enabled);
+    await rerender(tree(true));
+    expect(state(container, "email")).toEqual(dimmed);
+    await rerender(tree(false));
+    expect(state(container, "email")).toEqual(enabled);
   });
 
   test("is the author's when they pass one", async () => {
@@ -658,5 +755,267 @@ describe("the hint's aria-disabled", () => {
       "aria-disabled": false,
     });
     expect(hint.getAttribute("aria-disabled")).toBe("false");
+  });
+
+  test('is the author\'s `"true"` or `true` in an enabled option', async () => {
+    for (const value of ["true", true] as const)
+      expect(
+        (await hintOf({}, undefined, { "aria-disabled": value })).getAttribute(
+          "aria-disabled",
+        ),
+      ).toBe("true");
+  });
+
+  // The author then owns the hint's contrast, as with a disabled RadioItem
+  test("is the author's `false` when the RadioButton alone is disabled, and the hint still dims", async () => {
+    const hint = await hintOf(
+      {},
+      undefined,
+      { "aria-disabled": false },
+      { disabled: true },
+    );
+    expect(hint.getAttribute("aria-disabled")).toBe("false");
+    expect(hint.classList.contains(hintDim)).toBe(true);
+  });
+
+  test("is kept when the author passes `aria-disabled={undefined}`, with the RadioItem or the RadioButton disabled", async () => {
+    const own: HintProps = { "aria-disabled": undefined };
+    expect((await hintOf({}, true, own)).getAttribute("aria-disabled")).toBe(
+      "true",
+    );
+    expect(
+      (await hintOf({}, undefined, own, { disabled: true })).getAttribute(
+        "aria-disabled",
+      ),
+    ).toBe("true");
+  });
+});
+
+describe("a RadioLabel and RadioHintText", () => {
+  test("carry the data attributes their RadioItem dims them by", async () => {
+    const { container } = await mount(
+      radio({}, option("email", { hints: [{ children: "Hint." }] })),
+    );
+    expect(labelOf(container, "email").getAttribute("data-radio-label")).toBe(
+      "",
+    );
+    expect(hints(container, "email")[0]!.getAttribute("data-radio-hint")).toBe(
+      "",
+    );
+  });
+
+  // A RadioButton in a Radio nested in an option doesn't speak for that
+  // option, which its own RadioButton does
+  test.each([
+    ["its own `disabled`", {}, { disabled: true }],
+    ["the nested Radio's `disabled`", { disabled: true }, {}],
+  ] as const)(
+    "in an enabled option stay enabled when its grid holds a nested Radio with a bare RadioButton disabled by %s",
+    async (_, innerRadio, innerButton) => {
+      const { container } = await mount(
+        radio(
+          {},
+          createElement(
+            RadioItem,
+            null,
+            createElement(RadioButton, { value: "outer", id: "outer" }),
+            createElement(
+              "div",
+              { className: "grid" },
+              createElement(RadioLabel, { htmlFor: "outer" }, "Outer"),
+              hint("About outer."),
+              radio(
+                { name: "inner", ...innerRadio },
+                createElement(RadioButton, {
+                  value: "inner",
+                  id: "inner",
+                  ...innerButton,
+                }),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(button(container, "inner").disabled).toBe(true);
+      expect(state(container, "outer")).toEqual(enabled);
+    },
+  );
+
+  test("in a disabled option dim, and a bare RadioButton in a nested Radio there inherits the option's `disabled`", async () => {
+    const { container } = await mount(
+      radio(
+        {},
+        createElement(
+          RadioItem,
+          { disabled: true },
+          createElement(RadioButton, { value: "outer", id: "outer" }),
+          createElement(
+            "div",
+            { className: "grid" },
+            createElement(RadioLabel, { htmlFor: "outer" }, "Outer"),
+            hint("About outer."),
+            radio(
+              { name: "inner" },
+              createElement(RadioButton, { value: "inner", id: "inner" }),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(button(container, "inner").disabled).toBe(true);
+    expect(state(container, "outer")).toEqual(dimmed);
+  });
+
+  test("in one RadioItem with two RadioButtons, which isn't supported, render without an error", async () => {
+    const { container } = await mount(
+      radio(
+        {},
+        createElement(
+          RadioItem,
+          null,
+          createElement(RadioButton, { value: "a", id: "a", disabled: true }),
+          createElement(RadioButton, { value: "b", id: "b" }),
+          createElement(RadioLabel, { htmlFor: "a" }, "A"),
+          hint("About a."),
+        ),
+      ),
+    );
+    expect(button(container, "a").disabled).toBe(true);
+    expect(button(container, "b").disabled).toBe(false);
+  });
+});
+
+// RadioItemContext as an older copy's RadioItem provides it, with `disabled`
+// alone. The registry holds the one context of that name, which an older
+// copy, loaded first, makes.
+const OlderItemContext = sharedContext<{ disabled: boolean }>(
+  "RadioItemContext",
+  { disabled: false },
+);
+
+describe("under an older copy's RadioItem, whose context holds only `disabled`", () => {
+  const olderOption = (
+    disabled: boolean,
+    own?: HintProps,
+    {
+      group = {},
+      buttonProps = {},
+    }: { group?: RadioProps; buttonProps?: ButtonProps } = {},
+  ) =>
+    radio(
+      group,
+      createElement(
+        OlderItemContext.Provider,
+        { value: { disabled } },
+        createElement(
+          "div",
+          { className: "flex items-center gap-3" },
+          createElement(RadioButton, {
+            value: "email",
+            id: "email",
+            ...buttonProps,
+          }),
+          createElement(
+            "div",
+            { className: "grid" },
+            createElement(RadioLabel, { htmlFor: "email" }, "Email"),
+            hint("We will email you.", own),
+          ),
+        ),
+      ),
+    );
+
+  // The label's and hint's classes and the hint's `aria-disabled`, as before
+  // #225
+  test.each([
+    [
+      "disabled",
+      true,
+      "font-medium text-body-md text-txt-black-disabled",
+      "text-body-sm text-otl-gray-300",
+      "true",
+    ],
+    [
+      "enabled",
+      false,
+      "text-txt-black-700 font-medium text-body-md",
+      "text-txt-black-500 text-body-sm",
+      null,
+    ],
+  ] as const)(
+    "a RadioLabel and RadioHintText are as before when %s",
+    async (_, disabled, labelClasses, hintClasses, ariaDisabled) => {
+      const { container } = await mount(olderOption(disabled));
+      expect(labelOf(container, "email").className).toBe(labelClasses);
+      const [hint] = hints(container, "email");
+      expect(hint!.className).toBe(hintClasses);
+      expect(hint!.getAttribute("aria-disabled")).toBe(ariaDisabled);
+    },
+  );
+
+  // As before #225, the text follows the older context's `disabled` alone,
+  // though the radio is disabled: the CSS RadioItem dims it by is missing too
+  test.each([
+    [
+      "a disabled Radio's item passes `disabled: false` (#357)",
+      { group: { disabled: true } },
+    ],
+    ["the RadioButton alone is disabled", { buttonProps: { disabled: true } }],
+  ] as const)(
+    "a RadioLabel and RadioHintText are as before, undimmed and unmarked, when %s",
+    async (_, options) => {
+      const { container } = await mount(olderOption(false, {}, options));
+      expect(button(container, "email").disabled).toBe(true);
+      expect(labelOf(container, "email").className).toBe(
+        "text-txt-black-700 font-medium text-body-md",
+      );
+      const [hint] = hints(container, "email");
+      expect(hint!.className).toBe("text-txt-black-500 text-body-sm");
+      expect(hint!.hasAttribute("aria-disabled")).toBe(false);
+    },
+  );
+
+  test("a RadioHintText keeps its `aria-disabled` when the author passes `aria-disabled={undefined}`", async () => {
+    const { container } = await mount(
+      olderOption(true, { "aria-disabled": undefined }),
+    );
+    expect(hints(container, "email")[0]!.getAttribute("aria-disabled")).toBe(
+      "true",
+    );
+  });
+});
+
+describe("server-rendered, then hydrated, a disabled option logs nothing", () => {
+  test("and with the RadioButton alone disabled, its hint is marked once the RadioButton reports it", async () => {
+    const tree = radio(
+      {},
+      option("email", {
+        button: { disabled: true },
+        hints: [{ children: "We will email you." }],
+      }),
+    );
+    const container = serverRender(tree);
+    // Not dimmed before it's marked, so checkers never see it unexempt
+    const [hint] = hints(container, "email");
+    expect(hint!.hasAttribute("aria-disabled")).toBe(false);
+    expect(hint!.classList.contains(hintDim)).toBe(false);
+    expect(await hydrate(container, tree)).toEqual([]);
+    expect(state(container, "email")).toEqual(dimmed);
+  });
+
+  test("and in #357's case its hint is marked in the server HTML", async () => {
+    const tree = radio(
+      { disabled: true },
+      option("email", {
+        disabled: false,
+        hints: [{ children: "We will email you." }],
+      }),
+    );
+    const container = serverRender(tree);
+    expect(hints(container, "email")[0]!.getAttribute("aria-disabled")).toBe(
+      "true",
+    );
+    expect(await hydrate(container, tree)).toEqual([]);
+    expect(state(container, "email")).toEqual(dimmed);
   });
 });

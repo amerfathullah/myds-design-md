@@ -144,3 +144,30 @@ export const DisabledDark: Story = createStory(
   },
   "dark",
 );
+
+// A disabled fieldset disables every radio, with no `disabled` prop on Radio,
+// and each option's label and hint dim with its own radio. The dark story
+// puts `dark` on the fieldset, so its legend takes the dark theme too.
+const inDisabledFieldset: Story["render"] = function Render({
+  className,
+  ...args
+}) {
+  return (
+    <fieldset disabled className={className}>
+      <legend className="text-body-sm text-txt-black-900 mb-2">
+        Notifications
+      </legend>
+      {meta.render(args)}
+    </fieldset>
+  );
+};
+
+export const DisabledFieldset: Story = {
+  ...createStory({ value: "phone_call" }),
+  render: inDisabledFieldset,
+};
+
+export const DisabledFieldsetDark: Story = {
+  ...createStory({ value: "phone_call", className: "dark" }, "dark"),
+  render: inDisabledFieldset,
+};

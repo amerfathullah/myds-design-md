@@ -216,7 +216,7 @@ Use the `size` prop to change the radio size.
 
 ### Disabled
 
-Disable all radio items by setting the `disabled` prop to true on the `Radio` component.
+Disable all radio items by setting the `disabled` prop to true on the `Radio` component. A disabled `<fieldset>` around the `Radio` disables its items too, and their labels and hints dim. Setting `disabled` on a `RadioButton` disables just that option, as it does on its `RadioItem`.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
@@ -418,7 +418,7 @@ Each part forwards its `ref` to the element it renders.
 
 ### RadioHintText
 
-`RadioHintText` uses the same props as a regular `div` element. It describes the `RadioButton` in its `RadioItem`: screen readers read it after the radio's name, which the `RadioLabel` gives, not as part of the name. The `RadioButton` points its `aria-describedby` at each hint in its item, in order, before any ids you pass it, so you don't wire the hint yourself. Clicking the hint doesn't select the radio; clicking the `RadioLabel` does. In a disabled `RadioItem` or `Radio`, the hint is marked `aria-disabled`, as part of the inactive option.
+`RadioHintText` uses the same props as a regular `div` element. It describes the `RadioButton` in its `RadioItem`: screen readers read it after the radio's name, which the `RadioLabel` gives, not as part of the name. The `RadioButton` points its `aria-describedby` at each hint in its item, in order, before any ids you pass it, so you don't wire the hint yourself. Clicking the hint doesn't select the radio; clicking the `RadioLabel` does. In a disabled `RadioItem` or `Radio`, or when its `RadioButton` is disabled, the hint is marked `aria-disabled`, as part of the inactive option. In a disabled `<fieldset>` it isn't marked, because contrast checkers exempt everything inside one.
 
 <TypeTable
   type={{

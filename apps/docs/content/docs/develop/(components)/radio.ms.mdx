@@ -216,7 +216,7 @@ Gunakan prop `size` untuk menukar saiz radio.
 
 ### Dinyahaktifkan
 
-Nyahaktifkan semua item radio dengan menetapkan prop `disabled` kepada true pada komponen `Radio`.
+Nyahaktifkan semua item radio dengan menetapkan prop `disabled` kepada true pada komponen `Radio`. `<fieldset>` yang dinyahaktifkan di sekeliling `Radio` turut menyahaktifkan itemnya, dan label serta petunjuknya menjadi malap. Menetapkan `disabled` pada `RadioButton` menyahaktifkan pilihan itu sahaja, seperti pada `RadioItem`nya.
 
 <Tabs items={["Preview", "Code"]}>
   <Tab value="Preview" className="not-prose">
@@ -418,7 +418,7 @@ Setiap bahagian meneruskan `ref`nya kepada elemen yang dipaparkannya.
 
 ### RadioHintText
 
-`RadioHintText` menggunakan prop yang sama seperti elemen `div` biasa. Ia menerangkan `RadioButton` dalam `RadioItem`nya: pembaca skrin membacanya selepas nama radio, yang diberikan oleh `RadioLabel`, bukan sebagai sebahagian daripada nama itu. `RadioButton` menunjukkan `aria-describedby`nya kepada setiap petunjuk dalam itemnya, mengikut susunan, sebelum sebarang id yang anda berikan kepadanya, jadi anda tidak perlu menyambungkan petunjuk itu sendiri. Mengklik petunjuk tidak memilih radio; mengklik `RadioLabel` memilihnya. Dalam `RadioItem` atau `Radio` yang dinyahaktifkan, petunjuk ditanda dengan `aria-disabled`, sebagai sebahagian daripada pilihan yang tidak aktif.
+`RadioHintText` menggunakan prop yang sama seperti elemen `div` biasa. Ia menerangkan `RadioButton` dalam `RadioItem`nya: pembaca skrin membacanya selepas nama radio, yang diberikan oleh `RadioLabel`, bukan sebagai sebahagian daripada nama itu. `RadioButton` menunjukkan `aria-describedby`nya kepada setiap petunjuk dalam itemnya, mengikut susunan, sebelum sebarang id yang anda berikan kepadanya, jadi anda tidak perlu menyambungkan petunjuk itu sendiri. Mengklik petunjuk tidak memilih radio; mengklik `RadioLabel` memilihnya. Dalam `RadioItem` atau `Radio` yang dinyahaktifkan, atau apabila `RadioButton`nya dinyahaktifkan, petunjuk ditanda dengan `aria-disabled`, sebagai sebahagian daripada pilihan yang tidak aktif. Dalam `<fieldset>` yang dinyahaktifkan, ia tidak ditanda, kerana alat pemeriksa kontras mengecualikan semua yang berada di dalamnya.
 
 <TypeTable
   type={{

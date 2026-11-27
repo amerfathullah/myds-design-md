@@ -787,6 +787,9 @@ const RadioColumn = <TData extends Record<string, any>>() => {
             // As Radio: checked, it's primary-600, faded when disabled;
             // unchecked, its input is bg-washed when disabled
             "has-[:checked]:bg-primary-600 has-[:checked]:border-none has-[:disabled]:has-[:checked]:opacity-30",
+            // Checked, it's filled, so the ring is 2px, outside a 2px fr-gap
+            // band that separates it from the fill
+            "has-[:checked:focus-visible]:ring-2 has-[:checked:focus-visible]:ring-offset-2 has-[:checked:focus-visible]:ring-offset-fr-gap",
           )}
         >
           <input

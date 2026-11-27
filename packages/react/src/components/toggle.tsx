@@ -13,6 +13,9 @@ const thumbVariants = cva(
     // Under forced colours, which drop the ring, `outline-hidden` draws an
     // outline instead
     "peer-focus:ring-3 peer-focus:ring-fr-primary peer-focus:outline-hidden",
+    // Checked, the track is filled, so the ring is 2px, outside a 2px fr-gap
+    // band that separates it from the fill
+    "peer-focus:data-[state=checked]:ring-2 peer-focus:data-[state=checked]:ring-offset-2 peer-focus:data-[state=checked]:ring-offset-fr-gap",
     "before:content-[''] before:left-[3px] before:bottom-[3px] before:bg-white before:absolute before:rounded-full before:transition-all before:duration-200",
     "peer-disabled:data-[state=checked]:bg-bg-primary-disabled peer-disabled:cursor-not-allowed peer-disabled:data-[state=checked]:before:bg-bg-white",
     "peer-disabled:data-[state=unchecked]:bg-bg-washed peer-disabled:data-[state=unchecked]:before:bg-bg-white",

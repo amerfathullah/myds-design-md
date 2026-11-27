@@ -208,6 +208,7 @@
   /* Focus ring (`fr-*`) */
   --color-fr-primary: rgb(var(--fr-primary));
   --color-fr-danger: rgb(var(--fr-danger));
+  --color-fr-gap: rgb(var(--fr-gap));
 
   /* Set by Radix on the tooltip at runtime */
   --transform-origin-tooltip-origin: var(

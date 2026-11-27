@@ -16,6 +16,10 @@ const checkbox_cva = cva(
     "data-[state=indeterminate]:bg-primary-600 data-[state=indeterminate]:border-none data-[state=indeterminate]:hover:border-primary-700 data-[state=indeterminate]:hover:bg-primary-700",
     "focus-visible:ring-[3px] focus-visible:ring-fr-primary",
     "focus:ring-[3px] focus:ring-fr-primary",
+    // Checked or indeterminate, it's filled, so the ring is 2px, outside a
+    // 2px fr-gap band that separates it from the fill
+    "data-[state=checked]:focus:ring-2 data-[state=checked]:focus:ring-offset-2 data-[state=checked]:focus:ring-offset-fr-gap",
+    "data-[state=indeterminate]:focus:ring-2 data-[state=indeterminate]:focus:ring-offset-2 data-[state=indeterminate]:focus:ring-offset-fr-gap",
     "disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-bg-washed data-[state=checked]:disabled:bg-primary-600",
   ],
   {

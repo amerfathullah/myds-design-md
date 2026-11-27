@@ -1,8 +1,9 @@
-// A focused control that fills in some State draws its focus ring 2px wide,
-// outside a 2px band in `fr-gap`, which separates the ring from the fill
-// (#264). Without the band, the opaque `fr-primary` ring sits close to the
-// fill: 1.30:1 on `primary-600` in light, and 1.00:1 on a hovered
-// `primary-700` fill, the ring's own colour. The controls are `primary-fill`
+// A focused filled control draws its focus ring 2px wide, outside a 2px band
+// in `fr-gap`, which separates the ring from the fill (#264). Its variant
+// fills it, as on a `primary-fill` Button, or a state does, such as checked.
+// Without the band, the opaque `fr-primary` ring sits close to the fill:
+// 1.30:1 on `primary-600` in light, and 1.00:1 on a hovered `primary-700`
+// fill, the ring's own colour. The controls are `primary-fill`
 // and `danger-fill` Buttons, which ring on `focus:`, checked and
 // indeterminate Checkboxes, checked Radios and DataTable radios, which ring
 // on keyboard focus, checked Switches, which ring while their checkbox has
@@ -49,7 +50,7 @@ const away = { x: 1150, y: 20 };
 
 // The fills, as [r, g, b]: primitives, the same in both themes, except the
 // checked Switch's track, which is `primary-400` in dark
-const fill = {
+const fillColours = {
   "primary-600": [37, 99, 235],
   "primary-700": [29, 78, 216],
   "danger-600": [220, 38, 38],
@@ -65,13 +66,17 @@ const day = (calendar, date) =>
 
 /**
  * Each filled control:
+ * - `name`: what the test calls it
  * - `focus`: the element that takes focus
  * - `ring`: the element that draws the ring, if not the focused one
+ * - `outline`: the element that draws the forced-colours outline, if not the
+ *   focused one
  * - `fills`: its fill at rest and hovered, as `[rest, hover]`, or per theme
+ * - `from`: the control Tab reaches first, if not this one
  * - `reach`: how keyboard focus reaches it, after Tab reaches `from` (or
- *   `focus`): `keys` presses keys there, `select` presses Space to fill it,
- *   and `list` opens the Select by keyboard, then focuses it by script, since
- *   Tab doesn't move through an open Select
+ *   `focus`): `keys` presses `keys` there, `select` presses Space to fill
+ *   it, and `list` opens the Select by keyboard, then focuses it by script,
+ *   since Tab doesn't move through an open Select
  * - `view`: the Calendar's caption button that opens its month or year view
  * - `hidden`: sides that something hides, as it hides today's 3px ring: a
  *   neighbour that paints over them (#283) or a container that clips them
@@ -81,6 +86,8 @@ const day = (calendar, date) =>
  *   not 2px in, as on the SearchBar's button: its 1px `primary-600` border,
  *   around a gradient from `primary-400`. Its edge is round, so the border's
  *   pixel is antialiased into the band, up to 16 off in a channel.
+ * - `tolerance`: how far, in each channel, the measured pixel may be from the
+ *   fill: 8 unless it says otherwise
  */
 const controls = [
   {
@@ -112,6 +119,7 @@ const controls = [
     name: `Switch, ${size}`,
     focus: `#switch-${size}`,
     ring: `#switch-${size} + span`,
+    outline: `#switch-${size} + span`,
     fills: {
       light: ["primary-600", "primary-600"],
       dark: ["primary-400", "primary-400"],
@@ -362,7 +370,7 @@ function readFocus({ focus, ring }) {
 }
 
 // The band and ring a filled control shows while focused, in `theme`
-const bandOf = (theme) => [
+const filledRingOf = (theme) => [
   `${colours[theme]["fr-gap"]} 0px 0px 0px 2px`,
   `${colours[theme]["fr-primary"]} 0px 0px 0px 4px`,
 ];
@@ -449,13 +457,14 @@ const nearest = (pixel, named) =>
 // What a side's line of pixels shows: the fill inside the edge, then, from
 // the edge out, whether each of the next 4px is nearer the band's colour or
 // the ring's, and whether the 2px after them are nearer the ring's or the
-// page's. In light, `fr-gap` is the page's white, so the band and the page
-// are told apart by where they are. A round control's edges are
-// antialiased, so a pixel counts as the colour it's nearest.
+// page's, the surface around it. In light, `fr-gap` is the page's white, so
+// the band and the surface are told apart by where they are. A round
+// control's edges are antialiased, so a pixel counts as the colour it's
+// nearest.
 function readSide(line, { theme, measured = 2 }) {
   const gap = rgbOf(colours[theme]["fr-gap"]);
   const ring = rgbOf(colours[theme]["fr-primary"]);
-  const page = rgbOf(colours[theme]["bg-white"]);
+  const surface = rgbOf(colours[theme]["bg-white"]);
   const inside = line[2 - measured];
   const outside = line.slice(2);
   const [band, rings] = [outside.slice(0, 2), outside.slice(2, 4)];
@@ -463,7 +472,7 @@ function readSide(line, { theme, measured = 2 }) {
     inside,
     out: [
       ...outside.slice(0, 4).map((pixel) => nearest(pixel, { gap, ring })),
-      ...outside.slice(4).map((pixel) => nearest(pixel, { ring, page })),
+      ...outside.slice(4).map((pixel) => nearest(pixel, { ring, surface })),
     ].join(" "),
     // The lowest contrast of a band pixel with the fill, and of a ring pixel
     // with a band pixel
@@ -499,7 +508,7 @@ test("each filled control, focused by keyboard, draws a 2px fr-gap band between 
             focus: control.focus,
             ring,
           });
-          expected[key] = { focused: true, ring: bandOf(theme) };
+          expected[key] = { focused: true, ring: filledRingOf(theme) };
           const lines = await page.evaluate(linesOut, { selector: ring });
           const sides = Object.keys(lines).filter(
             (side) => !control.hidden?.includes(side),
@@ -517,7 +526,7 @@ test("each filled control, focused by keyboard, draws a 2px fr-gap band between 
             // Within 8 of the fill in each channel, so the line starts on
             // the fill, hovered too; then 2px of band and 2px of ring, each
             // at least 3:1 with what it touches, and the page around them
-            const want = fill[fillName];
+            const want = fillColours[fillName];
             const { tolerance = 8 } = control;
             actual[sideKey] = {
               inside:
@@ -530,7 +539,7 @@ test("each filled control, focused by keyboard, draws a 2px fr-gap band between 
             };
             expected[sideKey] = {
               inside: fillName,
-              out: "gap gap ring ring page page",
+              out: "gap gap ring ring surface surface",
               bandOnFill: true,
               ringOnBand: true,
             };
@@ -616,10 +625,7 @@ test("under forced colours, a filled control draws a solid 2px outline only whil
       theme,
       async (page) => {
         for (const control of controls) {
-          // The Switch's track draws the outline for its checkbox
-          const selector = control.ring?.endsWith("+ span")
-            ? control.ring
-            : control.focus;
+          const selector = control.outline ?? control.focus;
           await focusByKeyboard(page, control);
           actual[`${control.name}, focused (${theme})`] = await page.evaluate(
             readOutline,

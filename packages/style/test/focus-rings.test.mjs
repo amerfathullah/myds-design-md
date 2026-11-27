@@ -1,8 +1,9 @@
 // Keyboard focus shows MYDS's focus ring: a 3px ring in `fr-primary`, drawn
 // as a box-shadow, or `fr-danger` on an invalid InputOTP, in both themes. A
-// control in a filled State, such as the Switch once a click checks it,
-// draws a 2px ring outside a 2px `fr-gap` band instead (#264);
-// focus-ring-fill.test.mjs checks those. These controls draw it on `:focus-visible`, so a mouse click shows none:
+// filled control, such as the Switch once a click checks it, draws a 2px
+// ring outside a 2px `fr-gap` band instead (#264); focus-ring-fill.test.mjs
+// checks those. These controls draw it on `:focus-visible`, so a mouse click
+// shows none:
 // the Link family (Link, SiteLink, NavbarMenuItem and NavbarLogo, with and
 // without `asChild`), BreadcrumbLink, the Accordion, the NavbarMenuDropdown
 // trigger, TooltipTrigger, TableCell, Radio, DataTable's radio column, the

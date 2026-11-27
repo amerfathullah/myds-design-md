@@ -9,7 +9,7 @@ The focus ring tokens, `fr-primary` and `fr-danger`, are now opaque, so a focus 
 
 These are the primitives the `bg-primary-700` and `bg-danger-700` tokens (`bg-bg-primary-700`, `bg-bg-danger-700`) use in each theme. Against the page (`bg-white`), `fr-primary` is now 6.70:1 in light and 8.87:1 in dark, and `fr-danger` 6.47:1 and 9.33:1. Against the other surfaces a ring sits on, such as dialogs, callouts, the calendar's range cells and the Masthead trigger's fill, both stay at 5.10:1 or more.
 
-Every MYDS focus ring changes colour. Which controls draw it and when they draw it don't change. A control in a filled state also draws its ring outside a band in the new `fr-gap` token; see that entry.
+Every MYDS focus ring changes colour. Which controls draw it and when they draw it don't change. A filled control also draws its ring outside a band in the new `fr-gap` token; see that entry.
 
 **Your own `fr-*` utilities change too.** Anything you write with an `fr-*` token takes the new colour with no code change: `ring-fr-primary`, `bg-fr-primary`, `text-fr-danger`, `border-fr-danger`, `outline-fr-primary` and so on. An opacity modifier now takes its share of an opaque colour, not of a 40% one: `ring-fr-primary/50` in light is `primary-700` @ 50%, where it was `primary-300` @ 20%.
 

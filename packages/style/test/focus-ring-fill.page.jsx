@@ -1,12 +1,12 @@
-// The page focus-ring-fill.test.mjs renders in Chromium: every control that
-// fills in some State, in that State, rendered by the React components
-// themselves. Focused, each draws its ring outside a band in `fr-gap`, which
-// separates the ring from the fill (#264). Buttons in the `primary-fill` and
-// `danger-fill` variants, a checked and an indeterminate Checkbox, checked
-// Radios and Switches at each size, DataTable's selection columns, and
-// Calendars with a selected day, a range, and their month and year views. It
-// also has the tight places a filled Button sits in: a Select's header and
-// footer, and the large SearchBar's search button. The test bundles this file with esbuild.
+// The page focus-ring-fill.test.mjs renders in Chromium: every filled
+// control, filled, rendered by the React components themselves. Focused,
+// each draws its ring outside a band in `fr-gap`, which separates the ring
+// from the fill (#264). Buttons in the `primary-fill` and `danger-fill`
+// variants, a checked and an indeterminate Checkbox, checked Radios and
+// Switches at each size, DataTable's selection columns, and Calendars with a
+// selected day, a range, and their month and year views. It also has the
+// tight places a filled Button sits in: a Select's header and footer, and the
+// large SearchBar's search button. The test bundles this file with esbuild.
 // `data-test` names what the test focuses.
 import { createRoot } from "react-dom/client";
 

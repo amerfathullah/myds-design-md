@@ -72,7 +72,7 @@ const fills = [
 ];
 // Each fill's cell: a 40px square of the page with a 16px box of the fill in
 // the middle, whose band runs from 10 to 12px in and its ring from 8 to 10px
-const bands = fills.map((fill, row) => ({ fill, x: 0, y: row * cell }));
+const fillCells = fills.map((fill, row) => ({ fill, x: 0, y: row * cell }));
 // A pixel of the fill, of the band and of the ring, mid-way down the left side
 const fillPixel = ({ x, y }) => ({ x: x + 20, y: y + 20 });
 const bandPixel = ({ x, y }) => ({ x: x + 11, y: y + 20 });
@@ -100,7 +100,7 @@ before(async () => {
     )
     .join("");
   html = `<!doctype html><html><head><style>${css}</style></head><body class="bg-bg-white" style="margin:0">${cells}</body></html>`;
-  const bandCells = bands
+  const bandCells = fillCells
     .map(
       ({ fill, x, y }) =>
         `<div data-fill="${fill}" class="bg-${fill} ring-2 ring-offset-2 ring-offset-fr-gap ring-fr-primary" style="position:absolute;left:${x + 12}px;top:${y + 12}px;width:16px;height:16px"></div>`,
@@ -204,7 +204,7 @@ function unbanded() {
 
 test("fr-gap contrasts at least 3:1 with every fill a focus ring touches, and fr-primary with fr-gap, in both themes", async () => {
   const page = await browser.newPage({
-    viewport: { width: cell, height: bands.length * cell },
+    viewport: { width: cell, height: fillCells.length * cell },
   });
   await page.setContent(bandHtml);
   const below = {};
@@ -216,13 +216,13 @@ test("fr-gap contrasts at least 3:1 with every fill a focus ring touches, and fr
     assert.deepEqual(await page.evaluate(unbanded), []);
     const painted = await pixels(
       page,
-      bands.flatMap((band) => [
-        fillPixel(band),
-        bandPixel(band),
-        bandRingPixel(band),
+      fillCells.flatMap((fillCell) => [
+        fillPixel(fillCell),
+        bandPixel(fillCell),
+        bandRingPixel(fillCell),
       ]),
     );
-    bands.forEach(({ fill }, i) => {
+    fillCells.forEach(({ fill }, i) => {
       const [fillColour, band, ring] = painted.slice(3 * i, 3 * i + 3);
       const onFill = contrast(band, fillColour);
       if (onFill < 3)

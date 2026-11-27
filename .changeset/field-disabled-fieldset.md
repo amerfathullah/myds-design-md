@@ -1,6 +1,0 @@
----
-"@amerfathullah/myds-react": patch
-"@amerfathullah/myds-style": patch
----
-
-DateField and TimeField now look disabled whenever their `<input>` is, including inside a `<fieldset disabled>`. Their frame and their calendar or clock icon took the disabled look only from the `disabled` prop, so in a disabled fieldset, which disables the input without the prop, the field showed a washed patch behind its value inside a white frame, beside an icon in its enabled colour. The frame and the icon now follow the input's `:disabled`, as the error styling follows its `aria-invalid`: a disabled field has a `bg-washed` frame with a `not-allowed` cursor and a `txt-black-500` icon, whether the prop or a disabled fieldset, with or without `className="group"`, disables it. A `disabled={false}` field inside a disabled fieldset, which the browser disables anyway, now looks disabled too. An enabled field looks as before, also inside an element you mark `group` or `group/field` that holds other disabled inputs. On a disabled field, a background you pass in `className` now gives way to the washed background, as on Input; before, some, such as `bg-transparent`, won. A `disabled` you added to each field in a disabled fieldset only for its look can go. `disabled` keeps its type, `boolean | undefined`. `full.css` in `@amerfathullah/myds-style` carries the new classes.

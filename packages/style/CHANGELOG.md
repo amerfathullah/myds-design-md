@@ -1,5 +1,320 @@
 # @amerfathullah/myds-style
 
+## 2.1.0
+
+### Minor Changes
+
+- efe0620: A focused filled control now draws its focus ring 2px wide, outside a 2px band in a new token, `fr-gap`, so the ring no longer merges into the fill. The opaque `fr-primary` ring sat close to a fill's colour: 1.30:1 against a `primary-fill` button's `primary-600` in light and 2.59:1 in dark, and 1.00:1 against its hover fill, `primary-700`, in light, so a focused, hovered button just looked 3px bigger.
+
+  - **`fr-gap`** is `white` (`#FFFFFF`) in light and `black` (`#000000`) in dark. It contrasts at least 3:1 with every fill it touches, at rest and hovered: 4.83:1 or more in light and 3.13:1 or more in dark. The ring is 6.70:1 against it in light and 10.51:1 in dark.
+  - **Which controls.** `primary-fill` and `danger-fill` Buttons, and everything that renders one, such as the large SearchBar's search button; checked and indeterminate Checkboxes, DataTable's included; checked Radios and DataTable's checked radio; the checked Switch; and the Calendar's selected day, range start and end, and selected month and year, in DatePicker and DateRangePicker too. The band shows only while the control is focused and filled, and `danger-fill`'s ring stays `fr-primary`. Every other ring is unchanged: 3px, with no band.
+  - **Size.** The band and ring reach 4px out, 1px more than the 3px ring, which still fits DataTable's selection cells, a Select's footer and the SearchBar's padding.
+  - **Around the control.** In light the band is the page's white. In dark it is 1.19:1 against the page and 1.25:1 on a dialog, so it shows as a faint halo on surfaces other than the page.
+  - **Forced colours** are unchanged. The band is a box-shadow, like the ring, so a focused control still shows a 2px outline instead.
+  - **The Calendar's previous and next buttons** now render as `default-outline` Buttons, where they took that look from their class names over Button's default `primary-fill`. They look the same, and keep the 3px ring with no band.
+
+  **If you set focus styles yourself:**
+
+  - A ring width you pass to a filled Button, such as `focus:ring-3`, now sits outside the 2px band. Add `focus:ring-offset-0` to drop the band.
+  - On a control of your own that fills, draw the ring the same way, behind its focus variant, and behind the state that fills it where a state does, such as `focus:ring-2 focus:ring-offset-2 focus:ring-offset-fr-gap`. Don't leave a `ring-offset-*` width bare, because `shadow-button` then draws the band at rest, and don't leave out `ring-offset-fr-gap`, because Tailwind colours an offset white, which in dark is a white band.
+
+  `full.css` in `@amerfathullah/myds-style` carries the new classes, and the preset's `fr-gap` utilities, such as `ring-offset-fr-gap`, `bg-fr-gap` and `border-fr-gap`, are new.
+
+- 46d3d9e: The Tailwind import now sets the scroll, focus and underline rules that only `full.css` had, so both entries render the same. `full.css`, which imports it, has each of these rules once and adds only the fonts and its box-sizing pair (`border-box` on `html`, `inherit` on every element), which stays out of the import.
+
+  **With the Tailwind import, you now get:**
+
+  - `scroll-padding-top: 65px` on `html`, so an in-page link's target, the SkipLink's included, lands below the 64px sticky Navbar instead of under it. The value doesn't change with the breakpoint: below `md:` the Navbar is 56px, so targets land 9px lower than they need to.
+  - Smooth scrolling (`scroll-behavior: smooth` on `html`), unless the user prefers reduced motion. Under `prefers-reduced-motion: reduce`, in-page links jump.
+  - No outline when focus isn't `:focus-visible`, as after a mouse click on a button or link. That hides an outline-width utility's outline too, such as `focus:outline-[3px]`, after a click; keyboard focus still shows it. An outline whose style a utility sets, such as `focus:outline-solid`, still shows on a click. The rule doesn't use `@apply`, so the import still compiles under `@import "tailwindcss" prefix(…)`.
+  - `text-underline-position: from-font` on `underline` and its Tailwind variants, such as `hover:underline` and `focus-visible:underline`. Nothing is generated when your sources don't use `underline`.
+
+  **`full.css` changes too:**
+
+  - Smooth scrolling now respects reduced motion.
+  - `hover:underline` and `focus-visible:underline` now get `from-font`, as `underline` already did.
+  - `underline` no longer resets the decoration's style, thickness or colour, because it no longer sets the `text-decoration` shorthand. `decoration-*` utilities on an underlined element now apply, and a Link that isn't `primary` takes its parent's decoration, through `decoration-inherit` and the `text-decoration: inherit` that preflight gives links.
+
+  **Opting out of the scroll padding.** In an app without the MYDS Navbar, or whose headings carry their own scroll margin (Fumadocs headings have `scroll-m-28`), the 65px adds to that margin. Set `html { scroll-padding-top: 0 }` in your stylesheet, or, with the Tailwind import, put `scroll-pt-0` on `<html>`.
+
+  **Next.js App Router.** Put `data-scroll-behavior="smooth"` on `<html>`, so that moving to another page jumps to its top instead of scrolling there smoothly.
+
+  **Remove the rule you added by hand.** If you followed the old advice and added `html { scroll-behavior: smooth; scroll-padding-top: 65px; }` to your own stylesheet, delete it. MYDS now sets both, and your copy would keep smooth scrolling on under reduced motion.
+
+- 737eea1: Input and TextArea now take an `invalid` prop, as DateField and TimeField do, so a field that fails validation can show it. `invalid` sets the native element's `aria-invalid`, and the error styling follows `aria-invalid="true"`, so an `aria-invalid` you pass yourself, as form libraries do, overrides `invalid`: `<Input aria-invalid />` looks invalid, and `<Input invalid aria-invalid={false} />` looks valid. An invalid field has an `otl-danger-300` border, which it keeps while focused, and shows its 3px `fr-danger` ring only then. On Input only the editable field turns red: the wrapper keeps its `otl-gray-200` border, and `InputAddon` and `InputIcon` keep their colours. `invalid` takes `boolean | null`; omitted, `false` or `null`, the field looks as before. A border class you added to show an error, such as `border-danger-600` on Input, which lands on the wrapper, doesn't re-theme and sets no `aria-invalid`, can go. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- 73321a8: Label now takes a `disabled` prop, so a Label beside a disabled field can show it. Label used to dim only after a disabled sibling marked `peer`, or inside a disabled ancestor marked `group`, and no library field is either, so a Label beside a disabled Input, TextArea, DateField, TimeField, Select or Checkbox kept its `txt-black-700` colour. `disabled` sets the rendered element's `data-disabled`, and the disabled styling, `txt-black-disabled` text with a `not-allowed` cursor, follows `data-disabled="true"`, so it doesn't depend on where the field sits: before it, after it or in another wrapper. A `data-disabled` you pass yourself overrides `disabled`. Label disables nothing, so pass `disabled` to the Label and to the field: `<Label htmlFor="name" disabled>` beside `<Input id="name" disabled />`. `disabled` takes `boolean | null`; omitted, `false` or `null`, the Label looks as before. It never reaches the element as a native `disabled`, with or without `asChild`. Label still dims inside a `<fieldset disabled className="group">`. Once the Label takes `disabled`, a `text-txt-black-disabled` class or a `peer` class added as a workaround can go. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- 099bc3a: The focus ring tokens, `fr-primary` and `fr-danger`, are now opaque, so a focus ring contrasts at least 3:1 with the surface around it, as WCAG's SC 1.4.11 (Non-text Contrast) asks of a focus indicator. At 40% alpha they were 1.28:1 to 1.37:1 against the page, so keyboard users with low vision could hardly see where focus was.
+
+  - **`fr-primary`** is `primary-700` (`#1D4ED8`) in light, where it was `primary-300` @ 40%, and `primary-300` (`#96B7FF`) in dark, where it was `primary-700` @ 40%.
+  - **`fr-danger`** is `danger-700` (`#B91C1C`) in light, where it was `danger-300` @ 40%, and `danger-300` (`#FCA5A5`) in dark, where it was `danger-700` @ 40%.
+
+  These are the primitives the `bg-primary-700` and `bg-danger-700` tokens (`bg-bg-primary-700`, `bg-bg-danger-700`) use in each theme. Against the page (`bg-white`), `fr-primary` is now 6.70:1 in light and 8.87:1 in dark, and `fr-danger` 6.47:1 and 9.33:1. Against the other surfaces a ring sits on, such as dialogs, callouts, the calendar's range cells and the Masthead trigger's fill, both stay at 5.10:1 or more.
+
+  Every MYDS focus ring changes colour. Which controls draw it and when they draw it don't change. A filled control also draws its ring outside a band in the new `fr-gap` token; see that entry.
+
+  **Your own `fr-*` utilities change too.** Anything you write with an `fr-*` token takes the new colour with no code change: `ring-fr-primary`, `bg-fr-primary`, `text-fr-danger`, `border-fr-danger`, `outline-fr-primary` and so on. An opacity modifier now takes its share of an opaque colour, not of a 40% one: `ring-fr-primary/50` in light is `primary-700` @ 50%, where it was `primary-300` @ 20%.
+
+  **On a filled control, the opaque ring would sit close to the fill's colour:** a `primary-fill` button's `primary-600` is 1.30:1 against it in light and 2.59:1 in dark. So a filled control draws it outside a 2px `fr-gap` band, which separates it from the fill; see the `fr-gap` entry.
+
+  `full.css` carries the new values.
+
+- f73a96d: SearchBar now has a hover state, as the design guideline asks. Pointing at the bar's input container turns its border from `otl-gray-200` to `otl-gray-300`, in every size and in both themes, so pointer users get feedback before they click. It's a semantic token, so it re-themes in the dark theme. Focus still wins: a bar whose input has focus keeps its `otl-primary-300` border and ring while hovered. Nothing else changes on hover, and SearchBar's props are the same. A `hover:` border class you added to the bar yourself can go. `full.css` in `@amerfathullah/myds-style` carries the new class.
+
+### Patch Changes
+
+- 095eb25: AccordionTrigger's disabled look now follows its own button's `:disabled`. It took `txt-black-disabled` text, a not-allowed cursor, no hover underline and a dimmed chevron only from Radix's `data-disabled`, which only `disabled` on Accordion or AccordionItem sets. So a trigger disabled another way looked enabled, with a pointer and a hover underline, though a click didn't open it and Tab skipped it. It now looks disabled whatever disables it:
+
+  - a `<fieldset disabled>` around the Accordion: plain, `group`, a plain fieldset nested in a disabled one, or one disabled after mount, even with `disabled={false}` on Accordion and AccordionItem. The enabled look comes back when the fieldset is enabled again;
+  - `disabled` on AccordionTrigger alone;
+  - an open trigger, whose text kept `txt-black-900` beside a dimmed chevron, with the props as well. It's now `txt-black-disabled`, as the `accordion-trigger-disabled` token says.
+
+  A trigger that `disabled={false}` or `disabled={undefined}` re-enables under a disabled AccordionItem or Accordion no longer looks disabled. It already opened on click and took a Tab stop; see #432. Neither does one with a hand-passed `data-disabled`. No `group` around the Accordion dims an enabled trigger's chevron any more: it dimmed inside the open item of a disabled outer Accordion, or under any element marked `group` with `data-disabled`. An icon of your own in a trigger keeps its colour, and a `text-*` or `[&>svg]:text-*` class on the trigger still applies while it's enabled and gives way to the dim while it's disabled. Every trigger's `:disabled` state, click, Tab stop and accessible state are unchanged, and no prop type changes. A `disabled` you passed to an Accordion inside a disabled fieldset only for its look can go.
+
+  `full.css` in `@amerfathullah/myds-style` gains `disabled:hover:no-underline`, `disabled:data-[state=open]:text-txt-black-disabled` and `[:disabled>&]:text-txt-black-disabled`, and loses `data-[disabled]:text-txt-black-disabled`, `data-[disabled]:hover:no-underline` and `group-data-[disabled]:text-txt-black-disabled`. `data-[disabled]:cursor-not-allowed` stays, for Dropdown.
+
+- c7723da: The preset now clears Tailwind's `drop-shadow-*` and `text-shadow-*` scales, as it already cleared `shadow-*` and `inset-shadow-*`. Their steps no longer generate any CSS: bare `drop-shadow`, `drop-shadow-xs` … `drop-shadow-2xl` and `text-shadow-2xs` … `text-shadow-lg`. They gave Tailwind's own shadows, which aren't part of MYDS's shadow scale.
+
+  **If you use them in your own markup, that element loses its shadow.** Use `shadow-button`, `shadow-card` or `shadow-context-menu` instead.
+
+  `drop-shadow-none`, `text-shadow-none`, shadow colours such as `drop-shadow-primary-600`, and arbitrary values such as `drop-shadow-[0_1px_2px_black]` still work. No MYDS component used these utilities, so components look the same.
+
+- a350f9b: CookieBanner now sits where the design guideline's "Cookie banner location" puts it: across the bottom of the window below `md:` (768px), and in the bottom-left corner from `md:` up. It used to sit bottom-right, touching the window's edges on a phone. From `md:` up a toast sat over it there, and took the clicks meant for its "Reject all" and "Customise" buttons. Toasts stay bottom-right, so from 908px up the two no longer overlap. From 768 to 907px a toast can still cover the banner's right side.
+
+  - **Below `md:`.** The banner stretches across the window, 18px from its left, right and bottom edges, with 18px padding. Nothing caps its width here: it's the window's width less 36px.
+  - **From `md:` up.** It's 500px wide, border and padding included, 24px from the window's left and bottom edges, with 24px padding. Its padding used to widen at `sm:` (640px); it now widens at `md:`.
+  - **Height cap.** It's never taller than the window less its bottom gap: 18px below `md:` and 24px from `md:` up. Its content scrolls inside it beyond that.
+  - **Page padding.** While it's shown, the inline `scroll-padding-bottom` on `<html>` and `padding-bottom` on `<body>` are its height plus its new bottom gap.
+  - **Unchanged.** The action row still stacks below `sm:`, and `CookieBannerPreferencesTrigger` is still full width below `sm:`. The slide-in, the close cross, the z-index and the focus behaviour are as before. No props, types or exports change.
+
+  **If you upgrade:**
+
+  - From 768px up, the banner now covers the bottom-left corner of the window, so check what you place there, such as chat or feedback widgets and back-to-top buttons.
+  - On a phone it has 18px margins, so it no longer touches the window's edges.
+  - A `className` that sets the banner's position must now also override its `md:` classes, such as `md:right-auto` and `md:ml-6`, which win from `md:` up. Its gaps are margins on a box fixed at `bottom-0`, so an unprefixed `bottom-auto` or `top-*` still moves it at every width.
+
+  `full.css` in `@amerfathullah/myds-style` gains `mx-4.5`, `mb-4.5`, `md:right-auto`, `md:ml-6`, `md:mb-6`, `md:w-[500px]` and `md:p-6`, and loses `max-w-[500px]`, `sm:mr-4` and `sm:mb-4`.
+
+  In `DESIGN.md`, the Page frame and the CookieBanner entry describe where the banner sits, and Known Gaps no longer lists its position as a Divergence. The docs (EN/MS) describe where it sits.
+
+- 9472d1b: CookieBanner is now a named page region instead of a modal dialog, so it no longer blocks the page, and only its own controls close it. As a dialog with no overlay, it hid the rest of the page from screen readers and kept Tab inside itself while open. It also caught the first click outside it, which closed it without reaching its target. Escape closed it too, so a visitor could dismiss it without choosing.
+
+  - **A `<section>` named by its title.** CookieBanner renders a `<section>` that `CookieBannerTitle` names, so always include a title. An `aria-label` or `aria-labelledby` you pass takes precedence. It has no `role="dialog"`, `aria-modal` or `aria-describedby`, and it leaves the rest of the page alone: no `aria-hidden`, no `pointer-events: none`, no scroll lock. Its description is read in reading order.
+  - **Rendered in place.** It renders where you put it, with no portal, and only in the browser, so a `defaultOpen` read from browser storage doesn't cause a hydration mismatch. It's now capped at the window's height less its bottom margin, and its content scrolls inside it beyond that.
+  - **What closes it.** Only a `CookieBannerClose` (Accept, Reject or Save) and the close cross. A press outside it, focus moving outside it and Escape no longer close it. It calls `preventDefault()` on none of them, so a click outside reaches its target. `onOpenChange(false)` is called once per close. Every opening starts in the default view, and nothing resets the Customise view while the banner is open.
+  - **Focus.** Opening it right after a visitor action, such as a click on "Cookie settings", moves focus to the banner. Opening it on page load or from an effect doesn't move focus. Closing it with focus inside moves focus back to what opened it, else to the next focusable element after it (SkipLink in the page frame), else to `<body>`, without scrolling the page. Tab and Shift+Tab move into and out of it in DOM order. Customise moves focus to the first preference, and a trigger that goes back, such as "Back", to Customise.
+  - **Page padding.** While it's shown, it sets an inline `scroll-padding-bottom` on `<html>` and `padding-bottom` on `<body>` to its height plus its bottom offset, and keeps them up to date as it resizes. A control that takes focus then scrolls into view above it (WCAG 2.2 SC 2.4.11). When it closes or unmounts, it puts back the inline values that were there before.
+  - **Handlers.** A `CookieBannerClose` or `CookieBannerPreferencesTrigger` runs your `onClick` first. If your handler calls `preventDefault()`, the banner stays open or the view stays. A trigger's `onClick` used to replace its toggle.
+  - **Props.** CookieBanner takes every `<section>` attribute, such as `id`, `aria-label` and `style`, and forwards its ref to the `<section>`. `open`, `defaultOpen`, `onOpenChange`, `modal` and `closeLabel` never reach the DOM, so React no longer warns about them. `modal` is deprecated and does nothing; it's removed at the next major. `CookieBannerPreferences` is now a `<div>`, so block content inside it no longer nests in a `<p>`.
+
+  **To migrate:**
+
+  - Render CookieBanner first in `<body>`, before SkipLink.
+  - Update tests and CSS that select it by `role="dialog"`. Select its region instead, for example by its title's name.
+  - Drop `modal`, and any `onInteractOutside` or `onEscapeKeyDown` handlers. They're no longer accepted, and the banner already stays open until the visitor chooses.
+
+  `full.css` in `@amerfathullah/myds-style` gains `max-h-[calc(100dvh-1.125rem)]` and `md:max-h-[calc(100dvh-1.5rem)]`, for the banner's height cap.
+
+  The docs (EN/MS) say to render the banner first in `<body>`, describe what closes it, its focus and its page padding, and document its section attributes, its ref and the deprecated `modal`. Their previews render it in place. In Storybook, the CookieBanner story's docs page shows each story in its own frame, so the banner isn't cut off, and the story logs `onOpenChange`.
+
+- 1afbb83: DataTable's radio selection is now one radio group per table, so it's one Tab stop, keeps the arrow keys inside the table and submits its selected row with a form. A new `selection.name` names the form field. Disabled radios now look as the library's Radio does.
+
+  - **One Tab stop per table.** The row radios share one `name`, so Tab stops on the selected row, or on the first row that can be selected while none is selected, instead of on every row. That includes a selected row that has since been made unselectable, in React 18 as well as 19. "Clear selection" stays a Tab stop of its own while a row is selected.
+  - **The arrow keys stay in the table.** They move between the table's selectable rows and select each one, wrapping at the ends. In Chromium, they used to move into, and select a row in, the next radio DataTable or any other unnamed radio on the page. `onSelectionChange` is still called with `[]` on mount, and now once for each actual change, never again with unchanged ids, for example when the selected row is clicked again.
+  - **New `selection.name`.** Inside a `<form>`, the table submits its selected row as `<name>=<row id>`, e.g. `pegawai=b` with `selection={{ id_by: "id", mode: "radio", name: "pegawai" }}`. Without `name`, or with an empty one, each table gets a name of its own from `useId()`. Make it unique within its form. Nothing is submitted while no row is selected, or once the selected row can no longer be selected, because a disabled radio isn't submitted. `checkbox` mode ignores `name`. Before, a radio DataTable submitted nothing.
+  - **"Clear selection" is `type="button"`.** Inside a form, it clears the selection without submitting. Before, it submitted the form, and when it was the form's first submit button, Enter in a text field submitted through it, clearing the selection first.
+  - **Disabled looks match Radio.** A selected row that can no longer be selected keeps `primary-600` at 30%, round, with its dot. Before, it painted almost the page's colour, so you couldn't tell which row was selected. A row that can't be selected is `bg-washed` at full opacity in its `otl-gray-200` border, instead of fading to 30%. An unselected radio no longer draws its dot in the page's colour.
+  - **No warning.** The radios select on their change event, so React no longer logs "You provided a `checked` prop to a form field without an `onChange` handler" for each row, in the browser or on the server.
+  - **No radio `id`.** The row radios no longer render the bare row id as their `id`, which repeated across tables. Their `value` is still the row id.
+
+  `full.css` gains `checked:before:bg-bg-white`, `disabled:not-checked:bg-bg-washed` and `has-[:disabled]:has-[:checked]:opacity-30`, and loses `has-[:disabled]:opacity-30`, which nothing else used. DataTable also drops `has-[:disabled]:has-[:checked]::bg-primary-600` and `before:contents-['']`, which generated no CSS; the pinned columns' edge shadows are unchanged.
+
+  The docs (EN/MS) describe the radio column's single Tab stop and arrow keys, `selection.name` and what a form submits.
+
+- 9cc1a9f: DataTable's sort and widen buttons now always show, so keyboard, screen reader and touch users can sort and widen columns, and they have names. They didn't render below 1024px, and from 1024px up they stayed invisible, and out of the tab order, until the pointer hovered their header or the column was sorted or widened.
+
+  - **Always shown.** In a `sortable` column the sort button shows, and in an `expandable` column the widen button shows. They show at rest, at every screen width, on touch screens too, whether or not the column is sorted or widened. Tab stops on each one, and focus stays on it after every press, including the one that clears a sort or collapses a column. They look as they did when their header was hovered.
+  - **Names.** The sort button is named "Sort by {header}" and the widen button "Widen {header}", where {header} is the text the column's header renders, whether `header` is a string, a function or left out. A header that renders no text gives "Sort column" and "Widen column". The names stay the same whether the column is sorted or widened. The column's new `meta.sortLabel` and `meta.widenLabel` replace the whole name in your site's language, for example `sortLabel: "Isih mengikut Jawatan"` and `widenLabel: "Lebarkan Nama"`. These options never reach the DOM. The icons inside the buttons are hidden from assistive technology.
+  - **State.** The primary sort column's header, the first in the sort, has `aria-sort="ascending"` or `aria-sort="descending"`. The other columns in a Shift+click multi-sort have none. The widen button has `aria-pressed`, `"true"` while its column is widened.
+  - **`type="button"`.** Both buttons are `type="button"`, so a sort or widen press no longer submits a form around the table.
+  - **Column header names.** Each column header is named by its text alone, not by the buttons and tooltip trigger inside it. Screen readers announced a header with a tooltip as "Age Tooltip", and the checkbox selection column's as "Select Select all rows"; they now announce "Age" and "Select". A header that renders no text is no longer named by the buttons inside it. The ids these names use come from `useId`, so they don't repeat across tables.
+  - **No dead sort button.** A `sortable` column without an accessor, which can't sort, no longer renders a sort button that did nothing.
+
+  Sorting itself doesn't change: a text column sorts ascending first and a number column descending first, and a third press clears the sort.
+
+  `full.css` in `@amerfathullah/myds-style` no longer carries the classes that only the hidden buttons used: `lg:block`, `group-hover:visible`, `data-[sorted=true]:visible` and `data-[expanded=true]:visible`.
+
+  The docs (EN/MS) say the buttons always show, give their default names, document `meta.sortLabel` and `meta.widenLabel` with Malay examples, and say a sorted header sets `aria-sort`. The design guideline's Table page says the expand and sort column buttons are always shown.
+
+- 496cf6e: DataTable now truncates exactly its widenable columns, so a column that can't be widened shows all its text, and every widen press on clipped text reveals it (#192). DataTable used to decide once, when it mounted, from the `id` of each top-level entry in `columns`. `meta.expandable`, which adds the widen button, played no part.
+
+  - **Widenable columns.** A column is widenable when it's a leaf column with `meta.expandable: true`, however it's defined: with an `id`, with `accessorKey` alone, inside a grouped header, or added after mount. DataTable works this out on every render. Its header, body and footer cells carry `data-expanded="false"` until the column is widened, and `"true"` once it is.
+  - **Truncation.** A collapsed widenable column truncates its text at every width: one line, with an ellipsis where its content is text. Its cells keep `max-width: 230px`, which caps the text, not the column: the column is at least 230px wide while its text is longer, and takes its share of spare width.
+  - **Wrapping.** Every other column wraps, at every width, `md:` and up included, so its text shows in full and makes its rows taller rather than the table wider. A widened column stays on one line from `md:` up and wraps below `md:`.
+  - **Each widen press shows its result.** A widenable column defined without an `id`, inside a grouped header or added after mount showed all its text at rest, changed nothing on its first widen press and truncated on its second. It now starts truncated, and its first press reveals its text.
+  - **Groups.** Group and placeholder header cells, and their footer cells, never carry `data-expanded`, even where a group shares an id with one of its leaves. A group column isn't widenable, so its `meta.expandable` no longer gives it a widen button.
+  - **Focus rings.** A focused button that starts a cell of a column that can't be widened, such as an Edit button in an Action column, no longer loses the left side of its ring to the cell's `overflow: hidden`.
+
+  Pinned columns' offsets and widths, and the table's width, don't change.
+
+  **If you upgrade:**
+
+  - A column with an `id` and no `meta.expandable` no longer truncates. Set `meta.expandable: true` to keep it truncated, which also gives it a widen button. In a table with pinned columns, give a long column that can't be widened a `size`, or it can be squeezed to its longest word.
+  - Widenable columns defined without an `id`, inside a grouped header or added after mount now start truncated.
+
+  `full.css` in `@amerfathullah/myds-style` drops `md:whitespace-nowrap` and gains `md:data-[expanded=true]:whitespace-nowrap`.
+
+  The docs (EN/MS) rename "Expanding Columns" to "Widening Columns" ("Melebarkan Lajur"), say which columns truncate, how wide a collapsed column is, that other columns wrap and that a widened one wraps below `md:`, and advise giving a long column a `size` in a pinned table. They say "widen" for a column, keeping "expand" for nested rows. Storybook's PinnedColumns story gives its Action columns unique ids, so no React key repeats.
+
+- 02b360f: DateRangePicker's `disabled={true}` now disables the whole picker, as DatePicker's does. It disabled every day in the calendars but left all four triggers enabled, so the From and To triggers looked enabled, took Tab focus, were announced as operable buttons, and each opened a calendar in which nothing could be picked: below `lg:`, a dialog with no close button. Now every trigger the picker renders takes native `disabled` and the `default-outline` Button's disabled look, Tab skips it, and a click, Enter or Space opens nothing. A disabled trigger keeps its text, its accessible name and its description. Its `From:` / `To:` prefix, always `txt-black-500` before, now takes `txt-black-disabled` whenever the trigger it sits in is `:disabled`, so it dims inside a `<fieldset disabled>` as well, where only the date used to dim. An enabled picker in the first `<legend>` of a `<fieldset disabled className="group">` keeps a `txt-black-500` prefix. Any other `disabled`, such as `{ before: date }`, a function or `false`, still leaves the triggers enabled, and the calendars disable the same days as before. So does an array of Matchers, unless it holds `true`: the entry for #231 covers those, which now disable the whole picker on both pickers. A `<fieldset disabled>` you wrapped around a DateRangePicker only to disable its triggers can go. `disabled` keeps its type, `Matcher | Matcher[]`, and its JSDoc on both pickers now says which values disable the whole picker and which only the days they match. `full.css` in `@amerfathullah/myds-style` carries the new class.
+- 7dfcd6d: DateField and TimeField now look disabled whenever their `<input>` is, including inside a `<fieldset disabled>`. Their frame and their calendar or clock icon took the disabled look only from the `disabled` prop, so in a disabled fieldset, which disables the input without the prop, the field showed a washed patch behind its value inside a white frame, beside an icon in its enabled colour. The frame and the icon now follow the input's `:disabled`, as the error styling follows its `aria-invalid`: a disabled field has a `bg-washed` frame with a `not-allowed` cursor and a `txt-black-500` icon, whether the prop or a disabled fieldset, with or without `className="group"`, disables it. A `disabled={false}` field inside a disabled fieldset, which the browser disables anyway, now looks disabled too. An enabled field looks as before, also inside an element you mark `group` or `group/field` that holds other disabled inputs. On a disabled field, a background you pass in `className` now gives way to the washed background, as on Input; before, some, such as `bg-transparent`, won. A `disabled` you added to each field in a disabled fieldset only for its look can go. `disabled` keeps its type, `boolean | undefined`. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- 75f291e: In Chromium, DateField and TimeField now fill the focused segment of their native input (day, month or year; hour, minute, second or AM/PM) with primitive `primary-600` and `white` text, the same in both themes. Their classes matched the segment with `:focus`, which Chromium never matches on a `::-webkit-datetime-edit-*-field` pseudo-element, so the browser's own highlight showed instead; they now match it with `:focus-within`. The fill they asked for, `primary-500` with `txt-white`, is replaced: it fell short of the 4.5:1 contrast WCAG AA asks of text, and `txt-white` turns dark in the dark theme. Firefox still shows its own highlight, because it gives page CSS no way to style a segment. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- 2e872fb: The controls below now show MYDS's focus ring on keyboard focus: a 3px `fr-primary` ring, or `fr-danger` on an invalid Input OTP. They show it only on keyboard focus, so a mouse click shows none, except on SearchBar and Input OTP, which ring while their input has focus.
+
+  - **Links.** Link, and SiteLink, NavbarMenuItem and NavbarLogo, which render it, showed only the browser's outline. They now show the ring, with or without `asChild`, and a link that wraps onto two lines has a closed ring on each line. A NavbarMenuItem's link now fills its item, so the ring outlines the rounded area its hover background fills. NavbarLogo's link no longer fills the header's height, so its ring isn't cut off at the top of the window; you click its image and name. The NavbarMenuDropdown trigger shows the ring too.
+  - **BreadcrumbLink** shows the ring. The one-line truncation moved from BreadcrumbItem onto the link, so the item no longer clips the ring. A long link still truncates to one line within the item's 200px.
+  - **Accordion.** Its trigger showed only an underline, which hover shows too. Now its item shows the ring while the trigger has keyboard focus, and the underline stays. A focused link inside the content doesn't ring the item.
+  - **Toast.** The close button and the toast card, which Tab reaches, showed no focus indicator at all. Both now show the ring. The viewport, which F8 focuses, shows it inset.
+  - **TooltipTrigger**, the table's tooltip trigger included, and the **Tabs** panel show the ring. With `asChild`, TooltipTrigger adds no classes, so its child keeps its own ring.
+  - **Rings in other colours.** TableCell's 3px outline in primitive `primary-600` @ 20%, which didn't re-theme, is now an inset `fr-primary` ring. SearchBar's and the active Input OTP slot's opaque `otl-primary-200` ring is now `fr-primary`, and an invalid slot's `otl-danger-200` ring is `fr-danger`, as on Input.
+  - **Radio** showed an opaque 4px ring in its text colour, black or white: `clx` read its `ring-opacity-40`, a Tailwind 3 utility that Tailwind 4 doesn't generate, as a ring colour and dropped `ring-fr-primary`. It now shows the 3px `fr-primary` ring. So does DataTable's radio-selection column, which no longer rings after a click. That column's cells are now 32px wide with 4px before the radio, as the checkbox column's are.
+  - **Forced colours.** Where rings don't render, as in Windows High Contrast, these controls show an outline on keyboard focus instead.
+
+  **If you set focus styles on these yourself:** a ring class you pass to Link or SiteLink can't reliably replace the 3px ring. Link doesn't merge `className` with its own classes, so the stylesheet's order decides which ring shows. A padding class you pass to NavbarMenuItem still lands on the item, so it now adds to its link's padding.
+
+  `full.css` in `@amerfathullah/myds-style` carries the new classes.
+
+- a0d594f: Under forced colours, as in Windows High Contrast, Button and the other controls below now show when they have focus. Forced colours drop box-shadows, which draw every MYDS focus ring, so a focused control shows a 2px outline instead. These controls drew that outline all the time, at rest too, so keyboard focus changed nothing a user could see, which fails WCAG's SC 2.4.7 (Focus Visible). Now they draw it only while they have focus, from the keyboard or the mouse.
+
+  - **Controls.** Button, and everything that renders it or reuses its classes, such as Pagination, the calendar's buttons and the DatePicker and DateRangePicker triggers; Input; Checkbox; SelectTrigger; TabsTrigger; and the CookieBanner's close cross. A disabled Button drew the outline too, and now draws none.
+  - **Items in an open list.** Every SelectItem and DropdownItem in an open list drew an outline, disabled ones included. Now only the focused item does. Forced colours remove its highlight fill, so the outline is what shows which item has focus.
+  - **Panels.** PopoverContent, such as the DatePicker's panel, and the CookieBanner draw the outline only while they hold focus themselves. The DatePicker's panel no longer shows a double border while a control inside it has focus, and the CookieBanner no longer has a box around it whenever it shows.
+  - **Stray boxes.** These never take focus but drew an outline all the time, and now draw none: Input's bordered wrapper and InputAddon's default `<div>`, the Masthead's inner grid and MastheadHeader, the Navbar's mobile menu, and DataTable's pinned-column edge, which drew two bars down every row, over the next column's first letter.
+
+  Nothing changes in normal colours: no element gains or loses an outline or a ring. The one exception is a focusable element you render through `InputAddon asChild`, such as a `<button>`, which now shows the browser's outline on keyboard focus, where it showed none.
+
+  `full.css` in `@amerfathullah/myds-style` no longer carries `before:outline-hidden`, which only DataTable's pinned-column edge used.
+
+  **If you set focus styles yourself:**
+
+  - An outline-width class you pass to these components, such as `outline-2`, is no longer hidden at rest, so it now draws an outline at rest. Put it behind the Tailwind focus variant you want, such as `focus-visible:outline-2`.
+  - Your own bare `outline-hidden` brings the permanent outline back under forced colours. Put it behind the Tailwind variant your ring is on: `focus-visible:outline-hidden`, or `focus:outline-hidden`.
+
+- 3d924cc: An InputIcon inside a Fragment, including one in an array, or inside your own component now gets room on the side it draws on. Input pads the field 40px on that side, as it does for an InputIcon passed directly, so the placeholder and typed text no longer run under the icon. The room is already there in server-rendered HTML, before the page hydrates. InputIcon's rendered element now carries the side it draws on in a new `data-input-icon` attribute, `"left"` or `"right"`, and Input pads the field from that attribute on a later sibling of its `<input>`. `data-has-left-icon` and `data-has-right-icon` are unchanged: they still describe Input's direct children only. Input's and InputIcon's props are the same. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- a4c05a6: InputOTP's slots now take their invalid and disabled looks only from InputOTP's own `<input>`. Inside an element marked `group`, such as a `<div className="group">` or a `<fieldset className="group">`, and inside the library's `AccordionItem` and `Toast`, which are marked `group`, the slots took the look of any other control there. An invalid Input, DateField, TimeField or another InputOTP gave them the `otl-danger-300` border, and the active slot the `fr-danger` ring. A disabled Button, Checkbox or Input, or a `<select>` with a disabled placeholder `<option>`, gave them the `bg-washed` fill and `txt-black-500` text. A control among InputOTP's children, such as a disabled Resend button, did the same. All the while InputOTP's own input stayed valid and enabled, and assistive technology announced it so. Now the slots have the `otl-danger-300` border exactly when the input has `aria-invalid="true"`, from `invalid` or an `aria-invalid` you pass, and the disabled look exactly when the input is `:disabled`, from `disabled` or a `<fieldset disabled>`. The one exception is an InputOTP you place among another InputOTP's children, which still takes the outer one's look. InputOTP's own looks don't change. Its container's class is now `group/input-otp` instead of `group`, so a bare `group-*` class you put on InputOTP's children or on `InputOTPSlot` no longer keys off the container: pass `containerClassName="group"`, or use the `/input-otp` form, such as `group-hover/input-otp:`. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- 6d0d3b0: DateField and TimeField now have an `otl-gray-200` border whether `invalid` is omitted, `null` or `false`. With `invalid` omitted, the border fell back to the preset's primitive `gray-200`, which doesn't re-theme, so in the dark theme the field had a light edge. An invalid field now keeps its `otl-danger-300` border while focused and shows its 3px `fr-danger` ring only then, as the design guideline asks; focus used to replace both with the `otl-primary-300` border and `fr-primary` ring. At rest it shows no ring. The error styling now follows the input's `aria-invalid="true"`, which `invalid` sets, so an `aria-invalid` you pass yourself, as form libraries do, overrides `invalid`: `<DateField aria-invalid />` looks invalid, and `<DateField invalid aria-invalid={false} />` looks valid. `invalid` keeps its type, `boolean | null`. An `invalid={false}` added as a workaround is no longer needed. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- 4d9f843: MastheadTrigger is now named by the text it shows, such as "Kenal pasti begini". Before, screen readers announced every trigger as "Toggle masthead", in English, whatever it showed, and speech-input users couldn't activate it by saying its text (WCAG 2.5.3, Label in Name).
+
+  - **Children name the trigger, at every width.** Below `sm:` the trigger still shows only its chevron. Its text is now visually hidden there (`max-sm:sr-only`) instead of `display: none`, so it names the trigger below `sm:` too.
+  - **"Toggle masthead" is the default only with no children.** A trigger with no children, or with `null`, `false` or `""`, is still named "Toggle masthead". An `aria-label` still replaces the name, with or without children, for example `<MastheadTrigger aria-label="Kenal pasti begini" />`.
+  - **Nothing else changes.** Opening the masthead still sets `aria-expanded`, and the name stays the same. Nothing changes visually: the trigger keeps its size at every width, and its text stays on one line beside a long title.
+
+  **If you upgrade:**
+
+  - **Tests that find the trigger by "Toggle masthead"** must find it by its text, for example `getByRole("button", { name: "Kenal pasti begini" })`.
+  - **An `aria-label` that only repeats the trigger's text** can be removed.
+  - **Children with no text,** such as an icon alone, need an `aria-label`.
+
+  `full.css` in `@amerfathullah/myds-style` gains `max-sm:sr-only` and no longer carries `sm:block`, which nothing else in the library used.
+
+  The docs (EN/MS) no longer pass an `aria-label` that repeats the trigger's text. They say the trigger's text names it below `sm:` too, that "Toggle masthead" applies only with no children, and how to rename it, with a Malay example.
+
+- 5b65fd4: A Radio option's RadioLabel and RadioHintText now dim exactly when the option's own radio button is disabled. They took `txt-black-disabled` and `otl-gray-300` only from the `disabled` of Radio or RadioItem, so a radio disabled another way looked disabled beside text in its enabled colours: inside a `<fieldset disabled>` (plain, `group`, nested or disabled after mount), with `disabled` on the RadioButton alone, or under `<Radio disabled>` with `<RadioItem disabled={false}>`, where Radix disables the radio anyway (#357). RadioItem now dims its label and hint from its radio's `:disabled`, whatever disabled it, when they sit directly in RadioItem or inside one wrapper there, and they come back when the fieldset is enabled again. RadioLabel and RadioHintText render `data-radio-label` and `data-radio-hint` for that. With RadioButton's `disabled` and in #357's case, the hint is now also marked `aria-disabled`, so contrast checkers exempt its dimmed colour, as they do the label's; RadioButton reports its disabled state to its RadioItem for that. In a disabled fieldset the hint isn't marked, because checkers exempt everything inside one. With `<RadioItem disabled>` and `<RadioButton disabled={false}>` or `disabled={undefined}`, which leave the radio enabled, the label and hint no longer dim and the hint is no longer marked `aria-disabled`, though server-rendered HTML still shows them dimmed and marked until it hydrates. A colour class on a RadioLabel or RadioHintText no longer keeps it from dimming on a disabled option; on an enabled one it still applies. An `aria-disabled` you pass to RadioHintText still wins, but `aria-disabled={undefined}`, as a wrapper that forwards it passes, no longer removes the computed value. A RadioButton in a Radio nested inside an option doesn't change that option's look. No part's prop types change, and a RadioLabel or RadioHintText of this version still works under an older copy's RadioItem. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- 7baa1a2: The README's hero image now loads from this repository's default branch, not from upstream's CloudFront bucket (ADR-0006), so it keeps showing on GitHub and npm if the bucket goes.
+- ee9b229: The unexported Sheet component is removed from `@amerfathullah/myds-react`. Its compiled files shipped in the package, but its `exports` map never had a `./sheet` entry, so `@amerfathullah/myds-react/sheet` could never be imported and no component used it. Nothing public changes: every subpath the package exports resolves as before, and its dependencies are the same. `full.css` in `@amerfathullah/myds-style` no longer carries the classes that only Sheet used.
+- 75be647: In Chromium, a DateField or TimeField whose input is narrower than its text (a fixed `width`, or a `min-width` inside a narrow parent) now scrolls the focused segment fully into view, fill included, whenever keyboard focus moves to it. Chromium's focus scroll used to bring a segment into view only when it was entirely hidden, so a partly hidden one stayed cut off. The fields wrapper inside the edit area now has scroll padding of half its width on each side, which leaves only its centre line, and Chromium centres any focused segment that doesn't cross it. Typing that widens the focused segment, as when an empty AM/PM becomes PM, doesn't scroll it, and neither does a click. A segment wider than half the field, such as milliseconds when `step` is under 1, can stay partly cut. A field at its natural width keeps its layout and never scrolls, in left-to-right and right-to-left locales. `full.css` in `@amerfathullah/myds-style` carries the new classes.
+- ba4baf7: A Select's highlighted option, the one the arrow keys move to and Enter picks, can now be seen in the dark theme. It had only a `bg-washed` fill, which in dark is `gray-850`, the same colour as the list's `bg-dialog` panel, and its text didn't change. So a keyboard user couldn't see which option had focus. Now they can, as WCAG's SC 2.4.7 (Focus Visible) asks.
+
+  - **It now looks like a highlighted Dropdown item.** The option takes a `bg-washed-active` fill with `txt-black-900` text, as a focused default `DropdownItem` does and as the design guideline's Menu list state draws it. In dark that's a `gray-800` fill with white text.
+  - **In light, only the text darkens,** from `txt-black-700` to `txt-black-900`, because `bg-washed-active` equals `bg-washed` there.
+  - **Every highlighted option gets it:** one a mouse pointer moves onto, a selected one, which still shows its check, and the options of a `multiple` select. Resting and disabled options don't change.
+  - **ThemeSwitch's select mode is fixed too,** as its options are SelectItems.
+
+  **A text colour you pass in `className` gives way while the option is highlighted.** A plain class such as `text-txt-primary` on `SelectItem` now yields to `txt-black-900` on the highlighted option, as it does on `DropdownItem`. A `data-[highlighted]:` class you pass still wins.
+
+  `full.css` in `@amerfathullah/myds-style` carries the new classes.
+
+- cda3853: `SummaryListTerm` and `SummaryListAction` now lay out as table cells, so `colSpan` and `rowSpan` work on them, and a row without a detail lays out as a table. Both were `display: flex`, so the browser wrapped each in an anonymous cell that ignored their spans:
+
+  - **An action with `colSpan={2}`** filled only its own column, and left the next one empty. It now spans both.
+  - **A term with `rowSpan={2}`** spanned one row. The next row's detail moved into the term column, which grew to most of the list's width. The term now spans both rows, and the detail stays in its column.
+  - **A term with `colSpan={2}`** spanned one column, and its row's action rendered under it. The term now spans both columns, with the action beside it.
+  - **A row with a term and an action but no detail** rendered the action under the term. The action now takes the next column, beside the term. That's the detail's column, so give the action `colSpan={2}` to line its buttons up with other rows' actions.
+  - **A row with two actions, or two terms,** stacked them in one column. Each now takes a column of its own. To stack buttons as before, put them in one action, in your own `<div className="flex flex-col items-end gap-3">`. To stack terms, put them in one term, in your own `<div className="flex flex-col items-start gap-6">`.
+
+  Each part now lays its children out in a flex row inside its cell, as the cell itself used to, so lists look as before, in both themes and in right-to-left pages. That includes terms holding icons or several elements, and terms that wrap. The term is still a `<th scope="row">`, and the accessibility tree doesn't change, except where an `empty:hidden` class no longer hides a term or an action, as below. No props or types change.
+
+  **If you style the children through `SummaryListTerm` or `SummaryListAction`:** `className` and the other props still go on the `<th>` or `<td>`, but the children now sit in a `<div>` inside it. So these no longer reach them:
+
+  - flex classes such as `gap-2`, `items-center` or `justify-start`;
+  - classes and page styles that select the cell's direct children, such as `space-x-2`, `*:mr-2`, `[&>svg]:size-5` or `td > button`.
+
+  Put them on your own wrapper, e.g. `<SummaryListAction><div className="flex gap-2">…</div></SummaryListAction>`. To move an action's buttons off the right edge, give your wrapper `flex-1` too, e.g. `<div className="flex flex-1 justify-start">`.
+
+  The `<div>` changes a few other things:
+
+  - Content you add with `before:` or `after:`, such as a required field's `after:content-['*']`, now sits outside the `<div>`, on a line of its own. Put it on your own element inside, e.g. `<SummaryListTerm><span className="flex after:content-['*']">Full name</span></SummaryListTerm>`.
+  - A term always holds the `<div>`, so `:empty` and `empty:` classes no longer match an empty term. An action with no children, or only `null`, `undefined`, booleans or `""`, as in `{canEdit && <EditButton />}`, is still an empty cell. But an action whose children render nothing, such as an empty fragment or a component that returns `null`, now holds the `<div>`, so `:empty` and `empty:` no longer match it either: put the condition in the action, as above.
+  - A class or page style that selects the `div`s in a list, such as `[&_div]:py-0.5` on `SummaryListBody`, now selects these too. Select your own elements by class instead.
+
+  **Don't change the term's or the action's own `display`**, e.g. with `flex`, `block` or `line-clamp-2`. A cell that isn't `table-cell` loses its spans again, and the class lays out the cell around the `<div>`, not the children, so `line-clamp-2` no longer clamps a term. Put such classes on your own element inside. To hide an action on small screens, use `hidden sm:table-cell`. `hidden sm:flex` still looks as it did, but costs the action its spans. An action you already made a table cell, with `table-cell` or `hidden sm:table-cell`, now lays its buttons out like any other action: in a row, against its end edge, on the row's first line. Before, each button sat on a line of its own, against the start edge, in the row's middle.
+
+  **If you set a width or a height on `SummaryListTerm` or `SummaryListAction`:** it now sizes a table cell, not a box inside one. The detail takes all the width the other columns' minimums leave, so a fixed width such as `w-64` or `style={{ width: 250 }}` no longer widens a column, and `w-0` no longer squeezes an action's buttons. Use a minimum width instead, e.g. `min-w-[250px]`, which works before and after this change. A percentage width such as `w-1/3`, which did nothing before, now sizes the term's column. A height such as `h-12` now sets its row's minimum height, and `min-h-*` and `max-h-*` do nothing: to size a box, put the height on your own element inside, less the cell's padding, e.g. `h-6` in a term or `<div className="flex h-9">` around an action's buttons for the old `h-12`. An empty term or action with `h-12` or `min-h-12` no longer pushes the rest of its row down.
+
+  **Classes and page styles that act on a table cell now act on the term and the action as cells**, as they already did on the detail:
+
+  - A background, a border or a click handler covers the cell's full height, and borders join the table's. They used to cover only a box the height of the content.
+  - `align-top` and `align-middle` now place the cell's content in its row.
+  - A rule such as `td { vertical-align: middle }` now reaches the action, and `th { vertical-align: middle }` the term, whenever it beats their own `align-baseline` class: with `!important`, outside a cascade layer, in a layer declared after Tailwind's, or in Tailwind's utilities layer with a stronger selector, as `[&_td]:align-middle` on `SummaryListBody` has, or with an equal one that Tailwind puts later, as `*:align-middle` on a row has. It moves the action's buttons, or the term's text, from the row's first line to its middle: leave them out of it, e.g. `:is(th, td):not(.align-baseline)`.
+  - An empty term or action with tall vertical padding, e.g. `py-4` or a page rule `td { padding: 16px }`, no longer pushes its row's text down as far. An empty action, like any empty table cell, takes no part in its row's baseline, so its padding can only make the row taller. An empty term holds the `<div>`, so its top padding still counts toward the row's baseline, but its bottom padding no longer does.
+
+  Text read with `innerText`, or copied from a selection of the list, changes in its whitespace only. It gains tabs between some cells, but a line break still separates the term, the detail and an action with children, so unlike a plain table's, a row doesn't read or copy as one tab-separated line. An empty action, like any empty cell, adds no line break of its own, so a `SummaryListAddition` after one can join the line before it. Each cell's own text doesn't change.
+
+  On the docs site, the rule that centres table cells now leaves out cells with `align-baseline`, so the actions in its summary list examples stay on their row's first line, as before.
+
+  `full.css` in `@amerfathullah/myds-style` gains `align-baseline`.
+
+- 6e2ff6c: Switch (`Toggle` + `ToggleThumb`) can now be named in your site's language, keyboard users meet it once, and a disabled fieldset disables it.
+
+  - **The checkbox is the switch.** ToggleThumb's visually hidden `<input type="checkbox">` now has `role="switch"` and is the switch's one tab stop. The track beside it is hidden from assistive technology (`aria-hidden="true"`) and no longer takes focus or keys. Keyboard users met two tab stops per switch, and the first showed no focus indicator.
+  - **No more "Toggle".** Every switch was announced as "Toggle", whatever it controlled. It now has no default name, so name each one:
+    - a `<Label htmlFor>` with Toggle's `id` now names the switch itself;
+    - or pass the new `aria-label` or `aria-labelledby` prop to ToggleThumb, for example `<ToggleThumb aria-label="Pemberitahuan e-mel" />`. ToggleThumb also takes `aria-describedby`. These go to the checkbox.
+    - The `ToggleThumbProps` type is exported.
+  - **Keys.** Space toggles the switch, as on any checkbox, and Enter still toggles it. Each calls `onCheckedChange` once. Enter now clicks the checkbox, so it fires the same native `change` event as Space, and it no longer submits a form around the switch.
+  - **Disabled fieldsets.** Inside a `<fieldset disabled>`, a switch without its own `disabled` looked disabled but still toggled with Space and Enter. Now it is disabled: Tab skips it, and no key or click changes it.
+  - **Focus ring.** The track shows the 3px `fr-primary` ring while the switch has focus, after a click on it too. Under forced colours it shows an outline only while the switch has focus; before, the outline showed at rest too.
+  - **Hooks.** Toggle now calls `useId()` on every render, so adding or removing `id` no longer breaks React's order of hooks.
+
+  Apart from focus, nothing changes visually: the track has the same sizes, colours, thumb and cursor.
+
+  **If you upgrade:**
+
+  - **A switch without a label** is now announced with no name, and accessibility checkers such as axe flag it. Give it a `<Label htmlFor>` or an `aria-label`.
+  - **Don't wrap a Toggle in a Label.** That nests ToggleThumb's own `<label>` inside the Label's, which HTML doesn't allow, and axe's `label` rule now flags it. Use `htmlFor` with Toggle's `id`.
+  - **`className` on ToggleThumb** still styles the track. The track never takes focus itself, so style its focus with `peer-focus:`, not `focus:`.
+  - **Tests that found the switch by `role="switch"`** now find the `<input type="checkbox">`, which has no `aria-checked`; read its `checked` instead.
+
+  `full.css` in `@amerfathullah/myds-style` carries the new classes.
+
+  The docs (EN/MS) name every switch with a Label, document `id` and ToggleThumb's props, and say how to name a switch, which keys toggle it and that a disabled fieldset disables it. Every Toggle story in Storybook names its switch, and new stories show an `aria-label` and a disabled fieldset.
+
+- 5057e46: The theme files now set the browser's `color-scheme`, `light` on `:root` and `dark` on `.dark`, so the browser draws its own parts to match the theme. Nothing set it before, so in the dark theme the browser drew them as it does for a light page. Both entries carry the change, the Tailwind import and `full.css`, and so do the standalone `light.css` and `dark.css`.
+
+  - **Inside `.dark`, on `<html>` or on a subtree, the browser draws its own parts dark:** scrollbars, number spinners, the pickers of native date and time inputs, and native form controls in your own markup, such as checkboxes and range sliders. MYDS's Checkbox, Radio and Select draw no native control, so they look the same.
+  - **The browser's focus ring is drawn for a dark page** on your own links and buttons that have no focus style of their own. It was drawn for a light page, so its dark inner line almost vanished in the dark theme.
+  - **On a dark root,** with `.dark` on `<html>`, three things change. `bg-bg-white text-txt-black-900` on `<body>` avoids the first two:
+    - Where nothing colours `<html>` or `<body>`, the page shows the browser's dark canvas, which isn't MYDS's dark background.
+    - Text with no colour of its own turns white instead of black.
+    - An iframe whose document doesn't declare dark shows an opaque light canvas instead of a transparent one.
+  - **In the light theme, an app's `<meta name="color-scheme">` no longer decides the scheme:** the root computes `light`. With `<meta name="color-scheme" content="light dark">` on a dark OS, scrollbars and form controls were dark and default text was white. They're now light, and default text is black.
+  - **To override it,** put a Tailwind `scheme-*` utility, such as `scheme-light`, on `<html>` or on a `.dark` element, or set `color-scheme` in an inline style or in a rule of your own outside any layer. MYDS sets it in `@layer base`, so each of these wins.
+
+  Only `.dark` sets `dark`. Under a custom theme class, such as `system`, the root keeps `light` unless you set `color-scheme` for that class. `.dark` wins on `<html>` only because `dark.css` comes after `light.css`, as both entries already import them, so keep that order if you import the standalone files. ThemeProvider and `getThemeScript` don't change.
+
+  The docs (EN/MS) say, in Style Configuration's Theme section, that the theme files set `color-scheme`, that `light.css` comes before `dark.css`, and to put `.dark` on `<html>` and colour `<body>` with the theme's tokens. In ThemeSwitch's Custom Themes, they say that a custom theme class keeps `light`.
+
+- 0868970: In Chromium, TimeField no longer cuts off the end of its last segment ("09:30 AM" read "09:30 AN"). Chromium overrides the width of a date or time input's edit area with an estimate built from its segments' text, which leaves out the 2px margins the components put around each separator, and cuts off whatever doesn't fit. It cut TimeField at every size and `step`, and at every pixel density and zoom level tested. DateField and TimeField now give the edit area no box (`display: contents` on `::-webkit-datetime-edit`), so the fields wrapper inside it sizes to the segments, and a field widens only by what its segments need, if anything. DateField, which wasn't cut, keeps its width. Remove any `style={{ minWidth: "5.5rem" }}` workaround: it is no longer needed. `full.css` in `@amerfathullah/myds-style` carries the new class.
+
 ## 2.0.1
 
 ### Patch Changes

@@ -19,7 +19,7 @@ Part 1 : Layout Prep
     [fe-template-b/src/components/layout/FooterMyds.tsx](fe-template-b/src/components/layout/FooterMyds.tsx)
 
     These files hold this repo's docs examples of the page-level components Masthead, Navbar and Footer, importing `@amerfathullah/myds-react`. Upstream's docs at https://myds.vercel.app are for MYDS 1.x and import the old package name, so don't copy from there.
-11. Paste this into LayoutMain.tsx. It imports MastheadMyds.tsx, NavbarMyds.tsx, FooterMyds.tsx, and `Skiplink` from `@amerfathullah/myds-react/skiplink`
+11. Paste this into LayoutMain.tsx. It imports MastheadMyds, NavbarMyds and FooterMyds from the layout folder, and `Skiplink` from `@amerfathullah/myds-react/skiplink`.
 
     The skip link comes first, before the Masthead, and points at the `<main id="main-content">` that holds the page's content. Its `tabIndex={-1}` makes following the link move focus to the content.
 
@@ -118,7 +118,7 @@ i18n.use(initReactI18next).init({
 export default i18n;
 ```
 
-4. Edit App.tsx, keeping `LayoutMain` around the content
+4. Replace the code in App.tsx with this, which keeps `LayoutMain` around the content
 
 ```
 import { Button } from "@amerfathullah/myds-react/button";
@@ -177,7 +177,7 @@ b) The button function
 
 c) use the translation using {t("welcome")} where welcome is written in i18n.ts
 
-d) `LayoutMain` stays around the content, so the page keeps the Masthead, Navbar and Footer from Part 1
+d) `LayoutMain` stays around the content, so the page keeps the skip link, Masthead, Navbar and Footer from Part 1
 
 5. Refactor out the translation where welcome is written in i18n.ts, into its own file.
    a) inside the src folder, create a locales folder.

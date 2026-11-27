@@ -4,8 +4,8 @@ Documentation for For FE Templates C ( React + Vite + MYDS + Layout + i18n + rou
 
 Follow [fe-template-b.md](fe-template-b.md), both parts, first. This walkthrough builds on what it adds:
 
-- `LayoutMain.tsx` and the MastheadMyds.tsx, NavbarMyds.tsx and FooterMyds.tsx files in `src/components/layout`
-- `i18n.ts` and the locale files in `src/locales`
+- `LayoutMain.tsx`, `MastheadMyds.tsx`, `NavbarMyds.tsx` and `FooterMyds.tsx` in `src/components/layout`
+- `src/i18n.ts`, and the locale files in `src/locales`
 - the logo in `public`
 - the `i18next` and `react-i18next` packages
 
@@ -33,11 +33,11 @@ export default function ErrorPage() {
 }
 ```
 
-7. Refactor `src/components/layout/LayoutMain.tsx` to clear up App.tsx and improve the layout
+7. Refactor `src/components/layout/LayoutMain.tsx`, so the language buttons move out of App.tsx and into LayoutMain
 a) Toggle Language now 
 	-- check the path and replaces the lang on path
 	-- navigate to new path and re-render using react-router
-b) Since using React Router, change children to <Outlet>
+b) Since using React Router, change children to `<Outlet>`
 c) Render `Skiplink` first, before the Masthead, and wrap the demo block and the `<Outlet>` in `<main id="main-content" tabIndex={-1}>`, which the skip link points at. Its `tabIndex={-1}` makes following the link move focus to the content.
 
 ```
@@ -110,6 +110,7 @@ export default App;
 ```
 9. Edit main.tsx so the whole app sits inside one `ThemeProvider` from `@amerfathullah/myds-react/hooks`, around the `Suspense`
 -- NavbarMyds's `ThemeSwitch` changes the theme only under a `ThemeProvider`, and one provider at the root of the app serves every switch.
+-- If you followed B, main.tsx already matches this.
 ```
 import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
@@ -128,12 +129,12 @@ createRoot(document.getElementById("root")!).render(
 );
 ```
 10. Create router.tsx inside src
-a) The router sends `/` to the language stored in local storage. LangWrapper (step 11) sends a language other than `en` or `ms` to the stored language, or to `/en` when none is stored, as with `/null` on a first visit.
+a) The router sends `/` to the language stored in local storage. When the path's language isn't `en` or `ms`, LangWrapper (step 11) redirects to the stored language, or to `/en` when the stored one isn't `en` or `ms` either. That's what happens to `/null` on a first visit, when nothing is stored yet.
 b) Routes from `/` to `/lang` --> making sure if someone goes to `/`, it goes to `lang`
 c) The path of `:lang` which is the dynamic route, contain an element `LangWrapper` where is set to get the language and share it with the pages and also handle error page `/*`
 --You can remove it IF you plan to go with fetch language on every page, but you need to write back error handling for `/*` route.
 d) Added LayoutMain to cover all the pages.
--- IF there is another pages that did not follow the general layout, take it out from `<Route element={<LayoutMain />}>` and create  a new wrapper Route `<Route element={<NewLayout />}>` and wrap he pages inside.
+-- IF there are other pages that don't use LayoutMain, take them out from `<Route element={<LayoutMain />}>` and create  a new wrapper Route `<Route element={<NewLayout />}>` and wrap the pages inside.
 e) Main page is `<Route index element={<HomePage />} />`, feel free to edit `HomePage`
 f)  To add pages, add new route and new path `<Route path="newpage" element={<NewPage />} />`
 g) Error page handling on path `/lang/*` is handled by `Redirect404Page()`
@@ -179,7 +180,7 @@ function Redirect404Page() {
 }
 ```
 
-11. Create the LangWrapper inside src
+11. Create LangWrapper.tsx inside src
 a) A React Router wrapper component that handles language-based routing and i18n initialization.
 b) Functions 
 --  Reads the `lang` URL parameter (`en` or `ms`).
@@ -222,6 +223,6 @@ export default function LangWrapper() {
 }
 ```
 12. Update NavbarMyds to update the dropdown language from the path. Replace its code with the code from
-[fe-template-c/src/components/layout/NavbarMyds.tsx](fe-template-c/src/components/layout/NavbarMyds.tsx)
+    [fe-template-c/src/components/layout/NavbarMyds.tsx](fe-template-c/src/components/layout/NavbarMyds.tsx)
 a) The URL decides the language: the language select shows the `lang` URL parameter, and LangWrapper syncs it to local storage and i18n.
 b) Choosing a language in the select replaces the `en` or `ms` at the start of the path and navigates to the new path.

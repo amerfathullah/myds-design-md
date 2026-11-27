@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
 import { SearchIcon, GlobeIcon } from "@amerfathullah/myds-react/icon";
@@ -29,7 +28,6 @@ export default function NavbarMyds() {
     lang === "en" || lang === "ms"
       ? lang
       : localStorage.getItem("lang") || "en";
-  const [isHidden, setIsHidden] = useState(false);
 
   const updateLanguage = (newLang: string) => {
     localStorage.setItem("lang", newLang);
@@ -45,10 +43,7 @@ export default function NavbarMyds() {
         MYDS
       </NavbarLogo>
 
-      <NavbarMenu
-        classNameNavDesktop=""
-        classNameNavMobile={`top-[-4vh] ${isHidden ? "block" : "hidden"}`}
-      >
+      <NavbarMenu>
         <NavbarMenuItem href="/menu1">Menu 1</NavbarMenuItem>
         <NavbarMenuItem href="/menu2">Menu 2</NavbarMenuItem>
         <NavbarMenuDropdown title="Menu Dropdown">
@@ -60,7 +55,7 @@ export default function NavbarMyds() {
         <NavbarMenuItem href="/menu3">Menu 3</NavbarMenuItem>
       </NavbarMenu>
 
-      <NavbarAction onClick={() => setIsHidden((prev) => !prev)}>
+      <NavbarAction>
         {/* Search Button */}
         <Button
           variant="default-ghost"

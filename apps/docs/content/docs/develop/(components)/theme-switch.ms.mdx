@@ -93,7 +93,9 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
   (atau Fumadocs), sebaliknya bekalkan `ThemeContext` dengan tema daripada
   next-themes, seperti yang dilakukan oleh
   [`ThemeBridge`](https://github.com/amerfathullah/myds-design-md/blob/main/apps/docs/components/theme-bridge.tsx)
-  laman ini.
+  laman ini. Di luar penyedia, ThemeSwitch dan `useTheme().setTheme` tidak
+  mengubah apa-apa, dan klik atau panggilan `setTheme` yang pertama pada
+  sesuatu halaman mencatatkan amaran dalam konsol.
 </Callout>
 
 Jambatan ini memerlukan next-themes untuk menyimpan tema sebagai kelas pada `<html>` (`attribute="class"`), seperti yang dilakukan oleh Fumadocs. Berikut ialah versi ringkasnya. Paparkan ia di bawah penyedia next-themes:

@@ -92,7 +92,9 @@ import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
   `ThemeSwitch` component. If your app already runs next-themes (or Fumadocs),
   feed `ThemeContext` from next-themes instead, as this site's
   [`ThemeBridge`](https://github.com/amerfathullah/myds-design-md/blob/main/apps/docs/components/theme-bridge.tsx)
-  does.
+  does. Outside a provider, ThemeSwitch and `useTheme().setTheme` change
+  nothing, and the first click or `setTheme` call on a page logs a warning to
+  the console.
 </Callout>
 
 The bridge needs next-themes to keep the theme as a class on `<html>` (`attribute="class"`), as Fumadocs does. Here is a short version of it. Render it under next-themes' provider:

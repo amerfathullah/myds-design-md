@@ -218,6 +218,31 @@ const cases = `
     return calls;
   };
 
+  // A click on a ThemeSwitch toggle from \`c\` outside every provider, then a
+  // call to setTheme from \`p\`'s useTheme outside every provider (#245):
+  // what they logged, \`<html>\`'s classes after, and what onChange got.
+  // Each warns only once per page, so a program runs it before any case
+  // that could warn.
+  const outsideProvider = async (p, c) => {
+    reset();
+    const start = logs.length;
+    const changes = [];
+    const toggle = await mount(
+      h(c.themeSwitch.ThemeSwitch, { as: "toggle", onChange: (value) => changes.push(value) }),
+    );
+    await click(toggle.container.querySelector("button"));
+    await toggle.unmount();
+    let setTheme;
+    const Probe = () => {
+      setTheme = p.hooks.useTheme().setTheme;
+      return null;
+    };
+    const probe = await mount(h(Probe));
+    await act(async () => setTheme("light"));
+    await probe.unmount();
+    return { logged: logs.slice(start), html: htmlClasses(), changes };
+  };
+
   const themeToggle = async (p, c) => {
     reset();
     const view = await mount(
@@ -373,6 +398,7 @@ export const casesProgram = (
     const m = modules;
     const result = {
       files,
+      outsideProvider: await attempt(() => outsideProvider(m, m)),
       themeProviderServer: await attempt(() => themeProviderServer(m, m)),
       themeProviderClient: await attempt(() => themeProviderClient(m, m)),
       themeContextServer: await attempt(() => themeContextServer(m, m)),
@@ -397,7 +423,9 @@ export const directions = [
 /**
  * One process that loads every case's entry through both conditions, and
  * runs ThemeProvider, ThemeContext.Provider, toast() and Navbar with the
- * provider from one condition and the consumer from the other
+ * provider from one condition and the consumer from the other. First, it
+ * clicks a toggle and calls setTheme outside every provider, each from one
+ * condition.
  */
 export const mixedProgram = (pkgName: string, subpaths: string[]) =>
   header("import") +
@@ -418,6 +446,9 @@ export const mixedProgram = (pkgName: string, subpaths: string[]) =>
       via.require[name] = require(entry("./" + subpath));
     }
     ${cases}
+    // A toggle from \`require\` and useTheme from \`import\`, before any case
+    // that could warn
+    const outside = await attempt(() => outsideProvider(via.import, via.require));
     const texts = ${JSON.stringify(Object.fromEntries(directions.map((direction) => [direction.join(" to "), toastText(direction.join(" to "))])))};
     const results = {};
     for (const [direction, text] of Object.entries(texts)) {
@@ -433,6 +464,7 @@ export const mixedProgram = (pkgName: string, subpaths: string[]) =>
     return {
       oneReact: imported.createContext === React.createContext,
       files,
+      outsideProvider: outside,
       directions: results,
     };`);
 

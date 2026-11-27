@@ -51,7 +51,9 @@ import { TypeTable } from "fumadocs-ui/components/type-table";
   icon={<InfoIcon className="size-5" />}
 >
   Make sure your application is wrapped with `ThemeProvider` before using
-  `useTheme` to utilise the API provided.
+  `useTheme` to utilise the API provided. Outside a provider, ThemeSwitch and
+  `useTheme().setTheme` change nothing, and the first click or `setTheme` call
+  on a page logs a warning to the console.
 </Callout>
 
 ## Example

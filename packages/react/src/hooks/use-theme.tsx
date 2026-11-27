@@ -22,9 +22,25 @@ interface ThemeContextType {
   defaultTheme: string;
 }
 
+// Whether `setThemeOutsideProvider` has warned
+let warnedOutsideProvider = false;
+
+// ThemeContext's default `setTheme`, which an unwrapped ThemeSwitch or a
+// `useTheme()` outside every provider calls (#245). It changes nothing, and
+// warns on its first call. The copy of the library that loads first makes
+// the default that every copy shares, so its flag is everyone's: one warning
+// per page, or per process on a server.
+function setThemeOutsideProvider(theme: string) {
+  if (warnedOutsideProvider) return;
+  warnedOutsideProvider = true;
+  console.warn(
+    `useTheme: setTheme("${String(theme)}") was called outside a ThemeProvider, so the theme didn't change. Wrap the app in one ThemeProvider from @amerfathullah/myds-react/hooks, above every ThemeSwitch and useTheme call, or feed ThemeContext.Provider from your own theme state or another theme library.`,
+  );
+}
+
 const ThemeContext = sharedContext<ThemeContextType>("ThemeContext", {
   theme: "light",
-  setTheme: () => {},
+  setTheme: setThemeOutsideProvider,
   defaultTheme: "light",
 });
 

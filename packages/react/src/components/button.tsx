@@ -45,6 +45,9 @@ const button_cva = cva(
         "danger-fill": [
           "bg-danger-600 border border-danger-600 text-white shadow-button",
           "hover:bg-danger-700",
+          // Focused, a 2px ring outside a 2px fr-gap band, which separates
+          // the ring from the fill. The ring stays fr-primary.
+          "focus:ring-2 focus:ring-offset-2 focus:ring-offset-fr-gap",
           "disabled:bg-bg-danger-disabled disabled:text-white-disabled disabled:border-bg-danger-disabled",
         ],
         "danger-outline": [
@@ -60,6 +63,10 @@ const button_cva = cva(
         "primary-fill": [
           "bg-primary-600 border border-primary-600 text-white shadow-button",
           "hover:bg-primary-700",
+          // Focused, a 2px ring outside a 2px fr-gap band, which separates
+          // the ring from the fill, hovered too: the hover fill is the light
+          // ring's own colour
+          "focus:ring-2 focus:ring-offset-2 focus:ring-offset-fr-gap",
           "disabled:bg-bg-primary-disabled disabled:text-white-disabled disabled:border-bg-primary-disabled",
         ],
         "primary-outline": [

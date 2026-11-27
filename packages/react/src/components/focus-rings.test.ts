@@ -119,14 +119,32 @@ describe("the component sources", () => {
     ).toEqual([]);
   });
 
-  // A ring or outline is focus, so it takes an `fr-*` token. Anything else
-  // after `ring-` or `outline-` is a colour, an offset's included, except a
-  // width, a pixel width in brackets, an offset, `inset` and the outline
-  // styles.
+  // A ring or outline is focus, so it takes an `fr-*` token, and so does a
+  // ring's offset. Anything else after `ring-` or `outline-` is a colour, an
+  // offset's included, except a width, a pixel width in brackets, an offset,
+  // `inset` and the outline styles.
   test("colour every ring and outline with an fr-* token", () => {
     expect(
       classesMatching(
-        /(?:^|:)(?:ring|outline)-(?!fr-|\d|\[\d+(?:\.\d+)?px\]|offset-\d|inset$|hidden$|none$|solid$|dashed$|dotted$|double$)/,
+        /(?:^|:)(?:ring|outline)-(?!fr-|offset-fr-|\d|\[\d+(?:\.\d+)?px\]|offset-\d|inset$|hidden$|none$|solid$|dashed$|dotted$|double$)/,
+      ),
+    ).toEqual([]);
+  });
+
+  // A ring's offset is the band a filled control draws between its fill and
+  // its ring (#264). Tailwind colours an offset white unless a class colours
+  // it, which in dark is a white band, and `shadow-button` draws an offset
+  // even unfocused. So each offset width goes behind a focus variant, with
+  // `ring-offset-fr-gap` behind the same variants in the same file.
+  test("colour every ring offset with fr-gap, and tie it to focus", () => {
+    const coloured = new Set(classesMatching(/(?:^|:)ring-offset-fr-gap$/));
+    expect(
+      classesMatching(/(?:^|:)ring-offset-\d/).filter(
+        (entry) =>
+          !variantsOf(entry.slice(entry.indexOf(": ") + 2)).some(isFocus) ||
+          !coloured.has(
+            entry.replace(/ring-offset-\d+$/, "ring-offset-fr-gap"),
+          ),
       ),
     ).toEqual([]);
   });

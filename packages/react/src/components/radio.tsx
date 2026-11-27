@@ -254,6 +254,9 @@ const RadioButton = React.forwardRef<
         "focus-visible:ring-fr-primary focus:outline-hidden focus-visible:ring-3",
         "disabled:bg-bg-washed disabled:cursor-not-allowed",
         "data-[state=checked]:bg-primary-600 data-[state=checked]:border-none",
+        // Checked, it's filled, so the ring is 2px, outside a 2px fr-gap
+        // band that separates it from the fill
+        "data-[state=checked]:focus-visible:ring-2 data-[state=checked]:focus-visible:ring-offset-2 data-[state=checked]:focus-visible:ring-offset-fr-gap",
         "data-[state=checked]:disabled:bg-primary-600 data-[state=checked]:disabled:opacity-30",
         size === "small" && "w-4",
         size === "medium" && "w-5",

@@ -37,6 +37,13 @@ const departures = {
     light: "rgba(185, 28, 28, 255)",
     dark: "rgba(252, 165, 165, 255)",
   },
+  // New: the band between a filled control and its focus ring, which v1
+  // didn't have, so its fixture records v1's fallbacks
+  "fr-gap": {
+    issue: "#264",
+    light: "rgba(255, 255, 255, 255)",
+    dark: "rgba(0, 0, 0, 255)",
+  },
 };
 
 // Each departure's colour utilities, as tokenUtilities() writes them, such

@@ -3767,6 +3767,30 @@
       "borderTopColor": "rgba(185, 27, 27, 102)"
     }
   },
+  "bg-fr-gap": {
+    "light": {
+      "backgroundColor": "transparent"
+    },
+    "dark": {
+      "backgroundColor": "transparent"
+    }
+  },
+  "text-fr-gap": {
+    "light": {
+      "color": "rgba(0, 0, 0, 255)"
+    },
+    "dark": {
+      "color": "rgba(0, 0, 0, 255)"
+    }
+  },
+  "border-fr-gap": {
+    "light": {
+      "borderTopColor": "rgba(228, 228, 231, 255)"
+    },
+    "dark": {
+      "borderTopColor": "rgba(228, 228, 231, 255)"
+    }
+  },
   "text-heading-xl": {
     "light": {
       "fontSize": "60px",
@@ -4155,14 +4179,6 @@
     },
     "dark": {
       "borderTopColor": "rgba(160, 100, 5, 51)"
-    }
-  },
-  "outline-primary-600/20": {
-    "light": {
-      "outlineColor": "rgba(35, 100, 235, 51)"
-    },
-    "dark": {
-      "outlineColor": "rgba(35, 100, 235, 51)"
     }
   },
   "text": {

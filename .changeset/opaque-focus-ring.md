@@ -9,10 +9,10 @@ The focus ring tokens, `fr-primary` and `fr-danger`, are now opaque, so a focus 
 
 These are the primitives the `bg-primary-700` and `bg-danger-700` tokens (`bg-bg-primary-700`, `bg-bg-danger-700`) use in each theme. Against the page (`bg-white`), `fr-primary` is now 6.70:1 in light and 8.87:1 in dark, and `fr-danger` 6.47:1 and 9.33:1. Against the other surfaces a ring sits on, such as dialogs, callouts, the calendar's range cells and the Masthead trigger's fill, both stay at 5.10:1 or more.
 
-Every MYDS focus ring changes colour. Which controls draw it, how wide it is, and when they draw it don't change.
+Every MYDS focus ring changes colour. Which controls draw it and when they draw it don't change. A filled control also draws its ring outside a band in the new `fr-gap` token; see that entry.
 
 **Your own `fr-*` utilities change too.** Anything you write with an `fr-*` token takes the new colour with no code change: `ring-fr-primary`, `bg-fr-primary`, `text-fr-danger`, `border-fr-danger`, `outline-fr-primary` and so on. An opacity modifier now takes its share of an opaque colour, not of a 40% one: `ring-fr-primary/50` in light is `primary-700` @ 50%, where it was `primary-300` @ 20%.
 
-**On a filled control, the ring now sits close to the fill's colour.** A `primary-fill` button's `primary-600` is 1.30:1 against the ring in light and 2.59:1 in dark, so the ring is hard to tell apart from the fill where they touch. Button rings on `focus:`, so after a click it can be focused and hovered at once, and its hover fill, `primary-700`, is the light ring's own colour. The ring still contrasts with the surface around the control, which is what SC 1.4.11 asks of a ring drawn outside it.
+**On a filled control, the opaque ring would sit close to the fill's colour:** a `primary-fill` button's `primary-600` is 1.30:1 against it in light and 2.59:1 in dark. So a filled control draws it outside a 2px `fr-gap` band, which separates it from the fill; see the `fr-gap` entry.
 
 `full.css` carries the new values.

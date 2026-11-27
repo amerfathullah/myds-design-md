@@ -160,4 +160,7 @@
 
   /* Ring - Danger */
   --fr-danger: var(--_danger-300);
+
+  /* Ring - Gap: the band between a filled control and its ring */
+  --fr-gap: var(--_black);
 }

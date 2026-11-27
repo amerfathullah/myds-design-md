@@ -144,6 +144,9 @@ const Calendar: FC<CalendarProps> = ({
           // A focused day that is disabled gets aria-disabled, not disabled, so it keeps focus
           "aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-txt-black-disabled",
           "[.selected:not(.in-range)_&]:bg-primary-600 [.selected:not(.in-range)_&]:text-white",
+          // The selected day and a range's ends are filled, so their ring is
+          // 2px, outside a 2px fr-gap band that separates it from the fill
+          "[.selected:not(.in-range)_&]:focus:ring-2 [.selected:not(.in-range)_&]:focus:ring-offset-2 [.selected:not(.in-range)_&]:focus:ring-offset-fr-gap",
           "[.today:not(.selected)_&]:text-txt-primary [.today:selected)_&]:text-white",
         ),
         selected: clx(
@@ -374,9 +377,12 @@ const Calendar: FC<CalendarProps> = ({
             </div>
           );
         },
+        // Outlined: react-day-picker passes the outline variant's classes as
+        // `className`, which leaves the default primary-fill's band on focus
         NextMonthButton(props) {
           return view === "day" ? (
             <Button
+              variant="default-outline"
               {...props}
               onClick={() => {
                 const date = addMonths(month, 1);
@@ -387,6 +393,7 @@ const Calendar: FC<CalendarProps> = ({
             />
           ) : view === "month" ? (
             <Button
+              variant="default-outline"
               {...props}
               aria-label={nextYearLabel}
               onClick={() => {
@@ -400,9 +407,12 @@ const Calendar: FC<CalendarProps> = ({
             <></>
           );
         },
+        // Outlined: react-day-picker passes the outline variant's classes as
+        // `className`, which leaves the default primary-fill's band on focus
         PreviousMonthButton(props) {
           return view === "day" ? (
             <Button
+              variant="default-outline"
               {...props}
               onClick={() => {
                 const date = subMonths(month, 1);
@@ -413,6 +423,7 @@ const Calendar: FC<CalendarProps> = ({
             />
           ) : view === "month" ? (
             <Button
+              variant="default-outline"
               {...props}
               aria-label={previousYearLabel}
               onClick={() => {

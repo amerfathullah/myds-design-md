@@ -241,7 +241,9 @@ function Page() {
 
         <div style={{ ...gap, display: "flex", gap: 32 }}>
           {["small", "medium", "large"].map((size) => (
-            <Radio key={size} size={size} defaultValue="a">
+            // Unchecked: a checked Radio is filled, so focus-ring-fill.test.mjs
+            // checks its ring
+            <Radio key={size} size={size}>
               <RadioItem>
                 <RadioButton
                   value="a"

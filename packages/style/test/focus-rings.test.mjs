@@ -1,6 +1,8 @@
 // Keyboard focus shows MYDS's focus ring: a 3px ring in `fr-primary`, drawn
-// as a box-shadow, or `fr-danger` on an invalid InputOTP, in both themes.
-// These controls draw it on `:focus-visible`, so a mouse click shows none:
+// as a box-shadow, or `fr-danger` on an invalid InputOTP, in both themes. A
+// control in a filled State, such as the Switch once a click checks it,
+// draws a 2px ring outside a 2px `fr-gap` band instead (#264);
+// focus-ring-fill.test.mjs checks those. These controls draw it on `:focus-visible`, so a mouse click shows none:
 // the Link family (Link, SiteLink, NavbarMenuItem and NavbarLogo, with and
 // without `asChild`), BreadcrumbLink, the Accordion, the NavbarMenuDropdown
 // trigger, TooltipTrigger, TableCell, Radio, DataTable's radio column, the
@@ -83,6 +85,8 @@ const dataTableCell = (row, column) =>
  * - `from`: the control before it in the tab order, if keyboard focus starts
  *   there and must reach it in one Tab
  * - `click`: whether a mouse click shows the ring too
+ * - `clickFills`: whether the click fills it, so it shows the 2px ring outside
+ *   a 2px `fr-gap` band that a filled control shows (#264)
  * - `pointer`: the element the mouse presses, if not the focused one
  * - `press`: where the mouse presses it, from its top-left, if not its middle
  * - `release`: whether the mouse releases the button where it pressed, as a
@@ -144,6 +148,8 @@ const controls = [
     pointer: "#switch + span",
     release: true,
     click: true,
+    // The click checks it, which fills its track
+    clickFills: true,
     pixels: true,
   },
   {
@@ -468,6 +474,13 @@ function ringOf(control, theme) {
   return `${colours[theme][colour]} 0px 0px 0px ${width}px${inset ? " inset" : ""}`;
 }
 
+// The ring a filled control shows, in `theme`: 2px outside a 2px `fr-gap`
+// band, so its box-shadow's ring layer reaches 4px
+const filledRingOf = (theme) => [
+  `${colours[theme]["fr-gap"]} 0px 0px 0px 2px`,
+  `${colours[theme]["fr-primary"]} 0px 0px 0px 4px`,
+];
+
 const themes = ["light", "dark"];
 
 test("each control shows its focus ring on keyboard focus, in both themes", async () => {
@@ -540,7 +553,11 @@ test("a mouse click shows no ring, except on SearchBar, InputOTP and Switch", as
         expected[key] = {
           focused: true,
           outline: "none",
-          ring: control.click ? [ringOf(control, theme)] : [],
+          ring: !control.click
+            ? []
+            : control.clickFills
+              ? filledRingOf(theme)
+              : [ringOf(control, theme)],
         };
       }
     });

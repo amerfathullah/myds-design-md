@@ -53,12 +53,43 @@ const pairs = surfaces.flatMap((surface, row) =>
 const ringPixel = ({ x, y }) => ({ x: x + 10, y: y + 20 });
 const surfacePixel = ({ x, y }) => ({ x: x + 2, y: y + 2 });
 
+// The fills a focused filled control's ring touches, at rest and hovered. On
+// those controls the ring is 2px, outside a 2px `fr-gap` band that separates
+// it from the fill (#264). The fills are primitives, the same in both themes,
+// except the Switch's track.
+const fills = [
+  // primary-fill Buttons, checked and indeterminate Checkboxes, checked
+  // Radios and DataTable radios, and the Calendar's selected days, range
+  // ends, months and years
+  "primary-600",
+  // Hovered primary-fill Buttons and checked or indeterminate Checkboxes
+  "primary-700",
+  // danger-fill Buttons, at rest and hovered
+  "danger-600",
+  "danger-700",
+  // The checked Switch's track: `primary-400` in dark
+  "bg-primary-600",
+];
+// Each fill's cell: a 40px square of the page with a 16px box of the fill in
+// the middle, whose band runs from 10 to 12px in and its ring from 8 to 10px
+const bands = fills.map((fill, row) => ({ fill, x: 0, y: row * cell }));
+// A pixel of the fill, of the band and of the ring, mid-way down the left side
+const fillPixel = ({ x, y }) => ({ x: x + 20, y: y + 20 });
+const bandPixel = ({ x, y }) => ({ x: x + 11, y: y + 20 });
+const bandRingPixel = ({ x, y }) => ({ x: x + 9, y: y + 20 });
+
 let browser;
 let html;
+let bandHtml;
 before(async () => {
   const classes = [
     "ring-3",
+    "ring-2",
+    "ring-offset-2",
+    "ring-offset-fr-gap",
+    "ring-fr-primary",
     ...surfaces.map((surface) => `bg-${surface}`),
+    ...fills.map((fill) => `bg-${fill}`),
     ...tokens.map((token) => `ring-${token}`),
   ];
   const css = await compile(`@source inline("${classes.join(" ")}");`);
@@ -69,6 +100,13 @@ before(async () => {
     )
     .join("");
   html = `<!doctype html><html><head><style>${css}</style></head><body class="bg-bg-white" style="margin:0">${cells}</body></html>`;
+  const bandCells = bands
+    .map(
+      ({ fill, x, y }) =>
+        `<div data-fill="${fill}" class="bg-${fill} ring-2 ring-offset-2 ring-offset-fr-gap ring-fr-primary" style="position:absolute;left:${x + 12}px;top:${y + 12}px;width:16px;height:16px"></div>`,
+    )
+    .join("");
+  bandHtml = `<!doctype html><html><head><style>${css}</style></head><body class="bg-bg-white" style="margin:0">${bandCells}</body></html>`;
   browser = await chromium.launch();
 });
 after(() => browser?.close());
@@ -144,6 +182,55 @@ test("fr-primary and fr-danger contrast at least 3:1 with every surface a focus 
       const ratio = contrast(painted[2 * i], painted[2 * i + 1]);
       if (ratio < 3)
         below[`${token} on ${surface} (${theme})`] = `${ratio.toFixed(2)}:1`;
+    });
+  }
+  assert.deepEqual(below, {});
+});
+
+// Runs in the page: the fills their utility leaves unfilled, and those
+// without a 2px band inside a 4px ring, so a utility the preset doesn't
+// generate fails rather than measuring the page behind it
+function unbanded() {
+  return [...document.querySelectorAll("[data-fill]")]
+    .filter((e) => {
+      const { backgroundColor, boxShadow } = getComputedStyle(e);
+      return (
+        backgroundColor === "rgba(0, 0, 0, 0)" ||
+        !/ 0px 0px 0px 2px, .* 0px 0px 0px 4px/.test(boxShadow)
+      );
+    })
+    .map((e) => e.dataset.fill);
+}
+
+test("fr-gap contrasts at least 3:1 with every fill a focus ring touches, and fr-primary with fr-gap, in both themes", async () => {
+  const page = await browser.newPage({
+    viewport: { width: cell, height: bands.length * cell },
+  });
+  await page.setContent(bandHtml);
+  const below = {};
+  for (const theme of ["light", "dark"]) {
+    await page.evaluate(
+      (dark) => document.documentElement.classList.toggle("dark", dark),
+      theme === "dark",
+    );
+    assert.deepEqual(await page.evaluate(unbanded), []);
+    const painted = await pixels(
+      page,
+      bands.flatMap((band) => [
+        fillPixel(band),
+        bandPixel(band),
+        bandRingPixel(band),
+      ]),
+    );
+    bands.forEach(({ fill }, i) => {
+      const [fillColour, band, ring] = painted.slice(3 * i, 3 * i + 3);
+      const onFill = contrast(band, fillColour);
+      if (onFill < 3)
+        below[`fr-gap on ${fill} (${theme})`] = `${onFill.toFixed(2)}:1`;
+      const onBand = contrast(ring, band);
+      if (onBand < 3)
+        below[`fr-primary on fr-gap, around ${fill} (${theme})`] =
+          `${onBand.toFixed(2)}:1`;
     });
   }
   assert.deepEqual(below, {});

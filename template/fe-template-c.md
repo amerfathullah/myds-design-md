@@ -2,11 +2,18 @@
 Documentation for For FE Templates C ( React + Vite + MYDS + Layout + i18n + router)
 ===
 
+Follow [fe-template-b.md](fe-template-b.md), both parts, first. This walkthrough builds on what it adds:
+
+- `LayoutMain.tsx` and the MastheadMyds.tsx, NavbarMyds.tsx and FooterMyds.tsx files in `src/components/layout`
+- `i18n.ts` and the locale files in `src/locales`
+- the logo in `public`
+- the `i18next` and `react-i18next` packages
+
 1. Run
 ``` npm i react-router ```
 React Router 8 needs Node.js 22.22 or newer.
-2. Create pages file in src
-3. Create About.tsx , Home.tsx and Error.tsx and put them in pages file
+2. Create a pages folder in src
+3. Create About.tsx , Home.tsx and Error.tsx and put them in the pages folder
 4. Edit About.tsx
 ```
 export default function AboutPage() {
@@ -26,7 +33,7 @@ export default function ErrorPage() {
 }
 ```
 
-7. Refactor Layout.tsx to clear up App.tsx and improve layout.tsx
+7. Refactor `src/components/layout/LayoutMain.tsx` to clear up App.tsx and improve the layout
 a) Toggle Language now 
 	-- check the path and replaces the lang on path
 	-- navigate to new path and re-render using react-router
@@ -121,12 +128,12 @@ createRoot(document.getElementById("root")!).render(
 );
 ```
 10. Create router.tsx inside src
-a)  Get lang from local storage, on initialize already added --> read main.tsx
+a) The router sends `/` to the language stored in local storage. LangWrapper (step 11) sends a language other than `en` or `ms` to the stored language, or to `/en` when none is stored, as with `/null` on a first visit.
 b) Routes from `/` to `/lang` --> making sure if someone goes to `/`, it goes to `lang`
 c) The path of `:lang` which is the dynamic route, contain an element `LangWrapper` where is set to get the language and share it with the pages and also handle error page `/*`
 --You can remove it IF you plan to go with fetch language on every page, but you need to write back error handling for `/*` route.
-d) Added Layout to cover all the pages.
--- IF there is another pages that did not follow the general layout, take it out from `<Route element={<Layout />}>` and create  a new wrapper Route `<Route element={<NewLayout />}>` and wrap he pages inside.
+d) Added LayoutMain to cover all the pages.
+-- IF there is another pages that did not follow the general layout, take it out from `<Route element={<LayoutMain />}>` and create  a new wrapper Route `<Route element={<NewLayout />}>` and wrap he pages inside.
 e) Main page is `<Route index element={<HomePage />} />`, feel free to edit `HomePage`
 f)  To add pages, add new route and new path `<Route path="newpage" element={<NewPage />} />`
 g) Error page handling on path `/lang/*` is handled by `Redirect404Page()`
@@ -135,11 +142,11 @@ i) Error page itself is in `<Route path="404" element={<ErrorPage />} />`
 
 ```
 import { Routes, Route, Navigate, useParams } from "react-router";
-import Layout from "./components/layout/Layout";
 import LangWrapper from "./LangWrapper";
 import HomePage from "./pages/Home";
 import AboutPage from "./pages/About";
 import ErrorPage from "./pages/Error";
+import LayoutMain from "./components/layout/LayoutMain";
 
 export default function AppRoutes() {
   let lang = localStorage.getItem("lang");
@@ -148,7 +155,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to={`/${lang}`} replace />} />
       <Route path=":lang" element={<LangWrapper />}>
-        <Route element={<Layout />}>
+        <Route element={<LayoutMain />}>
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route
@@ -170,7 +177,6 @@ function Redirect404Page() {
   const targetLang = allowedLangs.includes(lang) ? lang : langStorage;
   return <Navigate to={`/${targetLang}/404`} replace />;
 }
-
 ```
 
 11. Create the LangWrapper inside src
@@ -214,117 +220,8 @@ export default function LangWrapper() {
 
   return <Outlet />;
 }
-
 ```
-12. Update NavbarMyds to update the dropdown language from the path.
-a) Updated: Sync state when URL param changes
-b) you can now remove the test button to use this dropdown as the main language switcher
-```
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
-import { Button, ButtonIcon } from "@amerfathullah/myds-react/button";
-import { SearchIcon, GlobeIcon } from "@amerfathullah/myds-react/icon";
-import {
-  Navbar,
-  NavbarLogo,
-  NavbarMenu,
-  NavbarMenuItem,
-  NavbarMenuDropdown,
-  NavbarAction,
-} from "@amerfathullah/myds-react/navbar";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@amerfathullah/myds-react/select";
-import { ThemeSwitch } from "@amerfathullah/myds-react/theme-switch";
-import i18n from "../../i18n";
-
-export default function NavbarMyds() {
-  const navigate = useNavigate();
-  const { lang } = useParams<{ lang: string }>();
-
-  const [selectedLang, setSelectedLang] = useState(
-    localStorage.getItem("lang") || "en"
-  );
-
-  // Sync state when URL param changes (for manual URL changes or navigation)
-  useEffect(() => {
-    if (lang && (lang === "en" || lang === "ms")) {
-      setSelectedLang(lang);
-      localStorage.setItem("lang", lang);
-      i18n.changeLanguage(lang);
-    }
-  }, [lang]);
-
-  const updateLanguage = (newLang: string) => {
-    setSelectedLang(newLang);
-    localStorage.setItem("lang", newLang);
-    i18n.changeLanguage(newLang);
-    const currentPath = window.location.pathname;
-    const newPath = currentPath.replace(/^\/(en|ms)/, `/${newLang}`);
-    navigate(newPath);
-  };
-
-  return (
-    <Navbar>
-      <NavbarLogo
-        src="/logo.svg"
-        alt="Malaysian Government Design System"
-      >
-        MYDS
-      </NavbarLogo>
-
-      <NavbarMenu>
-        <NavbarMenuItem href="/menu1">Menu 1</NavbarMenuItem>
-        <NavbarMenuItem href="/menu2">Menu 2</NavbarMenuItem>
-        <NavbarMenuDropdown title="Menu Dropdown">
-          <NavbarMenuItem href="/submenu1">Submenu 1</NavbarMenuItem>
-          <NavbarMenuItem href="/submenu2">Submenu 2</NavbarMenuItem>
-          <NavbarMenuItem href="/submenu3">Submenu 3</NavbarMenuItem>
-          <NavbarMenuItem href="/submenu4">Submenu 4</NavbarMenuItem>
-        </NavbarMenuDropdown>
-        <NavbarMenuItem href="/menu3">Menu 3</NavbarMenuItem>
-      </NavbarMenu>
-
-      <NavbarAction>
-        {/* Search Button */}
-        <Button
-          variant="default-ghost"
-          iconOnly
-          aria-label="Search"
-          size="small"
-        >
-          <ButtonIcon>
-            <SearchIcon />
-          </ButtonIcon>
-        </Button>
-
-        {/* Theme Switch */}
-        <ThemeSwitch as="toggle" />
-
-        {/* Language Selector */}
-        <div className="hidden sm:block">
-          <Select
-            value={selectedLang}
-            onValueChange={(value) => updateLanguage(value)}
-            variant="outline"
-            size="small"
-          >
-            <SelectTrigger aria-label="Language">
-              <GlobeIcon className="h-4 w-4" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end" className="font-body rounded-[4px] py-1">
-              <SelectItem value="en">en</SelectItem>
-              <SelectItem value="ms">ms</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </NavbarAction>
-    </Navbar>
-  );
-}
-```
+12. Update NavbarMyds to update the dropdown language from the path. Replace its code with the code from
+[fe-template-c/src/components/layout/NavbarMyds.tsx](fe-template-c/src/components/layout/NavbarMyds.tsx)
+a) The URL decides the language: the language select shows the `lang` URL parameter, and LangWrapper syncs it to local storage and i18n.
+b) Choosing a language in the select replaces the `en` or `ms` at the start of the path and navigates to the new path.

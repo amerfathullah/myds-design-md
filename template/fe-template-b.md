@@ -3,27 +3,25 @@ Documentation for For FE Templates B ( React + Vite + MYDS + Layout + i18n)
 
 Part 1 : Layout Prep
 
-1. Use the Documentation for For FE Templates ( React + Vite + MYDS)
-2. Create components file in src
-3. Create layout file in components file
-4. create Layout.tsx in layout file
-5. Create MastheadMyds.tsx in layout file
+1. Start from the app you built with [fe-template-a.md](fe-template-a.md) (React + Vite + MYDS)
+2. Create a components folder in src
+3. Create a layout folder in the components folder
+4. Create LayoutMain.tsx in the layout folder
+5. Create MastheadMyds.tsx in the layout folder
 6. Paste in masthead the code from [fe-template-b/src/components/layout/MastheadMyds.tsx](fe-template-b/src/components/layout/MastheadMyds.tsx)
-7. Create NavbarMyds.tsx in layout file
+7. Create NavbarMyds.tsx in the layout folder
 8. Paste in navbar the code from
    [fe-template-b/src/components/layout/NavbarMyds.tsx](fe-template-b/src/components/layout/NavbarMyds.tsx)
 
    Its logo loads `/logo.svg`, so copy [fe-template-b/public/logo.svg](fe-template-b/public/logo.svg) into your app's `public` folder.
-9. Create FooterMyds.tsx in layout file
+9. Create FooterMyds.tsx in the layout folder
 10. Paste in footer the code from
     [fe-template-b/src/components/layout/FooterMyds.tsx](fe-template-b/src/components/layout/FooterMyds.tsx)
 
     These files hold this repo's docs examples of the page-level components Masthead, Navbar and Footer, importing `@amerfathullah/myds-react`. Upstream's docs at https://myds.vercel.app are for MYDS 1.x and import the old package name, so don't copy from there.
-11. Prepare the Layout like below example by importing the MastheadMyds.tsx, NavbarMyds.tsx, FooterMyds.tsx, and `Skiplink` from `@amerfathullah/myds-react/skiplink`
+11. Paste this into LayoutMain.tsx. It imports MastheadMyds.tsx, NavbarMyds.tsx, FooterMyds.tsx, and `Skiplink` from `@amerfathullah/myds-react/skiplink`
 
     The skip link comes first, before the Masthead, and points at the `<main id="main-content">` that holds the page's content. Its `tabIndex={-1}` makes following the link move focus to the content.
-
-Ex:
 
 ```
 import { Skiplink } from "@amerfathullah/myds-react/skiplink";
@@ -49,16 +47,16 @@ export default function LayoutMain({ children }: LayoutMainProps) {
 }
 ```
 
-12. Wrap the layout on app.tsx
-Ex: 
+12. Wrap the content of App.tsx in `LayoutMain`
+
 ```
-import Layout from "./components/layout/Layout";
+import LayoutMain from "./components/layout/LayoutMain";
 
 function App() {
   return (
-    <Layout>
+    <LayoutMain>
       <div className="bg-bg-warning-50">test</div>
-    </Layout>
+    </LayoutMain>
   );
 }
 
@@ -88,7 +86,7 @@ createRoot(document.getElementById("root")!).render(
 Part 2: i18n
 
 1. Run `npm i i18next react-i18next`
-2. Create a file i18n.ts in src file
+2. Create a file i18n.ts in the src folder
 3. Paste into i18n.ts
 
 ```
@@ -120,12 +118,13 @@ i18n.use(initReactI18next).init({
 export default i18n;
 ```
 
-4. Edit app.tsx
+4. Edit App.tsx, keeping `LayoutMain` around the content
 
 ```
 import { Button } from "@amerfathullah/myds-react/button";
 import i18n from "./i18n";
 import { useTranslation } from "react-i18next";
+import LayoutMain from "./components/layout/LayoutMain";
 
 function App() {
   // When first initialize get the language from local storage.
@@ -155,18 +154,20 @@ function App() {
   const { t } = useTranslation();
 
   return (
-    <div className="bg-bg-warning-50">
-      <Button onClick={toggleLangMs}>Toggle this to ms</Button>
-      <Button onClick={toggleLangEn}>Toggle this to en</Button>
-      <h1>{t("welcome")} sini</h1>
-    </div>
+    <LayoutMain>
+      <div className="bg-bg-warning-50">
+        <Button onClick={toggleLangMs}>Toggle this to ms</Button>
+        <Button onClick={toggleLangEn}>Toggle this to en</Button>
+        <h1>{t("welcome")} sini</h1>
+      </div>
+    </LayoutMain>
   );
 }
 
 export default App;
 ```
 
-the app.tsx integrates
+App.tsx integrates
 a) Button to toggle the i18n
 b) The button function
 
@@ -176,10 +177,12 @@ b) The button function
 
 c) use the translation using {t("welcome")} where welcome is written in i18n.ts
 
+d) `LayoutMain` stays around the content, so the page keeps the Masthead, Navbar and Footer from Part 1
+
 5. Refactor out the translation where welcome is written in i18n.ts, into its own file.
-   a) inside src file, create locales file.
-   b) inside the locales file created, create 2 file, ms and en
-   c) inside ms file, create ms-MY.json and paste
+   a) inside the src folder, create a locales folder.
+   b) inside the locales folder created, create 2 folders, ms and en
+   c) inside the ms folder, create ms-MY.json and paste
 
 ```
 {
@@ -188,7 +191,7 @@ c) use the translation using {t("welcome")} where welcome is written in i18n.ts
 }
 ```
 
-d) inside en file, create en-GB.json and paste
+d) inside the en folder, create en-GB.json and paste
 
 ```
 {

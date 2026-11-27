@@ -2,7 +2,8 @@
 // a provider from one entry reaches a consumer from another: under the
 // `require` condition (#119), under `import`, and with the provider loaded
 // through one and its consumer through the other (#235), the Navbar parts
-// included (#162). Node child processes load the package by its own name
+// included (#162), and that outside every provider, ThemeContext's default
+// warns once in all (#245). Node child processes load the package by its own name
 // from the package root, in happy-dom where a case needs a DOM. It also
 // checks what sharing them must leave as it is: the "use client" directives,
 // the sourcemaps, every entry loading when globalThis or the registry's key
@@ -116,8 +117,17 @@ interface ThemeState {
   saved: string | null;
   label: string | null;
 }
+// What a click on an unwrapped ThemeSwitch toggle, then a call to setTheme
+// from useTheme outside every provider, logged, `<html>`'s classes after,
+// and what the toggle's onChange got
+interface OutsideProvider {
+  logged: string[];
+  html: string[];
+  changes: string[];
+}
 interface Cases {
   files: Record<string, string>;
+  outsideProvider: Case<OutsideProvider>;
   themeProviderServer: Case<string>;
   themeProviderClient: Case<{ html: string[]; shows: string | null }>;
   themeContextServer: Case<string>;
@@ -144,6 +154,7 @@ interface ToggleState {
 interface Mixed {
   oneReact: boolean;
   files: Record<Condition, Record<string, string>>;
+  outsideProvider: Case<OutsideProvider>;
   directions: Record<
     `${Condition} to ${Condition}`,
     {
@@ -230,6 +241,21 @@ function resultOf<T>(result: Case<T>): T {
   return result;
 }
 
+// Outside every provider, the toggle's click and the call to setTheme
+// change nothing, and log one warning between them, because every copy of
+// the library shares ThemeContext's default and the flag in it (#245).
+// The toggle calls onChange all the same.
+function expectOneWarning(result: Case<OutsideProvider>) {
+  const { logged, html, changes } = resultOf(result);
+  expect(logged).toEqual([
+    expect.stringMatching(
+      /^warn: .*setTheme\("dark"\).*ThemeProvider.*@amerfathullah\/myds-react\/hooks/,
+    ),
+  ]);
+  expect(html).toEqual([]);
+  expect(changes).toEqual(["dark"]);
+}
+
 const timeout = 120_000;
 const builtFile = { import: /\/dist\/.+\.mjs$/, require: /\/dist\/.+\.js$/ };
 
@@ -244,6 +270,12 @@ describe.each(conditions)(
       expect(Object.keys(files)).toEqual(Object.values(caseEntries));
       for (const file of Object.values(files))
         expect(file).toMatch(builtFile[condition]);
+    });
+
+    // Under `require`, `./theme-switch` and `./hooks` are separate bundles,
+    // each with its own copy of useTheme's module
+    test("clicking an unwrapped ThemeSwitch toggle from `./theme-switch`, then calling setTheme from `./hooks`' useTheme outside a provider, logs one warning in all", async () => {
+      expectOneWarning((await built()).outsideProvider);
     });
 
     test('ThemeSwitch as="select" shows Dark in server HTML under ThemeProvider defaultTheme="dark"', async () => {
@@ -326,6 +358,10 @@ describe(
         for (const file of Object.values(files[condition]))
           expect(file).toMatch(builtFile[condition]);
       }
+    });
+
+    test("clicking an unwrapped ThemeSwitch toggle from `require`, then calling setTheme from `import`'s useTheme outside a provider, logs one warning in all", async () => {
+      expectOneWarning((await mixedRun()).outsideProvider);
     });
 
     test.each(directions)(

@@ -702,7 +702,7 @@ describe("the modules the build ships", () => {
         "ThemeContext": {
           "default": {
             "defaultTheme": "'light'",
-            "setTheme": "() => {}",
+            "setTheme": "setThemeOutsideProvider",
             "theme": "'light'",
           },
           "file": "hooks/use-theme.tsx",
